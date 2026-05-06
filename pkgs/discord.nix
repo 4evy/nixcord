@@ -14,12 +14,10 @@
   nix,
   openasar ? null,
   brotli,
-  openssl_1_1,
   libpulseaudio,
   # Krisp noise cancellation patching
   python3,
   runCommand,
-  unzip,
   darwin ? null,
 
   # Options
@@ -39,30 +37,17 @@ let
   variantKey = "${platformName}-${branch}";
   source = sources.${variantKey} or (throw "discord: no source defined for ${variantKey}");
 
-  # Newer Discord branches (currently linux ptb/canary/development) ship as
-  # brotli-compressed tar "distros" with the host app split from per-module
-  # native libraries. Older builds (linux stable + all macOS) still ship as a
-  # single tarball or dmg ("legacy")
-  isDistro = (source.kind or "legacy") == "distro";
-
   inherit (source) version;
 
-  src =
-    if isDistro then
-      fetchurl { inherit (source.distro) url hash; }
-    else
-      fetchurl { inherit (source) url hash; };
+  withoutOpenSSL11 = lib.filter (input: !(lib.hasPrefix "openssl-1.1.1" (lib.getName input)));
 
-  moduleSrcs = lib.optionalAttrs isDistro (
-    lib.mapAttrs (_: mod: fetchurl { inherit (mod) url hash; }) source.modules
-  );
+  src = fetchurl { inherit (source.distro) url hash; };
 
-  moduleVersions = lib.optionalAttrs isDistro (lib.mapAttrs (_: mod: mod.version) source.modules);
+  moduleSrcs = lib.mapAttrs (_: mod: fetchurl { inherit (mod) url hash; }) source.modules;
 
-  # Krisp source location depends on layout: distro builds embed it as a module,
-  # legacy builds use a sibling "${variant}-krisp" entry in sources.json.
-  krispSourceMeta =
-    if isDistro then source.modules.discord_krisp or null else sources."${variantKey}-krisp" or null;
+  moduleVersions = lib.mapAttrs (_: mod: mod.version) source.modules;
+
+  krispSourceMeta = source.modules.discord_krisp or null;
 
   krispSrc =
     if withKrisp && krispSourceMeta != null then
@@ -73,7 +58,7 @@ let
   # Modules to stage at install time. When Krisp is enabled we drop the bundled
   # discord_krisp here and deploy the patched version at runtime instead
   stagedModuleSrcs =
-    if withKrisp && isDistro && krispSrc != null then
+    if withKrisp && krispSrc != null then
       lib.removeAttrs moduleSrcs [ "discord_krisp" ]
     else
       moduleSrcs;
@@ -135,18 +120,12 @@ let
               ps.capstone
             ]))
           ]
-          ++ lib.optionals isDistro [ brotli ]
-          ++ lib.optionals (!isDistro) [ unzip ];
+          ++ [ brotli ];
         }
         (
           ''
             mkdir -p "$out"
-            ${
-              if isDistro then
-                ''brotli -d < ${krispSrc} | tar xf - --strip-components=1 -C "$out"''
-              else
-                ''unzip ${krispSrc} -d "$out"''
-            }
+            brotli -d < ${krispSrc} | tar xf - --strip-components=1 -C "$out"
             python3 ${patchKrispPy} "$out/discord_krisp.node"
           ''
           + lib.optionalString stdenvNoCC.isDarwin ''
@@ -204,43 +183,56 @@ basePackage.overrideAttrs (oldAttrs: {
       ;
   };
 
-  # Distro builds: ship pre-extracted modules and pull libraries (openssl 1.1 +
-  # pulseaudio) needed by the bundled .node files.
-  nativeBuildInputs = (oldAttrs.nativeBuildInputs or [ ]) ++ lib.optionals isDistro [ brotli ];
+  # Discord ships brotli-compressed tar "distros" with the host app split from
+  # per-module native libraries. discord_dispatch is still linked against
+  # openssl 1.1 on Linux, but that dependency is unused at runtime, so we ignore
+  # it below instead of forcing users to permit an insecure package.
+  nativeBuildInputs = (oldAttrs.nativeBuildInputs or [ ]) ++ [ brotli ];
   buildInputs =
-    (oldAttrs.buildInputs or [ ])
-    ++ lib.optionals (isDistro && stdenvNoCC.isLinux) [
-      openssl_1_1
-      libpulseaudio
+    withoutOpenSSL11 (oldAttrs.buildInputs or [ ])
+    ++ lib.optionals stdenvNoCC.isLinux [ libpulseaudio ];
+
+  autoPatchelfIgnoreMissingDeps = (oldAttrs.autoPatchelfIgnoreMissingDeps or [ ]) ++ lib.optionals
+    stdenvNoCC.isLinux
+    [
+      "libssl.so.1.1"
+      "libcrypto.so.1.1"
     ];
 
-  # Distro layout has no top-level dir; brotli-decompress + tar-extract into cwd.
-  # macOS dmgs now ship with sibling entries (.background, Applications symlink)
-  # alongside Discord.app, which trips stdenv's "multiple directories" check, so
-  # we extract manually and pin sourceRoot to Discord.app's parent.
-  unpackPhase =
-    if isDistro then
-      ''
-        runHook preUnpack
-        brotli -d < $src | tar xf - --strip-components=1
-        ${lib.concatStringsSep "\n" (
-          lib.mapAttrsToList (name: msrc: ''
-            mkdir -p modules/${name}
-            brotli -d < ${msrc} | tar xf - --strip-components=1 -C modules/${name}
-          '') stagedModuleSrcs
-        )}
-        runHook postUnpack
-      ''
-    else if stdenvNoCC.isDarwin then
-      ''
-        runHook preUnpack
-        undmg $src
-        runHook postUnpack
-      ''
-    else
-      "";
+  unpackPhase = ''
+    runHook preUnpack
+    brotli -d < $src | tar xf - --strip-components=1
+    ${lib.optionalString stdenvNoCC.isDarwin ''
+      find . -type l -exec chmod -h u+rwx {} +
+    ''}
+    ${lib.concatStringsSep "\n" (
+      lib.mapAttrsToList (name: msrc: ''
+        mkdir -p modules/${name}
+        brotli -d < ${msrc} | tar xf - --strip-components=1 -C modules/${name}
+        ${lib.optionalString stdenvNoCC.isDarwin ''
+          find modules/${name} -type l -exec chmod -h u+rwx {} +
+        ''}
+      '') stagedModuleSrcs
+    )}
+    runHook postUnpack
+  '';
 
-  sourceRoot = lib.optionalString (isDistro || stdenvNoCC.isDarwin) ".";
+  sourceRoot = ".";
+
+  installPhase =
+    if stdenvNoCC.isDarwin then
+      builtins.replaceStrings
+        [
+          ''cp -r "${binaryName}.app" $out/Applications''
+          ''cp -R "${binaryName}.app" $out/Applications''
+        ]
+        [
+          ''tar cf - "${binaryName}.app" | tar xf - -C $out/Applications''
+          ''tar cf - "${binaryName}.app" | tar xf - -C $out/Applications''
+        ]
+        oldAttrs.installPhase
+    else
+      oldAttrs.installPhase;
 
   postInstall =
     (oldAttrs.postInstall or "")
