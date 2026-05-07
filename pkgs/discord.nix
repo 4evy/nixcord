@@ -63,6 +63,8 @@ let
     else
       moduleSrcs;
 
+  stagedModuleVersions = lib.filterAttrs (name: _: builtins.hasAttr name stagedModuleSrcs) moduleVersions;
+
   # Krisp helper scripts from upstream nixpkgs PR #506089
   # (NixOS/nixpkgs@3fd9c5cd0268c221313e624f32ea0c328b0418f0)
   krispScriptsRev = "3fd9c5cd0268c221313e624f32ea0c328b0418f0";
@@ -179,12 +181,36 @@ let
       exec python3 ${./update-sources.py}
     '';
   };
+
+  # Discord's distro builds ship native modules separately from the host app.
+  # The JS module updater (and OpenASAR's replacement updater) only consider
+  # modules installed in the user config directory, so stage symlinks to the
+  # pinned store modules before launch. Without installed.json OpenASAR sees the
+  # current version as 0 and may try to download an "undefined" module update.
+  stageModules = writeShellApplication {
+    name = "discord-stage-modules";
+    text = ''
+      store_modules="$1"
+      modules_dir="''${XDG_CONFIG_HOME:-$HOME/.config}/${lib.toLower binaryName}/${version}/modules"
+
+      if [ ! -f "$modules_dir/installed.json" ]; then
+        mkdir -p "$modules_dir"
+        for module in ${lib.concatStringsSep " " (lib.attrNames stagedModuleSrcs)}; do
+          ln -sfn "$store_modules/$module" "$modules_dir/$module"
+        done
+        cat > "$modules_dir/installed.json" <<'EOF'
+${builtins.toJSON (lib.mapAttrs (_: moduleVersion: { installedVersion = moduleVersion; }) stagedModuleVersions)}
+EOF
+      fi
+    '';
+  };
 in
 basePackage.overrideAttrs (oldAttrs: {
   inherit version src;
   passthru = (oldAttrs.passthru or { }) // {
     inherit
       updateScript
+      stageModules
       source
       moduleSrcs
       moduleVersions
@@ -265,6 +291,13 @@ basePackage.overrideAttrs (oldAttrs: {
 
   postFixup =
     (oldAttrs.postFixup or "")
+    # Stage the pinned distro modules where Discord/OpenASAR's JS module
+    # updater expects them before the client starts. The Linux distro package
+    # installs these modules under $out/opt/$binaryName/modules.
+    + lib.optionalString stdenvNoCC.isLinux ''
+      wrapProgramShell $out/opt/${binaryName}/${binaryName} \
+        --run "${lib.getExe stageModules} $out/opt/${binaryName}/modules"
+    ''
     # Deploy the patched Krisp module at launch time via an extra --run hook.
     + (
       if withKrisp && deployKrisp != null then
