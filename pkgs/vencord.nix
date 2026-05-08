@@ -18,9 +18,9 @@ let
   stableHash = "sha256-sx3CGdOxkm4O0eM5s3K6N+FClNG6f6Jup1r86w0SaT8=";
   stablePnpmDeps = "sha256-GiUV2x8i7ewzn66v5wBUq67oNvrxZzOsh5TuQUtpJNQ=";
 
-  unstableVersion = "1.14.12-unstable-2026-05-05";
-  unstableRev = "2fbe267499205d0854a1d0b7079f39db1d5dbc40";
-  unstableHash = "sha256-sx3CGdOxkm4O0eM5s3K6N+FClNG6f6Jup1r86w0SaT8=";
+  unstableVersion = "1.14.13-unstable-2026-05-08";
+  unstableRev = "909df8b8c22e377aacbab6587db10e952bf1a461";
+  unstableHash = "sha256-Xqk/akTa/NcHjSm6h77y6Fkvq7ayBcR0w0HG0Hwfkf8=";
   unstablePnpmDeps = "sha256-GiUV2x8i7ewzn66v5wBUq67oNvrxZzOsh5TuQUtpJNQ=";
 
   version = if unstable then unstableVersion else stableVersion;
