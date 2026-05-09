@@ -262,8 +262,8 @@
     "description": "Create custom reasons to use in the Discord ban modal, and/or show a text input by default instead of the options. (Equicord-only)",
     "settings": {
       "reasons": {
-        "type": "types.listOf types.str",
-        "default": [],
+        "type": "types.attrs",
+        "default": {},
         "description": "Your custom reasons"
       },
       "isTextInputDefault": {
@@ -329,6 +329,11 @@
         "type": "types.bool",
         "default": false,
         "description": "Force a folder to open when switching to a server of that folder"
+      },
+      "enableNestedFolders": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Allow nesting folders inside other folders by dragging."
       },
       "keepIcons": {
         "type": "types.bool",
@@ -750,7 +755,7 @@
     "settings": {}
   },
   "cleanChannelName": {
-    "description": "remove all emoji and decor shit from channel names (Equicord-only)",
+    "description": "Remove emoji and decoration from channel names. Reverts to the original while you're editing the channel. (Equicord-only)",
     "settings": {}
   },
   "cleanerChannelGroups": {
@@ -833,6 +838,11 @@
         "default": true,
         "description": "Enable voice-only clips (audio without video) (restart required)"
       },
+      "enableSpeakingIndicators": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Enable speaking indicators (restart required)"
+      },
       "enableAdvancedSignals": {
         "type": "types.bool",
         "default": true,
@@ -886,6 +896,11 @@
         "type": "types.bool",
         "default": false,
         "description": "Persist the title bar as collapsed."
+      },
+      "headerBarCollapsed": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Persist the header bar as collapsed."
       },
       "userAreaCollapsed": {
         "type": "types.bool",
@@ -1001,6 +1016,11 @@
   "declutter": {
     "description": "Cleans up Discord by removing non-essential UI elements like profile effects, shop tabs, boosts, and more. (Equicord-only)",
     "settings": {
+      "removeAvatarDecoration": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Remove avatar decorations. (restart required)"
+      },
       "removeNameplate": {
         "type": "types.bool",
         "default": true,
@@ -1434,6 +1454,8 @@
           "buzzheavier",
           "tempsh",
           "filebin",
+          "pixelvault",
+          "pixeldrain",
           "sharex"
         ],
         "default": "zipline",
@@ -1545,20 +1567,35 @@
         "default": false,
         "description": "Wrap inserted URL in angle brackets"
       },
-      "interceptDiscordUpload": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Intercept Discord uploads and use FileUpload instead."
-      },
-      "interceptDiscordUploadOnlyOverLimit": {
+      "bypassDiscordUpload": {
         "type": "types.bool",
         "default": true,
-        "description": "Only intercept uploads that exceed Discord file size limit."
+        "description": "Bypass Discord uploads and use FileUpload instead."
+      },
+      "bypassDiscordUploadOnlyOverLimit": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Only use FileUpload if the file(s) exceed the file size limit."
       },
       "gofileToken": {
         "type": "types.str",
         "default": "",
         "description": "Optional GoFile API token"
+      },
+      "fallbackOrder": {
+        "type": "types.nullOr types.str",
+        "default": null,
+        "description": "Fallback uploader order"
+      },
+      "pixelVaultKey": {
+        "type": "types.str",
+        "default": "",
+        "description": "PixelVault upload key"
+      },
+      "pixelDrainKey": {
+        "type": "types.str",
+        "default": "",
+        "description": "Optional PixelDrain API key"
       },
       "uploadTimeoutMs": {
         "type": "types.int",
@@ -1603,6 +1640,11 @@
         "type": "types.bool",
         "default": true,
         "description": "Auto copy upload URL"
+      },
+      "autoUploadPastedFiles": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Automatically upload files from clipboard to image host when pasting in chat input."
       }
     }
   },
@@ -3374,264 +3416,8 @@
     }
   },
   "questify": {
-    "description": "Enhance your Quest experience with a suite of features, or disable them entirely if they're not your thing. (Equicord-only)",
-    "settings": {
-      "disableQuestsEverything": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Disable all Quest features."
-      },
-      "disableQuestsFetchingQuests": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Disable fetching Quests from Discord."
-      },
-      "disableQuestsDiscoveryTab": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Disable Quest tab in the Discovery page."
-      },
-      "disableQuestsDirectMessagesTab": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Disable Quest tab in Direct Messages."
-      },
-      "disableQuestsPageSponsoredBanner": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Disable the sponsored banner on the Quest page."
-      },
-      "disableQuestsPopupAboveAccountPanel": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Disable the Quest popup above your account panel."
-      },
-      "disableQuestsBadgeOnUserProfiles": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Disable the Quest badge on user profiles."
-      },
-      "disableQuestsGiftInventoryRelocationNotice": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Disable the gift inventory Quest relocation notice."
-      },
-      "disableFriendsListActiveNowPromotion": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Disable the promotion of Quests for games played by friends."
-      },
-      "disableMembersListActivelyPlayingIcon": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Disable the actively playing icon in members list items."
-      },
-      "makeMobileQuestsDesktopCompatible": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Make mobile-only Quests compatible with desktop."
-      },
-      "completeVideoQuestsQuicker": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Use Discord's progress leeway and elapsed enrollment time for Video Quest auto-completion."
-      },
-      "completeVideoQuestsInBackground": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Complete Video Quests in the background after the video duration has passed."
-      },
-      "completeGameQuestsInBackground": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Complete Game Quests in the background after the game duration has passed."
-      },
-      "completeAchievementQuestsInBackground": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Complete Achievement in Activity Quests in the background."
-      },
-      "notifyOnQuestComplete": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Show a notification when a Quest is auto-completed."
-      },
-      "questButtonDisplay": {
-        "type": "types.str",
-        "default": "always",
-        "description": "Which display type to use for the Quest button in the server list."
-      },
-      "questRewardIncludeRewardCode": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Include Quests with Reward Codes when displaying Quest counts."
-      },
-      "questRewardIncludeNitroCode": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Include Quests with Nitro Codes when displaying Quest counts."
-      },
-      "questRewardIncludeInGame": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Include Quests with In-Game rewards when displaying Quest counts."
-      },
-      "questRewardIncludeCollectibles": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Include Quests with Collectibles when displaying Quest counts."
-      },
-      "questRewardIncludeOrbs": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Include Quests with Orbs when displaying Quest counts."
-      },
-      "questButtonUnclaimed": {
-        "type": "types.str",
-        "default": "both",
-        "description": "Which display type to use for the unclaimed indicator on the Quest button in the server list."
-      },
-      "questButtonBadgeColor": {
-        "type": "types.int",
-        "default": 2842239,
-        "description": "The color of the Quest button badge in the server list."
-      },
-      "questButtonLeftClickAction": {
-        "type": "types.str",
-        "default": "open-quests",
-        "description": "The action to perform when left-clicking the Quest button in the server list."
-      },
-      "questButtonMiddleClickAction": {
-        "type": "types.str",
-        "default": "plugin-settings",
-        "description": "The action to perform when middle-clicking the Quest button in the server list."
-      },
-      "questButtonRightClickAction": {
-        "type": "types.str",
-        "default": "context-menu",
-        "description": "The action to perform when right-clicking the Quest button in the server list."
-      },
-      "fetchingQuestsInterval": {
-        "type": "types.int",
-        "default": 2700,
-        "description": "The interval in seconds to fetch Quests from Discord."
-      },
-      "fetchingQuestsAlert": {
-        "type": "types.str",
-        "default": "discodo",
-        "description": "The sound to play when new Quests are detected."
-      },
-      "fetchingQuestsAlertVolume": {
-        "type": "types.int",
-        "default": 100,
-        "description": "The volume for the new Quest alert sound."
-      },
-      "restyleQuestsUnclaimed": {
-        "type": "types.int",
-        "default": 2842239,
-        "description": "The color of unclaimed Quest tiles in the Quests page."
-      },
-      "restyleQuestsClaimed": {
-        "type": "types.int",
-        "default": 6105983,
-        "description": "The color of claimed Quest tiles in the Quests page."
-      },
-      "restyleQuestsIgnored": {
-        "type": "types.int",
-        "default": 8334124,
-        "description": "The color of ignored Quest tiles in the Quests page."
-      },
-      "restyleQuestsExpired": {
-        "type": "types.int",
-        "default": 2368553,
-        "description": "The color of expired Quest tiles in the Quests page."
-      },
-      "restyleQuestsGradient": {
-        "type": "types.str",
-        "default": "intense",
-        "description": "Style of the gradient used in the Quest tiles."
-      },
-      "restyleQuestsPreload": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Attempt to preload the assets for the Quest tiles."
-      },
-      "reorderQuests": {
-        "type": "types.str",
-        "default": "UNCLAIMED, CLAIMED, IGNORED, EXPIRED",
-        "description": "Sort Quests by their status. Leave empty for default sorting. Comma-separated list must contain all of: UNCLAIMED, CLAIMED, IGNORED, EXPIRED."
-      },
-      "unclaimedSubsort": {
-        "type": "types.str",
-        "default": "Expiring ASC",
-        "description": "Subsort method for unclaimed Quests."
-      },
-      "claimedSubsort": {
-        "type": "types.str",
-        "default": "Claimed DESC",
-        "description": "Subsort method for claimed Quests."
-      },
-      "ignoredSubsort": {
-        "type": "types.str",
-        "default": "Recent DESC",
-        "description": "Subsort method for ignored Quests."
-      },
-      "expiredSubsort": {
-        "type": "types.str",
-        "default": "Expiring DESC",
-        "description": "Subsort method for expired Quests."
-      },
-      "unclaimedUnignoredQuests": {
-        "type": "types.int",
-        "default": 0,
-        "description": "Tracks the number of unclaimed and unignored Quests."
-      },
-      "onQuestsPage": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Whether the user is currently on the Quests page."
-      },
-      "triggerQuestsRerender": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Trigger a rerender of the Quests page by toggling this setting."
-      },
-      "ignoredQuestProfile": {
-        "type": "types.str",
-        "default": "private",
-        "description": "The profile used for ignored Quests."
-      },
-      "rememberQuestPageSort": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Remember the last used sort on the Quests page."
-      },
-      "rememberQuestPageFilters": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Remember the last used filters on the Quests page."
-      },
-      "lastQuestPageSort": {
-        "type": "types.str",
-        "default": "questify",
-        "description": "Remember the last used sort on the Quests page."
-      },
-      "lastQuestPageFilters": {
-        "type": "types.attrs",
-        "default": {},
-        "description": "Remember the last used filters on the Quests page."
-      },
-      "ignoredQuestIDs": {
-        "type": "types.attrs",
-        "default": {},
-        "description": "An array of Quest IDs that are ignored."
-      },
-      "resumeQuestIDs": {
-        "type": "types.attrs",
-        "default": {},
-        "description": "An array of Quest IDs that are being auto-completed in the background."
-      }
-    }
+    "description": "Enhance specific Quest features, disable annoyances, or completely remove Quests. (Equicord-only)",
+    "settings": {}
   },
   "quickThemeSwitcher": {
     "description": "Quickly switch between themes using keyboard shortcuts. (Equicord-only)",
@@ -3900,7 +3686,7 @@
     "settings": {}
   },
   "replyPingControl": {
-    "description": "Control whether to always or never get pinged on message replies, with a whitelist feature (Equicord-only)",
+    "description": "Control whether to always or never get pinged on message replies, with whitelist and blacklist features (Equicord-only)",
     "settings": {
       "alwaysPingOnReply": {
         "type": "types.bool",
@@ -3911,6 +3697,11 @@
         "type": "types.str",
         "default": "",
         "description": "Comma-separated list of User IDs to always receive reply pings from"
+      },
+      "replyPingBlacklist": {
+        "type": "types.str",
+        "default": "",
+        "description": "Comma-separated list of User IDs to never receive reply pings from"
       }
     }
   },
@@ -4542,6 +4333,11 @@
         "default": false,
         "description": "Only display custom names when in DMs, and not in servers."
       },
+      "alwaysShowEffects": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Always show effects as if you were hovering."
+      },
       "includedNames": {
         "type": "types.str",
         "default": "{custom, friend, nick} [{display}] (@{user})",
@@ -4576,11 +4372,6 @@
         "type": "types.bool",
         "default": false,
         "description": "Trigger a name rerender by toggling this setting."
-      },
-      "alwaysHaveGradientsActive": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Enables gradients always on in dms and such instead of just on hover (restart required)"
       }
     }
   },
@@ -4590,10 +4381,6 @@
   },
   "showSongName": {
     "description": "Shows song name instead of artist for Spotify activity (Equicord-only)",
-    "settings": {}
-  },
-  "sidebarChat": {
-    "description": "Open a channel or DM as a sidebar or a popout. (Equicord-only)",
     "settings": {}
   },
   "signature": {
@@ -4797,6 +4584,11 @@
         "type": "types.str",
         "default": "US",
         "description": "Country used for lookup (Two letter country code)"
+      },
+      "includeMetadata": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Include the track title and artist name as a header."
       }
     }
   },
@@ -5117,7 +4909,7 @@
     }
   },
   "toastNotifications": {
-    "description": "Show a toast notification whenever you receive a direct message. (Equicord-only)",
+    "description": "Show a pop-up toast notification, configurable for DMs, group, friends, or guild channels. (Equicord-only)",
     "settings": {
       "position": {
         "type": "types.enum",
@@ -5128,83 +4920,65 @@
           "bottom-right"
         ],
         "default": "bottom-left",
-        "description": "The position of the toast notification"
+        "description": "The position of the toast notification."
       },
       "timeout": {
         "type": "types.float",
         "default": {
           "__nixRaw": "5.0"
         },
-        "description": "Time in seconds notifications will be shown for"
+        "description": "Time in seconds notifications will be shown for."
       },
       "opacity": {
         "type": "types.float",
         "default": {
           "__nixRaw": "100.0"
         },
-        "description": "Opacity of the notification"
+        "description": "The visible opacity of the notification."
       },
       "maxNotifications": {
         "type": "types.float",
         "default": {
           "__nixRaw": "3.0"
         },
-        "description": "Maximum number of notifications displayed at once"
-      },
-      "determineServerNotifications": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Automatically determine what server notifications to show based on your channel/guild settings"
+        "description": "Maximum number of notifications displayed at once."
       },
       "disableInStreamerMode": {
         "type": "types.bool",
         "default": true,
-        "description": "Disable notifications while in streamer mode"
+        "description": "Do not show notifications when streamer mode is enabled."
       },
-      "renderImages": {
+      "respectDoNotDisturb": {
         "type": "types.bool",
-        "default": true,
-        "description": "Render images in notifications"
+        "default": false,
+        "description": "Do not show notifications when your status is Do Not Disturb."
       },
       "directMessages": {
         "type": "types.bool",
         "default": true,
-        "description": "Show notifications for direct messages"
+        "description": "Show notifications for direct messages."
       },
       "groupMessages": {
         "type": "types.bool",
         "default": true,
-        "description": "Show notifications for group messages"
+        "description": "Show notifications for group messages."
       },
       "friendServerNotifications": {
         "type": "types.bool",
         "default": true,
-        "description": "Show notifications when friends send messages in servers they share with you"
-      },
-      "friendActivity": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Show notifications for adding someone or receiving a friend request"
-      },
-      "streamingTreatment": {
-        "type": "types.enum",
-        "enumValues": [
-          0,
-          1,
-          2
-        ],
-        "default": 0,
-        "description": "How to treat notifications while sharing your screen\n\nValues: 0 = Normal - Show the notification as normal, 1 = No Content - Hide the notification body, 2 = Ignore - Don't show the notification at all"
-      },
-      "notifyFor": {
-        "type": "types.str",
-        "default": "",
-        "description": "Create a list of channel ids to receive notifications from (separate with commas)"
+        "description": "Show notifications when friends send messages in servers they share with you."
       },
       "ignoreUsers": {
         "type": "types.str",
         "default": "",
-        "description": "Create a list of user ids to ignore all their notifications from (separate with commas)"
+        "description": "A list of user IDs (separate by commas) to ignore displaying notifications for.",
+        "example": "000000000000000000,111111111111111111,222222222222222222"
+      },
+      "notifyFor": {
+        "type": "types.str",
+        "default": "",
+        "description": "A list of channel IDs (separate by commas) to always receive notifications from.",
+        "example": "000000000000000000,111111111111111111,222222222222222222"
       }
     }
   },
@@ -5932,6 +5706,10 @@
       }
     }
   },
+  "voiceStats": {
+    "description": "Shows how long you've spent in voice with each user in their profile (Equicord-only)",
+    "settings": {}
+  },
   "waitForSlot": {
     "description": "Automatically join a full voice channel when a slot opens. (Equicord-only)",
     "settings": {
@@ -5963,17 +5741,17 @@
       "defaultEmojis": {
         "type": "types.bool",
         "default": true,
-        "description": "Hide default emojis"
+        "description": "Hide default Unicode emojis from the autocomplete unless whitelisted."
       },
       "serverEmojis": {
         "type": "types.bool",
         "default": true,
-        "description": "Hide server emojis"
+        "description": "Hide custom server emojis from the autocomplete unless whitelisted."
       },
       "disableToasts": {
         "type": "types.bool",
         "default": false,
-        "description": "Disable toasts"
+        "description": "Don't show toasts when adding or removing emojis."
       }
     }
   },
@@ -6018,5 +5796,9 @@
         "description": "Strings not to capitilise (seperate with a comma)"
       }
     }
+  },
+  "zipPreview": {
+    "description": "Previews ZIP contents inside file attachments. (Equicord-only)",
+    "settings": {}
   }
 }

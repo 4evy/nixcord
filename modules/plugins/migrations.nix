@@ -42,6 +42,34 @@ in
       use = x: x;
     })
 
+    # Setting renames: hideChatButtons
+    (lib.modules.doRename {
+      from = base ++ [
+        "hideChatButtons"
+        "Color"
+      ];
+      to = base ++ [
+        "hideChatButtons"
+        "color"
+      ];
+      visible = false;
+      warn = true;
+      use = x: x;
+    })
+    (lib.modules.doRename {
+      from = base ++ [
+        "hideChatButtons"
+        "Open"
+      ];
+      to = base ++ [
+        "hideChatButtons"
+        "open"
+      ];
+      visible = false;
+      warn = true;
+      use = x: x;
+    })
+
     # Setting renames: platformIndicators
     (lib.modules.doRename {
       from = base ++ [

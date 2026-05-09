@@ -8,6 +8,10 @@
     "globalBadges": {
       "showRa1ncord": "showRaincord"
     },
+    "hideChatButtons": {
+      "Color": "color",
+      "Open": "open"
+    },
     "noBlockedMessages": {
       "applyToIgnoredUsers": "alsoHideIgnoredUsers",
       "ignoreMessages": "disableNotifications"

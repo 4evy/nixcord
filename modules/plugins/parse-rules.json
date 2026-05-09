@@ -3,10 +3,6 @@
     "oneko"
   ],
   "settingRenames": {
-    "hideChatButtons": {
-      "color": "Color",
-      "open": "Open"
-    },
     "messageLoggerEnhanced": {
       "showLogsButton": "ShowLogsButton",
       "showWhereMessageIsFrom": "ShowWhereMessageIsFrom"

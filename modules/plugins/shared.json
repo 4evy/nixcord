@@ -129,21 +129,6 @@
     "description": "Change GIF alt text from simply being 'GIF' to containing the gif tags / filename (Shared between Vencord and Equicord)",
     "settings": {}
   },
-  "betterNotesBox": {
-    "description": "Hide notes or disable spellcheck (Configure in settings!!) (Shared between Vencord and Equicord)",
-    "settings": {
-      "hide": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Hide notes (restart required)"
-      },
-      "noSpellCheck": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Disable spellcheck in notes"
-      }
-    }
-  },
   "betterRoleContext": {
     "description": "Adds options to copy role color / edit role / view role icon when right clicking roles in the user profile (Shared between Vencord and Equicord)",
     "settings": {
@@ -781,7 +766,7 @@
       "statusName": {
         "type": "types.str",
         "default": "some music",
-        "description": "Custom status text"
+        "description": "Custom status text. You can use the following variables: {artist} | {album} | {title}"
       },
       "statusDisplayType": {
         "type": "types.enum",
@@ -825,10 +810,10 @@
         "default": true,
         "description": "Show the Last.fm logo by the album cover"
       },
-      "alwaysHideArt": {
+      "showAlbumCover": {
         "type": "types.bool",
-        "default": false,
-        "description": "Disable downloading album art"
+        "default": true,
+        "description": "Show album cover. Disabling this will display a placeholder. Useful if your Music has inappropriate art"
       }
     }
   },
@@ -965,6 +950,10 @@
   },
   "noMaskedUrlPaste": {
     "description": "Pasting a link while having text selected will not paste as masked URL (Shared between Vencord and Equicord)",
+    "settings": {}
+  },
+  "noMiddleClickPaste": {
+    "description": "Disable Linux middle-click paste - Linux only (Shared between Vencord and Equicord)",
     "settings": {}
   },
   "noMosaic": {
@@ -1552,52 +1541,57 @@
     "settings": {}
   },
   "translate": {
-    "description": "Translate messages with Google Translate or DeepL (Shared between Vencord and Equicord)",
+    "description": "Translate messages with Google Translate, DeepL or Kagi. (Shared between Vencord and Equicord)",
     "settings": {
       "receivedInput": {
         "type": "types.str",
         "default": "auto",
-        "description": "Language that received messages should be translated from"
+        "description": "Language incoming messages are translated from"
       },
       "receivedOutput": {
         "type": "types.str",
         "default": "en",
-        "description": "Language that received messages should be translated to"
+        "description": "Language incoming messages are translated to"
       },
       "sentInput": {
         "type": "types.str",
         "default": "auto",
-        "description": "Language that your own messages should be translated from"
+        "description": "Language your messages are translated from"
       },
       "sentOutput": {
         "type": "types.str",
         "default": "en",
-        "description": "Language that your own messages should be translated to"
+        "description": "Language your messages are translated to"
       },
       "service": {
         "type": "types.enum",
         "enumValues": [
           "google",
           "deepl",
-          "deepl-pro"
+          "deepl-pro",
+          "kagi"
         ],
         "default": "google"
       },
       "deeplApiKey": {
         "type": "types.str",
         "default": "",
-        "description": "DeepL API key",
-        "example": "Get your API key from https://deepl.com/your-account"
+        "description": "Your DeepL API key (from deepl.com/your-account)"
+      },
+      "kagiSession": {
+        "type": "types.str",
+        "default": "",
+        "description": "Your Kagi session token (from kagi.com/settings?p=user_details)"
       },
       "autoTranslate": {
         "type": "types.bool",
         "default": false,
-        "description": "Automatically translate your messages before sending. You can also shift/right click the translate button to toggle this"
+        "description": "Automatically translate your messages before sending. You can also Shift+click or right-click the translate button to toggle this"
       },
       "showAutoTranslateTooltip": {
         "type": "types.bool",
         "default": true,
-        "description": "Show a tooltip on the ChatBar button whenever a message is automatically translated"
+        "description": "Show a tooltip on the chat bar button when a message is auto-translated"
       }
     }
   },
