@@ -9,21 +9,21 @@
     "test:watch": "vitest",
     "typecheck": "tsc --build",
     "clean": "rm -rf packages/*/dist",
-    "format": "prettier --write \"packages/*/src/**/*.{ts,tsx,json}\" \"packages/*/tests/**/*.{ts,tsx,json}\"",
-    "format:check": "prettier --check \"packages/*/src/**/*.{ts,tsx,json}\" \"packages/*/tests/**/*.{ts,tsx,json}\"",
+    "format": "biome format --write packages/*/src packages/*/tests",
+    "format:check": "biome format packages/*/src packages/*/tests",
     "lint": "fallow dead-code && fallow dupes",
     "lint:health": "fallow health",
     "check": "bun run typecheck && bun run lint && bun run format:check"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.4.14",
     "@types/fs-extra": "^11.0.4",
-    "@types/node": "^25.5.2",
-    "@vitest/coverage-v8": "~4.1.2",
-    "@vitest/ui": "~4.1.2",
-    "fallow": "^2.13.0",
-    "vitest": "~4.1.2",
-    "prettier": "^3.8.1",
-    "typescript": "^6.0.2",
-    "vite": "~8.0.3"
+    "@types/node": "^25.6.2",
+    "@vitest/coverage-v8": "~4.1.5",
+    "@vitest/ui": "~4.1.5",
+    "fallow": "^2.69.0",
+    "typescript": "^6.0.3",
+    "vite": "~8.0.11",
+    "vitest": "~4.1.5"
   }
 }

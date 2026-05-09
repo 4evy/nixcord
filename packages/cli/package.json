@@ -14,11 +14,10 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "dependencies": {
-    "@nixcord/git-analyzer": "^1.0.0",
     "@nixcord/nix-generator": "^1.0.0",
     "@nixcord/parser": "^1.0.0",
     "@nixcord/shared": "^1.0.0",
-    "commander": "^14.0.3",
+    "@stricli/core": "^1.2.6",
     "fs-extra": "^11.3.4",
     "ora": "^9.3.0",
     "pathe": "^2.0.3",

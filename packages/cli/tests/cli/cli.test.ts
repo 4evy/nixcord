@@ -26,42 +26,46 @@ vi.mock('@nixcord/shared', async (orig) => ({
 }));
 
 describe('buildCli', () => {
-  test('builds a Command instance with correct name and description', () => {
-    const cli = buildCli();
-    expect(cli.name()).toBe('generate-plugin-options');
-    expect(cli.description()).toBe(
+  const cli = buildCli();
+  test('builds a Stricli application with correct name and description', () => {
+    expect(cli.config.name).toBe('generate-plugin-options');
+    expect(cli.root.brief).toBe(
       'Extract Vencord/Equicord plugin settings and generate Nix configuration options'
     );
   });
 
-  test('has correct version', () => {
-    const cli = buildCli();
-    expect(cli.version()).toBe(CLI_CONFIG.version);
+  test('has a version flag', () => {
+    expect(cli.root.usesFlag('version')).toBe(true);
   });
 
   test('has all expected options', () => {
-    const cli = buildCli();
-    const options = cli.options.map((opt) => opt.flags);
+    const flags = Object.keys(cli.root.parameters.flags ?? {});
 
-    expect(options).toContain('--vencord <path>');
-    expect(options).toContain('-e, --equicord <path>');
-    expect(options).toContain('-o, --output <path>');
-    expect(options).toContain('--vencord-plugins <path>');
-    expect(options).toContain('--equicord-plugins <path>');
-    expect(options).toContain('-v, --verbose');
+    expect(flags).toContain('vencord');
+    expect(flags).toContain('equicord');
+    expect(flags).toContain('output');
+    expect(flags).toContain('vencordPlugins');
+    expect(flags).toContain('equicordPlugins');
+    expect(flags).toContain('verbose');
   });
 
   test('has positional argument for vencord path', () => {
-    const cli = buildCli();
-    const args = cli.registeredArguments;
-    expect(args.length).toBeGreaterThan(0);
-    expect(args[0]?.name()).toBe('vencord-path');
+    const positional = cli.root.parameters.positional;
+    expect(positional?.kind).toBe('tuple');
+    if (positional?.kind === 'tuple') {
+      expect(positional.parameters[0]?.placeholder).toBe('vencord-path');
+    }
   });
 });
 
 describe('CLI Argument Parsing', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    process.exitCode = undefined;
+  });
+
+  afterEach(() => {
+    process.exitCode = undefined;
   });
 
   test('accepts vencord path as positional argument', async () => {
@@ -74,7 +78,6 @@ describe('CLI Argument Parsing', () => {
 
     vi.mocked(runGeneratePluginOptions).mockResolvedValue(Ok(mockSummary));
 
-    const cli = buildCli();
     const tempDir = await fse.mkdtemp(join(__dirname, 'test-cli-'));
     const vencordDir = join(tempDir, 'vencord');
     await fse.ensureDir(vencordDir);
@@ -82,7 +85,7 @@ describe('CLI Argument Parsing', () => {
     await fse.ensureDir(join(vencordDir, 'src', 'plugins'));
 
     try {
-      await cli.parseAsync(['node', 'cli.js', vencordDir, '--output', join(tempDir, 'output.nix')]);
+      await runCli(['node', 'cli.js', vencordDir, '--output', join(tempDir, 'output.nix')]);
 
       expect(runGeneratePluginOptions).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -106,7 +109,6 @@ describe('CLI Argument Parsing', () => {
 
     vi.mocked(runGeneratePluginOptions).mockResolvedValue(Ok(mockSummary));
 
-    const cli = buildCli();
     const tempDir = await fse.mkdtemp(join(__dirname, 'test-cli-'));
     const vencordDir = join(tempDir, 'vencord');
     await fse.ensureDir(vencordDir);
@@ -114,7 +116,7 @@ describe('CLI Argument Parsing', () => {
     await fse.ensureDir(join(vencordDir, 'src', 'plugins'));
 
     try {
-      await cli.parseAsync([
+      await runCli([
         'node',
         'cli.js',
         '--vencord',
@@ -143,7 +145,6 @@ describe('CLI Argument Parsing', () => {
 
     vi.mocked(runGeneratePluginOptions).mockResolvedValue(Ok(mockSummary));
 
-    const cli = buildCli();
     const tempDir = await fse.mkdtemp(join(__dirname, 'test-cli-'));
     const vencordDir1 = join(tempDir, 'vencord1');
     const vencordDir2 = join(tempDir, 'vencord2');
@@ -155,7 +156,7 @@ describe('CLI Argument Parsing', () => {
     await fse.ensureDir(join(vencordDir2, 'src', 'plugins'));
 
     try {
-      await cli.parseAsync([
+      await runCli([
         'node',
         'cli.js',
         vencordDir1,
@@ -176,13 +177,12 @@ describe('CLI Argument Parsing', () => {
   });
 
   test('throws error when vencord path is missing', async () => {
-    const cli = buildCli();
     const tempDir = await fse.mkdtemp(join(__dirname, 'test-cli-'));
 
     try {
-      await expect(
-        cli.parseAsync(['node', 'cli.js', '--output', join(tempDir, 'output.nix')])
-      ).rejects.toThrow('Missing Vencord source path');
+      await runCli(['node', 'cli.js', '--output', join(tempDir, 'output.nix')]);
+      expect(process.exitCode).toBe(1);
+      expect(runGeneratePluginOptions).not.toHaveBeenCalled();
     } finally {
       await fse.remove(tempDir);
     }
@@ -198,7 +198,6 @@ describe('CLI Argument Parsing', () => {
 
     vi.mocked(runGeneratePluginOptions).mockResolvedValue(Ok(mockSummary));
 
-    const cli = buildCli();
     const tempDir = await fse.mkdtemp(join(__dirname, 'test-cli-'));
     const vencordDir = join(tempDir, 'vencord');
     const equicordDir = join(tempDir, 'equicord');
@@ -210,7 +209,7 @@ describe('CLI Argument Parsing', () => {
     await fse.ensureDir(join(equicordDir, 'src', 'plugins'));
 
     try {
-      await cli.parseAsync([
+      await runCli([
         'node',
         'cli.js',
         vencordDir,
@@ -241,7 +240,6 @@ describe('CLI Argument Parsing', () => {
 
     vi.mocked(runGeneratePluginOptions).mockResolvedValue(Ok(mockSummary));
 
-    const cli = buildCli();
     const tempDir = await fse.mkdtemp(join(__dirname, 'test-cli-'));
     const vencordDir = join(tempDir, 'vencord');
     await fse.ensureDir(vencordDir);
@@ -249,7 +247,7 @@ describe('CLI Argument Parsing', () => {
     await fse.ensureDir(join(vencordDir, 'src', 'plugins'));
 
     try {
-      await cli.parseAsync(['node', 'cli.js', vencordDir]);
+      await runCli(['node', 'cli.js', vencordDir]);
 
       expect(runGeneratePluginOptions).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -271,7 +269,6 @@ describe('CLI Argument Parsing', () => {
 
     vi.mocked(runGeneratePluginOptions).mockResolvedValue(Ok(mockSummary));
 
-    const cli = buildCli();
     const tempDir = await fse.mkdtemp(join(__dirname, 'test-cli-'));
     const vencordDir = join(tempDir, 'vencord');
     const customOutput = join(tempDir, 'custom-output.nix');
@@ -280,7 +277,7 @@ describe('CLI Argument Parsing', () => {
     await fse.ensureDir(join(vencordDir, 'src', 'plugins'));
 
     try {
-      await cli.parseAsync(['node', 'cli.js', vencordDir, '--output', customOutput]);
+      await runCli(['node', 'cli.js', vencordDir, '--output', customOutput]);
 
       expect(runGeneratePluginOptions).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -302,7 +299,6 @@ describe('CLI Argument Parsing', () => {
 
     vi.mocked(runGeneratePluginOptions).mockResolvedValue(Ok(mockSummary));
 
-    const cli = buildCli();
     const tempDir = await fse.mkdtemp(join(__dirname, 'test-cli-'));
     const vencordDir = join(tempDir, 'vencord');
     await fse.ensureDir(vencordDir);
@@ -310,7 +306,7 @@ describe('CLI Argument Parsing', () => {
     await fse.ensureDir(join(vencordDir, 'src', 'plugins'));
 
     try {
-      await cli.parseAsync(['node', 'cli.js', vencordDir, '--output', join(tempDir, 'output.nix')]);
+      await runCli(['node', 'cli.js', vencordDir, '--output', join(tempDir, 'output.nix')]);
 
       expect(runGeneratePluginOptions).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -333,7 +329,6 @@ describe('CLI Argument Parsing', () => {
 
     vi.mocked(runGeneratePluginOptions).mockResolvedValue(Ok(mockSummary));
 
-    const cli = buildCli();
     const tempDir = await fse.mkdtemp(join(__dirname, 'test-cli-'));
     const vencordDir = join(tempDir, 'vencord');
     await fse.ensureDir(vencordDir);
@@ -341,7 +336,7 @@ describe('CLI Argument Parsing', () => {
     await fse.ensureDir(join(vencordDir, 'custom', 'plugins'));
 
     try {
-      await cli.parseAsync([
+      await runCli([
         'node',
         'cli.js',
         vencordDir,
@@ -371,7 +366,6 @@ describe('CLI Argument Parsing', () => {
 
     vi.mocked(runGeneratePluginOptions).mockResolvedValue(Ok(mockSummary));
 
-    const cli = buildCli();
     const tempDir = await fse.mkdtemp(join(__dirname, 'test-cli-'));
     const vencordDir = join(tempDir, 'vencord');
     await fse.ensureDir(vencordDir);
@@ -379,7 +373,7 @@ describe('CLI Argument Parsing', () => {
     await fse.ensureDir(join(vencordDir, 'src', 'plugins'));
 
     try {
-      await cli.parseAsync([
+      await runCli([
         'node',
         'cli.js',
         vencordDir,
@@ -409,7 +403,6 @@ describe('CLI Argument Parsing', () => {
 
     vi.mocked(runGeneratePluginOptions).mockResolvedValue(Ok(mockSummary));
 
-    const cli = buildCli();
     const tempDir = await fse.mkdtemp(join(__dirname, 'test-cli-'));
     const vencordDir = join(tempDir, 'vencord');
     await fse.ensureDir(vencordDir);
@@ -417,7 +410,7 @@ describe('CLI Argument Parsing', () => {
     await fse.ensureDir(join(vencordDir, 'src', 'plugins'));
 
     try {
-      await cli.parseAsync([
+      await runCli([
         'node',
         'cli.js',
         vencordDir,
@@ -451,7 +444,6 @@ describe('CLI Error Handling', () => {
     const mockError = new Error('Runner failed');
     vi.mocked(runGeneratePluginOptions).mockResolvedValue(Err(mockError));
 
-    const cli = buildCli();
     const tempDir = await fse.mkdtemp(join(__dirname, 'test-cli-'));
     const vencordDir = join(tempDir, 'vencord');
     await fse.ensureDir(vencordDir);
@@ -459,9 +451,8 @@ describe('CLI Error Handling', () => {
     await fse.ensureDir(join(vencordDir, 'src', 'plugins'));
 
     try {
-      await expect(
-        cli.parseAsync(['node', 'cli.js', vencordDir, '--output', join(tempDir, 'output.nix')])
-      ).rejects.toThrow(CliExecutionError);
+      await runCli(['node', 'cli.js', vencordDir, '--output', join(tempDir, 'output.nix')]);
+      expect(process.exitCode).toBe(1);
     } finally {
       await fse.remove(tempDir);
     }

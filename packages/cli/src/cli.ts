@@ -1,5 +1,11 @@
 import { resolve } from 'pathe';
-import { Command } from 'commander';
+import {
+  buildApplication,
+  buildCommand,
+  run,
+  type Application,
+  type CommandContext,
+} from '@stricli/core';
 import { z } from 'zod';
 import { fromZodError } from 'zod-validation-error';
 import { runGeneratePluginOptions } from './runner/index.js';
@@ -8,16 +14,22 @@ import { CLI_CONFIG } from '@nixcord/shared';
 import { createLogger } from '@nixcord/shared';
 
 const DEFAULT_OUTPUT = 'modules/plugins-generated.nix';
+const DESCRIPTION =
+  'Extract Vencord/Equicord plugin settings and generate Nix configuration options';
 
 const CliOptionsSchema = z.object({
   equicord: z.string().optional(),
   output: z.string().min(1, 'Output path cannot be empty'),
   verbose: z.boolean(),
   vencord: z.string().optional(),
+  version: z.boolean(),
   vencordPlugins: z.string().min(1, 'Vencord plugins path cannot be empty'),
   equicordPlugins: z.string().min(1, 'Equicord plugins path cannot be empty'),
   skipGitMigrations: z.boolean(),
 });
+
+type CliFlags = z.infer<typeof CliOptionsSchema>;
+type CliArgs = [vencordArg?: string];
 
 export class CliExecutionError extends Error {
   constructor(
@@ -29,45 +41,105 @@ export class CliExecutionError extends Error {
   }
 }
 
-export const buildCli = (): Command => {
-  const program = new Command();
+const stringParser = (input: string): string => input;
 
-  return program
-    .name('generate-plugin-options')
-    .description('Extract Vencord/Equicord plugin settings and generate Nix configuration options')
-    .version(CLI_CONFIG.version)
-    .argument('[vencord-path]', 'Path to Vencord source directory')
-    .option('--vencord <path>', 'Path to Vencord source directory (optional override)')
-    .option('-e, --equicord <path>', 'Path to Equicord source directory (optional)')
-    .option('-o, --output <path>', 'Output file path', DEFAULT_OUTPUT)
-    .option(
-      '--vencord-plugins <path>',
-      'Relative path to Vencord plugins directory',
-      CLI_CONFIG.directories.vencordPlugins
-    )
-    .option(
-      '--equicord-plugins <path>',
-      'Relative path to Equicord plugins directory',
-      CLI_CONFIG.directories.equicordPlugins
-    )
-    .option(
-      '--skip-git-migrations',
-      'Do not inspect git history for plugin rename/removal migrations',
-      false
-    )
-    .option('-v, --verbose', 'Enable verbose output', false)
-    .action(async (vencordArg: string | undefined, options: unknown) => {
+export const buildCli = (): Application<CommandContext> => {
+  const command = buildCommand<CliFlags, CliArgs>({
+    docs: {
+      brief: DESCRIPTION,
+      fullDescription: DESCRIPTION,
+    },
+    parameters: {
+      flags: {
+        vencord: {
+          kind: 'parsed',
+          parse: stringParser,
+          brief: 'Path to Vencord source directory (optional override)',
+          placeholder: 'path',
+          optional: true,
+        },
+        equicord: {
+          kind: 'parsed',
+          parse: stringParser,
+          brief: 'Path to Equicord source directory (optional)',
+          placeholder: 'path',
+          optional: true,
+        },
+        output: {
+          kind: 'parsed',
+          parse: stringParser,
+          brief: 'Output file path',
+          placeholder: 'path',
+          default: DEFAULT_OUTPUT,
+        },
+        vencordPlugins: {
+          kind: 'parsed',
+          parse: stringParser,
+          brief: 'Relative path to Vencord plugins directory',
+          placeholder: 'path',
+          default: CLI_CONFIG.directories.vencordPlugins,
+        },
+        equicordPlugins: {
+          kind: 'parsed',
+          parse: stringParser,
+          brief: 'Relative path to Equicord plugins directory',
+          placeholder: 'path',
+          default: CLI_CONFIG.directories.equicordPlugins,
+        },
+        skipGitMigrations: {
+          kind: 'boolean',
+          brief: 'Do not inspect git history for plugin rename/removal migrations',
+          default: false,
+          withNegated: false,
+        },
+        verbose: {
+          kind: 'boolean',
+          brief: 'Enable verbose output',
+          default: false,
+          withNegated: false,
+        },
+        version: {
+          kind: 'boolean',
+          brief: 'Print version information and exit',
+          default: false,
+          withNegated: false,
+        },
+      },
+      aliases: {
+        e: 'equicord',
+        o: 'output',
+        v: 'verbose',
+        V: 'version',
+      },
+      positional: {
+        kind: 'tuple',
+        parameters: [
+          {
+            parse: stringParser,
+            brief: 'Path to Vencord source directory',
+            placeholder: 'vencord-path',
+            optional: true,
+          },
+        ],
+      },
+    },
+    async func(flags, vencordArg) {
       // Run the options through Zod before we touch the filesystem; this mirrors how we catch
-      // typos like `--vencrod` in our release scripts before the Equicord/Vencord paths are read
-      const validationResult = CliOptionsSchema.safeParse(options);
+      // typos like `--vencrod` in our release scripts before the Equicord/Vencord paths are read.
+      const validationResult = CliOptionsSchema.safeParse(flags);
       if (!validationResult.success) {
         const zodError = fromZodError(validationResult.error);
-        throw new CliExecutionError(new Error(`Invalid CLI options: ${zodError.message}`), false);
+        return new CliExecutionError(new Error(`Invalid CLI options: ${zodError.message}`), false);
+      }
+
+      if (validationResult.data.version) {
+        this.process.stdout.write(`${CLI_CONFIG.version}\n`);
+        return;
       }
 
       const vencordPath = validationResult.data.vencord ?? vencordArg;
       if (!vencordPath) {
-        throw new CliExecutionError(
+        return new CliExecutionError(
           new Error('Missing Vencord source path. Provide --vencord or the positional argument.'),
           validationResult.data.verbose
         );
@@ -93,7 +165,7 @@ export const buildCli = (): Command => {
       const result = await runGeneratePluginOptions(params);
 
       if (!result.ok) {
-        throw new CliExecutionError(result.error, validationResult.data.verbose);
+        return new CliExecutionError(result.error, validationResult.data.verbose);
       }
 
       const summary = result.value;
@@ -104,12 +176,27 @@ export const buildCli = (): Command => {
           `  - ${CLI_CONFIG.filenames.equicord}: ${summary.equicordOnlyCount} plugins (Equicord-only)\n` +
           `  - ${CLI_CONFIG.filenames.parseRules}: parser rename rules`
       );
-    });
+    },
+  });
+
+  return buildApplication(command, {
+    name: 'generate-plugin-options',
+    scanner: {
+      caseStyle: 'allow-kebab-for-camel',
+    },
+    documentation: {
+      caseStyle: 'convert-camel-to-kebab',
+    },
+  });
 };
 
 export const runCli = async (argv = process.argv): Promise<void> => {
   const cli = buildCli();
-  await cli.parseAsync(argv);
+  await run(cli, argv.slice(2), { process });
+
+  if (typeof process.exitCode === 'number' && process.exitCode < 0) {
+    process.exitCode = 1;
+  }
 };
 
 export const handleCliError = (error: unknown): void => {

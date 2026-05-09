@@ -36,9 +36,8 @@ export const ExtractedPluginInfoSchema = z.object({
  * Plugin information extracted from definePlugin call.
  * Contains the plugin name and description if available.
  */
-export interface ExtractedPluginInfo extends ReadonlyDeep<
-  z.infer<typeof ExtractedPluginInfoSchema>
-> {}
+export interface ExtractedPluginInfo
+  extends ReadonlyDeep<z.infer<typeof ExtractedPluginInfoSchema>> {}
 
 /**
  * Error types for extraction failures.
