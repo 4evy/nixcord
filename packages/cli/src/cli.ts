@@ -16,6 +16,7 @@ const CliOptionsSchema = z.object({
   vencord: z.string().optional(),
   vencordPlugins: z.string().min(1, 'Vencord plugins path cannot be empty'),
   equicordPlugins: z.string().min(1, 'Equicord plugins path cannot be empty'),
+  skipGitMigrations: z.boolean(),
 });
 
 export class CliExecutionError extends Error {
@@ -49,6 +50,11 @@ export const buildCli = (): Command => {
       'Relative path to Equicord plugins directory',
       CLI_CONFIG.directories.equicordPlugins
     )
+    .option(
+      '--skip-git-migrations',
+      'Do not inspect git history for plugin rename/removal migrations',
+      false
+    )
     .option('-v, --verbose', 'Enable verbose output', false)
     .action(async (vencordArg: string | undefined, options: unknown) => {
       // Run the options through Zod before we touch the filesystem; this mirrors how we catch
@@ -77,6 +83,7 @@ export const buildCli = (): Command => {
         logger,
         vencordPluginsDir: validationResult.data.vencordPlugins,
         equicordPluginsDir: validationResult.data.equicordPlugins,
+        skipGitMigrations: validationResult.data.skipGitMigrations,
       };
 
       const params: GeneratePluginOptionsParams = validationResult.data.equicord

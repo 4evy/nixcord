@@ -44,6 +44,7 @@ const GeneratePluginOptionsParamsSchema = z.object({
   outputPath: z.string().min(1),
   verbose: z.boolean().optional(),
   logger: LoggerSchema,
+  skipGitMigrations: z.boolean().optional(),
 });
 
 export type GeneratePluginOptionsParams = Simplify<
@@ -245,16 +246,21 @@ export const runGeneratePluginOptions = async (
     try {
       const pluginsDir = getPluginsDir(parsedParams.outputPath);
 
-      // Run migration extraction on both repos
-      const vencordMigrations = await extractMigrations(resolvedVencordPath, [
-        parsedParams.vencordPluginsDir,
-      ]);
-      const equicordMigrations = resolvedEquicordPath
-        ? await extractMigrations(resolvedEquicordPath, [
-            parsedParams.vencordPluginsDir,
-            parsedParams.equicordPluginsDir,
-          ])
-        : { renames: [], deletions: [] };
+      // Run migration extraction on both repos when git history is available.
+      // Nix package builds intentionally pass --skip-git-migrations so source
+      // fetches do not need leaveDotGit=true. CI can run this against ordinary
+      // git clones and commit the resulting deprecated.json/migrations.nix.
+      const vencordMigrations = parsedParams.skipGitMigrations
+        ? { renames: [], deletions: [] }
+        : await extractMigrations(resolvedVencordPath, [parsedParams.vencordPluginsDir]);
+      const equicordMigrations = parsedParams.skipGitMigrations
+        ? { renames: [], deletions: [] }
+        : resolvedEquicordPath
+          ? await extractMigrations(resolvedEquicordPath, [
+              parsedParams.vencordPluginsDir,
+              parsedParams.equicordPluginsDir,
+            ])
+          : { renames: [], deletions: [] };
 
       // Combine migrations from both repos
       const combinedMigrations = {

@@ -7,6 +7,9 @@
   vencord,
   equicord,
   nix,
+  vencordSource ? vencord.src,
+  equicordSource ? equicord.src,
+  skipGitMigrations ? true,
 }:
 let
   nodeModulesHashDarwin = "sha256-JkZrtNQmy452ieDfDMHIWBCeLZS7Lrs6wh21v8H43bY=";
@@ -27,6 +30,7 @@ stdenvNoCC.mkDerivation (finalAttrs: {
       ../vitest.projects.ts
       ../vite.config.shared.ts
       ../modules/plugins/deprecated.nix
+      ../modules/plugins/deprecated.json
       ../packages
     ];
   };
@@ -108,13 +112,15 @@ stdenvNoCC.mkDerivation (finalAttrs: {
 
     mkdir -p "$out/plugins"
     cp modules/plugins/deprecated.nix "$out/plugins/deprecated.nix"
+    cp modules/plugins/deprecated.json "$out/plugins/deprecated.json"
 
     ${lib.getExe nodejs} packages/cli/dist/index.js \
-      --vencord "${vencord.src}" \
+      --vencord "${vencordSource}" \
       --vencord-plugins src/plugins \
-      --equicord "${equicord.srcWithGit or equicord.src}" \
+      --equicord "${equicordSource}" \
       --equicord-plugins src/equicordplugins \
       --output "$out/dummy.nix" \
+      ${lib.optionalString skipGitMigrations "--skip-git-migrations"} \
       --verbose
 
     runHook postInstall

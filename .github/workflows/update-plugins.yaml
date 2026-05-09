@@ -319,6 +319,7 @@ jobs:
       - name: Generate plugin options
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NIXCORD_GENERATE_WITH_GIT: "1"
         shell: bash
         run: |
           set -eo pipefail
@@ -326,16 +327,10 @@ jobs:
 
           echo "::group::Generating plugin options"
           if ! output=$(nix run .#generate 2>&1); then
-            expected_hash=$(echo "$output" | grep -oE "specified:\s+sha256-[A-Za-z0-9+/=]+" | head -1 | sed 's/specified:\s*//')
             new_hash=$(echo "$output" | grep -oE "got:\s+sha256-[A-Za-z0-9+/=]+" | head -1 | sed 's/got:\s*//')
             if [[ -n "$new_hash" ]]; then
-              if [[ -n "$expected_hash" ]] && grep -q "gitHash = \"$expected_hash\";" ./pkgs/equicord.nix; then
-                echo "::notice::Updating Equicord gitHash to $new_hash"
-                perl -pi -e "s|gitHash = \"\Q$expected_hash\E\";|gitHash = \"$new_hash\";|" ./pkgs/equicord.nix
-              else
-                echo "::notice::Updating nodeModulesHashLinux to $new_hash"
-                perl -pi -e "s|nodeModulesHashLinux = \".*\";|nodeModulesHashLinux = \"$new_hash\";|" "$NIX_FILE"
-              fi
+              echo "::notice::Updating nodeModulesHashLinux to $new_hash"
+              perl -pi -e "s|nodeModulesHashLinux = \".*\";|nodeModulesHashLinux = \"$new_hash\";|" "$NIX_FILE"
               nix run .#generate
             else
               echo "$output"

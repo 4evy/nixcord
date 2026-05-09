@@ -16,7 +16,6 @@
 let
   version = "v1.14.13.0";
   hash = "sha256-F+aT0XEgxi8lpNqYM9dCdImGg8NJ5h0i0XhGw37GNsM=";
-  gitHash = "sha256-bgP2AML0v75i3WjaWkKo5odPoI6iQqZkOPlYTh7uJOA=";
   pnpmDepsHashDarwin = "sha256-8za+KfTNZXROt9zasumUppzCo6/bz3Rrp976mAyaBa4=";
   pnpmDepsHashLinux = "sha256-uEQRrFyHPm90S0TH2T6PEffruaG5YGY33MSgcnFma1U=";
   pnpmDepsHash = if stdenvNoCC.isDarwin then pnpmDepsHashDarwin else pnpmDepsHashLinux;
@@ -26,12 +25,6 @@ let
     inherit owner repo;
     tag = version;
     inherit hash;
-  };
-  srcWithGit = fetchFromGitHub {
-    inherit owner repo;
-    tag = version;
-    hash = gitHash;
-    leaveDotGit = true;
   };
   updateScript = writeShellApplication {
     name = "equicord-update";
@@ -83,23 +76,16 @@ let
 
       prefetch_github() {
         local rev="$1"
-        local leave_dot_git="''${2:-}"
         local output
-        if [[ "$leave_dot_git" == "--leave-dot-git" ]]; then
-          output=$(nix-prefetch-github "${equicord.src.owner}" "${equicord.src.repo}" --rev "$rev" --leave-dot-git 2>/dev/null) || return 1
-        else
-          output=$(nix-prefetch-github "${equicord.src.owner}" "${equicord.src.repo}" --rev "$rev" 2>/dev/null) || return 1
-        fi
+        output=$(nix-prefetch-github "${equicord.src.owner}" "${equicord.src.repo}" --rev "$rev" 2>/dev/null) || return 1
         echo "$output" | jq -r .hash
       }
 
       update_version_and_hash() {
         local new_tag="$1"
         local new_hash="$2"
-        local new_git_hash="$3"
         update_value "version" "$new_tag"
         update_value "hash" "$new_hash"
-        update_value "gitHash" "$new_git_hash"
       }
 
       platform_hash_var() {
@@ -167,9 +153,8 @@ let
 
       echo "Updating to version: $new_tag"
       new_hash=$(prefetch_github "$new_tag") || { echo "Failed to prefetch GitHub" >&2; exit 1; }
-      new_git_hash=$(prefetch_github "$new_tag" --leave-dot-git) || { echo "Failed to prefetch GitHub (git)" >&2; exit 1; }
 
-      update_version_and_hash "$new_tag" "$new_hash" "$new_git_hash"
+      update_version_and_hash "$new_tag" "$new_hash"
 
       update_pnpm_deps
       echo "Update complete"
@@ -186,7 +171,6 @@ in
     hash = pnpmDepsHash;
   };
   passthru.updateScript = updateScript;
-  passthru.srcWithGit = srcWithGit;
   env = {
     EQUICORD_REMOTE = "${owner}/${repo}";
     EQUICORD_HASH = "${src.tag}";
