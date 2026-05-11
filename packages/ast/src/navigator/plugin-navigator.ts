@@ -15,6 +15,7 @@ import {
   DEFINE_PLUGIN_FUNCTION_NAME,
   DEFINE_PLUGIN_SETTINGS_FUNCTION_NAME,
   MIGRATE_PLUGIN_SETTING_FUNCTION_NAME,
+  MIGRATE_PLUGIN_SETTINGS_FUNCTION_NAME,
 } from '../extractor/constants.js';
 
 /**
@@ -47,4 +48,12 @@ export function findDefinePluginSettings(sourceFile: SourceFile): CallExpression
  */
 export function findMigratePluginSettingCalls(sourceFile: SourceFile): CallExpression[] {
   return findAllCallExpressionsByName(sourceFile, MIGRATE_PLUGIN_SETTING_FUNCTION_NAME);
+}
+
+/**
+ * Finds all migratePluginSettings() calls in a source file.
+ * There can be multiple calls per file (one per renamed plugin group).
+ */
+export function findMigratePluginSettingsCalls(sourceFile: SourceFile): CallExpression[] {
+  return findAllCallExpressionsByName(sourceFile, MIGRATE_PLUGIN_SETTINGS_FUNCTION_NAME);
 }

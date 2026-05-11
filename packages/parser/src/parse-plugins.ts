@@ -19,6 +19,7 @@ import {
   findDefinePluginSettings,
   findDefinePluginCall,
   findMigratePluginSettingCalls,
+  findMigratePluginSettingsCalls,
 } from '@nixcord/ast';
 import {
   extractSettingsFromCall,
@@ -249,11 +250,7 @@ async function parseSinglePlugin(
   }
 
   const pluginRenames: PluginRename[] = [];
-  const pluginRenameCalls = allSourceFiles.flatMap((source) =>
-    source
-      .getDescendantsOfKind(SyntaxKind.CallExpression)
-      .filter((call) => call.getExpression().getText() === 'migratePluginSettings')
-  );
+  const pluginRenameCalls = allSourceFiles.flatMap(findMigratePluginSettingsCalls);
   for (const call of pluginRenameCalls) {
     const args = call.getArguments();
     const newName = args[0]?.asKind(SyntaxKind.StringLiteral)?.getLiteralValue();

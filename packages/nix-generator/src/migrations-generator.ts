@@ -39,7 +39,16 @@ function mkRenamedLine(oldPlugin: string, newPlugin: string, settingPath: string
   const newParts = parts.map((p) => `"${p}"`).join(' ');
   const oldId = toNixIdentifier(oldPlugin);
   const newId = toNixIdentifier(newPlugin);
-  return `    (lib.modules.mkRenamedOptionModule (base ++ ["${oldId}" ${oldParts}]) (base ++ ["${newId}" ${newParts}]))`;
+  const from = `base ++ ["${oldId}" ${oldParts}]`;
+  const to = `base ++ ["${newId}" ${newParts}]`;
+
+  if (settingPath === 'enable') {
+    const oldPath = `programs.nixcord.config.plugins.${oldId}.enable`;
+    const newPath = `programs.nixcord.config.plugins.${newId}.enable`;
+    return `    (lib.modules.doRename { from = ${from}; to = ${to}; visible = false; warn = false; use = x: if x then builtins.trace "Obsolete option \`${oldPath}' is used. It was renamed to \`${newPath}'." x else x; })`;
+  }
+
+  return `    (lib.modules.mkRenamedOptionModule (${from}) (${to}))`;
 }
 
 /**

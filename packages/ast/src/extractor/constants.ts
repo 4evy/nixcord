@@ -1,6 +1,7 @@
 export const DEFINE_PLUGIN_FUNCTION_NAME = 'definePlugin';
 export const DEFINE_PLUGIN_SETTINGS_FUNCTION_NAME = 'definePluginSettings';
 export const MIGRATE_PLUGIN_SETTING_FUNCTION_NAME = 'migratePluginSetting';
+export const MIGRATE_PLUGIN_SETTINGS_FUNCTION_NAME = 'migratePluginSettings';
 export const GET_FUNCTION_NAME = 'get';
 export const NAME_PROPERTY = 'name';
 export const DESCRIPTION_PROPERTY = 'description';
