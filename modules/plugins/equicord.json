@@ -752,7 +752,280 @@
   },
   "channelTabs": {
     "description": "Group your commonly visited channels in tabs, like a browser (Equicord-only)",
-    "settings": {}
+    "settings": {
+      "onStartup": {
+        "type": "types.enum",
+        "enumValues": [
+          "nothing",
+          "remember",
+          "preset"
+        ],
+        "default": "nothing",
+        "description": "On startup"
+      },
+      "tabSet": {
+        "type": "types.attrs",
+        "default": {}
+      },
+      "noPomeloNames": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Use display names instead of usernames for DM's"
+      },
+      "showStatusIndicators": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Show status indicators for DM's"
+      },
+      "showBookmarkBar": {
+        "type": "types.bool",
+        "default": true
+      },
+      "bookmarkNotificationDot": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Show notification dot for bookmarks"
+      },
+      "persistUnreadCountFallback": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Persist unread badge fallbacks across reloads for tabs and bookmarks"
+      },
+      "widerTabsAndBookmarks": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Extend the length of tabs and bookmarks for larger monitors"
+      },
+      "tabWidthScale": {
+        "type": "types.int",
+        "default": 100,
+        "description": "Tab width scale (percentage) - adjustable by dragging tab edges"
+      },
+      "tabHeightScale": {
+        "type": "types.int",
+        "default": 100,
+        "description": "Tab height scale (percentage)."
+      },
+      "renderAllTabs": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Keep all tabs cached in memory for faster switching (caches scroll position and state)"
+      },
+      "switchToExistingTab": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Switch to tab if it already exists for the channel you're navigating to"
+      },
+      "createNewTabIfNotExists": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Create a new tab if one doesn't exist for the channel you're navigating to"
+      },
+      "enableRapidNavigation": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Enable rapid navigation behavior - quickly navigating between channels will replace the current tab instead of creating new ones"
+      },
+      "rapidNavigationThreshold": {
+        "type": "types.float",
+        "default": {
+          "__nixRaw": "3.0"
+        },
+        "description": "Time window (in seconds) for rapid navigation. Within this time, new channels replace the current tab instead of creating new ones."
+      },
+      "tabBarPosition": {
+        "type": "types.enum",
+        "enumValues": [
+          "top",
+          "bottom"
+        ],
+        "default": "top",
+        "description": "Where to show the tab bar. (restart required)"
+      },
+      "enableNumberKeySwitching": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Enable number keys (1-9) to switch tabs"
+      },
+      "numberKeySwitchCount": {
+        "type": "types.float",
+        "default": {
+          "__nixRaw": "3.0"
+        },
+        "description": "Number of tabs accessible via number keys (1-9)"
+      },
+      "enableCloseTabShortcut": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Enable close tab keyboard shortcut"
+      },
+      "enableNewTabShortcut": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Enable new tab keyboard shortcut"
+      },
+      "enableTabCycleShortcut": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Enable tab cycling keyboard shortcut"
+      },
+      "closeTabKeybind": {
+        "type": "types.str",
+        "default": "CTRL+W",
+        "description": "Keyboard shortcut to close the current tab"
+      },
+      "newTabKeybind": {
+        "type": "types.str",
+        "default": "CTRL+T",
+        "description": "Keyboard shortcut to open a new tab"
+      },
+      "cycleTabForwardKeybind": {
+        "type": "types.str",
+        "default": "CTRL+TAB",
+        "description": "Keyboard shortcut to cycle to the next tab"
+      },
+      "cycleTabBackwardKeybind": {
+        "type": "types.str",
+        "default": "CTRL+SHIFT+TAB",
+        "description": "Keyboard shortcut to cycle to the previous tab"
+      },
+      "showTabNumbers": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Show numbered badges on tabs to indicate keyboard shortcuts"
+      },
+      "tabNumberPosition": {
+        "type": "types.enum",
+        "enumValues": [
+          "left",
+          "right"
+        ],
+        "default": "left",
+        "description": "Where to display the numbered badge on tabs"
+      },
+      "animationHover": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Enable hover lift and scale effects"
+      },
+      "animationSelection": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Enable selection animations (border glow, lift)"
+      },
+      "animationDragDrop": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Enable drag and drop ghost effects"
+      },
+      "animationEnterExit": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Enable tab creation/closing slide animations"
+      },
+      "animationIconPop": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Enable icon scale-up animation on selection"
+      },
+      "animationCloseRotation": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Enable rotation animation for close buttons"
+      },
+      "animationPlusPulse": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Enable pulse animation for plus button"
+      },
+      "animationMentionGlow": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Enable pulsing red glow for mentions"
+      },
+      "animationCompactExpand": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Enable smooth expansion for compact tabs"
+      },
+      "animationSelectedBorder": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Enable border and glow styling for selected tabs"
+      },
+      "animationSelectedBackground": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Enable background color change for selected tabs"
+      },
+      "animationTabShadows": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Enable shadow effects on tabs"
+      },
+      "animationTabPositioning": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Enable smooth transitions when tabs move positions"
+      },
+      "animationResizeHandle": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Enable fade animation for resize handle"
+      },
+      "animationQuestsActive": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Enable gradient animations on Quests tab when quests are actively running"
+      },
+      "compactAutoExpandSelected": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Automatically expand compact tabs when selected to show the full channel name"
+      },
+      "compactAutoExpandOnHover": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Automatically expand compact tabs on hover to show the full channel name"
+      },
+      "openInNewTabAutoSwitch": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Automatically switch to new tabs opened from 'Open in New Tab' context menu"
+      },
+      "bookmarksIndependentFromTabs": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Bookmarks navigate independently without affecting the active tabs bar"
+      },
+      "showResizeHandle": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Show resize handle when hovering over tabs to adjust tab width"
+      },
+      "openNewTabsInCompactMode": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Open all newly created tabs in compact mode by default"
+      },
+      "newTabButtonBehavior": {
+        "type": "types.bool",
+        "default": true,
+        "description": "New tab (+) button follows tabs instead of staying pinned to the right"
+      },
+      "oneTabPerServer": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Limit to one tab per server, so opening a new channel in that server will use the existing tab."
+      },
+      "maxOpenTabs": {
+        "type": "types.float",
+        "default": {
+          "__nixRaw": "0.0"
+        },
+        "description": "Maximum number of open tabs (0 = unlimited)"
+      }
+    }
   },
   "cleanChannelName": {
     "description": "Remove emoji and decoration from channel names. Reverts to the original while you're editing the channel. (Equicord-only)",
@@ -1123,7 +1396,12 @@
   },
   "discordDevBanner": {
     "description": "Enables the Discord developer banner, in which displays the build-ID (Equicord-only)",
-    "settings": {}
+    "settings": {
+      "format": {
+        "type": "types.str",
+        "default": "{buildChannel} {buildNumber} ({buildHash}) | {equicordName} {equicordVersion} ({equicordHash})"
+      }
+    }
   },
   "dragFavoriteEmotes": {
     "description": "Adds the ability to change the order of your favourite emotes (Equicord-only)",
@@ -2077,7 +2355,43 @@
   },
   "instantScreenshare": {
     "description": "Instantly screenshare when joining a voice channel with support for desktop sources, windows, and video input devices (cameras, capture cards) (Equicord-only)",
-    "settings": {}
+    "settings": {
+      "includeVideoDevices": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Include video input devices (cameras, capture cards) in the source list"
+      },
+      "autoMute": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Automatically mute your microphone when joining a voice channel"
+      },
+      "autoDeafen": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Automatically deafen when joining a voice channel (also mutes you)"
+      },
+      "instantScreenshare": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Enables automatic screenshare feature"
+      },
+      "keybindScreenshare": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Screenshare by keybind in discord keybind settings (restart required)"
+      },
+      "focusDiscord": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Only start screenshare with keybind when Discord is focused"
+      },
+      "toolboxManagement": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Enable/Disable Instant Screenshare"
+      }
+    }
   },
   "invisibleChat": {
     "description": "Encrypt your Messages in a non-suspicious way! (Equicord-only)",
@@ -2462,7 +2776,33 @@
   },
   "messageColors": {
     "description": "Displays color codes like #FF0042 inside of messages (Equicord-only)",
-    "settings": {}
+    "settings": {
+      "renderType": {
+        "type": "types.enum",
+        "enumValues": [
+          1,
+          0,
+          2
+        ],
+        "default": 1,
+        "description": "How to render colors\n\nValues: 1 = Text color, 0 = Block nearby, 2 = Background color"
+      },
+      "enableShortHexCodes": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Enable 3 char hex-code like #39f (restart required)"
+      },
+      "blockView": {
+        "type": "types.enum",
+        "enumValues": [
+          1,
+          0,
+          2
+        ],
+        "default": 1,
+        "description": "Where to display colored block\n\nValues: 1 = Right side, 0 = Left side, 2 = Both sides"
+      }
+    }
   },
   "messageFetchTimer": {
     "description": "Shows how long it took to fetch messages for the current channel (Equicord-only)",
@@ -2834,7 +3174,23 @@
   },
   "moreCommands": {
     "description": "Adds various fun and useful commands (Equicord-only)",
-    "settings": {}
+    "settings": {
+      "addFreakyEnding": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Add 👅 or ❤️ at the end"
+      },
+      "uwuEveryMessage": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Make every single message uwuified"
+      },
+      "uwuEverything": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Makes *all* text uwuified - really bad idea (restart required)"
+      }
+    }
   },
   "moreQuickReactions": {
     "description": "Improves the quick react buttons in the message context menu. (Equicord-only)",
@@ -3417,7 +3773,257 @@
   },
   "questify": {
     "description": "Enhance specific Quest features, disable annoyances, or completely remove Quests. (Equicord-only)",
-    "settings": {}
+    "settings": {
+      "migrationVersion": {
+        "type": "types.int",
+        "default": 1,
+        "description": "The current migration version of the settings."
+      },
+      "disableQuestsEverything": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Disable all Quest features. (restart required)"
+      },
+      "disableRelocationNotices": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Disable Quest relocation notices in the Discovery page. (restart required)"
+      },
+      "disableSponsoredBanner": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Disable the sponsored banner on the Quest page. (restart required)"
+      },
+      "disableAccountPanelPromo": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Disable the promoted Quest popup above your account panel. (restart required)"
+      },
+      "disableAccountPanelQuestProgress": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Disable active and completed Quest progress above your account panel. (restart required)"
+      },
+      "disableOrbsAndQuestsBadges": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Disable the Quest badge on user profiles. (restart required)"
+      },
+      "disableFriendsListPromo": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Disable the promotion of Quests for games played by friends. (restart required)"
+      },
+      "disableMembersListPromo": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Disable the actively playing icon in members list items. (restart required)"
+      },
+      "allowChangingDangerousSettings": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Allow changing dangerous settings."
+      },
+      "resumeInterruptedQuests": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Resume auto-completing Quests after a reload or restart. (restart required)"
+      },
+      "makeMobileVideoQuestsDesktopCompatible": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Make mobile-only Video Quests compatible with desktop. (restart required)"
+      },
+      "autoCompleteQuestsSimultaneously": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Complete Quests simultaneously rather than sequentially. (restart required)"
+      },
+      "completeVideoQuestsQuicker": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Use Discord's progress leeway and elapsed enrollment time for Video Quest auto-completion. (restart required)"
+      },
+      "autoCompleteQuestTypes": {
+        "type": "types.attrs",
+        "default": {},
+        "description": "Which types of Quests to auto-complete in the background. (restart required)"
+      },
+      "questButtonDisplay": {
+        "type": "types.attrs",
+        "default": {},
+        "description": "Which display type to use for the Quest button in the server list. (restart required)"
+      },
+      "questButtonIncludedTypes": {
+        "type": "types.attrs",
+        "default": {},
+        "description": "Which reward types and Quest types to include when displaying Quest counts on the Quest button."
+      },
+      "questButtonIndicator": {
+        "type": "types.attrs",
+        "default": {},
+        "description": "Which display type to use for the unclaimed indicator on the Quest button in the server list."
+      },
+      "questButtonBadgeCount": {
+        "type": "types.float",
+        "description": "The current number of relevant unclaimed Quests."
+      },
+      "questButtonBadgeColor": {
+        "type": "types.float",
+        "description": "The color of the Quest button badge in the server list."
+      },
+      "questButtonLeftClickAction": {
+        "type": "types.attrs",
+        "default": {},
+        "description": "The action to perform when left-clicking the Quest button in the server list."
+      },
+      "questButtonMiddleClickAction": {
+        "type": "types.attrs",
+        "default": {},
+        "description": "The action to perform when middle-clicking the Quest button in the server list."
+      },
+      "questButtonRightClickAction": {
+        "type": "types.attrs",
+        "default": {},
+        "description": "The action to perform when right-clicking the Quest button in the server list."
+      },
+      "notifyOnQuestComplete": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Show a notification when a Quest is completed."
+      },
+      "notifyOnNewQuests": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Show a notification when new Quests are detected."
+      },
+      "notifyOnNewExcludedQuests": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Show a notification when new excluded Quests are detected."
+      },
+      "questCompletedAlertSound": {
+        "type": "types.nullOr types.str",
+        "default": null,
+        "description": "The sound to play when a Quest is completed."
+      },
+      "questCompletedAlertVolume": {
+        "type": "types.float",
+        "description": "The volume for the Quest completed alert sound."
+      },
+      "questFetchInterval": {
+        "type": "types.float",
+        "description": "The interval in seconds to fetch Quests from Discord."
+      },
+      "newQuestAlertSound": {
+        "type": "types.nullOr types.str",
+        "default": null,
+        "description": "The sound to play when new Quests are detected."
+      },
+      "newQuestAlertVolume": {
+        "type": "types.float",
+        "description": "The volume for the new Quest alert sound."
+      },
+      "newExcludedQuestAlertSound": {
+        "type": "types.nullOr types.str",
+        "default": null,
+        "description": "The sound to play when new excluded Quests are detected."
+      },
+      "newExcludedQuestAlertVolume": {
+        "type": "types.float",
+        "description": "The volume for the new excluded Quest alert sound."
+      },
+      "questTileUnclaimedColor": {
+        "type": "types.attrs",
+        "default": {},
+        "description": "The color of unclaimed Quest tiles in the Quests page."
+      },
+      "questTileClaimedColor": {
+        "type": "types.attrs",
+        "default": {},
+        "description": "The color of claimed Quest tiles in the Quests page."
+      },
+      "questTileIgnoredColor": {
+        "type": "types.attrs",
+        "default": {},
+        "description": "The color of ignored Quest tiles in the Quests page."
+      },
+      "questTileExpiredColor": {
+        "type": "types.attrs",
+        "default": {},
+        "description": "The color of expired Quest tiles in the Quests page."
+      },
+      "questTileGradient": {
+        "type": "types.nullOr types.str",
+        "default": null,
+        "description": "Style of the gradient used in the Quest tiles."
+      },
+      "questTilePreload": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Attempt to preload the assets for the Quest tiles."
+      },
+      "questOrder": {
+        "type": "types.attrs",
+        "default": {},
+        "description": "Sort order for Quest status groups."
+      },
+      "unclaimedSubsort": {
+        "type": "types.nullOr types.str",
+        "default": null,
+        "description": "Subsort method for unclaimed Quests."
+      },
+      "claimedSubsort": {
+        "type": "types.nullOr types.str",
+        "default": null,
+        "description": "Subsort method for claimed Quests."
+      },
+      "ignoredSubsort": {
+        "type": "types.nullOr types.str",
+        "default": null,
+        "description": "Subsort method for ignored Quests."
+      },
+      "expiredSubsort": {
+        "type": "types.nullOr types.str",
+        "default": null,
+        "description": "Subsort method for expired Quests."
+      },
+      "isOnQuestsPage": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Whether the user is currently on the Quests page."
+      },
+      "rememberQuestPageSort": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Remember the last used sort on the Quests page."
+      },
+      "rememberQuestPageFilters": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Remember the last used filters on the Quests page."
+      },
+      "lastQuestPageSort": {
+        "type": "types.nullOr types.str",
+        "default": null,
+        "description": "Remember the last used sort on the Quests page."
+      },
+      "lastQuestPageFilters": {
+        "type": "types.attrs",
+        "default": {},
+        "description": "Remember the last used filters on the Quests page."
+      },
+      "ignoredQuestIDs": {
+        "type": "types.attrs",
+        "default": {},
+        "description": "An array of Quest IDs that are ignored."
+      },
+      "resumeQuestIDs": {
+        "type": "types.attrs",
+        "default": {},
+        "description": "An array of Quest IDs that are being or are queued to be auto-completed in the background."
+      }
+    }
   },
   "quickThemeSwitcher": {
     "description": "Quickly switch between themes using keyboard shortcuts. (Equicord-only)",
@@ -4830,7 +5436,13 @@
   },
   "themeLibrary": {
     "description": "A library of themes for Vencord. (Equicord-only)",
-    "settings": {}
+    "settings": {
+      "hideWarningCard": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Hide the warning card displayed at the top of the theme library tab"
+      }
+    }
   },
   "tidalEmbeds": {
     "description": "Embeds TIDAL songs to make them playable in Discord. (Equicord-only)",
