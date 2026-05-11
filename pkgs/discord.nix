@@ -68,15 +68,15 @@ let
   ) moduleVersions;
 
   # Krisp helper scripts from upstream nixpkgs PR #506089
-  # (NixOS/nixpkgs@3fd9c5cd0268c221313e624f32ea0c328b0418f0)
-  krispScriptsRev = "3fd9c5cd0268c221313e624f32ea0c328b0418f0";
+  # (NixOS/nixpkgs@3327261e53f551e4b4393ef3d6ac660976c19a1d)
+  krispScriptsRev = "3327261e53f551e4b4393ef3d6ac660976c19a1d";
   patchKrispPy = fetchurl {
     url = "https://raw.githubusercontent.com/NixOS/nixpkgs/${krispScriptsRev}/pkgs/applications/networking/instant-messengers/discord/patch-krisp.py";
     hash = "sha256-pj0+CCUZqApYE02zfXnLvOoiIHbtLTT1JMzrJN86WDo=";
   };
   deployKrispPy = fetchurl {
     url = "https://raw.githubusercontent.com/NixOS/nixpkgs/${krispScriptsRev}/pkgs/applications/networking/instant-messengers/discord/deploy-krisp.py";
-    hash = "sha256-KMlE7JsffW9KM6MIL+qGoIF0xxdGYHi33Vc18PuHgBU=";
+    hash = "sha256-N/XweGjZobDs2tvEH1aQ7J3IjzwJgwRfk/WsZLAzNis=";
   };
 
   variantPackages = {
