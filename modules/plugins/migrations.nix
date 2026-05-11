@@ -12,6 +12,5864 @@ let
 in
 {
   imports = [
+    # Anammox -> Declutter
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "anammox"
+          "alwaysShowUsername"
+        ]
+      )
+      (
+        base
+        ++ [
+          "declutter"
+          "alwaysShowUsername"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "anammox"
+          "enable"
+        ]
+      )
+      (
+        base
+        ++ [
+          "declutter"
+          "enable"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "anammox"
+          "removeAudioMenus"
+        ]
+      )
+      (
+        base
+        ++ [
+          "declutter"
+          "removeAudioMenus"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "anammox"
+          "removeAvatarDecoration"
+        ]
+      )
+      (
+        base
+        ++ [
+          "declutter"
+          "removeAvatarDecoration"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "anammox"
+          "removeBillingSettings"
+        ]
+      )
+      (
+        base
+        ++ [
+          "declutter"
+          "removeBillingSettings"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "anammox"
+          "removeButtonTooltips"
+        ]
+      )
+      (
+        base
+        ++ [
+          "declutter"
+          "removeButtonTooltips"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "anammox"
+          "removeClanTag"
+        ]
+      )
+      (
+        base
+        ++ [
+          "declutter"
+          "removeClanTag"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "anammox"
+          "removeGiftButton"
+        ]
+      )
+      (
+        base
+        ++ [
+          "declutter"
+          "removeGiftButton"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "anammox"
+          "removeNameplate"
+        ]
+      )
+      (
+        base
+        ++ [
+          "declutter"
+          "removeNameplate"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "anammox"
+          "removeProfileEffect"
+        ]
+      )
+      (
+        base
+        ++ [
+          "declutter"
+          "removeProfileEffect"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "anammox"
+          "removeQuestsAboveDM"
+        ]
+      )
+      (
+        base
+        ++ [
+          "declutter"
+          "removeQuestsAboveDM"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "anammox"
+          "removeServerBoostInfo"
+        ]
+      )
+      (
+        base
+        ++ [
+          "declutter"
+          "removeServerBoostInfo"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "anammox"
+          "removeShopAboveDM"
+        ]
+      )
+      (
+        base
+        ++ [
+          "declutter"
+          "removeShopAboveDM"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "anammox"
+          "removeUnavailableEmojiPicker"
+        ]
+      )
+      (
+        base
+        ++ [
+          "declutter"
+          "removeUnavailableEmojiPicker"
+        ]
+      )
+    )
+
+    # AudioBookShelfRichPresence -> RichPresence
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "audioBookShelfRichPresence"
+          "abs_enabled"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "abs_enabled"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "audioBookShelfRichPresence"
+          "abs_password"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "abs_password"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "audioBookShelfRichPresence"
+          "abs_serverUrl"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "abs_serverUrl"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "audioBookShelfRichPresence"
+          "abs_username"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "abs_username"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "audioBookShelfRichPresence"
+          "enable"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "enable"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "audioBookShelfRichPresence"
+          "enabled"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "enabled"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "audioBookShelfRichPresence"
+          "gr_enabled"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "gr_enabled"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "audioBookShelfRichPresence"
+          "gr_refreshInterval"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "gr_refreshInterval"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "audioBookShelfRichPresence"
+          "jf_apiKey"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_apiKey"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "audioBookShelfRichPresence"
+          "jf_coverType"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_coverType"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "audioBookShelfRichPresence"
+          "jf_customName"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_customName"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "audioBookShelfRichPresence"
+          "jf_enabled"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_enabled"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "audioBookShelfRichPresence"
+          "jf_episodeFormat"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_episodeFormat"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "audioBookShelfRichPresence"
+          "jf_nameDisplay"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_nameDisplay"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "audioBookShelfRichPresence"
+          "jf_overrideType"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_overrideType"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "audioBookShelfRichPresence"
+          "jf_privacyMode"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_privacyMode"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "audioBookShelfRichPresence"
+          "jf_serverUrl"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_serverUrl"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "audioBookShelfRichPresence"
+          "jf_showEpisodeName"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_showEpisodeName"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "audioBookShelfRichPresence"
+          "jf_showPausedState"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_showPausedState"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "audioBookShelfRichPresence"
+          "jf_userId"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_userId"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "audioBookShelfRichPresence"
+          "lb_enabled"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_enabled"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "audioBookShelfRichPresence"
+          "lb_hideWithActivity"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_hideWithActivity"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "audioBookShelfRichPresence"
+          "lb_hideWithSpotify"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_hideWithSpotify"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "audioBookShelfRichPresence"
+          "lb_mbContact"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_mbContact"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "audioBookShelfRichPresence"
+          "lb_missingArt"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_missingArt"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "audioBookShelfRichPresence"
+          "lb_nameFormat"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_nameFormat"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "audioBookShelfRichPresence"
+          "lb_shareSong"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_shareSong"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "audioBookShelfRichPresence"
+          "lb_shareUsername"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_shareUsername"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "audioBookShelfRichPresence"
+          "lb_statusName"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_statusName"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "audioBookShelfRichPresence"
+          "lb_useListeningStatus"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_useListeningStatus"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "audioBookShelfRichPresence"
+          "lb_useLogo"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_useLogo"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "audioBookShelfRichPresence"
+          "lb_useTimeBar"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_useTimeBar"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "audioBookShelfRichPresence"
+          "lb_username"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_username"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "audioBookShelfRichPresence"
+          "sfm_alwaysHideArt"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_alwaysHideArt"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "audioBookShelfRichPresence"
+          "sfm_enabled"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_enabled"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "audioBookShelfRichPresence"
+          "sfm_hideWithExternalRPC"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_hideWithExternalRPC"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "audioBookShelfRichPresence"
+          "sfm_hideWithSpotify"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_hideWithSpotify"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "audioBookShelfRichPresence"
+          "sfm_missingArt"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_missingArt"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "audioBookShelfRichPresence"
+          "sfm_nameFormat"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_nameFormat"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "audioBookShelfRichPresence"
+          "sfm_shareSong"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_shareSong"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "audioBookShelfRichPresence"
+          "sfm_shareUsername"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_shareUsername"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "audioBookShelfRichPresence"
+          "sfm_showLogo"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_showLogo"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "audioBookShelfRichPresence"
+          "sfm_statusName"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_statusName"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "audioBookShelfRichPresence"
+          "sfm_useListeningStatus"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_useListeningStatus"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "audioBookShelfRichPresence"
+          "sfm_username"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_username"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "audioBookShelfRichPresence"
+          "tosu_enabled"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "tosu_enabled"
+        ]
+      )
+    )
+
+    # BetterQuickReact -> MoreQuickReactions
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "betterQuickReact"
+          "columns"
+        ]
+      )
+      (
+        base
+        ++ [
+          "moreQuickReactions"
+          "columns"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "betterQuickReact"
+          "compactMode"
+        ]
+      )
+      (
+        base
+        ++ [
+          "moreQuickReactions"
+          "compactMode"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "betterQuickReact"
+          "enable"
+        ]
+      )
+      (
+        base
+        ++ [
+          "moreQuickReactions"
+          "enable"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "betterQuickReact"
+          "frequentEmojis"
+        ]
+      )
+      (
+        base
+        ++ [
+          "moreQuickReactions"
+          "frequentEmojis"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "betterQuickReact"
+          "reactionCount"
+        ]
+      )
+      (
+        base
+        ++ [
+          "moreQuickReactions"
+          "reactionCount"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "betterQuickReact"
+          "rows"
+        ]
+      )
+      (
+        base
+        ++ [
+          "moreQuickReactions"
+          "rows"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "betterQuickReact"
+          "scroll"
+        ]
+      )
+      (
+        base
+        ++ [
+          "moreQuickReactions"
+          "scroll"
+        ]
+      )
+    )
+
+    # BetterUserArea -> Declutter
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "betterUserArea"
+          "alwaysShowUsername"
+        ]
+      )
+      (
+        base
+        ++ [
+          "declutter"
+          "alwaysShowUsername"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "betterUserArea"
+          "enable"
+        ]
+      )
+      (
+        base
+        ++ [
+          "declutter"
+          "enable"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "betterUserArea"
+          "removeAudioMenus"
+        ]
+      )
+      (
+        base
+        ++ [
+          "declutter"
+          "removeAudioMenus"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "betterUserArea"
+          "removeAvatarDecoration"
+        ]
+      )
+      (
+        base
+        ++ [
+          "declutter"
+          "removeAvatarDecoration"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "betterUserArea"
+          "removeBillingSettings"
+        ]
+      )
+      (
+        base
+        ++ [
+          "declutter"
+          "removeBillingSettings"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "betterUserArea"
+          "removeButtonTooltips"
+        ]
+      )
+      (
+        base
+        ++ [
+          "declutter"
+          "removeButtonTooltips"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "betterUserArea"
+          "removeClanTag"
+        ]
+      )
+      (
+        base
+        ++ [
+          "declutter"
+          "removeClanTag"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "betterUserArea"
+          "removeGiftButton"
+        ]
+      )
+      (
+        base
+        ++ [
+          "declutter"
+          "removeGiftButton"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "betterUserArea"
+          "removeNameplate"
+        ]
+      )
+      (
+        base
+        ++ [
+          "declutter"
+          "removeNameplate"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "betterUserArea"
+          "removeProfileEffect"
+        ]
+      )
+      (
+        base
+        ++ [
+          "declutter"
+          "removeProfileEffect"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "betterUserArea"
+          "removeQuestsAboveDM"
+        ]
+      )
+      (
+        base
+        ++ [
+          "declutter"
+          "removeQuestsAboveDM"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "betterUserArea"
+          "removeServerBoostInfo"
+        ]
+      )
+      (
+        base
+        ++ [
+          "declutter"
+          "removeServerBoostInfo"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "betterUserArea"
+          "removeShopAboveDM"
+        ]
+      )
+      (
+        base
+        ++ [
+          "declutter"
+          "removeShopAboveDM"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "betterUserArea"
+          "removeUnavailableEmojiPicker"
+        ]
+      )
+      (
+        base
+        ++ [
+          "declutter"
+          "removeUnavailableEmojiPicker"
+        ]
+      )
+    )
+
+    # EmoteCloner -> ExpressionCloner
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "emoteCloner"
+          "enable"
+        ]
+      )
+      (
+        base
+        ++ [
+          "expressionCloner"
+          "enable"
+        ]
+      )
+    )
+
+    # FriendCloud -> MoreCommands
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "friendCloud"
+          "addFreakyEnding"
+        ]
+      )
+      (
+        base
+        ++ [
+          "moreCommands"
+          "addFreakyEnding"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "friendCloud"
+          "enable"
+        ]
+      )
+      (
+        base
+        ++ [
+          "moreCommands"
+          "enable"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "friendCloud"
+          "uwuEveryMessage"
+        ]
+      )
+      (
+        base
+        ++ [
+          "moreCommands"
+          "uwuEveryMessage"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "friendCloud"
+          "uwuEverything"
+        ]
+      )
+      (
+        base
+        ++ [
+          "moreCommands"
+          "uwuEverything"
+        ]
+      )
+    )
+
+    # GensokyoRadioRPC -> RichPresence
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "GensokyoRadioRPC"
+          "abs_enabled"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "abs_enabled"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "GensokyoRadioRPC"
+          "abs_password"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "abs_password"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "GensokyoRadioRPC"
+          "abs_serverUrl"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "abs_serverUrl"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "GensokyoRadioRPC"
+          "abs_username"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "abs_username"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "GensokyoRadioRPC"
+          "enable"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "enable"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "GensokyoRadioRPC"
+          "enabled"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "enabled"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "GensokyoRadioRPC"
+          "gr_enabled"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "gr_enabled"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "GensokyoRadioRPC"
+          "gr_refreshInterval"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "gr_refreshInterval"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "GensokyoRadioRPC"
+          "jf_apiKey"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_apiKey"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "GensokyoRadioRPC"
+          "jf_coverType"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_coverType"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "GensokyoRadioRPC"
+          "jf_customName"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_customName"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "GensokyoRadioRPC"
+          "jf_enabled"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_enabled"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "GensokyoRadioRPC"
+          "jf_episodeFormat"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_episodeFormat"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "GensokyoRadioRPC"
+          "jf_nameDisplay"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_nameDisplay"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "GensokyoRadioRPC"
+          "jf_overrideType"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_overrideType"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "GensokyoRadioRPC"
+          "jf_privacyMode"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_privacyMode"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "GensokyoRadioRPC"
+          "jf_serverUrl"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_serverUrl"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "GensokyoRadioRPC"
+          "jf_showEpisodeName"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_showEpisodeName"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "GensokyoRadioRPC"
+          "jf_showPausedState"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_showPausedState"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "GensokyoRadioRPC"
+          "jf_userId"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_userId"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "GensokyoRadioRPC"
+          "lb_enabled"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_enabled"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "GensokyoRadioRPC"
+          "lb_hideWithActivity"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_hideWithActivity"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "GensokyoRadioRPC"
+          "lb_hideWithSpotify"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_hideWithSpotify"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "GensokyoRadioRPC"
+          "lb_mbContact"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_mbContact"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "GensokyoRadioRPC"
+          "lb_missingArt"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_missingArt"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "GensokyoRadioRPC"
+          "lb_nameFormat"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_nameFormat"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "GensokyoRadioRPC"
+          "lb_shareSong"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_shareSong"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "GensokyoRadioRPC"
+          "lb_shareUsername"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_shareUsername"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "GensokyoRadioRPC"
+          "lb_statusName"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_statusName"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "GensokyoRadioRPC"
+          "lb_useListeningStatus"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_useListeningStatus"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "GensokyoRadioRPC"
+          "lb_useLogo"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_useLogo"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "GensokyoRadioRPC"
+          "lb_useTimeBar"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_useTimeBar"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "GensokyoRadioRPC"
+          "lb_username"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_username"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "GensokyoRadioRPC"
+          "sfm_alwaysHideArt"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_alwaysHideArt"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "GensokyoRadioRPC"
+          "sfm_enabled"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_enabled"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "GensokyoRadioRPC"
+          "sfm_hideWithExternalRPC"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_hideWithExternalRPC"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "GensokyoRadioRPC"
+          "sfm_hideWithSpotify"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_hideWithSpotify"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "GensokyoRadioRPC"
+          "sfm_missingArt"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_missingArt"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "GensokyoRadioRPC"
+          "sfm_nameFormat"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_nameFormat"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "GensokyoRadioRPC"
+          "sfm_shareSong"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_shareSong"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "GensokyoRadioRPC"
+          "sfm_shareUsername"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_shareUsername"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "GensokyoRadioRPC"
+          "sfm_showLogo"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_showLogo"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "GensokyoRadioRPC"
+          "sfm_statusName"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_statusName"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "GensokyoRadioRPC"
+          "sfm_useListeningStatus"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_useListeningStatus"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "GensokyoRadioRPC"
+          "sfm_username"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_username"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "GensokyoRadioRPC"
+          "tosu_enabled"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "tosu_enabled"
+        ]
+      )
+    )
+
+    # GifRoulette -> MoreCommands
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "gifRoulette"
+          "addFreakyEnding"
+        ]
+      )
+      (
+        base
+        ++ [
+          "moreCommands"
+          "addFreakyEnding"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "gifRoulette"
+          "enable"
+        ]
+      )
+      (
+        base
+        ++ [
+          "moreCommands"
+          "enable"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "gifRoulette"
+          "uwuEveryMessage"
+        ]
+      )
+      (
+        base
+        ++ [
+          "moreCommands"
+          "uwuEveryMessage"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "gifRoulette"
+          "uwuEverything"
+        ]
+      )
+      (
+        base
+        ++ [
+          "moreCommands"
+          "uwuEverything"
+        ]
+      )
+    )
+
+    # HideAttachments -> HideMedia
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "hideAttachments"
+          "enable"
+        ]
+      )
+      (
+        base
+        ++ [
+          "hideMedia"
+          "enable"
+        ]
+      )
+    )
+
+    # ImgToGif -> MoreCommands
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "imgToGif"
+          "addFreakyEnding"
+        ]
+      )
+      (
+        base
+        ++ [
+          "moreCommands"
+          "addFreakyEnding"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "imgToGif"
+          "enable"
+        ]
+      )
+      (
+        base
+        ++ [
+          "moreCommands"
+          "enable"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "imgToGif"
+          "uwuEveryMessage"
+        ]
+      )
+      (
+        base
+        ++ [
+          "moreCommands"
+          "uwuEveryMessage"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "imgToGif"
+          "uwuEverything"
+        ]
+      )
+      (
+        base
+        ++ [
+          "moreCommands"
+          "uwuEverything"
+        ]
+      )
+    )
+
+    # JellyfinRichPresence -> RichPresence
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "jellyfinRichPresence"
+          "abs_enabled"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "abs_enabled"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "jellyfinRichPresence"
+          "abs_password"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "abs_password"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "jellyfinRichPresence"
+          "abs_serverUrl"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "abs_serverUrl"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "jellyfinRichPresence"
+          "abs_username"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "abs_username"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "jellyfinRichPresence"
+          "enable"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "enable"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "jellyfinRichPresence"
+          "enabled"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "enabled"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "jellyfinRichPresence"
+          "gr_enabled"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "gr_enabled"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "jellyfinRichPresence"
+          "gr_refreshInterval"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "gr_refreshInterval"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "jellyfinRichPresence"
+          "jf_apiKey"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_apiKey"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "jellyfinRichPresence"
+          "jf_coverType"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_coverType"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "jellyfinRichPresence"
+          "jf_customName"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_customName"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "jellyfinRichPresence"
+          "jf_enabled"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_enabled"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "jellyfinRichPresence"
+          "jf_episodeFormat"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_episodeFormat"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "jellyfinRichPresence"
+          "jf_nameDisplay"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_nameDisplay"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "jellyfinRichPresence"
+          "jf_overrideType"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_overrideType"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "jellyfinRichPresence"
+          "jf_privacyMode"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_privacyMode"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "jellyfinRichPresence"
+          "jf_serverUrl"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_serverUrl"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "jellyfinRichPresence"
+          "jf_showEpisodeName"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_showEpisodeName"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "jellyfinRichPresence"
+          "jf_showPausedState"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_showPausedState"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "jellyfinRichPresence"
+          "jf_userId"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_userId"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "jellyfinRichPresence"
+          "lb_enabled"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_enabled"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "jellyfinRichPresence"
+          "lb_hideWithActivity"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_hideWithActivity"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "jellyfinRichPresence"
+          "lb_hideWithSpotify"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_hideWithSpotify"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "jellyfinRichPresence"
+          "lb_mbContact"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_mbContact"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "jellyfinRichPresence"
+          "lb_missingArt"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_missingArt"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "jellyfinRichPresence"
+          "lb_nameFormat"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_nameFormat"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "jellyfinRichPresence"
+          "lb_shareSong"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_shareSong"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "jellyfinRichPresence"
+          "lb_shareUsername"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_shareUsername"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "jellyfinRichPresence"
+          "lb_statusName"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_statusName"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "jellyfinRichPresence"
+          "lb_useListeningStatus"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_useListeningStatus"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "jellyfinRichPresence"
+          "lb_useLogo"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_useLogo"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "jellyfinRichPresence"
+          "lb_useTimeBar"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_useTimeBar"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "jellyfinRichPresence"
+          "lb_username"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_username"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "jellyfinRichPresence"
+          "sfm_alwaysHideArt"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_alwaysHideArt"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "jellyfinRichPresence"
+          "sfm_enabled"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_enabled"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "jellyfinRichPresence"
+          "sfm_hideWithExternalRPC"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_hideWithExternalRPC"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "jellyfinRichPresence"
+          "sfm_hideWithSpotify"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_hideWithSpotify"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "jellyfinRichPresence"
+          "sfm_missingArt"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_missingArt"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "jellyfinRichPresence"
+          "sfm_nameFormat"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_nameFormat"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "jellyfinRichPresence"
+          "sfm_shareSong"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_shareSong"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "jellyfinRichPresence"
+          "sfm_shareUsername"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_shareUsername"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "jellyfinRichPresence"
+          "sfm_showLogo"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_showLogo"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "jellyfinRichPresence"
+          "sfm_statusName"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_statusName"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "jellyfinRichPresence"
+          "sfm_useListeningStatus"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_useListeningStatus"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "jellyfinRichPresence"
+          "sfm_username"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_username"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "jellyfinRichPresence"
+          "tosu_enabled"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "tosu_enabled"
+        ]
+      )
+    )
+
+    # ListenBrainzRPC -> RichPresence
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "ListenBrainzRPC"
+          "abs_enabled"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "abs_enabled"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "ListenBrainzRPC"
+          "abs_password"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "abs_password"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "ListenBrainzRPC"
+          "abs_serverUrl"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "abs_serverUrl"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "ListenBrainzRPC"
+          "abs_username"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "abs_username"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "ListenBrainzRPC"
+          "enable"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "enable"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "ListenBrainzRPC"
+          "enabled"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "enabled"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "ListenBrainzRPC"
+          "gr_enabled"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "gr_enabled"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "ListenBrainzRPC"
+          "gr_refreshInterval"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "gr_refreshInterval"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "ListenBrainzRPC"
+          "jf_apiKey"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_apiKey"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "ListenBrainzRPC"
+          "jf_coverType"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_coverType"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "ListenBrainzRPC"
+          "jf_customName"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_customName"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "ListenBrainzRPC"
+          "jf_enabled"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_enabled"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "ListenBrainzRPC"
+          "jf_episodeFormat"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_episodeFormat"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "ListenBrainzRPC"
+          "jf_nameDisplay"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_nameDisplay"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "ListenBrainzRPC"
+          "jf_overrideType"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_overrideType"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "ListenBrainzRPC"
+          "jf_privacyMode"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_privacyMode"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "ListenBrainzRPC"
+          "jf_serverUrl"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_serverUrl"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "ListenBrainzRPC"
+          "jf_showEpisodeName"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_showEpisodeName"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "ListenBrainzRPC"
+          "jf_showPausedState"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_showPausedState"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "ListenBrainzRPC"
+          "jf_userId"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_userId"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "ListenBrainzRPC"
+          "lb_enabled"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_enabled"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "ListenBrainzRPC"
+          "lb_hideWithActivity"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_hideWithActivity"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "ListenBrainzRPC"
+          "lb_hideWithSpotify"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_hideWithSpotify"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "ListenBrainzRPC"
+          "lb_mbContact"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_mbContact"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "ListenBrainzRPC"
+          "lb_missingArt"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_missingArt"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "ListenBrainzRPC"
+          "lb_nameFormat"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_nameFormat"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "ListenBrainzRPC"
+          "lb_shareSong"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_shareSong"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "ListenBrainzRPC"
+          "lb_shareUsername"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_shareUsername"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "ListenBrainzRPC"
+          "lb_statusName"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_statusName"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "ListenBrainzRPC"
+          "lb_useListeningStatus"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_useListeningStatus"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "ListenBrainzRPC"
+          "lb_useLogo"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_useLogo"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "ListenBrainzRPC"
+          "lb_useTimeBar"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_useTimeBar"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "ListenBrainzRPC"
+          "lb_username"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_username"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "ListenBrainzRPC"
+          "sfm_alwaysHideArt"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_alwaysHideArt"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "ListenBrainzRPC"
+          "sfm_enabled"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_enabled"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "ListenBrainzRPC"
+          "sfm_hideWithExternalRPC"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_hideWithExternalRPC"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "ListenBrainzRPC"
+          "sfm_hideWithSpotify"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_hideWithSpotify"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "ListenBrainzRPC"
+          "sfm_missingArt"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_missingArt"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "ListenBrainzRPC"
+          "sfm_nameFormat"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_nameFormat"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "ListenBrainzRPC"
+          "sfm_shareSong"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_shareSong"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "ListenBrainzRPC"
+          "sfm_shareUsername"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_shareUsername"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "ListenBrainzRPC"
+          "sfm_showLogo"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_showLogo"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "ListenBrainzRPC"
+          "sfm_statusName"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_statusName"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "ListenBrainzRPC"
+          "sfm_useListeningStatus"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_useListeningStatus"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "ListenBrainzRPC"
+          "sfm_username"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_username"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "ListenBrainzRPC"
+          "tosu_enabled"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "tosu_enabled"
+        ]
+      )
+    )
+
+    # MemberListActivities -> BetterActivities
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "memberListActivities"
+          "allActivitiesStyle"
+        ]
+      )
+      (
+        base
+        ++ [
+          "betterActivities"
+          "allActivitiesStyle"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "memberListActivities"
+          "enable"
+        ]
+      )
+      (
+        base
+        ++ [
+          "betterActivities"
+          "enable"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "memberListActivities"
+          "hideTooltip"
+        ]
+      )
+      (
+        base
+        ++ [
+          "betterActivities"
+          "hideTooltip"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "memberListActivities"
+          "iconSize"
+        ]
+      )
+      (
+        base
+        ++ [
+          "betterActivities"
+          "iconSize"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "memberListActivities"
+          "memberList"
+        ]
+      )
+      (
+        base
+        ++ [
+          "betterActivities"
+          "memberList"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "memberListActivities"
+          "removeGameActivityStatus"
+        ]
+      )
+      (
+        base
+        ++ [
+          "betterActivities"
+          "removeGameActivityStatus"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "memberListActivities"
+          "renderGifs"
+        ]
+      )
+      (
+        base
+        ++ [
+          "betterActivities"
+          "renderGifs"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "memberListActivities"
+          "specialFirst"
+        ]
+      )
+      (
+        base
+        ++ [
+          "betterActivities"
+          "specialFirst"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "memberListActivities"
+          "userPopout"
+        ]
+      )
+      (
+        base
+        ++ [
+          "betterActivities"
+          "userPopout"
+        ]
+      )
+    )
+
+    # MessageTags -> CustomCommands
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "messageTags"
+          "enable"
+        ]
+      )
+      (
+        base
+        ++ [
+          "customCommands"
+          "enable"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "messageTags"
+          "tagsList"
+        ]
+      )
+      (
+        base
+        ++ [
+          "customCommands"
+          "tagsList"
+        ]
+      )
+    )
+
+    # MoreKaomoji -> MoreCommands
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "moreKaomoji"
+          "addFreakyEnding"
+        ]
+      )
+      (
+        base
+        ++ [
+          "moreCommands"
+          "addFreakyEnding"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "moreKaomoji"
+          "enable"
+        ]
+      )
+      (
+        base
+        ++ [
+          "moreCommands"
+          "enable"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "moreKaomoji"
+          "uwuEveryMessage"
+        ]
+      )
+      (
+        base
+        ++ [
+          "moreCommands"
+          "uwuEveryMessage"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "moreKaomoji"
+          "uwuEverything"
+        ]
+      )
+      (
+        base
+        ++ [
+          "moreCommands"
+          "uwuEverything"
+        ]
+      )
+    )
+
+    # PronounDB -> UserMessagesPronouns
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "PronounDB"
+          "enable"
+        ]
+      )
+      (
+        base
+        ++ [
+          "userMessagesPronouns"
+          "enable"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "PronounDB"
+          "pronounsFormat"
+        ]
+      )
+      (
+        base
+        ++ [
+          "userMessagesPronouns"
+          "pronounsFormat"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "PronounDB"
+          "showSelf"
+        ]
+      )
+      (
+        base
+        ++ [
+          "userMessagesPronouns"
+          "showSelf"
+        ]
+      )
+    )
+
+    # RepeatMessage -> RepeatMessages
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "repeatMessage"
+          "enable"
+        ]
+      )
+      (
+        base
+        ++ [
+          "repeatMessages"
+          "enable"
+        ]
+      )
+    )
+
+    # Search -> ReplaceGoogleSearch
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "search"
+          "customEngineName"
+        ]
+      )
+      (
+        base
+        ++ [
+          "replaceGoogleSearch"
+          "customEngineName"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "search"
+          "customEngineURL"
+        ]
+      )
+      (
+        base
+        ++ [
+          "replaceGoogleSearch"
+          "customEngineURL"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "search"
+          "enable"
+        ]
+      )
+      (
+        base
+        ++ [
+          "replaceGoogleSearch"
+          "enable"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "search"
+          "replacementEngine"
+        ]
+      )
+      (
+        base
+        ++ [
+          "replaceGoogleSearch"
+          "replacementEngine"
+        ]
+      )
+    )
+
+    # SearchReply -> FullSearchContext
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "searchReply"
+          "enable"
+        ]
+      )
+      (
+        base
+        ++ [
+          "fullSearchContext"
+          "enable"
+        ]
+      )
+    )
+
+    # ShowAllRoles -> AlwaysExpandRoles
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "showAllRoles"
+          "enable"
+        ]
+      )
+      (
+        base
+        ++ [
+          "alwaysExpandRoles"
+          "enable"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "showAllRoles"
+          "hideArrow"
+        ]
+      )
+      (
+        base
+        ++ [
+          "alwaysExpandRoles"
+          "hideArrow"
+        ]
+      )
+    )
+
+    # StatsfmPresence -> RichPresence
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statsfmPresence"
+          "abs_enabled"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "abs_enabled"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statsfmPresence"
+          "abs_password"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "abs_password"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statsfmPresence"
+          "abs_serverUrl"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "abs_serverUrl"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statsfmPresence"
+          "abs_username"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "abs_username"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statsfmPresence"
+          "enable"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "enable"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statsfmPresence"
+          "enabled"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "enabled"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statsfmPresence"
+          "gr_enabled"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "gr_enabled"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statsfmPresence"
+          "gr_refreshInterval"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "gr_refreshInterval"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statsfmPresence"
+          "jf_apiKey"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_apiKey"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statsfmPresence"
+          "jf_coverType"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_coverType"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statsfmPresence"
+          "jf_customName"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_customName"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statsfmPresence"
+          "jf_enabled"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_enabled"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statsfmPresence"
+          "jf_episodeFormat"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_episodeFormat"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statsfmPresence"
+          "jf_nameDisplay"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_nameDisplay"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statsfmPresence"
+          "jf_overrideType"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_overrideType"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statsfmPresence"
+          "jf_privacyMode"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_privacyMode"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statsfmPresence"
+          "jf_serverUrl"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_serverUrl"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statsfmPresence"
+          "jf_showEpisodeName"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_showEpisodeName"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statsfmPresence"
+          "jf_showPausedState"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_showPausedState"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statsfmPresence"
+          "jf_userId"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_userId"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statsfmPresence"
+          "lb_enabled"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_enabled"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statsfmPresence"
+          "lb_hideWithActivity"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_hideWithActivity"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statsfmPresence"
+          "lb_hideWithSpotify"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_hideWithSpotify"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statsfmPresence"
+          "lb_mbContact"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_mbContact"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statsfmPresence"
+          "lb_missingArt"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_missingArt"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statsfmPresence"
+          "lb_nameFormat"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_nameFormat"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statsfmPresence"
+          "lb_shareSong"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_shareSong"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statsfmPresence"
+          "lb_shareUsername"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_shareUsername"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statsfmPresence"
+          "lb_statusName"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_statusName"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statsfmPresence"
+          "lb_useListeningStatus"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_useListeningStatus"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statsfmPresence"
+          "lb_useLogo"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_useLogo"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statsfmPresence"
+          "lb_useTimeBar"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_useTimeBar"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statsfmPresence"
+          "lb_username"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_username"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statsfmPresence"
+          "sfm_alwaysHideArt"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_alwaysHideArt"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statsfmPresence"
+          "sfm_enabled"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_enabled"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statsfmPresence"
+          "sfm_hideWithExternalRPC"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_hideWithExternalRPC"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statsfmPresence"
+          "sfm_hideWithSpotify"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_hideWithSpotify"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statsfmPresence"
+          "sfm_missingArt"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_missingArt"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statsfmPresence"
+          "sfm_nameFormat"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_nameFormat"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statsfmPresence"
+          "sfm_shareSong"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_shareSong"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statsfmPresence"
+          "sfm_shareUsername"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_shareUsername"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statsfmPresence"
+          "sfm_showLogo"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_showLogo"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statsfmPresence"
+          "sfm_statusName"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_statusName"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statsfmPresence"
+          "sfm_useListeningStatus"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_useListeningStatus"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statsfmPresence"
+          "sfm_username"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_username"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statsfmPresence"
+          "tosu_enabled"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "tosu_enabled"
+        ]
+      )
+    )
+
+    # StatusWhilePlaying -> AutoDNDWhilePlaying
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statusWhilePlaying"
+          "enable"
+        ]
+      )
+      (
+        base
+        ++ [
+          "AutoDNDWhilePlaying"
+          "enable"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statusWhilePlaying"
+          "excludeInvisible"
+        ]
+      )
+      (
+        base
+        ++ [
+          "AutoDNDWhilePlaying"
+          "excludeInvisible"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "statusWhilePlaying"
+          "statusToSet"
+        ]
+      )
+      (
+        base
+        ++ [
+          "AutoDNDWhilePlaying"
+          "statusToSet"
+        ]
+      )
+    )
+
+    # TimelessClips -> ClipsEnhancements
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "timelessClips"
+          "enable"
+        ]
+      )
+      (
+        base
+        ++ [
+          "clipsEnhancements"
+          "enable"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "timelessClips"
+          "enableAdvancedSignals"
+        ]
+      )
+      (
+        base
+        ++ [
+          "clipsEnhancements"
+          "enableAdvancedSignals"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "timelessClips"
+          "enableScreenshotKeybind"
+        ]
+      )
+      (
+        base
+        ++ [
+          "clipsEnhancements"
+          "enableScreenshotKeybind"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "timelessClips"
+          "enableSpeakingIndicators"
+        ]
+      )
+      (
+        base
+        ++ [
+          "clipsEnhancements"
+          "enableSpeakingIndicators"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "timelessClips"
+          "enableVoiceOnlyClips"
+        ]
+      )
+      (
+        base
+        ++ [
+          "clipsEnhancements"
+          "enableVoiceOnlyClips"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "timelessClips"
+          "ignorePlatformRestriction"
+        ]
+      )
+      (
+        base
+        ++ [
+          "clipsEnhancements"
+          "ignorePlatformRestriction"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "timelessClips"
+          "richPresenceTagging"
+        ]
+      )
+      (
+        base
+        ++ [
+          "clipsEnhancements"
+          "richPresenceTagging"
+        ]
+      )
+    )
+
+    # TosuRPC -> RichPresence
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "TosuRPC"
+          "abs_enabled"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "abs_enabled"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "TosuRPC"
+          "abs_password"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "abs_password"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "TosuRPC"
+          "abs_serverUrl"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "abs_serverUrl"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "TosuRPC"
+          "abs_username"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "abs_username"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "TosuRPC"
+          "enable"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "enable"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "TosuRPC"
+          "enabled"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "enabled"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "TosuRPC"
+          "gr_enabled"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "gr_enabled"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "TosuRPC"
+          "gr_refreshInterval"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "gr_refreshInterval"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "TosuRPC"
+          "jf_apiKey"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_apiKey"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "TosuRPC"
+          "jf_coverType"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_coverType"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "TosuRPC"
+          "jf_customName"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_customName"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "TosuRPC"
+          "jf_enabled"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_enabled"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "TosuRPC"
+          "jf_episodeFormat"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_episodeFormat"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "TosuRPC"
+          "jf_nameDisplay"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_nameDisplay"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "TosuRPC"
+          "jf_overrideType"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_overrideType"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "TosuRPC"
+          "jf_privacyMode"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_privacyMode"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "TosuRPC"
+          "jf_serverUrl"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_serverUrl"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "TosuRPC"
+          "jf_showEpisodeName"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_showEpisodeName"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "TosuRPC"
+          "jf_showPausedState"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_showPausedState"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "TosuRPC"
+          "jf_userId"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "jf_userId"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "TosuRPC"
+          "lb_enabled"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_enabled"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "TosuRPC"
+          "lb_hideWithActivity"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_hideWithActivity"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "TosuRPC"
+          "lb_hideWithSpotify"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_hideWithSpotify"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "TosuRPC"
+          "lb_mbContact"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_mbContact"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "TosuRPC"
+          "lb_missingArt"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_missingArt"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "TosuRPC"
+          "lb_nameFormat"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_nameFormat"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "TosuRPC"
+          "lb_shareSong"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_shareSong"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "TosuRPC"
+          "lb_shareUsername"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_shareUsername"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "TosuRPC"
+          "lb_statusName"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_statusName"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "TosuRPC"
+          "lb_useListeningStatus"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_useListeningStatus"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "TosuRPC"
+          "lb_useLogo"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_useLogo"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "TosuRPC"
+          "lb_useTimeBar"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_useTimeBar"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "TosuRPC"
+          "lb_username"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "lb_username"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "TosuRPC"
+          "sfm_alwaysHideArt"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_alwaysHideArt"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "TosuRPC"
+          "sfm_enabled"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_enabled"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "TosuRPC"
+          "sfm_hideWithExternalRPC"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_hideWithExternalRPC"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "TosuRPC"
+          "sfm_hideWithSpotify"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_hideWithSpotify"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "TosuRPC"
+          "sfm_missingArt"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_missingArt"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "TosuRPC"
+          "sfm_nameFormat"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_nameFormat"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "TosuRPC"
+          "sfm_shareSong"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_shareSong"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "TosuRPC"
+          "sfm_shareUsername"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_shareUsername"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "TosuRPC"
+          "sfm_showLogo"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_showLogo"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "TosuRPC"
+          "sfm_statusName"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_statusName"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "TosuRPC"
+          "sfm_useListeningStatus"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_useListeningStatus"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "TosuRPC"
+          "sfm_username"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "sfm_username"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "TosuRPC"
+          "tosu_enabled"
+        ]
+      )
+      (
+        base
+        ++ [
+          "richPresence"
+          "tosu_enabled"
+        ]
+      )
+    )
+
+    # YoutubeDescription -> FixYoutubeEmbeds
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "youtubeDescription"
+          "enable"
+        ]
+      )
+      (
+        base
+        ++ [
+          "fixYoutubeEmbeds"
+          "enable"
+        ]
+      )
+    )
+    (lib.modules.mkRenamedOptionModule
+      (
+        base
+        ++ [
+          "youtubeDescription"
+          "youtubeDescription"
+        ]
+      )
+      (
+        base
+        ++ [
+          "fixYoutubeEmbeds"
+          "youtubeDescription"
+        ]
+      )
+    )
+
     # Setting renames: fontLoader
     (lib.modules.doRename {
       from = base ++ [
@@ -64,6 +5922,21 @@ in
       to = base ++ [
         "hideChatButtons"
         "open"
+      ];
+      visible = false;
+      warn = true;
+      use = x: x;
+    })
+
+    # Setting renames: noBlockedMessages
+    (lib.modules.doRename {
+      from = base ++ [
+        "noBlockedMessages"
+        "ignoreBlockedMessages"
+      ];
+      to = base ++ [
+        "noBlockedMessages"
+        "ignoreMessages"
       ];
       visible = false;
       warn = true;

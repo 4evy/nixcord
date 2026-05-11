@@ -154,7 +154,8 @@ async function parseSinglePlugin(
   const allSourceFiles = pluginSourceFiles.map((filePath) =>
     getOrAddSourceFile(normalize(filePath))
   );
-  const pluginInfo = extractPluginInfo(sourceFile, typeChecker);
+  const pluginTypeChecker = project.getTypeChecker();
+  const pluginInfo = extractPluginInfo(sourceFile, pluginTypeChecker);
 
   // Derive plugin name from directory if not explicitly defined
   const pluginName =
@@ -196,7 +197,7 @@ async function parseSinglePlugin(
 
   let settings: Record<string, PluginSetting | PluginConfig> =
     settingsCall !== undefined
-      ? extractSettingsFromCall(settingsCall, typeChecker, project.getProgram(), true)
+      ? extractSettingsFromCall(settingsCall, pluginTypeChecker, project.getProgram(), true)
       : {};
 
   // Bug 1 fix: If no definePluginSettings() was found, fall back to extracting
@@ -217,7 +218,7 @@ async function parseSinglePlugin(
           if (optionsInit) {
             settings = extractSettingsFromObject(
               optionsInit,
-              typeChecker,
+              pluginTypeChecker,
               project.getProgram(),
               true
             );

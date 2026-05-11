@@ -20,6 +20,7 @@ import { extractSelectOptions } from './select/index.js';
 import { tsTypeToNixType } from '../parser.js';
 import { resolveDefaultValue, isBareComponentSetting } from './default-value-resolution.js';
 import type { PluginSetting, PluginConfig } from '@nixcord/shared';
+import type { EnumLiteral } from '../foundation/index.js';
 
 const BOOLEAN_NIX_TYPE = 'types.bool';
 
@@ -36,6 +37,104 @@ const extractLiteralValue = (node: Node | undefined, checker: TypeChecker): unkn
     return arr.getElements().map((el) => extractLiteralValue(el, checker));
   }
   return tryEvaluate(node, checker);
+};
+
+const extractLiteralFromTypeNode = (node: Node): EnumLiteral | undefined => {
+  const literalNode = node.asKind(SyntaxKind.LiteralType)?.getLiteral();
+  if (!literalNode) return undefined;
+  if (literalNode.getKind() === SyntaxKind.StringLiteral) {
+    return literalNode.asKindOrThrow(SyntaxKind.StringLiteral).getLiteralValue();
+  }
+  if (literalNode.getKind() === SyntaxKind.NumericLiteral) {
+    return literalNode.asKindOrThrow(SyntaxKind.NumericLiteral).getLiteralValue();
+  }
+  if (literalNode.getKind() === SyntaxKind.TrueKeyword) return true;
+  if (literalNode.getKind() === SyntaxKind.FalseKeyword) return false;
+  return undefined;
+};
+
+const extractLiteralUnionFromTypeNode = (node: Node): readonly EnumLiteral[] | undefined => {
+  const unionNode = node.asKind(SyntaxKind.UnionType);
+  if (unionNode) {
+    const values = unionNode.getTypeNodes().map(extractLiteralFromTypeNode);
+    return values.every((value): value is EnumLiteral => value !== undefined)
+      ? Object.freeze(values)
+      : undefined;
+  }
+
+  const typeRef = node.asKind(SyntaxKind.TypeReference);
+  const typeName = typeRef?.getTypeName();
+  if (typeName) {
+    const symbol = typeName.getSymbol();
+    const aliasedSymbol = symbol?.getAliasedSymbol();
+    const declaration = aliasedSymbol?.getDeclarations()[0] ?? symbol?.getDeclarations()[0];
+    const aliasTypeNode = declaration?.asKind(SyntaxKind.TypeAliasDeclaration)?.getTypeNode();
+    return aliasTypeNode ? extractLiteralUnionFromTypeNode(aliasTypeNode) : undefined;
+  }
+
+  return undefined;
+};
+
+const extractLiteralUnionValues = (
+  node: Node | undefined,
+  checker: TypeChecker
+): readonly EnumLiteral[] | undefined => {
+  if (!node) return undefined;
+  const typeNode = node.asKind(SyntaxKind.AsExpression)?.getTypeNode();
+  if (!typeNode) return undefined;
+
+  const staticValues = extractLiteralUnionFromTypeNode(typeNode);
+  if (staticValues) return staticValues;
+
+  try {
+    const type = checker.getTypeAtLocation(typeNode);
+    const unionTypes = type.getUnionTypes();
+    if (unionTypes.length > 0) {
+      const values = unionTypes
+        .map((unionType) => {
+          if (unionType.isStringLiteral() || unionType.isNumberLiteral()) {
+            return unionType.getLiteralValue();
+          }
+          if (unionType.isBooleanLiteral()) {
+            const text = unionType.getText(typeNode);
+            if (text === 'true') return true;
+            if (text === 'false') return false;
+          }
+          return undefined;
+        })
+        .filter((value): value is EnumLiteral =>
+          ['string', 'number', 'boolean'].includes(typeof value)
+        );
+
+      return values.length === unionTypes.length ? Object.freeze(values) : undefined;
+    }
+  } catch {}
+
+  try {
+    const type = checker.getTypeAtLocation(node);
+    const unionTypes = type.getUnionTypes();
+    if (unionTypes.length === 0) return undefined;
+
+    const values = unionTypes
+      .map((unionType) => {
+        if (unionType.isStringLiteral() || unionType.isNumberLiteral()) {
+          return unionType.getLiteralValue();
+        }
+        if (unionType.isBooleanLiteral()) {
+          const text = unionType.getText(node);
+          if (text === 'true') return true;
+          if (text === 'false') return false;
+        }
+        return undefined;
+      })
+      .filter((value): value is EnumLiteral =>
+        ['string', 'number', 'boolean'].includes(typeof value)
+      );
+
+    return values.length === unionTypes.length ? Object.freeze(values) : undefined;
+  } catch {
+    return undefined;
+  }
 };
 
 const extractProperties = (valueObj: ObjectLiteralExpression, checker: TypeChecker) => {
@@ -55,11 +154,18 @@ const extractProperties = (valueObj: ObjectLiteralExpression, checker: TypeCheck
       ?.asKind(SyntaxKind.PropertyAssignment)
       ?.getInitializer()
       ?.getKind() === SyntaxKind.TrueKeyword;
-  const defaultLiteralValue = extractLiteralValue(
-    getPropertyInitializer(valueObj, 'default'),
-    checker
-  );
-  return { typeNode, description, placeholder, restartNeeded, hidden, defaultLiteralValue };
+  const defaultInitializer = getPropertyInitializer(valueObj, 'default');
+  const defaultLiteralValue = extractLiteralValue(defaultInitializer, checker);
+  const typeAssertionEnumValues = extractLiteralUnionValues(defaultInitializer, checker);
+  return {
+    typeNode,
+    description,
+    placeholder,
+    restartNeeded,
+    hidden,
+    defaultLiteralValue,
+    typeAssertionEnumValues,
+  };
 };
 
 const buildPluginSetting = (
@@ -149,6 +255,8 @@ export function extractSettingsFromPropertyIterable(
 
         const optionsResult = extractSelectOptions(valueObj, checker);
         const extractedOptions = optionsResult.ok ? optionsResult.value.values : undefined;
+        const nonEmptyExtractedOptions =
+          extractedOptions && extractedOptions.length > 0 ? extractedOptions : undefined;
         const extractedLabels = optionsResult.ok ? optionsResult.value.labels : undefined;
 
         const rawSetting = {
@@ -158,7 +266,7 @@ export function extractSettingsFromPropertyIterable(
           placeholder: props.placeholder,
           restartNeeded: props.restartNeeded,
           hidden: props.hidden,
-          options: extractedOptions,
+          options: nonEmptyExtractedOptions ?? props.typeAssertionEnumValues,
         };
         const typeResult = tsTypeToNixType(rawSetting, program, checker);
         const defaultResolution = resolveDefaultValue(
@@ -175,7 +283,7 @@ export function extractSettingsFromPropertyIterable(
           props.description,
           defaultResolution.defaultValue,
           typeResult.enumValues,
-          extractedLabels,
+          nonEmptyExtractedOptions ? extractedLabels : undefined,
           props.placeholder,
           props.hidden,
           props.restartNeeded

@@ -43,9 +43,10 @@ const resolveIdentifier = (identifier: Identifier, checker: TypeChecker): Node |
   if (!symbol) return undefined;
 
   const valueDecl = symbol.getValueDeclaration();
-  if (!valueDecl) return undefined;
-
-  const varDecl = valueDecl.asKind(SyntaxKind.VariableDeclaration);
+  const aliasedValueDecl = symbol.getAliasedSymbol()?.getValueDeclaration?.();
+  const varDecl =
+    valueDecl?.asKind(SyntaxKind.VariableDeclaration) ??
+    aliasedValueDecl?.asKind(SyntaxKind.VariableDeclaration);
   if (varDecl) {
     const init = varDecl.getInitializer();
     return init ? unwrapNode(init) : undefined;

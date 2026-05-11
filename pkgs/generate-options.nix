@@ -12,7 +12,7 @@
   skipGitMigrations ? true,
 }:
 let
-  nodeModulesHashDarwin = "sha256-JkZrtNQmy452ieDfDMHIWBCeLZS7Lrs6wh21v8H43bY=";
+  nodeModulesHashDarwin = "sha256-HrntzBT2zJ6njNlvWPIYIzjKiH85Xfry/KezWmQwMNs=";
   nodeModulesHashLinux = "sha256-CpKWMgGkk3W64mZ7EFWfaW0A3kPEaT2jcn62+iJYQPM=";
   nodeModulesHash = if stdenvNoCC.hostPlatform.isDarwin then nodeModulesHashDarwin else nodeModulesHashLinux;
 in
@@ -95,7 +95,12 @@ stdenvNoCC.mkDerivation (finalAttrs: {
 
   buildPhase = ''
     runHook preBuild
-    bun run --filter '*' build
+    bun run --filter '@nixcord/shared' build
+    bun run --filter '@nixcord/git-analyzer' build
+    bun run --filter '@nixcord/ast' build
+    bun run --filter '@nixcord/nix-generator' build
+    bun run --filter '@nixcord/parser' build
+    bun run --filter '@nixcord/cli' build
     runHook postBuild
   '';
 

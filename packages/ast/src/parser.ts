@@ -253,8 +253,12 @@ export function tsTypeToNixType(
         return { nixType: NIX_TYPE_FLOAT };
       case OPTION_TYPE_COMPONENT:
         return { nixType: nixTypeForComponentOrCustom(setting.default) };
-      case OPTION_TYPE_CUSTOM:
+      case OPTION_TYPE_CUSTOM: {
+        const enumValues = buildEnumValuesFromOptions(setting.options) ?? Object.freeze([]);
+        if (isBooleanEnumValues(enumValues)) return { nixType: NIX_TYPE_BOOL };
+        if (enumValues.length > 0) return { nixType: NIX_ENUM_TYPE, enumValues };
         return { nixType: nixTypeForComponentOrCustom(setting.default) };
+      }
       default:
         return { nixType: inferNixTypeFromRuntimeDefault(setting.default) };
     }
@@ -262,9 +266,10 @@ export function tsTypeToNixType(
 
   const inferredType = inferTypeFromTypeScriptType(type, _checker, setting.default);
   const enumValues = buildEnumValuesFromOptions(setting.options);
-  if (inferredType)
-    return enumValues ? { nixType: inferredType, enumValues } : { nixType: inferredType };
-  return enumValues
-    ? { nixType: inferNixTypeFromRuntimeDefault(setting.default), enumValues }
-    : { nixType: inferNixTypeFromRuntimeDefault(setting.default) };
+  if (enumValues && enumValues.length > 0) {
+    if (isBooleanEnumValues(enumValues)) return { nixType: NIX_TYPE_BOOL };
+    return { nixType: NIX_ENUM_TYPE, enumValues };
+  }
+  if (inferredType) return { nixType: inferredType };
+  return { nixType: inferNixTypeFromRuntimeDefault(setting.default) };
 }

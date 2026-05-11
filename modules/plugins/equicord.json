@@ -1900,8 +1900,8 @@
         "description": "Embed helper service to wrap uploaded video links."
       },
       "corsProxyUrl": {
-        "type": "types.nullOr types.str",
-        "default": null,
+        "type": "types.str",
+        "default": "https://cors.keiran0.workers.dev",
         "description": "CORS proxy URL used for browser uploads"
       },
       "apngToGif": {
@@ -3786,7 +3786,7 @@
       },
       "disableRelocationNotices": {
         "type": "types.bool",
-        "default": false,
+        "default": true,
         "description": "Disable Quest relocation notices in the Discovery page. (restart required)"
       },
       "disableSponsoredBanner": {
@@ -3796,7 +3796,7 @@
       },
       "disableAccountPanelPromo": {
         "type": "types.bool",
-        "default": false,
+        "default": true,
         "description": "Disable the promoted Quest popup above your account panel. (restart required)"
       },
       "disableAccountPanelQuestProgress": {
@@ -3811,12 +3811,12 @@
       },
       "disableFriendsListPromo": {
         "type": "types.bool",
-        "default": false,
+        "default": true,
         "description": "Disable the promotion of Quests for games played by friends. (restart required)"
       },
       "disableMembersListPromo": {
         "type": "types.bool",
-        "default": false,
+        "default": true,
         "description": "Disable the actively playing icon in members list items. (restart required)"
       },
       "allowChangingDangerousSettings": {
@@ -3850,8 +3850,13 @@
         "description": "Which types of Quests to auto-complete in the background. (restart required)"
       },
       "questButtonDisplay": {
-        "type": "types.attrs",
-        "default": {},
+        "type": "types.enum",
+        "enumValues": [
+          "always",
+          "unclaimed",
+          "never"
+        ],
+        "default": "always",
         "description": "Which display type to use for the Quest button in the server list. (restart required)"
       },
       "questButtonIncludedTypes": {
@@ -3860,41 +3865,67 @@
         "description": "Which reward types and Quest types to include when displaying Quest counts on the Quest button."
       },
       "questButtonIndicator": {
-        "type": "types.attrs",
-        "default": {},
+        "type": "types.enum",
+        "enumValues": [
+          "pill",
+          "badge",
+          "both",
+          "none"
+        ],
+        "default": "both",
         "description": "Which display type to use for the unclaimed indicator on the Quest button in the server list."
       },
       "questButtonBadgeCount": {
-        "type": "types.float",
+        "type": "types.int",
+        "default": 0,
         "description": "The current number of relevant unclaimed Quests."
       },
       "questButtonBadgeColor": {
-        "type": "types.float",
+        "type": "types.int",
+        "default": 2842239,
         "description": "The color of the Quest button badge in the server list."
       },
       "questButtonLeftClickAction": {
-        "type": "types.attrs",
-        "default": {},
+        "type": "types.enum",
+        "enumValues": [
+          "open-quests",
+          "context-menu",
+          "plugin-settings",
+          "nothing"
+        ],
+        "default": "open-quests",
         "description": "The action to perform when left-clicking the Quest button in the server list."
       },
       "questButtonMiddleClickAction": {
-        "type": "types.attrs",
-        "default": {},
+        "type": "types.enum",
+        "enumValues": [
+          "open-quests",
+          "context-menu",
+          "plugin-settings",
+          "nothing"
+        ],
+        "default": "plugin-settings",
         "description": "The action to perform when middle-clicking the Quest button in the server list."
       },
       "questButtonRightClickAction": {
-        "type": "types.attrs",
-        "default": {},
+        "type": "types.enum",
+        "enumValues": [
+          "open-quests",
+          "context-menu",
+          "plugin-settings",
+          "nothing"
+        ],
+        "default": "context-menu",
         "description": "The action to perform when right-clicking the Quest button in the server list."
       },
       "notifyOnQuestComplete": {
         "type": "types.bool",
-        "default": false,
+        "default": true,
         "description": "Show a notification when a Quest is completed."
       },
       "notifyOnNewQuests": {
         "type": "types.bool",
-        "default": false,
+        "default": true,
         "description": "Show a notification when new Quests are detected."
       },
       "notifyOnNewExcludedQuests": {
@@ -3903,25 +3934,28 @@
         "description": "Show a notification when new excluded Quests are detected."
       },
       "questCompletedAlertSound": {
-        "type": "types.nullOr types.str",
-        "default": null,
+        "type": "types.str",
+        "default": "bop_message1",
         "description": "The sound to play when a Quest is completed."
       },
       "questCompletedAlertVolume": {
-        "type": "types.float",
+        "type": "types.int",
+        "default": 100,
         "description": "The volume for the Quest completed alert sound."
       },
       "questFetchInterval": {
-        "type": "types.float",
+        "type": "types.int",
+        "default": 2700,
         "description": "The interval in seconds to fetch Quests from Discord."
       },
       "newQuestAlertSound": {
-        "type": "types.nullOr types.str",
-        "default": null,
+        "type": "types.str",
+        "default": "discodo",
         "description": "The sound to play when new Quests are detected."
       },
       "newQuestAlertVolume": {
-        "type": "types.float",
+        "type": "types.int",
+        "default": 100,
         "description": "The volume for the new Quest alert sound."
       },
       "newExcludedQuestAlertSound": {
@@ -3930,7 +3964,8 @@
         "description": "The sound to play when new excluded Quests are detected."
       },
       "newExcludedQuestAlertVolume": {
-        "type": "types.float",
+        "type": "types.int",
+        "default": 100,
         "description": "The volume for the new excluded Quest alert sound."
       },
       "questTileUnclaimedColor": {
@@ -3954,13 +3989,13 @@
         "description": "The color of expired Quest tiles in the Quests page."
       },
       "questTileGradient": {
-        "type": "types.nullOr types.str",
-        "default": null,
+        "type": "types.str",
+        "default": "intense",
         "description": "Style of the gradient used in the Quest tiles."
       },
       "questTilePreload": {
         "type": "types.bool",
-        "default": false,
+        "default": true,
         "description": "Attempt to preload the assets for the Quest tiles."
       },
       "questOrder": {
@@ -3969,23 +4004,23 @@
         "description": "Sort order for Quest status groups."
       },
       "unclaimedSubsort": {
-        "type": "types.nullOr types.str",
-        "default": null,
+        "type": "types.str",
+        "default": "Expiring ASC",
         "description": "Subsort method for unclaimed Quests."
       },
       "claimedSubsort": {
-        "type": "types.nullOr types.str",
-        "default": null,
+        "type": "types.str",
+        "default": "Claimed DESC",
         "description": "Subsort method for claimed Quests."
       },
       "ignoredSubsort": {
-        "type": "types.nullOr types.str",
-        "default": null,
+        "type": "types.str",
+        "default": "Recent DESC",
         "description": "Subsort method for ignored Quests."
       },
       "expiredSubsort": {
-        "type": "types.nullOr types.str",
-        "default": null,
+        "type": "types.str",
+        "default": "Expiring DESC",
         "description": "Subsort method for expired Quests."
       },
       "isOnQuestsPage": {
@@ -3995,17 +4030,17 @@
       },
       "rememberQuestPageSort": {
         "type": "types.bool",
-        "default": false,
+        "default": true,
         "description": "Remember the last used sort on the Quests page."
       },
       "rememberQuestPageFilters": {
         "type": "types.bool",
-        "default": false,
+        "default": true,
         "description": "Remember the last used filters on the Quests page."
       },
       "lastQuestPageSort": {
-        "type": "types.nullOr types.str",
-        "default": null,
+        "type": "types.str",
+        "default": "questify",
         "description": "Remember the last used sort on the Quests page."
       },
       "lastQuestPageFilters": {
@@ -5901,7 +5936,51 @@
     "description": "Announces when users join, leave, or move voice channels via narrator using TikTok TTS. Revamped and back from the dead. (Equicord-only)",
     "settings": {
       "customVoice": {
-        "type": "types.str",
+        "type": "types.enum",
+        "enumValues": [
+          "id_001",
+          "jp_001",
+          "jp_003",
+          "jp_005",
+          "jp_006",
+          "kr_003",
+          "kr_002",
+          "kr_004",
+          "en_au_001",
+          "en_au_002",
+          "en_male_funny",
+          "en_male_narration",
+          "en_female_emotional",
+          "en_male_cody",
+          "en_uk_001",
+          "en_uk_003",
+          "en_us_001",
+          "en_us_002",
+          "en_us_006",
+          "en_us_007",
+          "en_us_009",
+          "en_us_010",
+          "fr_001",
+          "fr_002",
+          "de_001",
+          "de_002",
+          "it_male_m18",
+          "es_002",
+          "en_us_c3po",
+          "en_us_chewbacca",
+          "en_us_ghostface",
+          "en_male_ghosthost",
+          "en_female_madam_leota",
+          "en_male_pirate",
+          "en_us_rocket",
+          "en_us_stitch",
+          "en_us_stormtrooper",
+          "br_001",
+          "br_003",
+          "br_004",
+          "br_005",
+          "es_mx_002"
+        ],
         "default": "en_us_001",
         "description": "Narrator voice"
       },

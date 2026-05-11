@@ -63,9 +63,8 @@ describe('parsePlugins()', () => {
         result.vencordPlugins['ShikiDesktop'] ?? result.equicordPlugins['ShikiDesktop'];
       expect(plugin).toBeDefined();
       const theme = plugin?.settings.theme as PluginSetting;
-      // When theme values cannot be resolved at build time, fall back to types.str
-      expect(theme.type).toBe('types.nullOr types.str');
-      expect(theme.enumValues).toBeUndefined();
+      expect(theme.type).toBe('types.enum');
+      expect(theme.enumValues).toEqual(['https://darkplus', 'https://lightplus', 'https://moon']);
       expect(['string', 'undefined', 'object']).toContain(typeof theme.default);
     } finally {
       await fse.remove(tempDir);
@@ -340,6 +339,79 @@ describe('parsePlugins()', () => {
       expect(Array.isArray(method.enumValues ?? [])).toBe(true);
       // default may be unresolved in minimal env, or resolved to number/string
       expect(['string', 'number', 'undefined']).toContain(typeof method.default);
+    } finally {
+      await fse.remove(tempDir);
+    }
+  });
+
+  test('parses imported as-expression defaults and custom literal-union enums', async () => {
+    const tempDir = await fse.mkdtemp(join(__dirname, 'test-'));
+    try {
+      await createPlugin(tempDir, 'questifyLite', {
+        indexContent: `import definePlugin from "@utils/types";
+        import { settings } from "./settings/store";
+        export default definePlugin({ name: "QuestifyLite", description: "Test", settings });`,
+        additionalFiles: [
+          {
+            path: 'settings/def.ts',
+            content: `export type QuestButtonDisplayMode = "always" | "unclaimed" | "never";
+            export const defaultQuestButtonDisplay: QuestButtonDisplayMode = "always";
+            export const defaultQuestButtonBadgeCount = 0;
+            export const defaultQuestButtonBadgeColor = 2842239;
+            export const defaultQuestFetchInterval = 2700;
+            export const defaultQuestCompletedAlertVolume = 100;`,
+          },
+          {
+            path: 'settings/store.ts',
+            content: `import { definePluginSettings, OptionType } from "@utils/types";
+            import { defaultQuestButtonBadgeColor, defaultQuestButtonBadgeCount, defaultQuestButtonDisplay, defaultQuestCompletedAlertVolume, defaultQuestFetchInterval, type QuestButtonDisplayMode } from "./def";
+            export const settings = definePluginSettings({
+              questButtonDisplay: {
+                type: OptionType.CUSTOM,
+                description: "Which display type to use for the Quest button in the server list.",
+                default: defaultQuestButtonDisplay as QuestButtonDisplayMode,
+              },
+              questButtonBadgeCount: {
+                type: OptionType.NUMBER,
+                description: "The current number of relevant unclaimed Quests.",
+                default: defaultQuestButtonBadgeCount,
+              },
+              questButtonBadgeColor: {
+                type: OptionType.NUMBER | OptionType.CUSTOM,
+                description: "The color of the Quest button badge in the server list.",
+                default: defaultQuestButtonBadgeColor as number | null,
+              },
+              questCompletedAlertVolume: {
+                type: OptionType.NUMBER,
+                description: "The volume for the Quest completed alert sound.",
+                default: defaultQuestCompletedAlertVolume,
+              },
+              questFetchInterval: {
+                type: OptionType.NUMBER,
+                description: "The interval in seconds to fetch Quests from Discord.",
+                default: defaultQuestFetchInterval,
+              },
+            });`,
+          },
+        ],
+      });
+
+      await createTsConfig(tempDir, { baseUrl: './src', include: ['src'] });
+
+      const result = await parsePlugins(tempDir);
+      const plugin =
+        result.vencordPlugins['QuestifyLite'] ?? result.equicordPlugins['QuestifyLite'];
+      expect(plugin).toBeDefined();
+
+      const display = plugin?.settings.questButtonDisplay as PluginSetting;
+      expect(display.type).toBe('types.enum');
+      expect(display.enumValues).toEqual(['always', 'unclaimed', 'never']);
+      expect(display.default).toBe('always');
+
+      expect((plugin?.settings.questButtonBadgeCount as PluginSetting).default).toBe(0);
+      expect((plugin?.settings.questButtonBadgeColor as PluginSetting).default).toBe(2842239);
+      expect((plugin?.settings.questCompletedAlertVolume as PluginSetting).default).toBe(100);
+      expect((plugin?.settings.questFetchInterval as PluginSetting).default).toBe(2700);
     } finally {
       await fse.remove(tempDir);
     }

@@ -150,8 +150,8 @@ export const evaluate = (node: Node, checker: TypeChecker): EvaluationResult => 
     kind === SyntaxKind.TypeAssertionExpression ||
     kind === SyntaxKind.ParenthesizedExpression
   ) {
-    const unwrapped = resolveIdentifierWithFallback(node, checker);
-    if (unwrapped) return evaluate(unwrapped, checker);
+    const unwrapped = unwrapNode(node);
+    if (unwrapped !== node) return evaluate(unwrapped, checker);
     return Err(createEvaluationError(`Cannot unwrap node: ${node.getText()}`, node));
   }
 
