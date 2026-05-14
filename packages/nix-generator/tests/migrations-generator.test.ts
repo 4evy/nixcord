@@ -68,7 +68,7 @@ describe('generateMigrationsModule()', () => {
     expect(result).not.toContain('mkRemovedPluginModule');
   });
 
-  test('plugin rename enable aliases do not warn for default false values', () => {
+  test('plugin rename enable aliases are silent for target defaults', () => {
     const deprecated: DeprecatedData = {
       renames: { OldPlugin: { to: 'NewPlugin', date: '2026-01-01' } },
       removals: {},
@@ -82,7 +82,8 @@ describe('generateMigrationsModule()', () => {
 
     expect(result).toContain('lib.modules.doRename');
     expect(result).toContain('warn = false');
-    expect(result).toContain('use = x: if x then builtins.trace');
+    expect(result).toContain('use = x: x');
+    expect(result).not.toContain('builtins.trace "Obsolete option');
     expect(result).toContain('base ++ ["oldPlugin" "enable"]');
     expect(result).toContain('base ++ ["newPlugin" "enable"]');
   });

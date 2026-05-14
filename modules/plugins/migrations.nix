@@ -40,12 +40,7 @@ in
       ];
       visible = false;
       warn = false;
-      use =
-        x:
-        if x then
-          builtins.trace "Obsolete option `programs.nixcord.config.plugins.anammox.enable' is used. It was renamed to `programs.nixcord.config.plugins.declutter.enable'." x
-        else
-          x;
+      use = x: x;
     })
     (lib.modules.mkRenamedOptionModule
       (
@@ -316,12 +311,7 @@ in
       ];
       visible = false;
       warn = false;
-      use =
-        x:
-        if x then
-          builtins.trace "Obsolete option `programs.nixcord.config.plugins.audioBookShelfRichPresence.enable' is used. It was renamed to `programs.nixcord.config.plugins.richPresence.enable'." x
-        else
-          x;
+      use = x: x;
     })
     (lib.modules.mkRenamedOptionModule
       (
@@ -1024,12 +1014,7 @@ in
       ];
       visible = false;
       warn = false;
-      use =
-        x:
-        if x then
-          builtins.trace "Obsolete option `programs.nixcord.config.plugins.betterQuickReact.enable' is used. It was renamed to `programs.nixcord.config.plugins.moreQuickReactions.enable'." x
-        else
-          x;
+      use = x: x;
     })
     (lib.modules.mkRenamedOptionModule
       (
@@ -1124,12 +1109,7 @@ in
       ];
       visible = false;
       warn = false;
-      use =
-        x:
-        if x then
-          builtins.trace "Obsolete option `programs.nixcord.config.plugins.betterUserArea.enable' is used. It was renamed to `programs.nixcord.config.plugins.declutter.enable'." x
-        else
-          x;
+      use = x: x;
     })
     (lib.modules.mkRenamedOptionModule
       (
@@ -1336,12 +1316,7 @@ in
       ];
       visible = false;
       warn = false;
-      use =
-        x:
-        if x then
-          builtins.trace "Obsolete option `programs.nixcord.config.plugins.emoteCloner.enable' is used. It was renamed to `programs.nixcord.config.plugins.expressionCloner.enable'." x
-        else
-          x;
+      use = x: x;
     })
 
     # FriendCloud -> MoreCommands
@@ -1372,12 +1347,7 @@ in
       ];
       visible = false;
       warn = false;
-      use =
-        x:
-        if x then
-          builtins.trace "Obsolete option `programs.nixcord.config.plugins.friendCloud.enable' is used. It was renamed to `programs.nixcord.config.plugins.moreCommands.enable'." x
-        else
-          x;
+      use = x: x;
     })
     (lib.modules.mkRenamedOptionModule
       (
@@ -1488,12 +1458,7 @@ in
       ];
       visible = false;
       warn = false;
-      use =
-        x:
-        if x then
-          builtins.trace "Obsolete option `programs.nixcord.config.plugins.GensokyoRadioRPC.enable' is used. It was renamed to `programs.nixcord.config.plugins.richPresence.enable'." x
-        else
-          x;
+      use = x: x;
     })
     (lib.modules.mkRenamedOptionModule
       (
@@ -2180,12 +2145,7 @@ in
       ];
       visible = false;
       warn = false;
-      use =
-        x:
-        if x then
-          builtins.trace "Obsolete option `programs.nixcord.config.plugins.gifRoulette.enable' is used. It was renamed to `programs.nixcord.config.plugins.moreCommands.enable'." x
-        else
-          x;
+      use = x: x;
     })
     (lib.modules.mkRenamedOptionModule
       (
@@ -2232,12 +2192,7 @@ in
       ];
       visible = false;
       warn = false;
-      use =
-        x:
-        if x then
-          builtins.trace "Obsolete option `programs.nixcord.config.plugins.hideAttachments.enable' is used. It was renamed to `programs.nixcord.config.plugins.hideMedia.enable'." x
-        else
-          x;
+      use = x: x;
     })
 
     # ImgToGif -> MoreCommands
@@ -2268,12 +2223,7 @@ in
       ];
       visible = false;
       warn = false;
-      use =
-        x:
-        if x then
-          builtins.trace "Obsolete option `programs.nixcord.config.plugins.imgToGif.enable' is used. It was renamed to `programs.nixcord.config.plugins.moreCommands.enable'." x
-        else
-          x;
+      use = x: x;
     })
     (lib.modules.mkRenamedOptionModule
       (
@@ -2384,12 +2334,7 @@ in
       ];
       visible = false;
       warn = false;
-      use =
-        x:
-        if x then
-          builtins.trace "Obsolete option `programs.nixcord.config.plugins.jellyfinRichPresence.enable' is used. It was renamed to `programs.nixcord.config.plugins.richPresence.enable'." x
-        else
-          x;
+      use = x: x;
     })
     (lib.modules.mkRenamedOptionModule
       (
@@ -3124,12 +3069,7 @@ in
       ];
       visible = false;
       warn = false;
-      use =
-        x:
-        if x then
-          builtins.trace "Obsolete option `programs.nixcord.config.plugins.ListenBrainzRPC.enable' is used. It was renamed to `programs.nixcord.config.plugins.richPresence.enable'." x
-        else
-          x;
+      use = x: x;
     })
     (lib.modules.mkRenamedOptionModule
       (
@@ -3816,12 +3756,7 @@ in
       ];
       visible = false;
       warn = false;
-      use =
-        x:
-        if x then
-          builtins.trace "Obsolete option `programs.nixcord.config.plugins.memberListActivities.enable' is used. It was renamed to `programs.nixcord.config.plugins.betterActivities.enable'." x
-        else
-          x;
+      use = x: x;
     })
     (lib.modules.mkRenamedOptionModule
       (
@@ -3948,12 +3883,7 @@ in
       ];
       visible = false;
       warn = false;
-      use =
-        x:
-        if x then
-          builtins.trace "Obsolete option `programs.nixcord.config.plugins.messageTags.enable' is used. It was renamed to `programs.nixcord.config.plugins.customCommands.enable'." x
-        else
-          x;
+      use = x: x;
     })
     (lib.modules.mkRenamedOptionModule
       (
@@ -4000,12 +3930,7 @@ in
       ];
       visible = false;
       warn = false;
-      use =
-        x:
-        if x then
-          builtins.trace "Obsolete option `programs.nixcord.config.plugins.moreKaomoji.enable' is used. It was renamed to `programs.nixcord.config.plugins.moreCommands.enable'." x
-        else
-          x;
+      use = x: x;
     })
     (lib.modules.mkRenamedOptionModule
       (
@@ -4052,12 +3977,7 @@ in
       ];
       visible = false;
       warn = false;
-      use =
-        x:
-        if x then
-          builtins.trace "Obsolete option `programs.nixcord.config.plugins.PronounDB.enable' is used. It was renamed to `programs.nixcord.config.plugins.userMessagesPronouns.enable'." x
-        else
-          x;
+      use = x: x;
     })
     (lib.modules.mkRenamedOptionModule
       (
@@ -4104,12 +4024,7 @@ in
       ];
       visible = false;
       warn = false;
-      use =
-        x:
-        if x then
-          builtins.trace "Obsolete option `programs.nixcord.config.plugins.repeatMessage.enable' is used. It was renamed to `programs.nixcord.config.plugins.repeatMessages.enable'." x
-        else
-          x;
+      use = x: x;
     })
 
     # Search -> ReplaceGoogleSearch
@@ -4156,12 +4071,7 @@ in
       ];
       visible = false;
       warn = false;
-      use =
-        x:
-        if x then
-          builtins.trace "Obsolete option `programs.nixcord.config.plugins.search.enable' is used. It was renamed to `programs.nixcord.config.plugins.replaceGoogleSearch.enable'." x
-        else
-          x;
+      use = x: x;
     })
     (lib.modules.mkRenamedOptionModule
       (
@@ -4192,12 +4102,7 @@ in
       ];
       visible = false;
       warn = false;
-      use =
-        x:
-        if x then
-          builtins.trace "Obsolete option `programs.nixcord.config.plugins.searchReply.enable' is used. It was renamed to `programs.nixcord.config.plugins.fullSearchContext.enable'." x
-        else
-          x;
+      use = x: x;
     })
 
     # ShowAllRoles -> AlwaysExpandRoles
@@ -4212,12 +4117,7 @@ in
       ];
       visible = false;
       warn = false;
-      use =
-        x:
-        if x then
-          builtins.trace "Obsolete option `programs.nixcord.config.plugins.showAllRoles.enable' is used. It was renamed to `programs.nixcord.config.plugins.alwaysExpandRoles.enable'." x
-        else
-          x;
+      use = x: x;
     })
     (lib.modules.mkRenamedOptionModule
       (
@@ -4312,12 +4212,7 @@ in
       ];
       visible = false;
       warn = false;
-      use =
-        x:
-        if x then
-          builtins.trace "Obsolete option `programs.nixcord.config.plugins.statsfmPresence.enable' is used. It was renamed to `programs.nixcord.config.plugins.richPresence.enable'." x
-        else
-          x;
+      use = x: x;
     })
     (lib.modules.mkRenamedOptionModule
       (
@@ -4988,12 +4883,7 @@ in
       ];
       visible = false;
       warn = false;
-      use =
-        x:
-        if x then
-          builtins.trace "Obsolete option `programs.nixcord.config.plugins.statusWhilePlaying.enable' is used. It was renamed to `programs.nixcord.config.plugins.AutoDNDWhilePlaying.enable'." x
-        else
-          x;
+      use = x: x;
     })
     (lib.modules.mkRenamedOptionModule
       (
@@ -5040,12 +4930,7 @@ in
       ];
       visible = false;
       warn = false;
-      use =
-        x:
-        if x then
-          builtins.trace "Obsolete option `programs.nixcord.config.plugins.timelessClips.enable' is used. It was renamed to `programs.nixcord.config.plugins.clipsEnhancements.enable'." x
-        else
-          x;
+      use = x: x;
     })
     (lib.modules.mkRenamedOptionModule
       (
@@ -5220,12 +5105,7 @@ in
       ];
       visible = false;
       warn = false;
-      use =
-        x:
-        if x then
-          builtins.trace "Obsolete option `programs.nixcord.config.plugins.TosuRPC.enable' is used. It was renamed to `programs.nixcord.config.plugins.richPresence.enable'." x
-        else
-          x;
+      use = x: x;
     })
     (lib.modules.mkRenamedOptionModule
       (
@@ -5896,12 +5776,7 @@ in
       ];
       visible = false;
       warn = false;
-      use =
-        x:
-        if x then
-          builtins.trace "Obsolete option `programs.nixcord.config.plugins.youtubeDescription.enable' is used. It was renamed to `programs.nixcord.config.plugins.fixYoutubeEmbeds.enable'." x
-        else
-          x;
+      use = x: x;
     })
     (lib.modules.mkRenamedOptionModule
       (

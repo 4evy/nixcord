@@ -43,9 +43,10 @@ function mkRenamedLine(oldPlugin: string, newPlugin: string, settingPath: string
   const to = `base ++ ["${newId}" ${newParts}]`;
 
   if (settingPath === 'enable') {
-    const oldPath = `programs.nixcord.config.plugins.${oldId}.enable`;
-    const newPath = `programs.nixcord.config.plugins.${newId}.enable`;
-    return `    (lib.modules.doRename { from = ${from}; to = ${to}; visible = false; warn = false; use = x: if x then builtins.trace "Obsolete option \`${oldPath}' is used. It was renamed to \`${newPath}'." x else x; })`;
+    // Plugin enable options can legitimately default to true after a rename.
+    // Emitting a trace from `use` would then warn users even when they never
+    // referenced the obsolete option, because doRename also sees target defaults.
+    return `    (lib.modules.doRename { from = ${from}; to = ${to}; visible = false; warn = false; use = x: x; })`;
   }
 
   return `    (lib.modules.mkRenamedOptionModule (${from}) (${to}))`;
