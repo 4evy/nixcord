@@ -355,6 +355,10 @@ basePackage.overrideAttrs (oldAttrs: {
           f.write("\n")
       PY
     ''
+    + lib.optionalString stdenvNoCC.isDarwin ''
+      find ${resourcesDir}/modules/discord_desktop_core/app/images/badges \
+        -type f -name '*.ico' -size +104857600c -delete 2>/dev/null || true
+    ''
     + lib.optionalString (withOpenASAR && openasar != null) ''
       cp -f ${openasar} ${resourcesDir}/app.asar
     ''
