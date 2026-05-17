@@ -39,6 +39,12 @@ in
         description = "A list of themes to enable from the themes directory.";
         example = [ "my-theme.css" ];
       };
+      enabledThemeLinks = mkOption {
+        type = types.listOf types.str;
+        default = [ ];
+        description = "A list of online Vencord theme URLs to enable.";
+        example = [ "https://raw.githubusercontent.com/rose-pine/discord/main/rose-pine.theme.css" ];
+      };
       enableReactDevtools = mkEnableOption "React developer tools";
       frameless = mkEnableOption "frameless client window";
       transparent = mkEnableOption "client transparency";

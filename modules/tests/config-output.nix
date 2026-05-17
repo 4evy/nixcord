@@ -188,6 +188,19 @@ let
     assert builtins.elem "https://example.com/theme.css" settingsJson.themeLinks;
     true;
 
+  # --- Test: enabledThemeLinks are preserved in settings ---
+  enabledThemeLinksTest =
+    let
+      config = evalHM (
+        ru baseConfig {
+          config.enabledThemeLinks = [ "https://example.com/enabled-theme.css" ];
+        }
+      );
+      settingsJson = getHomeFileJSON config "/home/testuser/.config/Vencord/settings/settings.json";
+    in
+    assert builtins.elem "https://example.com/enabled-theme.css" settingsJson.enabledThemeLinks;
+    true;
+
   # --- Test: useQuickCSS option is correctly renamed in JSON ---
   useQuickCssRenameTest =
     let
@@ -214,11 +227,12 @@ let
     assert pluginWithSettingsTest;
     assert extraConfigTest;
     assert themeLinksTest;
+    assert enabledThemeLinksTest;
     assert useQuickCssRenameTest;
     true;
 in
 
 pkgs.runCommand "config-output-test" { } ''
-  ${if allTests then "echo 'All 13 config output tests passed'" else "exit 1"}
+  ${if allTests then "echo 'All 14 config output tests passed'" else "exit 1"}
   touch $out
 ''
