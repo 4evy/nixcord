@@ -47,6 +47,12 @@ let
 
   moduleVersions = lib.mapAttrs (_: mod: mod.version) source.modules;
 
+  configDirName =
+    if stdenvNoCC.isDarwin then
+      lib.replaceStrings [ " " ] [ "" ] (lib.toLower binaryName)
+    else
+      lib.toLower binaryName;
+
   krispSourceMeta = source.modules.discord_krisp or null;
 
   krispSrc =
@@ -191,15 +197,18 @@ let
   };
 
   # Discord's distro builds ship native modules separately from the host app.
-  # The app can load these directly from the store via build_info.json, but
-  # OpenASAR's legacy updater still only considers modules installed in the user
-  # config directory. Keep those symlinks fresh and repair manifests left behind
-  # by failed "undefined" module downloads.
+  # Keep pinned modules linked where Discord/OpenASAR's module updater expects
+  # them and repair manifests left behind by failed "undefined" module downloads.
   stageModules = writeShellApplication {
     name = "discord-stage-modules";
     text = ''
       store_modules="$1"
-      modules_dir="''${XDG_CONFIG_HOME:-$HOME/.config}/${lib.toLower binaryName}/${version}/modules"
+      modules_dir="${
+        if stdenvNoCC.isDarwin then
+          "$HOME/Library/Application Support/${configDirName}"
+        else
+          "\${XDG_CONFIG_HOME:-$HOME/.config}/${configDirName}"
+      }/${version}/modules"
 
       mkdir -p "$modules_dir"
       for module in ${lib.concatStringsSep " " (lib.attrNames stagedModuleVersions)}; do
@@ -245,6 +254,8 @@ basePackage.overrideAttrs (oldAttrs: {
     withoutOpenSSL11 (oldAttrs.buildInputs or [ ])
     ++ lib.optionals stdenvNoCC.isLinux [ libpulseaudio ];
 
+  dontStrip = (oldAttrs.dontStrip or false) || stdenvNoCC.isDarwin;
+
   autoPatchelfIgnoreMissingDeps =
     (oldAttrs.autoPatchelfIgnoreMissingDeps or [ ])
     ++ lib.optionals stdenvNoCC.isLinux [
@@ -254,17 +265,46 @@ basePackage.overrideAttrs (oldAttrs: {
 
   unpackPhase = ''
     runHook preUnpack
-    brotli -d < $src | tar xf - --strip-components=1
-    ${lib.optionalString stdenvNoCC.isDarwin ''
-      find . -type l -exec chmod -h u+rwx {} +
-    ''}
+
+    extractDistro() {
+      local src="$1"
+      local dest="$2"
+      local tarball
+      tarball=$(mktemp)
+
+      brotli -d < "$src" > "$tarball"
+      tar xf "$tarball" --strip-components=1 -C "$dest"
+
+      ${lib.optionalString stdenvNoCC.isDarwin ''
+        # Discord's macOS distro tarballs store symlinks with mode 000. Darwin
+        # tools cannot read those links reliably, so recreate them with normal
+        # permissions from the tar metadata.
+        ${python3.interpreter} - "$tarball" "$dest" <<'PY'
+        import pathlib
+        import sys
+        import tarfile
+
+        with tarfile.open(sys.argv[1]) as tar:
+            for member in tar:
+                if not member.issym():
+                    continue
+                parts = pathlib.PurePosixPath(member.name).parts[1:]
+                if not parts:
+                    continue
+                path = pathlib.Path(sys.argv[2], *parts)
+                path.unlink(missing_ok=True)
+                path.symlink_to(member.linkname)
+        PY
+      ''}
+
+      rm "$tarball"
+    }
+
+    extractDistro "$src" .
     ${lib.concatStringsSep "\n" (
       lib.mapAttrsToList (name: msrc: ''
         mkdir -p modules/${name}
-        brotli -d < ${msrc} | tar xf - --strip-components=1 -C modules/${name}
-        ${lib.optionalString stdenvNoCC.isDarwin ''
-          find modules/${name} -type l -exec chmod -h u+rwx {} +
-        ''}
+        extractDistro ${msrc} modules/${name}
       '') stagedModuleSrcs
     )}
     ${lib.optionalString (withKrisp && patchedKrisp != null) ''
@@ -294,6 +334,10 @@ basePackage.overrideAttrs (oldAttrs: {
 
   postInstall =
     (oldAttrs.postInstall or "")
+    + lib.optionalString stdenvNoCC.isDarwin ''
+      mkdir -p ${resourcesDir}/modules
+      cp -R modules/. ${resourcesDir}/modules/
+    ''
     + lib.optionalString stdenvNoCC.isLinux ''
       ${python3.interpreter} - "$out/opt/${binaryName}/resources/build_info.json" "$out/opt/${binaryName}/modules" <<'PY'
       import json
@@ -330,11 +374,14 @@ basePackage.overrideAttrs (oldAttrs: {
   postFixup =
     (oldAttrs.postFixup or "")
     # Stage the pinned distro modules where Discord/OpenASAR's JS module
-    # updater expects them before the client starts. The Linux distro package
-    # installs these modules under $out/opt/$binaryName/modules.
+    # updater expects them before the client starts.
     + lib.optionalString stdenvNoCC.isLinux ''
       wrapProgramShell $out/opt/${binaryName}/${binaryName} \
         --run "${lib.getExe stageModules} $out/opt/${binaryName}/modules"
+    ''
+    + lib.optionalString stdenvNoCC.isDarwin ''
+      wrapProgram "$out/bin/${binaryName}" \
+        --run "${lib.getExe stageModules} \"$out/Applications/${binaryName}.app/Contents/Resources/modules\""
     ''
     # Let Discord's NVENC screenshare path find NVIDIA's driver libraries on NixOS.
     + lib.optionalString stdenvNoCC.isLinux ''
