@@ -77,7 +77,7 @@ in
       default = true;
       description = "Whether to enable OpenASAR for Discord (non-Vesktop).";
     };
-    krisp.enable = mkEnableOption "Krisp noise cancellation (patches Discord's signature check to work after patchelf)";
+    krisp.enable = mkEnableOption "Krisp noise cancellation";
     autoscroll.enable = mkEnableOption "middle-click autoscrolling for Discord";
     settings = mkOption {
       type = types.attrs;

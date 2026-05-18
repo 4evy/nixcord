@@ -18,7 +18,6 @@
   # Krisp noise cancellation patching
   python3,
   runCommand,
-  writeText,
   darwin ? null,
   rcodesign,
 
@@ -45,24 +44,15 @@ let
 
   src = fetchurl { inherit (source.distro) url hash; };
 
-  darwinEntitlements = writeText "discord-entitlements.plist" ''
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "https://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-    <dict>
-      <key>com.apple.security.cs.allow-jit</key>
-      <true/>
-      <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
-      <true/>
-      <key>com.apple.security.cs.disable-library-validation</key>
-      <true/>
-      <key>com.apple.security.device.audio-input</key>
-      <true/>
-      <key>com.apple.security.device.camera</key>
-      <true/>
-    </dict>
-    </plist>
-  '';
+  darwinEntitlements = builtins.toFile "discord-entitlements.plist" (
+    lib.generators.toPlist { escape = true; } {
+      "com.apple.security.cs.allow-jit" = true;
+      "com.apple.security.cs.allow-unsigned-executable-memory" = true;
+      "com.apple.security.cs.disable-library-validation" = true;
+      "com.apple.security.device.audio-input" = true;
+      "com.apple.security.device.camera" = true;
+    }
+  );
 
   moduleSrcs = lib.mapAttrs (_: mod: fetchurl { inherit (mod) url hash; }) source.modules;
 
@@ -83,8 +73,8 @@ let
       null;
 
   # Modules to stage at install time. When Krisp is enabled we do not unpack the
-  # bundled discord_krisp source; the patched module is copied into the staged
-  # modules tree below so distro builds load it from localModulesRoot directly.
+  # bundled discord_krisp source here; the Krisp module below is copied into the
+  # staged modules tree so distro builds load it from localModulesRoot directly.
   stagedModuleSrcs =
     if withKrisp && krispSrc != null then
       lib.removeAttrs moduleSrcs [ "discord_krisp" ]
@@ -92,7 +82,9 @@ let
       moduleSrcs;
 
   stagedModuleVersions =
-    if withKrisp && krispSrc != null then
+    if withKrisp && krispSrc != null && stdenvNoCC.isDarwin then
+      lib.removeAttrs moduleVersions [ "discord_krisp" ]
+    else if withKrisp && krispSrc != null then
       moduleVersions
     else
       lib.filterAttrs (name: _: builtins.hasAttr name stagedModuleSrcs) moduleVersions;
@@ -108,7 +100,6 @@ let
     url = "https://raw.githubusercontent.com/NixOS/nixpkgs/${krispScriptsRev}/pkgs/applications/networking/instant-messengers/discord/deploy-krisp.py";
     hash = "sha256-N/XweGjZobDs2tvEH1aQ7J3IjzwJgwRfk/WsZLAzNis=";
   };
-
   variantPackages = {
     stable = discord;
     ptb = discord-ptb;
@@ -149,25 +140,30 @@ let
     else
       "\"$out/Applications/${binaryName}.app/Contents/Resources\"";
 
-  # Patched Krisp noise-cancellation module.
-  # On Linux: patch the ELF to bypass signature verification.
-  # On macOS: patch the Mach-O and re-sign with an ad-hoc signature.
-  patchedKrisp =
+  # Krisp noise-cancellation module.
+  # Patch the native module to bypass Discord's signature check. Darwin uses
+  # nixpkgs' signingUtils so the patched module is ad-hoc signed with the
+  # Nix-provided Darwin signing tool.
+  krispModule =
     if withKrisp && krispSrc != null then
-      runCommand "discord-krisp-patched"
+      runCommand "discord-krisp-module"
         {
           nativeBuildInputs = [
+            brotli
+          ]
+          ++ lib.optionals (stdenvNoCC.isLinux || stdenvNoCC.isDarwin) [
             (python3.withPackages (ps: [
               ps.lief
               ps.capstone
             ]))
-          ]
-          ++ [ brotli ];
+          ];
         }
         (
           ''
             mkdir -p "$out"
             brotli -d < ${krispSrc} | tar xf - --strip-components=1 -C "$out"
+          ''
+          + lib.optionalString (stdenvNoCC.isLinux || stdenvNoCC.isDarwin) ''
             python3 ${patchKrispPy} "$out/discord_krisp.node"
           ''
           + lib.optionalString stdenvNoCC.isDarwin ''
@@ -179,16 +175,14 @@ let
       null;
 
   # Runtime deployer: copies the patched Krisp module into Discord's config dir
-  # before Discord starts and watches for the module updater overwriting it.
-  # Linux distro builds load modules via localModulesRoot, so the patched Krisp
-  # is staged into the package instead. Avoid the watcher there: on non-stable
-  # clients it can fight the module updater and trigger crash/write loops.
+  # before Discord starts and watches for the module updater overwriting it. On
+  # macOS the module must be a real writable copy, not a store symlink.
   deployKrisp =
-    if withKrisp && patchedKrisp != null && stdenvNoCC.isDarwin then
+    if withKrisp && krispModule != null && stdenvNoCC.isDarwin then
       runCommand "deploy-krisp.py"
         {
           pythonInterpreter = "${python3.withPackages (ps: [ ps.watchdog ])}/bin/python3";
-          krispPath = "${patchedKrisp}";
+          krispPath = "${krispModule}";
           discordVersion = version;
           configDirName = lib.toLower binaryName;
           meta.mainProgram = "deploy-krisp.py";
@@ -197,6 +191,7 @@ let
           mkdir -p "$out/bin"
           cp ${deployKrispPy} "$out/bin/deploy-krisp.py"
           substituteAllInPlace "$out/bin/deploy-krisp.py"
+          ${python3.interpreter} -c 'import sys; from pathlib import Path; p = Path(sys.argv[1]); text = p.read_text(); old = "        for p in dest.rglob(\"*\"):\n            p.chmod(0o755 if p.is_dir() else 0o644)\n"; new = "        for p in dest.rglob(\"*\"):\n            if p.is_symlink():\n                p.unlink()\n                continue\n            p.chmod(0o755 if p.is_dir() else 0o644)\n"; assert old in text, "could not find deploy chmod loop"; p.write_text(text.replace(old, new))' "$out/bin/deploy-krisp.py"
           chmod +x "$out/bin/deploy-krisp.py"
         ''
     else
@@ -335,9 +330,9 @@ basePackage.overrideAttrs (oldAttrs: {
         extractDistro ${msrc} modules/${name}
       '') stagedModuleSrcs
     )}
-    ${lib.optionalString (withKrisp && patchedKrisp != null) ''
+    ${lib.optionalString (withKrisp && krispModule != null) ''
       mkdir -p modules/discord_krisp
-      cp -R ${patchedKrisp}/. modules/discord_krisp/
+      cp -R ${krispModule}/. modules/discord_krisp/
       chmod -R u+w modules/discord_krisp
     ''}
     runHook postUnpack
@@ -391,9 +386,9 @@ basePackage.overrideAttrs (oldAttrs: {
             extractDistro ${msrc} "$out/Applications/${binaryName}.app/Contents/Resources/modules/${name}"
           '') stagedModuleSrcs
         )}
-        ${lib.optionalString (withKrisp && patchedKrisp != null) ''
+        ${lib.optionalString (withKrisp && krispModule != null) ''
           mkdir -p "$out/Applications/${binaryName}.app/Contents/Resources/modules/discord_krisp"
-          cp -R ${patchedKrisp}/. "$out/Applications/${binaryName}.app/Contents/Resources/modules/discord_krisp/"
+          cp -R ${krispModule}/. "$out/Applications/${binaryName}.app/Contents/Resources/modules/discord_krisp/"
           chmod -R u+w "$out/Applications/${binaryName}.app/Contents/Resources/modules/discord_krisp"
         ''}
 
@@ -446,9 +441,35 @@ basePackage.overrideAttrs (oldAttrs: {
           }
       };"""
       new = """VoiceEngine.setupKrispPath = function () {};"""
+      old_connection = """VoiceEngine.createVoiceConnectionWithOptions = function (userId, connectionOptions, onConnectCallback) {
+          const instance = new VoiceEngine.VoiceConnection(userId, connectionOptions, onConnectCallback);
+          return bindConnectionInstance(instance);
+      };"""
+      new_connection = """function disableKrispOptions(value, seen = new Set()) {
+          if (value == null || typeof value !== 'object' || seen.has(value)) {
+              return value;
+          }
+          seen.add(value);
+          if (Object.prototype.hasOwnProperty.call(value, 'noiseCancellation')) {
+              value.noiseCancellation = false;
+          }
+          if (Object.prototype.hasOwnProperty.call(value, 'vadUseKrisp')) {
+              value.vadUseKrisp = false;
+          }
+          for (const item of Object.values(value)) {
+              disableKrispOptions(item, seen);
+          }
+          return value;
+      }
+      VoiceEngine.createVoiceConnectionWithOptions = function (userId, connectionOptions, onConnectCallback) {
+          const instance = new VoiceEngine.VoiceConnection(userId, disableKrispOptions(connectionOptions), onConnectCallback);
+          return bindConnectionInstance(instance);
+      };"""
       if old not in text:
           raise RuntimeError(f"could not find Krisp setup hook in {voice_path}")
-      voice_path.write_text(text.replace(old, new))
+      if old_connection not in text:
+          raise RuntimeError(f"could not find voice connection hook in {voice_path}")
+      voice_path.write_text(text.replace(old, new).replace(old_connection, new_connection))
 
       krisp_path.write_text("""\"use strict\";
       module.exports = {
@@ -457,6 +478,29 @@ basePackage.overrideAttrs (oldAttrs: {
           getNcModelFilename: () => Promise.resolve(null),
       };
       """)
+      krisp_path.with_name("discord_krisp.node").unlink(missing_ok=True)
+      PY
+    ''
+    + lib.optionalString (stdenvNoCC.isDarwin && withKrisp && krispModule != null) ''
+      ${python3.interpreter} - "${resourcesDir}/modules/discord_voice/index.js" <<'PY'
+      import sys
+      from pathlib import Path
+
+      voice_path = Path(sys.argv[1])
+      text = voice_path.read_text()
+      old = """VoiceEngine.setupKrispPath = function () {
+          const krispPath = discordNative?.nativeModules?.getModulePath('discord_krisp');
+          if (krispPath != null) {
+              VoiceEngine.setKrispPath(krispPath);
+          }
+      };"""
+      new = """VoiceEngine.setupKrispPath = function () {
+          const krispPath = path.join(os.homedir(), 'Library', 'Application Support', '${configDirName}', '${version}', 'modules', 'discord_krisp');
+          VoiceEngine.setKrispPath(krispPath);
+      };"""
+      if old not in text:
+          raise RuntimeError(f"could not find Krisp setup hook in {voice_path}")
+      voice_path.write_text(text.replace(old, new))
       PY
     ''
     + lib.optionalString (withOpenASAR && openasar != null) ''
