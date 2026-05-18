@@ -254,6 +254,8 @@ basePackage.overrideAttrs (oldAttrs: {
     withoutOpenSSL11 (oldAttrs.buildInputs or [ ])
     ++ lib.optionals stdenvNoCC.isLinux [ libpulseaudio ];
 
+  dontUnpack = (oldAttrs.dontUnpack or false) || stdenvNoCC.isDarwin;
+
   dontStrip = (oldAttrs.dontStrip or false) || stdenvNoCC.isDarwin;
 
   autoPatchelfIgnoreMissingDeps =
@@ -279,7 +281,7 @@ basePackage.overrideAttrs (oldAttrs: {
         # Discord's macOS distro tarballs store symlinks with mode 000. Darwin
         # tools cannot read those links reliably, so recreate them with normal
         # permissions from the tar metadata.
-        ${python3.interpreter} - "$tarball" "$dest" <<'PY'
+        ${python3.interpreter} -c 'import textwrap; exec(textwrap.dedent("""
         import pathlib
         import sys
         import tarfile
@@ -294,7 +296,7 @@ basePackage.overrideAttrs (oldAttrs: {
                 path = pathlib.Path(sys.argv[2], *parts)
                 path.unlink(missing_ok=True)
                 path.symlink_to(member.linkname)
-        PY
+        """))' "$tarball" "$dest"
       ''}
 
       rm "$tarball"
@@ -319,25 +321,68 @@ basePackage.overrideAttrs (oldAttrs: {
 
   installPhase =
     if stdenvNoCC.isDarwin then
-      builtins.replaceStrings
-        [
-          ''cp -r "${binaryName}.app" $out/Applications''
-          ''cp -R "${binaryName}.app" $out/Applications''
-        ]
-        [
-          ''tar cf - "${binaryName}.app" | tar xf - -C $out/Applications''
-          ''tar cf - "${binaryName}.app" | tar xf - -C $out/Applications''
-        ]
-        oldAttrs.installPhase
+      ''
+        runHook preInstall
+
+        mkdir -p "$out/Applications"
+
+        extractDistro() {
+          local src="$1"
+          local dest="$2"
+          local tarball
+          tarball=$(mktemp)
+
+          brotli -d < "$src" > "$tarball"
+          tar xf "$tarball" --strip-components=1 -C "$dest"
+
+          # Discord's macOS distro tarballs store symlinks with mode 000.
+          # Recreate them so Darwin tooling can read the links reliably.
+          ${python3.interpreter} -c 'import textwrap; exec(textwrap.dedent("""
+          import pathlib
+          import sys
+          import tarfile
+
+          with tarfile.open(sys.argv[1]) as tar:
+              for member in tar:
+                  if not member.issym():
+                      continue
+                  parts = pathlib.PurePosixPath(member.name).parts[1:]
+                  if not parts:
+                      continue
+                  path = pathlib.Path(sys.argv[2], *parts)
+                  path.unlink(missing_ok=True)
+                  path.symlink_to(member.linkname)
+          """))' "$tarball" "$dest"
+
+          rm "$tarball"
+        }
+
+        extractDistro "$src" "$out/Applications"
+
+        ${lib.concatStringsSep "\n" (
+          lib.mapAttrsToList (name: msrc: ''
+            mkdir -p "$out/Applications/${binaryName}.app/Contents/Resources/modules/${name}"
+            extractDistro ${msrc} "$out/Applications/${binaryName}.app/Contents/Resources/modules/${name}"
+          '') stagedModuleSrcs
+        )}
+        ${lib.optionalString (withKrisp && patchedKrisp != null) ''
+          mkdir -p "$out/Applications/${binaryName}.app/Contents/Resources/modules/discord_krisp"
+          cp -R ${patchedKrisp}/. "$out/Applications/${binaryName}.app/Contents/Resources/modules/discord_krisp/"
+          chmod -R u+w "$out/Applications/${binaryName}.app/Contents/Resources/modules/discord_krisp"
+        ''}
+
+        mkdir -p "$out/bin"
+        makeWrapper "$out/Applications/${binaryName}.app/Contents/MacOS/${binaryName}" "$out/bin/${binaryName}" \
+          --run ${lib.getExe oldAttrs.passthru.disableBreakingUpdates} \
+          --add-flags ""
+
+        runHook postInstall
+      ''
     else
       oldAttrs.installPhase;
 
   postInstall =
     (oldAttrs.postInstall or "")
-    + lib.optionalString stdenvNoCC.isDarwin ''
-      mkdir -p ${resourcesDir}/modules
-      cp -R modules/. ${resourcesDir}/modules/
-    ''
     + lib.optionalString stdenvNoCC.isLinux ''
       ${python3.interpreter} - "$out/opt/${binaryName}/resources/build_info.json" "$out/opt/${binaryName}/modules" <<'PY'
       import json
