@@ -9,6 +9,7 @@ let
     evalHM
     evalHMAssertionFails
     getHMAssertionMessages
+    getHMWarnings
     firstSharedPlugin
     firstVencordOnlyPlugin
     firstEquicordOnlyPlugin
@@ -118,6 +119,39 @@ let
     assert config.warnings == [ ];
     true;
 
+  # --- Test: renamed target plugin does not trigger a deprecated-name warning ---
+  renamedTargetPluginWarningTest =
+    let
+      warnings = getHMWarnings {
+        enable = true;
+        config.plugins.userMessagesPronouns.enable = true;
+      };
+    in
+    assert warnings == [ ];
+    true;
+
+  # --- Test: deprecated typed plugin name still triggers a warning ---
+  deprecatedTypedPluginWarningTest =
+    let
+      warnings = getHMWarnings {
+        enable = true;
+        config.plugins.PronounDB.enable = true;
+      };
+    in
+    assert builtins.any (m: lib.hasInfix "PronounDB" m) warnings;
+    true;
+
+  # --- Test: deprecated freeform plugin name still triggers a warning ---
+  deprecatedFreeformPluginWarningTest =
+    let
+      warnings = getHMWarnings {
+        enable = true;
+        extraConfig.plugins.PronounDB.enable = true;
+      };
+    in
+    assert builtins.any (m: lib.hasInfix "PronounDB" m) warnings;
+    true;
+
   allTests =
     assert mutualExclusivityTest;
     assert mutualExclusivityMessageTest;
@@ -127,10 +161,13 @@ let
     assert vencordPluginWithEquicordTest;
     assert sharedPluginPassesTest;
     assert disabledModuleTest;
+    assert renamedTargetPluginWarningTest;
+    assert deprecatedTypedPluginWarningTest;
+    assert deprecatedFreeformPluginWarningTest;
     true;
 in
 
 pkgs.runCommand "assertions-test" { } ''
-  ${if allTests then "echo 'All 8 assertion tests passed'" else "exit 1"}
+  ${if allTests then "echo 'All 11 assertion tests passed'" else "exit 1"}
   touch $out
 ''
