@@ -72,14 +72,11 @@ let
     else
       null;
 
-  # Modules to stage at install time. When Krisp is enabled we do not unpack the
-  # bundled discord_krisp source here; the Krisp module below is copied into the
-  # staged modules tree so distro builds load it from localModulesRoot directly.
+  # Modules to stage at install time. Keep discord_krisp out of the generic
+  # staging path: when Krisp is enabled, the patched module is copied below;
+  # when disabled, leaving it absent avoids loading a broken native addon.
   stagedModuleSrcs =
-    if withKrisp && krispSrc != null then
-      lib.removeAttrs moduleSrcs [ "discord_krisp" ]
-    else
-      moduleSrcs;
+    if krispSourceMeta != null then lib.removeAttrs moduleSrcs [ "discord_krisp" ] else moduleSrcs;
 
   stagedModuleVersions =
     if withKrisp && krispSrc != null && stdenvNoCC.isDarwin then
@@ -90,15 +87,23 @@ let
       lib.filterAttrs (name: _: builtins.hasAttr name stagedModuleSrcs) moduleVersions;
 
   # Krisp helper scripts from upstream nixpkgs PR #506089
-  # (NixOS/nixpkgs@3327261e53f551e4b4393ef3d6ac660976c19a1d)
-  krispScriptsRev = "3327261e53f551e4b4393ef3d6ac660976c19a1d";
+  # (NixOS/nixpkgs@90cdc6283e794e7e276fa60f6d27b98a27454f15)
+  krispScriptsRev = "90cdc6283e794e7e276fa60f6d27b98a27454f15";
   patchKrispPy = fetchurl {
     url = "https://raw.githubusercontent.com/NixOS/nixpkgs/${krispScriptsRev}/pkgs/applications/networking/instant-messengers/discord/patch-krisp.py";
     hash = "sha256-pj0+CCUZqApYE02zfXnLvOoiIHbtLTT1JMzrJN86WDo=";
   };
+  patchKrispModulePy = fetchurl {
+    url = "https://raw.githubusercontent.com/NixOS/nixpkgs/${krispScriptsRev}/pkgs/applications/networking/instant-messengers/discord/patch-krisp-module.py";
+    hash = "sha256-WyiDHH0l8rtcG0Dn8acZoeO8Wd2u9ZqaqNZqQlsAGM8=";
+  };
+  patchVoiceKrispPy = fetchurl {
+    url = "https://raw.githubusercontent.com/NixOS/nixpkgs/${krispScriptsRev}/pkgs/applications/networking/instant-messengers/discord/patch-voice-krisp.py";
+    hash = "sha256-HEfIv9br3oimd+wtvlBUqOmgv4HS0XRaO2O92ZOupos=";
+  };
   deployKrispPy = fetchurl {
     url = "https://raw.githubusercontent.com/NixOS/nixpkgs/${krispScriptsRev}/pkgs/applications/networking/instant-messengers/discord/deploy-krisp.py";
-    hash = "sha256-N/XweGjZobDs2tvEH1aQ7J3IjzwJgwRfk/WsZLAzNis=";
+    hash = "sha256-3b1ymG+w3FIZtAIyw1wiRe3JC2vNDAC8d2YMHP9icxM=";
   };
   variantPackages = {
     stable = discord;
@@ -165,6 +170,7 @@ let
           ''
           + lib.optionalString (stdenvNoCC.isLinux || stdenvNoCC.isDarwin) ''
             python3 ${patchKrispPy} "$out/discord_krisp.node"
+            python3 ${patchKrispModulePy} "$out" ${if stdenvNoCC.isDarwin then "darwin" else "linux"}
           ''
           + lib.optionalString stdenvNoCC.isDarwin ''
             source ${darwin.signingUtils}
@@ -191,7 +197,6 @@ let
           mkdir -p "$out/bin"
           cp ${deployKrispPy} "$out/bin/deploy-krisp.py"
           substituteAllInPlace "$out/bin/deploy-krisp.py"
-          ${python3.interpreter} -c 'import sys; from pathlib import Path; p = Path(sys.argv[1]); text = p.read_text(); old = "        for p in dest.rglob(\"*\"):\n            p.chmod(0o755 if p.is_dir() else 0o644)\n"; new = "        for p in dest.rglob(\"*\"):\n            if p.is_symlink():\n                p.unlink()\n                continue\n            p.chmod(0o755 if p.is_dir() else 0o644)\n"; assert old in text, "could not find deploy chmod loop"; p.write_text(text.replace(old, new))' "$out/bin/deploy-krisp.py"
           chmod +x "$out/bin/deploy-krisp.py"
         ''
     else
@@ -404,7 +409,7 @@ basePackage.overrideAttrs (oldAttrs: {
 
   postInstall =
     (oldAttrs.postInstall or "")
-    + lib.optionalString stdenvNoCC.isLinux ''
+    + lib.optionalString (stdenvNoCC.isLinux && !(withKrisp && krispModule != null)) ''
       ${python3.interpreter} - "$out/opt/${binaryName}/resources/build_info.json" "$out/opt/${binaryName}/modules" <<'PY'
       import json
       import sys
@@ -421,87 +426,21 @@ basePackage.overrideAttrs (oldAttrs: {
           f.write("\n")
       PY
     ''
+    + lib.optionalString (stdenvNoCC.isLinux && withKrisp && krispModule != null) ''
+      ${python3.interpreter} ${patchVoiceKrispPy} \
+        "$out/opt/${binaryName}/modules/discord_voice/index.js" \
+        "require('path').join(process.env.XDG_CONFIG_HOME || require('path').join(require('os').homedir(), '.config'), '${lib.toLower binaryName}', '${version}', 'modules', 'discord_krisp')" \
+        "$out/opt/${binaryName}/resources/build_info.json" \
+        "$out/opt/${binaryName}/modules"
+    ''
     + lib.optionalString stdenvNoCC.isDarwin ''
       find ${resourcesDir}/modules/discord_desktop_core/app/images/badges \
         -type f -name '*.ico' -size +104857600c -delete 2>/dev/null || true
     ''
-    + lib.optionalString (stdenvNoCC.isDarwin && !withKrisp) ''
-      ${python3.interpreter} - "${resourcesDir}/modules/discord_voice/index.js" "${resourcesDir}/modules/discord_krisp/index.js" <<'PY'
-      import sys
-      from pathlib import Path
-
-      voice_path = Path(sys.argv[1])
-      krisp_path = Path(sys.argv[2])
-
-      text = voice_path.read_text()
-      old = """VoiceEngine.setupKrispPath = function () {
-          const krispPath = discordNative?.nativeModules?.getModulePath('discord_krisp');
-          if (krispPath != null) {
-              VoiceEngine.setKrispPath(krispPath);
-          }
-      };"""
-      new = """VoiceEngine.setupKrispPath = function () {};"""
-      old_connection = """VoiceEngine.createVoiceConnectionWithOptions = function (userId, connectionOptions, onConnectCallback) {
-          const instance = new VoiceEngine.VoiceConnection(userId, connectionOptions, onConnectCallback);
-          return bindConnectionInstance(instance);
-      };"""
-      new_connection = """function disableKrispOptions(value, seen = new Set()) {
-          if (value == null || typeof value !== 'object' || seen.has(value)) {
-              return value;
-          }
-          seen.add(value);
-          if (Object.prototype.hasOwnProperty.call(value, 'noiseCancellation')) {
-              value.noiseCancellation = false;
-          }
-          if (Object.prototype.hasOwnProperty.call(value, 'vadUseKrisp')) {
-              value.vadUseKrisp = false;
-          }
-          for (const item of Object.values(value)) {
-              disableKrispOptions(item, seen);
-          }
-          return value;
-      }
-      VoiceEngine.createVoiceConnectionWithOptions = function (userId, connectionOptions, onConnectCallback) {
-          const instance = new VoiceEngine.VoiceConnection(userId, disableKrispOptions(connectionOptions), onConnectCallback);
-          return bindConnectionInstance(instance);
-      };"""
-      if old not in text:
-          raise RuntimeError(f"could not find Krisp setup hook in {voice_path}")
-      if old_connection not in text:
-          raise RuntimeError(f"could not find voice connection hook in {voice_path}")
-      voice_path.write_text(text.replace(old, new).replace(old_connection, new_connection))
-
-      krisp_path.write_text("""\"use strict\";
-      module.exports = {
-          getNcModels: () => Promise.resolve([]),
-          getVadModels: () => Promise.resolve([]),
-          getNcModelFilename: () => Promise.resolve(null),
-      };
-      """)
-      krisp_path.with_name("discord_krisp.node").unlink(missing_ok=True)
-      PY
-    ''
     + lib.optionalString (stdenvNoCC.isDarwin && withKrisp && krispModule != null) ''
-      ${python3.interpreter} - "${resourcesDir}/modules/discord_voice/index.js" <<'PY'
-      import sys
-      from pathlib import Path
-
-      voice_path = Path(sys.argv[1])
-      text = voice_path.read_text()
-      old = """VoiceEngine.setupKrispPath = function () {
-          const krispPath = discordNative?.nativeModules?.getModulePath('discord_krisp');
-          if (krispPath != null) {
-              VoiceEngine.setKrispPath(krispPath);
-          }
-      };"""
-      new = """VoiceEngine.setupKrispPath = function () {
-          const krispPath = path.join(os.homedir(), 'Library', 'Application Support', '${configDirName}', '${version}', 'modules', 'discord_krisp');
-          VoiceEngine.setKrispPath(krispPath);
-      };"""
-      if old not in text:
-          raise RuntimeError(f"could not find Krisp setup hook in {voice_path}")
-      voice_path.write_text(text.replace(old, new))
-      PY
+      ${python3.interpreter} ${patchVoiceKrispPy} \
+        "${resourcesDir}/modules/discord_voice/index.js" \
+        "require('path').join(require('os').userInfo().homedir, 'Library', 'Application Support', '${configDirName}', '${version}', 'modules', 'discord_krisp')"
     ''
     + lib.optionalString (withOpenASAR && openasar != null) ''
       cp -f ${openasar} ${resourcesDir}/app.asar
