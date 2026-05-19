@@ -214,6 +214,47 @@ let
     assert settingsJson.useQuickCSS == true;
     true;
 
+  # --- Test: Equicord contentWarning trigger words are written to settings JSON ---
+  contentWarningTriggerWordsTest =
+    let
+      config = evalHM (
+        ru baseConfig {
+          discord.vencord.enable = false;
+          discord.equicord.enable = true;
+          config.plugins.contentWarning = {
+            enable = true;
+            triggerWords = [
+              "spoiler"
+              "secret"
+            ];
+          };
+        }
+      );
+      settingsJson = getHomeFileJSON config "/home/testuser/.config/Vencord/settings/settings.json";
+    in
+    assert settingsJson.plugins.ContentWarning.enabled == true;
+    assert settingsJson.plugins.ContentWarning.triggerWords == [
+      "spoiler"
+      "secret"
+    ];
+    true;
+
+  # --- Test: unset contentWarning trigger words keep the upstream DataStore fallback active ---
+  contentWarningTriggerWordsUnsetTest =
+    let
+      config = evalHM (
+        ru baseConfig {
+          discord.vencord.enable = false;
+          discord.equicord.enable = true;
+          config.plugins.contentWarning.enable = true;
+        }
+      );
+      settingsJson = getHomeFileJSON config "/home/testuser/.config/Vencord/settings/settings.json";
+    in
+    assert settingsJson.plugins.ContentWarning.enabled == true;
+    assert settingsJson.plugins.ContentWarning.triggerWords == null;
+    true;
+
   allTests =
     assert pluginTest;
     assert disabledPluginTest;
@@ -229,10 +270,12 @@ let
     assert themeLinksTest;
     assert enabledThemeLinksTest;
     assert useQuickCssRenameTest;
+    assert contentWarningTriggerWordsTest;
+    assert contentWarningTriggerWordsUnsetTest;
     true;
 in
 
 pkgs.runCommand "config-output-test" { } ''
-  ${if allTests then "echo 'All 14 config output tests passed'" else "exit 1"}
+  ${if allTests then "echo 'All 16 config output tests passed'" else "exit 1"}
   touch $out
 ''

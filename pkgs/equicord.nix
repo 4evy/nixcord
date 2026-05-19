@@ -163,6 +163,9 @@ let
 in
 (equicord.override { inherit buildWebExtension; }).overrideAttrs (oldAttrs: {
   inherit version src;
+  patches = (oldAttrs.patches or [ ]) ++ [
+    ./patches/equicord-content-warning-settings.patch
+  ];
   pnpmDeps = fetchPnpmDeps {
     inherit src;
     inherit version;

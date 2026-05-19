@@ -25,6 +25,7 @@ stdenvNoCC.mkDerivation (finalAttrs: {
       ../vitest.workspace.ts
       ../vitest.projects.ts
       ../vite.config.shared.ts
+      ../modules/plugins/overrides.json
       ../modules/plugins/deprecated.nix
       ../modules/plugins/deprecated.json
       ../modules/plugins/migrations.nix
@@ -127,6 +128,43 @@ stdenvNoCC.mkDerivation (finalAttrs: {
       --output "$out/dummy.nix" \
       ${lib.optionalString skipGitMigrations "--skip-git-migrations"} \
       --verbose
+
+    ${lib.getExe nodejs} <<'NODE'
+      const fs = require("node:fs");
+      const path = require("node:path");
+
+      const overridesPath = "modules/plugins/overrides.json";
+      if (!fs.existsSync(overridesPath)) process.exit(0);
+
+      const isPlainObject = value =>
+        value !== null && typeof value === "object" && !Array.isArray(value);
+
+      const merge = (base, override) => {
+        if (!isPlainObject(base) || !isPlainObject(override)) return override;
+
+        const result = { ...base };
+        for (const [key, value] of Object.entries(override)) {
+          result[key] = key in result ? merge(result[key], value) : value;
+        }
+        return result;
+      };
+
+      const overrides = JSON.parse(fs.readFileSync(overridesPath, "utf8"));
+      const files = {
+        shared: "shared.json",
+        vencord: "vencord.json",
+        equicord: "equicord.json",
+      };
+
+      for (const [category, filename] of Object.entries(files)) {
+        if (!overrides[category]) continue;
+
+        const targetPath = path.join(process.env.out, "plugins", filename);
+        const generated = JSON.parse(fs.readFileSync(targetPath, "utf8"));
+        const merged = merge(generated, overrides[category]);
+        fs.writeFileSync(targetPath, JSON.stringify(merged, null, 2) + "\n");
+      }
+    NODE
 
     runHook postInstall
   '';

@@ -1,0 +1,13 @@
+{
+  "equicord": {
+    "contentWarning": {
+      "settings": {
+        "triggerWords": {
+          "type": "types.nullOr (types.listOf types.str)",
+          "default": null,
+          "description": "Words to blur in messages (restart required)"
+        }
+      }
+    }
+  }
+}

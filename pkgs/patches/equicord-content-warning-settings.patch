@@ -1,0 +1,95 @@
+diff --git a/src/equicordplugins/contentWarning/index.tsx b/src/equicordplugins/contentWarning/index.tsx
+index 0c6982d..5cba043 100644
+--- a/src/equicordplugins/contentWarning/index.tsx
++++ b/src/equicordplugins/contentWarning/index.tsx
+@@ -21,7 +21,14 @@ const cl = classNameFactory("vc-content-warning-");
+ 
+ const WORDS_KEY = "ContentWarning_words";
+ 
+-let triggerWords = [""];
++let dataStoreTriggerWords = [""];
++
++const getTriggerWords = () => settings.plain.triggerWords ?? dataStoreTriggerWords;
++const setTriggerWords = (words: string[]) => {
++    dataStoreTriggerWords = words;
++    settings.store.triggerWords = words;
++    DataStore.set(WORDS_KEY, words);
++};
+ 
+ function safeMatchesRegex(s: string, r: string) {
+     if (r === "") return false;
+@@ -63,6 +70,7 @@ function TriggerContainer({ child }) {
+ }
+ 
+ function FlaggedInput({ index, forceUpdate }) {
++    const triggerWords = getTriggerWords();
+     const [value, setValue] = useState(triggerWords[index]);
+ 
+     if (value !== triggerWords[index]) {
+@@ -72,21 +80,23 @@ function FlaggedInput({ index, forceUpdate }) {
+     const isLast = index === triggerWords.length - 1;
+ 
+     const updateValue = v => {
+-        triggerWords[index] = v;
++        const nextTriggerWords = [...getTriggerWords()];
++        nextTriggerWords[index] = v;
+         setValue(v);
+-        DataStore.set(WORDS_KEY, triggerWords);
+ 
+         if (isLast) {
+-            triggerWords.push("");
++            nextTriggerWords.push("");
+             forceUpdate();
+         }
++
++        setTriggerWords(nextTriggerWords);
+     };
+ 
+     const removeSelf = () => {
+         if (triggerWords.length === 1) {
+             return;
+         }
+-        triggerWords = triggerWords.slice(0, index).concat(triggerWords.slice(index + 1));
++        setTriggerWords(triggerWords.slice(0, index).concat(triggerWords.slice(index + 1)));
+         forceUpdate();
+     };
+ 
+@@ -118,7 +128,7 @@ function FlaggedInput({ index, forceUpdate }) {
+ function FlaggedWords() {
+     const forceUpdate = useForceUpdater();
+ 
+-    const inputs = triggerWords.map((_, idx) => {
++    const inputs = getTriggerWords().map((_, idx) => {
+         return (
+             <FlaggedInput
+                 key={idx}
+@@ -137,6 +147,12 @@ function FlaggedWords() {
+ }
+ 
+ const settings = definePluginSettings({
++    triggerWords: {
++        type: OptionType.CUSTOM,
++        description: "Words to blur in messages",
++        hidden: true,
++        restartNeeded: true,
++    },
+     flagged: {
+         type: OptionType.COMPONENT,
+         component: () => <FlaggedWords />,
+@@ -165,7 +181,7 @@ export default definePlugin({
+     ],
+ 
+     modify(message, child) {
+-        if (triggerWords.some(w => safeMatchesRegex(message.content, w))) {
++        if (getTriggerWords().some(w => safeMatchesRegex(message.content, w))) {
+             return <TriggerContainer child={child} />;
+         } else {
+             return child;
+@@ -173,6 +189,6 @@ export default definePlugin({
+     },
+ 
+     async start() {
+-        triggerWords = await DataStore.get(WORDS_KEY) ?? [""];
++        dataStoreTriggerWords = await DataStore.get(WORDS_KEY) ?? [""];
+     }
+ });
