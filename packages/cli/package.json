@@ -17,9 +17,9 @@
   "main": "./dist/index.js",
   "types": "./src/index.ts",
   "dependencies": {
-    "@nixcord/nix-generator": "^1.0.0",
-    "@nixcord/parser": "^1.0.0",
-    "@nixcord/shared": "^1.0.0",
+    "@nixcord/nix-generator": "workspace:*",
+    "@nixcord/parser": "workspace:*",
+    "@nixcord/shared": "workspace:*",
     "@stricli/core": "^1.2.6",
     "fs-extra": "^11.3.4",
     "ora": "^9.3.0",

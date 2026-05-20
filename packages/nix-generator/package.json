@@ -14,8 +14,8 @@
   "main": "./dist/index.js",
   "types": "./src/index.ts",
   "dependencies": {
-    "@nixcord/git-analyzer": "^1.0.0",
-    "@nixcord/shared": "^1.0.0",
+    "@nixcord/git-analyzer": "workspace:*",
+    "@nixcord/shared": "workspace:*",
     "change-case": "^5.4.4",
     "fs-extra": "^11.3.4",
     "pathe": "^2.0.3"

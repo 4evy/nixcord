@@ -4,17 +4,13 @@
   nodejs,
   bun,
   writableTmpDirAsHomeHook,
-  vencord,
-  equicord,
   nix,
-  vencordSource ? vencord.src,
-  equicordSource ? equicord.src,
+  vencordSource ? "node_modules/vencord",
+  equicordSource ? "node_modules/equicord",
   skipGitMigrations ? true,
 }:
 let
-  nodeModulesHashDarwin = "sha256-HrntzBT2zJ6njNlvWPIYIzjKiH85Xfry/KezWmQwMNs=";
-  nodeModulesHashLinux = "sha256-CpKWMgGkk3W64mZ7EFWfaW0A3kPEaT2jcn62+iJYQPM=";
-  nodeModulesHash = if stdenvNoCC.hostPlatform.isDarwin then nodeModulesHashDarwin else nodeModulesHashLinux;
+  nodeModulesHash = "sha256-VpiscO5lRIhu+uut1U8IGsiIRrmayAY6mMYwdhwohmw=";
 in
 stdenvNoCC.mkDerivation (finalAttrs: {
   name = "nixcord-plugin-options";
@@ -58,6 +54,8 @@ stdenvNoCC.mkDerivation (finalAttrs: {
       bun install \
         --frozen-lockfile \
         --ignore-scripts \
+        --os=* \
+        --cpu=* \
         --no-progress
 
       runHook postBuild

@@ -6,6 +6,8 @@ import { spawn } from 'node:child_process';
 
 import { CLI_CONFIG } from '@nixcord/shared';
 import { parsePlugins } from '@nixcord/parser';
+import equicordPackage from 'equicord/package.json' with { type: 'json' };
+import vencordPackage from 'vencord/package.json' with { type: 'json' };
 
 type Args = {
   vencord?: string;
@@ -16,9 +18,11 @@ type Args = {
   keepOutput: boolean;
 };
 
-const usage = `Usage: bun run smoke:upstream -- --vencord /path/to/Vencord --equicord /path/to/Equicord [options]
+const usage = `Usage: bun run smoke:upstream -- [--vencord /path/to/Vencord] [--equicord /path/to/Equicord] [options]
 
 Options:
+  --vencord <path>           Vencord source path (default: ${CLI_CONFIG.sources.vencord}, ${vencordPackage.version})
+  --equicord <path>          Equicord source path (default: ${CLI_CONFIG.sources.equicord}, ${equicordPackage.version})
   --max-diagnostics <n>      Maximum parser diagnostics allowed (default: 25)
   --min-vencord-plugins <n>  Minimum parsed Vencord plugin count (default: 100)
   --min-equicord-plugins <n> Minimum parsed Equicord plugin count (default: 100)
@@ -27,6 +31,8 @@ Options:
 
 function parseArgs(argv: string[]): Args {
   const args: Args = {
+    vencord: CLI_CONFIG.sources.vencord,
+    equicord: CLI_CONFIG.sources.equicord,
     maxDiagnostics: 25,
     minVencordPlugins: 100,
     minEquicordPlugins: 100,
@@ -69,9 +75,6 @@ function parseArgs(argv: string[]): Args {
     }
   }
 
-  if (!args.vencord || !args.equicord) {
-    throw new Error(`Both --vencord and --equicord are required.\n\n${usage}`);
-  }
   for (const [name, value] of Object.entries({
     maxDiagnostics: args.maxDiagnostics,
     minVencordPlugins: args.minVencordPlugins,

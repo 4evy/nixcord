@@ -8,6 +8,10 @@ const CliConfigSchema = z.object({
     vencordPlugins: z.string().min(1),
     equicordPlugins: z.string().min(1),
   }),
+  sources: z.object({
+    vencord: z.string().min(1),
+    equicord: z.string().min(1),
+  }),
   filenames: z.object({
     packageJson: z.string().min(1),
     shared: z.string().min(1),
@@ -28,6 +32,10 @@ export const CLI_CONFIG = {
     output: 'plugins',
     vencordPlugins: 'src/plugins',
     equicordPlugins: 'src/equicordplugins',
+  },
+  sources: {
+    vencord: 'node_modules/vencord',
+    equicord: 'node_modules/equicord',
   },
   filenames: {
     packageJson: 'package.json',

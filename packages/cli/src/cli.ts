@@ -54,14 +54,14 @@ export const buildCli = (): Application<CommandContext> => {
         vencord: {
           kind: 'parsed',
           parse: stringParser,
-          brief: 'Path to Vencord source directory (optional override)',
+          brief: `Path to Vencord source directory (default: ${CLI_CONFIG.sources.vencord})`,
           placeholder: 'path',
           optional: true,
         },
         equicord: {
           kind: 'parsed',
           parse: stringParser,
-          brief: 'Path to Equicord source directory (optional)',
+          brief: `Path to Equicord source directory (default: ${CLI_CONFIG.sources.equicord})`,
           placeholder: 'path',
           optional: true,
         },
@@ -137,13 +137,8 @@ export const buildCli = (): Application<CommandContext> => {
         return;
       }
 
-      const vencordPath = validationResult.data.vencord ?? vencordArg;
-      if (!vencordPath) {
-        return new CliExecutionError(
-          new Error('Missing Vencord source path. Provide --vencord or the positional argument.'),
-          validationResult.data.verbose
-        );
-      }
+      const vencordPath = validationResult.data.vencord ?? vencordArg ?? CLI_CONFIG.sources.vencord;
+      const equicordPath = validationResult.data.equicord ?? CLI_CONFIG.sources.equicord;
 
       const logger = createLogger(validationResult.data.verbose);
       const resolvedOutputPath = resolve(process.cwd(), validationResult.data.output);
@@ -158,9 +153,7 @@ export const buildCli = (): Application<CommandContext> => {
         skipGitMigrations: validationResult.data.skipGitMigrations,
       };
 
-      const params: GeneratePluginOptionsParams = validationResult.data.equicord
-        ? { ...baseParams, equicordPath: validationResult.data.equicord }
-        : baseParams;
+      const params: GeneratePluginOptionsParams = { ...baseParams, equicordPath };
 
       const result = await runGeneratePluginOptions(params);
 

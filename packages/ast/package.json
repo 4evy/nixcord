@@ -14,7 +14,7 @@
   "main": "./dist/index.js",
   "types": "./src/index.ts",
   "dependencies": {
-    "@nixcord/shared": "^1.0.0",
+    "@nixcord/shared": "workspace:*",
     "zod": "^4.3.6",
     "ts-morph": "^27.0.2"
   },

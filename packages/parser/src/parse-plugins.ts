@@ -1,4 +1,4 @@
-import { Project, SyntaxKind, type ObjectLiteralExpression } from 'ts-morph';
+import { Project, SyntaxKind, type ObjectLiteralExpression, type SourceFile } from 'ts-morph';
 import pLimit from 'p-limit';
 import { basename, dirname, normalize, join } from 'pathe';
 import fse from 'fs-extra';
@@ -31,7 +31,7 @@ import { CLI_CONFIG } from '@nixcord/shared';
 import { createProject } from './project.js';
 
 const PLUGIN_SOURCE_FILE_PATTERNS = ['index.tsx', 'index.ts', 'settings.ts'] as const;
-const PARALLEL_PROCESSING_LIMIT = 5;
+const PARALLEL_PROCESSING_LIMIT = 1;
 const PROGRESS_REPORT_INTERVAL = 10;
 const PLUGIN_DIR_SEPARATOR_PATTERN = /[-_]/;
 const PLUGIN_FILE_GLOB_PATTERN = '*/index.{ts,tsx}';
@@ -47,6 +47,14 @@ const ParsePluginsOptionsSchema = z.object({
 async function findPluginSourceFile(pluginPath: string): Promise<string | undefined> {
   for (const pattern of PLUGIN_SOURCE_FILE_PATTERNS) {
     const filePath = normalize(join(pluginPath, pattern));
+    if (await fse.pathExists(filePath)) return filePath;
+  }
+  return undefined;
+}
+
+async function findSettingsSourceFile(pluginPath: string): Promise<string | undefined> {
+  for (const fileName of ['settings.tsx', 'settings.ts']) {
+    const filePath = normalize(join(pluginPath, fileName));
     if (await fse.pathExists(filePath)) return filePath;
   }
   return undefined;
@@ -136,17 +144,32 @@ function classifyEmptySettingsExtraction(
 async function parseSinglePlugin(
   pluginDir: string,
   pluginPath: string,
-  project: Project,
-  typeChecker: ReturnType<Project['getTypeChecker']>
+  project: Project
 ): Promise<SinglePluginResult | undefined> {
   const path = await findPluginSourceFile(pluginPath);
   if (!path) return undefined;
 
-  const getOrAddSourceFile = (filePath: string) =>
-    project.getSourceFile(filePath) ?? project.addSourceFileAtPath(filePath);
+  const addedSourceFiles: SourceFile[] = [];
+  const getOrAddSourceFile = (filePath: string) => {
+    const existing = project.getSourceFile(filePath);
+    if (existing) return existing;
+    const sourceFile = project.addSourceFileAtPath(filePath);
+    addedSourceFiles.push(sourceFile);
+    return sourceFile;
+  };
+  const cleanupSourceFiles = () => {
+    for (const sourceFile of addedSourceFiles.slice().reverse()) {
+      project.removeSourceFile(sourceFile);
+    }
+  };
 
+  const settingsPath = await findSettingsSourceFile(pluginPath);
+  const settingsSourceFile = settingsPath ? getOrAddSourceFile(settingsPath) : undefined;
   const sourceFile = getOrAddSourceFile(path);
-  if (!sourceFile) return undefined;
+  if (!sourceFile) {
+    cleanupSourceFiles();
+    return undefined;
+  }
   const pluginSourceFiles = await fg(PLUGIN_SOURCE_GLOB_PATTERN, {
     cwd: pluginPath,
     absolute: true,
@@ -167,20 +190,15 @@ async function parseSinglePlugin(
       .join('');
 
   // If we still don't have a plugin name, skip this plugin
-  if (!pluginName) return undefined;
+  if (!pluginName) {
+    cleanupSourceFiles();
+    return undefined;
+  }
 
-  let settingsCall = findDefinePluginSettings(sourceFile);
+  let settingsCall =
+    (settingsSourceFile ? findDefinePluginSettings(settingsSourceFile) : undefined) ??
+    findDefinePluginSettings(sourceFile);
   if (settingsCall === undefined) {
-    // Try conventional settings files first for deterministic behavior.
-    const settingsPathTsx = normalize(join(pluginPath, 'settings.tsx'));
-    const settingsPathTs = normalize(join(pluginPath, 'settings.ts'));
-
-    const settingsPath = (await fse.pathExists(settingsPathTsx))
-      ? settingsPathTsx
-      : (await fse.pathExists(settingsPathTs))
-        ? settingsPathTs
-        : null;
-
     if (settingsPath) {
       settingsCall = findDefinePluginSettings(getOrAddSourceFile(settingsPath));
     }
@@ -269,6 +287,7 @@ async function parseSinglePlugin(
     ...(pluginInfo.isModified !== undefined ? { isModified: pluginInfo.isModified } : {}),
   };
 
+  cleanupSourceFiles();
   return { entry: [pluginName, pluginConfig], settingRenames, pluginRenames, diagnostics };
 }
 
@@ -282,7 +301,6 @@ interface DirectoryParseResult {
 async function parsePluginsFromDirectory(
   pluginsPath: string,
   project: Project,
-  typeChecker: ReturnType<Project['getTypeChecker']>,
   isTTY: boolean
 ): Promise<DirectoryParseResult> {
   const pluginDirsArray = [
@@ -302,7 +320,7 @@ async function parsePluginsFromDirectory(
   const results = await Promise.all(
     pluginDirsArray.map(async (pluginDir) => {
       const result = await limit(() =>
-        parseSinglePlugin(pluginDir, normalize(join(pluginsPath, pluginDir)), project, typeChecker)
+        parseSinglePlugin(pluginDir, normalize(join(pluginsPath, pluginDir)), project)
       );
       processed++;
       if (!isTTY && processed % PROGRESS_REPORT_INTERVAL === 0) {
@@ -367,13 +385,10 @@ export async function parsePlugins(
   }
 
   const project = await createProject(sourcePath);
-  const typeChecker = project.getTypeChecker();
   const isTTY = process.stdout.isTTY;
 
-  const parseVencordPlugins = () =>
-    parsePluginsFromDirectory(pluginsPath, project, typeChecker, isTTY);
-  const parseEquicordPlugins = () =>
-    parsePluginsFromDirectory(equicordPluginsPath, project, typeChecker, isTTY);
+  const parseVencordPlugins = () => parsePluginsFromDirectory(pluginsPath, project, isTTY);
+  const parseEquicordPlugins = () => parsePluginsFromDirectory(equicordPluginsPath, project, isTTY);
 
   const emptyResult: DirectoryParseResult = {
     plugins: {} as ReadonlyDeep<Record<string, PluginConfig>>,

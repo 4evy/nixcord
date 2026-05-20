@@ -176,13 +176,25 @@ describe('CLI Argument Parsing', () => {
     }
   });
 
-  test('throws error when vencord path is missing', async () => {
+  test('uses packaged upstream sources when source paths are omitted', async () => {
+    const mockSummary = {
+      pluginsDir: '/tmp/plugins',
+      sharedCount: 5,
+      vencordOnlyCount: 3,
+      equicordOnlyCount: 2,
+    };
+    vi.mocked(runGeneratePluginOptions).mockResolvedValue(Ok(mockSummary));
+
     const tempDir = await fse.mkdtemp(join(__dirname, 'test-cli-'));
 
     try {
       await runCli(['node', 'cli.js', '--output', join(tempDir, 'output.nix')]);
-      expect(process.exitCode).toBe(1);
-      expect(runGeneratePluginOptions).not.toHaveBeenCalled();
+      expect(runGeneratePluginOptions).toHaveBeenCalledWith(
+        expect.objectContaining({
+          vencordPath: CLI_CONFIG.sources.vencord,
+          equicordPath: CLI_CONFIG.sources.equicord,
+        })
+      );
     } finally {
       await fse.remove(tempDir);
     }
