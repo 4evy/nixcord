@@ -36,7 +36,7 @@ export const CLI_CONFIG = {
     equicord: 'equicord.json',
     parseRules: 'parse-rules.json',
     deprecated: 'deprecated.json',
-    migrations: 'migrations.nix',
+    migrations: 'migrations.json',
   },
   symbols: {
     success: '✓',

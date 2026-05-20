@@ -31,6 +31,7 @@ stdenvNoCC.mkDerivation (finalAttrs: {
       ../vite.config.shared.ts
       ../modules/plugins/deprecated.nix
       ../modules/plugins/deprecated.json
+      ../modules/plugins/migrations.nix
       ../packages
     ];
   };
@@ -118,6 +119,7 @@ stdenvNoCC.mkDerivation (finalAttrs: {
     mkdir -p "$out/plugins"
     cp modules/plugins/deprecated.nix "$out/plugins/deprecated.nix"
     cp modules/plugins/deprecated.json "$out/plugins/deprecated.json"
+    cp modules/plugins/migrations.nix "$out/plugins/migrations.nix"
 
     ${lib.getExe nodejs} packages/cli/dist/index.js \
       --vencord "${vencordSource}" \

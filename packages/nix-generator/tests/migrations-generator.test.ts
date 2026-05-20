@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { generateMigrationsModule } from '../src/migrations-generator.js';
+import { generateMigrationsData, generateMigrationsJson } from '../src/migrations-generator.js';
 import type { ReadonlyDeep, PluginConfig, DeprecatedData } from '@nixcord/shared';
 
 const mkPlugin = (description = ''): ReadonlyDeep<PluginConfig> => ({
@@ -9,8 +9,8 @@ const mkPlugin = (description = ''): ReadonlyDeep<PluginConfig> => ({
   source: 'vencord' as const,
 });
 
-describe('generateMigrationsModule()', () => {
-  test('removal shims use mkRemovedPluginModule helper', () => {
+describe('generateMigrationsData()', () => {
+  test('emits removal names for the Nix adapter', () => {
     const deprecated: DeprecatedData = {
       renames: {},
       removals: {
@@ -23,19 +23,13 @@ describe('generateMigrationsModule()', () => {
       testPlugin: mkPlugin('A test plugin'),
     };
 
-    const result = generateMigrationsModule(deprecated, allPlugins);
+    const result = generateMigrationsData(deprecated, allPlugins);
 
-    expect(result).toContain(
-      'mkRemovedPluginModule = import ../lib/mkRemovedPluginModule.nix { inherit lib; };'
-    );
-    expect(result).toContain('(mkRemovedPluginModule "absRPC")');
-    expect(result).toContain('(mkRemovedPluginModule "betterArea")');
-    // Should NOT contain inline module definitions
-    expect(result).not.toContain('lib.types.anything');
-    expect(result).not.toContain('config.warnings');
+    expect(result.removals).toEqual(['absRPC', 'betterArea']);
+    expect(result.renames).toEqual([]);
   });
 
-  test('no let block when nothing to generate', () => {
+  test('empty migrations produce empty JSON arrays', () => {
     const deprecated: DeprecatedData = {
       renames: {},
       removals: {},
@@ -43,14 +37,12 @@ describe('generateMigrationsModule()', () => {
     };
     const allPlugins: Record<string, ReadonlyDeep<PluginConfig>> = {};
 
-    const result = generateMigrationsModule(deprecated, allPlugins);
+    const result = generateMigrationsData(deprecated, allPlugins);
 
-    expect(result).not.toContain('let');
-    expect(result).not.toContain('mkRemovedPluginModule');
-    expect(result).toContain('imports = [');
+    expect(result).toEqual({ renames: [], removals: [] });
   });
 
-  test('let block includes base when renames exist', () => {
+  test('setting rename aliases are warning migrations', () => {
     const deprecated: DeprecatedData = {
       renames: {},
       removals: {},
@@ -62,10 +54,18 @@ describe('generateMigrationsModule()', () => {
       testPlugin: mkPlugin('test'),
     };
 
-    const result = generateMigrationsModule(deprecated, allPlugins);
+    const result = generateMigrationsData(deprecated, allPlugins);
 
-    expect(result).toContain('base =');
-    expect(result).not.toContain('mkRemovedPluginModule');
+    expect(result).toEqual({
+      renames: [
+        {
+          from: ['testPlugin', 'oldSetting'],
+          to: ['testPlugin', 'newSetting'],
+          warn: true,
+        },
+      ],
+      removals: [],
+    });
   });
 
   test('plugin rename aliases are silent for target defaults', () => {
@@ -88,19 +88,23 @@ describe('generateMigrationsModule()', () => {
       },
     };
 
-    const result = generateMigrationsModule(deprecated, allPlugins);
+    const result = generateMigrationsData(deprecated, allPlugins);
 
-    expect(result).toContain('lib.modules.doRename');
-    expect(result).toContain('warn = false');
-    expect(result).toContain('use = x: x');
-    expect(result).not.toContain('mkRenamedOptionModule');
-    expect(result).toContain('base ++ ["oldPlugin" "enable"]');
-    expect(result).toContain('base ++ ["newPlugin" "enable"]');
-    expect(result).toContain('base ++ ["oldPlugin" "format"]');
-    expect(result).toContain('base ++ ["newPlugin" "format"]');
+    expect(result.renames).toEqual([
+      {
+        from: ['oldPlugin', 'enable'],
+        to: ['newPlugin', 'enable'],
+        warn: false,
+      },
+      {
+        from: ['oldPlugin', 'format'],
+        to: ['newPlugin', 'format'],
+        warn: false,
+      },
+    ]);
   });
 
-  test('let block includes both base and helper when renames and removals exist', () => {
+  test('can emit renames and removals together', () => {
     const deprecated: DeprecatedData = {
       renames: {},
       removals: {
@@ -114,11 +118,18 @@ describe('generateMigrationsModule()', () => {
       testPlugin: mkPlugin('test'),
     };
 
-    const result = generateMigrationsModule(deprecated, allPlugins);
+    const result = generateMigrationsData(deprecated, allPlugins);
 
-    expect(result).toContain('base =');
-    expect(result).toContain('mkRemovedPluginModule');
-    expect(result).toContain('(mkRemovedPluginModule "deadPlugin")');
+    expect(result).toEqual({
+      renames: [
+        {
+          from: ['testPlugin', 'oldSetting'],
+          to: ['testPlugin', 'newSetting'],
+          warn: true,
+        },
+      ],
+      removals: ['deadPlugin'],
+    });
   });
 
   test('skips removal shims for plugins that are still active', () => {
@@ -133,9 +144,24 @@ describe('generateMigrationsModule()', () => {
       testPlugin: mkPlugin('still active'),
     };
 
-    const result = generateMigrationsModule(deprecated, allPlugins);
+    const result = generateMigrationsData(deprecated, allPlugins);
 
-    expect(result).not.toContain('mkRemovedPluginModule');
-    expect(result).not.toContain('testPlugin');
+    expect(result.removals).toEqual([]);
+    expect(result.renames).toEqual([]);
+  });
+
+  test('serializes formatted JSON', () => {
+    const deprecated: DeprecatedData = {
+      renames: {},
+      removals: {
+        deadPlugin: { date: '2024-01-01' },
+      },
+      settingRenames: {},
+    };
+    const allPlugins: Record<string, ReadonlyDeep<PluginConfig>> = {};
+
+    const result = generateMigrationsJson(deprecated, allPlugins);
+
+    expect(result).toBe('{\n  "renames": [],\n  "removals": [\n    "deadPlugin"\n  ]\n}');
   });
 });

@@ -13,21 +13,28 @@ const __dirname = dirname(__filename);
 const mocks = vi.hoisted(() => ({
   parsePlugins: vi.fn(),
   categorizePlugins: vi.fn(),
+  extractMigrations: vi.fn(async () => ({ renames: [], deletions: [] })),
   generatePluginModule: vi.fn((plugins: Record<string, unknown>, label: string) => {
     return `${label}:${Object.keys(plugins).join(',')}`;
   }),
   generateParseRulesModule: vi.fn(() => 'rules'),
+  generateMigrationsJson: vi.fn(() => '{"renames":[],"removals":[]}'),
+  updateDeprecatedPlugins: vi.fn(async () => ({ renames: {}, removals: {}, settingRenames: {} })),
   oraPromise: vi.fn((promise: Promise<unknown>) => promise),
 }));
 
 vi.mock('@nixcord/parser', () => ({
   parsePlugins: mocks.parsePlugins,
   categorizePlugins: mocks.categorizePlugins,
+  extractMigrations: mocks.extractMigrations,
 }));
 
 vi.mock('@nixcord/nix-generator', () => ({
   generatePluginModule: mocks.generatePluginModule,
   generateParseRulesModule: mocks.generateParseRulesModule,
+  generateMigrationsJson: mocks.generateMigrationsJson,
+  updateDeprecatedPlugins: mocks.updateDeprecatedPlugins,
+  toNixIdentifier: (name: string) => name,
 }));
 
 vi.mock('ora', () => ({
@@ -127,11 +134,15 @@ describe('runGeneratePluginOptions', () => {
     const vencordPath = join(pluginsDir, CLI_CONFIG.filenames.vencord);
     const equicordPath = join(pluginsDir, CLI_CONFIG.filenames.equicord);
     const parseRulesPath = join(pluginsDir, CLI_CONFIG.filenames.parseRules);
+    const migrationsPath = join(pluginsDir, CLI_CONFIG.filenames.migrations);
 
     await expect(fse.readFile(sharedPath, 'utf8')).resolves.toBe('shared:Shared');
     await expect(fse.readFile(vencordPath, 'utf8')).resolves.toBe('vencord:SoloV');
     await expect(fse.readFile(equicordPath, 'utf8')).resolves.toBe('equicord:SoloE');
     await expect(fse.readFile(parseRulesPath, 'utf8')).resolves.toBe('rules');
+    await expect(fse.readFile(migrationsPath, 'utf8')).resolves.toBe(
+      '{"renames":[],"removals":[]}'
+    );
 
     expect(mocks.parsePlugins).toHaveBeenNthCalledWith(1, vencordRepo, {
       vencordPluginsDir: CLI_CONFIG.directories.vencordPlugins,

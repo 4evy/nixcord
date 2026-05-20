@@ -12,7 +12,7 @@ import type { ParsePluginsOptions } from '@nixcord/parser';
 import {
   generatePluginModule,
   generateParseRulesModule,
-  generateMigrationsModule,
+  generateMigrationsJson,
   updateDeprecatedPlugins,
   toNixIdentifier,
 } from '@nixcord/nix-generator';
@@ -255,14 +255,14 @@ export const runGeneratePluginOptions = async (
       outputPath: parsedParams.outputPath,
     });
 
-    // Extract migrations and update deprecated.json + migrations.nix
+    // Extract migrations and update deprecated.json + migrations.json
     try {
       const pluginsDir = getPluginsDir(parsedParams.outputPath);
 
       // Run migration extraction on both repos when git history is available.
       // Nix package builds intentionally pass --skip-git-migrations so source
       // fetches do not need leaveDotGit=true. CI can run this against ordinary
-      // git clones and commit the resulting deprecated.json/migrations.nix.
+      // git clones and commit the resulting deprecated.json/migrations.json.
       const vencordMigrations = parsedParams.skipGitMigrations
         ? { renames: [], deletions: [] }
         : await extractMigrations(resolvedVencordPath, [parsedParams.vencordPluginsDir]);
@@ -319,13 +319,13 @@ export const runGeneratePluginOptions = async (
         activePluginNames,
         toNixIdentifier
       );
-      const migrationsNix = generateMigrationsModule(deprecated, allPlugins, [
+      const migrationsJson = generateMigrationsJson(deprecated, allPlugins, [
         categorized.generic,
         categorized.vencordOnly,
         categorized.equicordOnly,
       ]);
       const migrationsPath = resolve(pluginsDir, CLI_CONFIG.filenames.migrations);
-      await fse.writeFile(migrationsPath, migrationsNix);
+      await fse.writeFile(migrationsPath, migrationsJson);
     } catch (error) {
       // Migration extraction is best-effort; don't fail the build if it fails
       if (verbose) {

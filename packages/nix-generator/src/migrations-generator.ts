@@ -1,8 +1,17 @@
 import type { ReadonlyDeep, PluginConfig, DeprecatedData } from '@nixcord/shared';
-import { AUTO_GENERATED_HEADER, isNestedConfig, sortedEntries } from '@nixcord/shared';
+import { isNestedConfig, sortedEntries } from '@nixcord/shared';
 import { toNixIdentifier } from './identifier.js';
 
-const BASE_PATH = '["programs" "nixcord" "config" "plugins"';
+export interface MigrationRenameJson {
+  from: string[];
+  to: string[];
+  warn: boolean;
+}
+
+export interface MigrationsJson {
+  renames: MigrationRenameJson[];
+  removals: string[];
+}
 
 /**
  * Collect all leaf setting names from a plugin config (flattened).
@@ -12,12 +21,18 @@ function normalizeSettingPath(path: string): string {
   return path.split('.').map(toNixIdentifier).join('.');
 }
 
+function normalizePathParts(path: string): string[] {
+  return normalizeSettingPath(path).split('.');
+}
+
 function collectSettingNames(config: ReadonlyDeep<PluginConfig>): string[] {
   const names = new Set<string>();
   names.add('enable');
 
-  for (const [, setting] of Object.entries(config.settings)) {
-    const settingName = toNixIdentifier(setting.name);
+  for (const [key, setting] of Object.entries(config.settings)) {
+    const settingName = toNixIdentifier(
+      'name' in setting && typeof setting.name === 'string' ? setting.name : key
+    );
     if (isNestedConfig(setting)) {
       for (const nestedName of collectSettingNames(setting)) {
         names.add(`${settingName}.${nestedName}`);
@@ -30,37 +45,30 @@ function collectSettingNames(config: ReadonlyDeep<PluginConfig>): string[] {
   return Array.from(names);
 }
 
-/**
- * Generate a silent alias for a single renamed plugin setting path.
- */
-function mkRenamedLine(oldPlugin: string, newPlugin: string, settingPath: string): string {
-  const parts = normalizeSettingPath(settingPath).split('.');
-  const oldParts = parts.map((p) => `"${p}"`).join(' ');
-  const newParts = parts.map((p) => `"${p}"`).join(' ');
+function mkRenameEntry(
+  oldPlugin: string,
+  newPlugin: string,
+  fromSettingPath: string,
+  toSettingPath = fromSettingPath,
+  warn = false
+): MigrationRenameJson {
   const oldId = toNixIdentifier(oldPlugin);
   const newId = toNixIdentifier(newPlugin);
-  const from = `base ++ ["${oldId}" ${oldParts}]`;
-  const to = `base ++ ["${newId}" ${newParts}]`;
 
   // Plugin options commonly have defaults. Warning aliases can therefore fire
   // during evaluation even when users never referenced the obsolete option.
-  return `    (lib.modules.doRename { from = ${from}; to = ${to}; visible = false; warn = false; use = x: x; })`;
+  return {
+    from: [oldId, ...normalizePathParts(fromSettingPath)],
+    to: [newId, ...normalizePathParts(toSettingPath)],
+    warn,
+  };
 }
 
-/**
- * Generate a removal shim module for a deleted plugin,
- * using the shared mkRemovedPluginModule helper.
- */
-function mkRemovalShim(pluginName: string): string {
-  const nixName = toNixIdentifier(pluginName);
-  return `    (mkRemovedPluginModule "${nixName}")`;
-}
-
-export function generateMigrationsModule(
+export function generateMigrationsData(
   deprecated: DeprecatedData,
   allPlugins: ReadonlyDeep<Record<string, PluginConfig>>,
   pluginSources?: ReadonlyDeep<Record<string, PluginConfig>>[]
-): string {
+): MigrationsJson {
   // Build lookup of active plugin nix identifiers to skip conflicting migrations
   const activeNixNames = new Set(Object.keys(allPlugins).map((k) => toNixIdentifier(k)));
 
@@ -77,61 +85,40 @@ export function generateMigrationsModule(
   }
   const settingRenameEntries = Array.from(settingRenamesByNixName.entries());
 
-  // Pre-filter rename entries to know if we need the `let base` binding
+  const pluginsByNixName = new Map(
+    Object.entries(allPlugins).map(([name, config]) => [toNixIdentifier(name), config])
+  );
+
+  // Pre-filter rename entries to the ones that still need compatibility aliases.
   const renameEntries = sortedEntries(deprecated.renames).filter(([oldName, entry]) => {
     const oldNixName = toNixIdentifier(oldName);
     const newNixName = toNixIdentifier(entry.to);
     return !activeNixNames.has(oldNixName) && activeNixNames.has(newNixName);
   });
 
-  const hasSettingRenames = settingRenameEntries.length > 0;
-  const hasRenames = renameEntries.length > 0;
-
-  // Pre-compute whether we have removals so we can emit the helper binding
+  // Pre-compute removals while skipping plugin names that came back upstream.
   const removalEntries = sortedEntries(deprecated.removals).filter(
     ([pluginName]) => !activeNixNames.has(toNixIdentifier(pluginName))
   );
-  const hasRemovals = removalEntries.length > 0;
-  const needsLetBlock = hasRenames || hasSettingRenames || hasRemovals;
-
-  const lines: string[] = [...AUTO_GENERATED_HEADER.split('\n'), ''];
-
-  if (!needsLetBlock) {
-    lines.push('');
-  }
-  if (needsLetBlock) {
-    lines.push('{ lib, ... }:');
-    lines.push('let');
-    if (hasRenames || hasSettingRenames) {
-      lines.push(`  base = ${BASE_PATH}];`);
-    }
-    if (hasRemovals) {
-      lines.push(
-        '  mkRemovedPluginModule = import ../lib/mkRemovedPluginModule.nix { inherit lib; };'
-      );
-    }
-    lines.push('in');
-  }
-
-  lines.push('{', '  imports = [');
+  const migrations: MigrationsJson = {
+    renames: [],
+    removals: removalEntries.map(([pluginName]) => toNixIdentifier(pluginName)),
+  };
 
   for (const [oldName, entry] of renameEntries) {
     const newName = entry.to;
 
-    const targetPlugin = allPlugins[newName];
-
-    lines.push(`    # ${oldName} -> ${newName}`);
+    const targetPlugin = pluginsByNixName.get(toNixIdentifier(newName));
 
     if (!targetPlugin) {
       // Target plugin not found in parsed data - just forward enable
-      lines.push(mkRenamedLine(oldName, newName, 'enable'));
+      migrations.renames.push(mkRenameEntry(oldName, newName, 'enable'));
     } else {
       const settingNames = collectSettingNames(targetPlugin);
       for (const setting of settingNames.sort()) {
-        lines.push(mkRenamedLine(oldName, newName, setting));
+        migrations.renames.push(mkRenameEntry(oldName, newName, setting));
       }
     }
-    lines.push('');
   }
 
   // Build a lookup from nix identifier to ALL setting names across all plugin versions.
@@ -166,24 +153,18 @@ export function generateMigrationsModule(
 
     if (validRenames.length === 0) continue;
 
-    lines.push(`    # Setting renames: ${nixName}`);
     for (const [oldSetting, newSetting] of validRenames) {
-      lines.push(
-        `    (lib.modules.doRename { from = base ++ ["${nixName}" "${oldSetting}"]; to = base ++ ["${nixName}" "${newSetting}"]; visible = false; warn = true; use = x: x; })`
-      );
+      migrations.renames.push(mkRenameEntry(nixName, nixName, oldSetting, newSetting, true));
     }
-    lines.push('');
   }
 
-  // Generate removal shims using the shared mkRemovedPluginModule helper
-  for (const [pluginName] of removalEntries) {
-    lines.push(`    # Removed: ${pluginName}`);
-    lines.push(mkRemovalShim(pluginName));
-    lines.push('');
-  }
+  return migrations;
+}
 
-  lines.push('  ];');
-  lines.push('}');
-
-  return lines.join('\n') + '\n';
+export function generateMigrationsJson(
+  deprecated: DeprecatedData,
+  allPlugins: ReadonlyDeep<Record<string, PluginConfig>>,
+  pluginSources?: ReadonlyDeep<Record<string, PluginConfig>>[]
+): string {
+  return JSON.stringify(generateMigrationsData(deprecated, allPlugins, pluginSources), null, 2);
 }
