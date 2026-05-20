@@ -63,8 +63,8 @@ let
     outputHashMode = "recursive";
     outputHash =
       {
-        x86_64-linux = "sha256-ItcsOfw3Eiqdl2HDgpqvJfT25sU8xRxwzdGui9Vn0KU=";
-        aarch64-darwin = "sha256-yDfNSchXbXtCRIvA47HCe+6Wen9m4aHZJVoT2tzfyA8=";
+        x86_64-linux = "sha256-EWiLUaGkR9iUHV/WyXcEE2QPyDxgTWzhjxB/5y+uOYo=";
+        aarch64-darwin = "sha256-zEvt4UerNN2mf53UJc9zZUlmpVlVWUZno83STMc/Dk4=";
       }
       .${stdenvNoCC.hostPlatform.system}
         or (throw "Unsupported system ${stdenvNoCC.hostPlatform.system}");

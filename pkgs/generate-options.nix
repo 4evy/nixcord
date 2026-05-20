@@ -10,7 +10,7 @@
   skipGitMigrations ? true,
 }:
 let
-  nodeModulesHash = "sha256-VpiscO5lRIhu+uut1U8IGsiIRrmayAY6mMYwdhwohmw=";
+  nodeModulesHash = "sha256-6MSNe+cEXjxc92oIX+5PCVVyBD7VwOIIlUbAEu0qGnM=";
 in
 stdenvNoCC.mkDerivation (finalAttrs: {
   name = "nixcord-plugin-options";
@@ -21,6 +21,7 @@ stdenvNoCC.mkDerivation (finalAttrs: {
     fileset = lib.fileset.unions [
       ../package.json
       ../bun.lock
+      ../docs/site/package.json
       ../tsconfig.base.json
       ../vitest.workspace.ts
       ../vitest.projects.ts
