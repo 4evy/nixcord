@@ -1,7 +1,8 @@
 {
   "private": true,
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "docs/site"
   ],
   "dependencies": {
     "@nixcord/parser": "workspace:*",
@@ -20,6 +21,12 @@
     "smoke:built-cli": "bun run build && bun scripts/smoke-built-cli.ts",
     "smoke:upstream": "bun run build && bun scripts/smoke-upstream.ts",
     "drift:plugins": "bun scripts/check-plugin-drift.ts",
+    "docs:dev": "bun run --filter nixcord-docs dev",
+    "docs:dev:options": "bun run --filter nixcord-docs dev:options",
+    "docs:prepare-options": "bun run --filter nixcord-docs prepare-options",
+    "docs:build": "bun run --filter nixcord-docs build",
+    "docs:check": "bun run --filter nixcord-docs check",
+    "docs:preview": "bun run --filter nixcord-docs preview",
     "check": "bun run typecheck && bun run lint && bun run format:check && bun run smoke:built-cli"
   },
   "devDependencies": {

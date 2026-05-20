@@ -53,15 +53,17 @@
             equicord = pkgs.callPackage ./pkgs/equicord.nix { };
             generate = pkgs.callPackage ./pkgs/generate-options.nix { };
 
-            docs-html =
+            docs =
               (import ./docs {
                 pkgs = pkgs;
                 lib = pkgs.lib;
+                revision = inputs.self.rev or "main";
               }).html;
             docs-json =
               (import ./docs {
                 pkgs = pkgs;
                 lib = pkgs.lib;
+                revision = inputs.self.rev or "main";
               }).json;
           };
 

@@ -113,6 +113,7 @@ lerna-debug.log*
 dist/
 build/
 coverage/
+docs/site/public/options.json
 *.log
 .DS_Store
 tsconfig.tsbuildinfo

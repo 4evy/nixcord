@@ -178,7 +178,7 @@ Dorion is a bit annoying because it needs `LocalStorage` databases that only exi
 ## Docs
 
   * **Web:** [flameflag.github.io/nixcord](https://flameflag.github.io/nixcord/)
-  * **Build locally:** `nix build .#docs-html`
+  * **Build locally:** `nix build .#docs`
   * **JSON:** `nix build .#docs-json`
 
 -----

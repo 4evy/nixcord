@@ -7,8 +7,12 @@ on:
     paths:
       - "flake.nix"
       - "flake.lock"
+      - "package.json"
+      - "bun.lock"
+      - "packages/**"
       - "modules/**"
       - "docs/**"
+      - ".github/workflows/github-pages.yaml"
   workflow_dispatch:
 
 jobs:
@@ -39,7 +43,7 @@ jobs:
 
       - name: Build documentation
         run: |
-          nix build .#docs-html
+          nix build .#docs
           cp -r result/share/doc/nixcord public
           unlink result
 

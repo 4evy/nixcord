@@ -1,0 +1,274 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+
+  --color-nmd-blue: #0a3e68;
+  --color-nmd-teal: #268598;
+  --color-nmd-green: #b8d09e;
+  --color-nmd-yellow: #f6cf5e;
+  --color-nmd-orange: #ec733b;
+  --color-nmd-info: #167cb9;
+  --color-nmd-warn: #ff6700;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply m-0 min-h-screen bg-neutral-100 text-neutral-950 antialiased;
+    font-family: var(--font-sans);
+    line-height: 1.55;
+    text-rendering: optimizeLegibility;
+  }
+
+  a {
+    @apply text-nmd-blue underline underline-offset-2;
+    text-decoration-thickness: 1px;
+  }
+
+  a:hover {
+    @apply text-nmd-teal;
+  }
+
+  code,
+  pre {
+    font-family: var(--font-mono);
+  }
+}
+
+@layer components {
+  .book {
+    @apply mx-auto min-h-screen max-w-[62rem] border-x border-neutral-300 bg-white px-5 py-8 text-[16px] sm:px-10 lg:px-16;
+  }
+
+  .titlepage > div:first-child {
+    @apply mb-5;
+  }
+
+  .titlepage hr {
+    @apply my-6 border-0 border-t border-neutral-300;
+  }
+
+  h1.title {
+    @apply mt-8 mb-4 text-[1.9rem] leading-tight font-semibold text-nmd-blue;
+  }
+
+  .titlepage:first-child h1.title {
+    @apply mt-0 text-[2.35rem];
+  }
+
+  h2.title {
+    @apply mt-7 mb-3 text-[1.45rem] leading-snug font-semibold text-neutral-900;
+  }
+
+  h2.subtitle {
+    @apply mt-1 text-[1.25rem] font-normal text-neutral-600;
+  }
+
+  .section {
+    @apply mt-7;
+  }
+
+  .book > .section {
+    @apply mt-10 border-t border-neutral-300 pt-7;
+  }
+
+  .book > .section > .titlepage:first-child h1.title {
+    @apply mt-0;
+  }
+
+  p {
+    @apply my-3;
+    max-width: 72ch;
+  }
+
+  .toc {
+    @apply my-5;
+  }
+
+  .toc-main {
+    @apply my-7 border-y border-neutral-300 bg-neutral-50 px-5 py-4;
+  }
+
+  .toc-local {
+    @apply max-w-[28rem] border border-neutral-300 border-l-4 border-l-neutral-300 bg-neutral-50 px-4 py-3;
+  }
+
+  .toc-title {
+    @apply mt-0 mb-2 text-[0.95rem] font-semibold text-neutral-900;
+  }
+
+  .toc-list {
+    @apply m-0 list-none p-0;
+  }
+
+  .toc-list li {
+    @apply my-1;
+  }
+
+  .toc-list a {
+    @apply inline-block;
+  }
+
+  .itemizedlist ul {
+    @apply my-3 ml-8 list-disc;
+  }
+
+  .orderedlist ol {
+    @apply my-3 ml-8 list-decimal;
+  }
+
+  li.listitem {
+    @apply my-1;
+  }
+
+  .blockquote {
+    @apply my-4 border-l-4 border-nmd-info bg-sky-50 px-4 py-3 text-neutral-900;
+  }
+
+  .blockquote blockquote,
+  .blockquote p {
+    @apply m-0;
+  }
+
+  code.literal,
+  code.option,
+  code.filename {
+    @apply rounded bg-neutral-100 px-1 py-0.5 text-[0.92em] text-neutral-900;
+  }
+
+  pre {
+    @apply my-4 overflow-x-auto rounded border border-neutral-300 bg-neutral-50 p-0 text-[0.92rem] leading-6;
+  }
+
+  pre code {
+    @apply block bg-transparent p-4 text-neutral-950;
+  }
+
+  pre code.hljs {
+    @apply bg-transparent;
+  }
+
+  .variablelist {
+    @apply mt-5;
+  }
+
+  dl.variablelist {
+    @apply m-0;
+  }
+
+  .option-sections {
+    @apply mt-5;
+  }
+
+  .option-section {
+    @apply border-t border-neutral-300 py-4;
+    content-visibility: auto;
+    contain-intrinsic-size: auto 1600px;
+  }
+
+  .option-section:first-child {
+    @apply border-t-0 pt-0;
+  }
+
+  .option-section-summary {
+    @apply cursor-pointer text-nmd-blue;
+  }
+
+  .option-section-heading {
+    @apply text-[1.35rem] leading-snug font-semibold;
+  }
+
+  .option-section-count {
+    @apply ml-2 text-[0.95rem] text-neutral-600;
+  }
+
+  .option-section-description {
+    @apply mt-2 mb-0 text-neutral-700;
+  }
+
+  .option-definition {
+    @apply mt-5 border border-neutral-300 border-l-4 border-l-nmd-blue bg-white;
+    content-visibility: auto;
+    contain-intrinsic-size: auto 240px;
+  }
+
+  .option-definition:first-child {
+    @apply mt-5;
+  }
+
+  .option-heading {
+    @apply border-b border-neutral-200 bg-neutral-50 px-4 py-3;
+  }
+
+  .option-body {
+    @apply m-0 px-4 py-3;
+  }
+
+  .option-description {
+    @apply mt-0 mb-3;
+  }
+
+  .option-fields {
+    @apply m-0 border-t border-neutral-200;
+  }
+
+  .option-field {
+    @apply grid gap-1 border-b border-neutral-200 py-2 sm:grid-cols-[8rem_minmax(0,1fr)];
+  }
+
+  .option-field:last-child {
+    @apply border-b-0;
+  }
+
+  .option-field > dt {
+    @apply text-[0.9rem] font-semibold text-neutral-600;
+  }
+
+  .option-field > dd {
+    @apply m-0 min-w-0;
+  }
+
+  .source-list {
+    @apply m-0 list-none p-0;
+  }
+
+  .source-list li {
+    @apply my-0;
+  }
+
+  .source-list li + li {
+    @apply mt-1;
+  }
+
+  a.term {
+    @apply no-underline;
+  }
+
+  code.option {
+    @apply bg-transparent px-0 py-0 text-[1rem] font-semibold text-nmd-blue;
+    overflow-wrap: anywhere;
+  }
+
+  code.filename,
+  a.filename {
+    overflow-wrap: anywhere;
+  }
+
+  table.simplelist {
+    @apply mt-2 border-0;
+  }
+
+  table.simplelist td {
+    @apply py-1 align-top;
+  }
+
+  .options-error {
+    @apply border-l-4 border-nmd-warn bg-orange-50 px-4 py-3 text-neutral-950;
+  }
+}

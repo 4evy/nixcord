@@ -1,0 +1,24 @@
+{
+  "name": "nixcord-docs",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prepare-options": "mkdir -p public && nix build ../..#docs-json --out-link .options-json && cp .options-json/share/doc/nixos/options.json public/options.json && unlink .options-json",
+    "dev": "vite --host 127.0.0.1",
+    "dev:options": "bun run prepare-options && vite --host 127.0.0.1",
+    "build": "vite build",
+    "check": "tsc --noEmit --project tsconfig.json",
+    "preview": "vite preview --host 127.0.0.1"
+  },
+  "dependencies": {
+    "@sveltejs/vite-plugin-svelte": "^6.2.1",
+    "@tailwindcss/vite": "^4.1.18",
+    "highlight.js": "^11.11.1",
+    "svelte": "^5.45.0",
+    "tailwindcss": "^4.1.18",
+    "vite": "^7.2.7"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3"
+  }
+}
