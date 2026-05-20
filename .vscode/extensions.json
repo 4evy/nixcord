@@ -1,0 +1,9 @@
+{
+  "recommendations": [
+    "biomejs.biome",
+    "jnoortheen.nix-ide",
+    "mkhl.direnv",
+    "oven.bun-vscode",
+    "svelte.svelte-vscode"
+  ]
+}

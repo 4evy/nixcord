@@ -1,0 +1,25 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug drift check",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "bun",
+      "program": "${workspaceFolder}/scripts/check-plugin-drift.ts",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Debug smoke upstream",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "bun",
+      "program": "${workspaceFolder}/scripts/smoke-upstream.ts",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    }
+  ]
+}

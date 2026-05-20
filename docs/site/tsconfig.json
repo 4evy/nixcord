@@ -17,5 +17,5 @@
     "target": "ES2022",
     "types": ["node", "svelte", "vite/client"]
   },
-  "include": ["src/**/*.ts", "src/**/*.svelte", "vite.config.ts"]
+  "include": ["src/**/*.ts", "src/**/*.svelte", "scripts/**/*.ts", "vite.config.ts"]
 }

@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "composite": false,
+    "noEmit": true,
+    "rootDir": ".",
+    "types": ["bun", "node"]
+  },
+  "include": ["scripts/**/*.ts"]
+}

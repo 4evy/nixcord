@@ -1,0 +1,42 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "typecheck",
+      "type": "shell",
+      "command": "bun run typecheck",
+      "group": "build",
+      "problemMatcher": "$tsc"
+    },
+    {
+      "label": "test",
+      "type": "shell",
+      "command": "bun run test",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "format:check",
+      "type": "shell",
+      "command": "bun run format:check",
+      "problemMatcher": []
+    },
+    {
+      "label": "docs:dev",
+      "type": "shell",
+      "command": "bun run docs:dev",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "vite",
+        "pattern": {
+          "regexp": "^$"
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "VITE",
+          "endsPattern": "Local:"
+        }
+      }
+    }
+  ]
+}

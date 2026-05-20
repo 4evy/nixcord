@@ -78,7 +78,6 @@ tags
 [._]*.un~
 
 ### VisualStudioCode ###
-.vscode/*
 
 # Local History for Visual Studio Code
 .history/
@@ -96,6 +95,7 @@ node_modules/
 
 # Bun
 bun.lockb
+tsconfig.tools.tsbuildinfo
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
