@@ -8,7 +8,7 @@
     "dev:options": "bun run prepare-options && vite --host 127.0.0.1",
     "generate-logo": "bun run scripts/generate-nix-logo.ts",
     "build": "vite build",
-    "check": "tsc --noEmit --project tsconfig.json",
+    "check": "tsgo --noEmit --project tsconfig.json",
     "preview": "vite preview --host 127.0.0.1"
   },
   "dependencies": {
@@ -20,6 +20,7 @@
     "vite": "^7.2.7"
   },
   "devDependencies": {
-    "typescript": "^6.0.3"
+    "@typescript/native-preview": "^7.0.0-dev.20260421.2",
+    "typescript": "npm:@typescript/typescript6@^6.0.0"
   }
 }

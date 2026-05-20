@@ -9,10 +9,10 @@
     "@nixcord/shared": "workspace:*"
   },
   "scripts": {
-    "build": "bun run --filter '*' build && tsc --build --emitDeclarationOnly --force",
+    "build": "bun run --filter '*' build && tsgo --build --emitDeclarationOnly --force",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --build",
+    "typecheck": "tsgo --build",
     "clean": "rm -rf packages/*/dist",
     "format": "biome check --write .",
     "format:check": "biome check .",
@@ -34,11 +34,12 @@
     "@types/bun": "^1.3.14",
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^25.9.1",
+    "@typescript/native-preview": "^7.0.0-dev.20260421.2",
     "@vitest/coverage-v8": "~4.1.7",
     "@vitest/ui": "~4.1.7",
     "equicord": "github:Equicord/Equicord#v1.14.13.0",
     "fallow": "^2.76.0",
-    "typescript": "^6.0.3",
+    "typescript": "npm:@typescript/typescript6@^6.0.0",
     "vencord": "github:Vendicated/Vencord#v1.14.13",
     "vite": "~8.0.13",
     "vitest": "~4.1.7"
