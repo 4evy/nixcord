@@ -1208,6 +1208,11 @@
         "type": "types.bool",
         "default": false,
         "description": "Only show trigger content on click instead of hover"
+      },
+      "triggerWords": {
+        "type": "types.nullOr (types.listOf types.str)",
+        "default": null,
+        "description": "Words to blur in messages (restart required)"
       }
     }
   },

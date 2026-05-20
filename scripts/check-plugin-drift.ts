@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { copyFile, mkdir, mkdtemp, rm, stat } from 'node:fs/promises';
+import { copyFile, mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
@@ -38,6 +38,15 @@ const generatedFiles = [
   CLI_CONFIG.filenames.deprecated,
   CLI_CONFIG.filenames.migrations,
 ] as const;
+
+const overridableFiles = {
+  shared: CLI_CONFIG.filenames.shared,
+  vencord: CLI_CONFIG.filenames.vencord,
+  equicord: CLI_CONFIG.filenames.equicord,
+} as const;
+
+type JsonObject = Record<string, unknown>;
+type PluginOverrides = Partial<Record<keyof typeof overridableFiles, JsonObject>>;
 
 function parseDriftOptions(argv: string[]): DriftCheckOptions | 'help' {
   const { values } = parseArgs({
@@ -79,6 +88,39 @@ async function assertExists(path: string): Promise<void> {
   });
 }
 
+function isPlainObject(value: unknown): value is JsonObject {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function mergeJson(base: unknown, override: unknown): unknown {
+  if (!isPlainObject(base) || !isPlainObject(override)) return override;
+
+  const result: JsonObject = { ...base };
+  for (const [key, value] of Object.entries(override)) {
+    result[key] = key in result ? mergeJson(result[key], value) : value;
+  }
+  return result;
+}
+
+async function readJson<T>(path: string): Promise<T> {
+  return JSON.parse(await readFile(path, 'utf8')) as T;
+}
+
+async function applyOverrides(expectedDir: string, generatedDir: string): Promise<void> {
+  const overridesPath = join(expectedDir, 'overrides.json');
+  if (!(await stat(overridesPath).then(() => true, () => false))) return;
+
+  const overrides = await readJson<PluginOverrides>(overridesPath);
+  for (const [category, filename] of Object.entries(overridableFiles)) {
+    const override = overrides[category as keyof typeof overridableFiles];
+    if (!override) continue;
+
+    const generatedPath = join(generatedDir, filename);
+    const generated = await readJson<unknown>(generatedPath);
+    await writeFile(generatedPath, JSON.stringify(mergeJson(generated, override), null, 2));
+  }
+}
+
 async function runDriftCheck(options: DriftCheckOptions, logger: Logger): Promise<void> {
   const expectedDir = resolve(options.expectedDir);
   const tmp = await mkdtemp(join(tmpdir(), 'nixcord-plugin-drift-'));
@@ -108,6 +150,7 @@ async function runDriftCheck(options: DriftCheckOptions, logger: Logger): Promis
 
     if (!result.ok) throw result.error;
     logGeneratePluginOptionsSummary(logger, result.value);
+    await applyOverrides(expectedDir, generatedDir);
 
     let hasDrift = false;
     for (const file of generatedFiles) {
