@@ -35,6 +35,17 @@ in
     assert builtins.any (message: lib.hasInfix "userMessagesPronouns" message) warnings;
     true;
 
+  "deprecated normalized plugin name warns with replacement" =
+    let
+      warnings = hmWarnings {
+        enable = true;
+        config.plugins.anammox.enable = true;
+      };
+    in
+    assert builtins.any (message: lib.hasInfix "anammox" message) warnings;
+    assert builtins.any (message: lib.hasInfix "declutter" message) warnings;
+    true;
+
   "deprecated freeform plugin name warns" =
     let
       warnings = hmWarnings {
@@ -43,5 +54,16 @@ in
       };
     in
     assert builtins.any (message: lib.hasInfix "PronounDB" message) warnings;
+    true;
+
+  "deprecated freeform upstream plugin name warns with normalized replacement" =
+    let
+      warnings = hmWarnings {
+        enable = true;
+        extraConfig.plugins.Anammox.enable = true;
+      };
+    in
+    assert builtins.any (message: lib.hasInfix "Anammox" message) warnings;
+    assert builtins.any (message: lib.hasInfix "declutter" message) warnings;
     true;
 }

@@ -73,7 +73,35 @@ let
       );
 
       deprecated = builtins.fromJSON (builtins.readFile ../plugins/deprecated.json);
-      pluginNameMigrations = lib.mapAttrs (_: v: v.to) (deprecated.renames or { });
+      migrations = builtins.fromJSON (builtins.readFile ../plugins/migrations.json);
+
+      activePluginNames = sharedPluginNames ++ vencordPluginNames ++ equicordPluginNames;
+      activePluginNamesByLowercase = lib.listToAttrs (
+        map (name: {
+          name = lib.toLower name;
+          value = name;
+        }) activePluginNames
+      );
+      normalizeActivePluginName =
+        name: activePluginNamesByLowercase.${lib.toLower name} or name;
+
+      deprecatedPluginNameMigrations = lib.mapAttrs (_: v: normalizeActivePluginName v.to) (
+        deprecated.renames or { }
+      );
+      generatedPluginNameMigrations = lib.listToAttrs (
+        map (migration: {
+          name = builtins.elemAt migration.from 0;
+          value = builtins.elemAt migration.to 0;
+        }) (
+          lib.filter (
+            migration:
+            builtins.length (migration.from or [ ]) == 2
+            && builtins.elemAt migration.from 1 == "enable"
+            && builtins.length (migration.to or [ ]) >= 1
+          ) (migrations.renames or [ ])
+        )
+      );
+      pluginNameMigrations = deprecatedPluginNameMigrations // generatedPluginNameMigrations;
 
       isPluginEnabled = pluginConfig: pluginConfig.enable or false;
 
