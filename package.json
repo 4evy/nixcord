@@ -10,8 +10,10 @@
   },
   "scripts": {
     "build": "bun run --filter '*' build && tsgo --build --emitDeclarationOnly --force",
-    "test": "vitest run",
-    "test:watch": "vitest",
+    "test": "vitest run --exclude 'packages/parser/tests/validation/**' --no-isolate --experimental.fsModuleCache --maxWorkers=4",
+    "test:all": "bun run test && bun run test:upstream",
+    "test:upstream": "vitest run packages/parser/tests/validation/real-world.test.ts --no-isolate --experimental.fsModuleCache --maxWorkers=4",
+    "test:watch": "vitest --exclude 'packages/parser/tests/validation/**' --no-isolate --maxWorkers=4",
     "typecheck": "tsgo --build",
     "clean": "rm -rf packages/*/dist",
     "format": "biome check --write .",

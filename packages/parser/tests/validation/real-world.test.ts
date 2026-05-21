@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs';
-import { CLI_CONFIG, type PluginSetting } from '@nixcord/shared';
-import { describe, expect, test } from 'vitest';
+import { CLI_CONFIG, type ParsedPluginsResult, type PluginSetting } from '@nixcord/shared';
+import { beforeAll, describe, expect, test } from 'vitest';
 import { categorizePlugins, parsePlugins } from '../../src/index.js';
 
 const VENCORD_PATH = CLI_CONFIG.sources.vencord;
@@ -8,11 +8,21 @@ const EQUICORD_PATH = CLI_CONFIG.sources.equicord;
 const hasVencord = existsSync(VENCORD_PATH);
 const hasEquicord = existsSync(EQUICORD_PATH);
 
-describe.skipIf(!hasVencord)('Real-world: Vencord', () => {
-  test('parses Vencord plugins without throwing', async () => {
-    const result = await parsePlugins(VENCORD_PATH);
-    const pluginCount = Object.keys(result.vencordPlugins).length;
+let vencordResultPromise: Promise<ParsedPluginsResult> | undefined;
+let equicordResultPromise: Promise<ParsedPluginsResult> | undefined;
 
+const parseVencord = () => (vencordResultPromise ??= parsePlugins(VENCORD_PATH));
+const parseEquicord = () => (equicordResultPromise ??= parsePlugins(EQUICORD_PATH));
+
+describe.skipIf(!hasVencord)('Real-world: Vencord', () => {
+  let result: ParsedPluginsResult;
+
+  beforeAll(async () => {
+    result = await parseVencord();
+  }, 60_000);
+
+  test('parses Vencord plugins without throwing', () => {
+    const pluginCount = Object.keys(result.vencordPlugins).length;
     expect(pluginCount).toBeGreaterThan(50);
     console.log(`Vencord: parsed ${pluginCount} plugins`);
 
@@ -28,10 +38,9 @@ describe.skipIf(!hasVencord)('Real-world: Vencord', () => {
       `Vencord: ${withSettings}/${pluginCount} plugins have settings (${totalSettings} total settings)`
     );
     expect(withSettings).toBeGreaterThan(10);
-  }, 60_000);
+  });
 
-  test('known plugins have expected structure', async () => {
-    const result = await parsePlugins(VENCORD_PATH);
+  test('known plugins have expected structure', () => {
     const plugins = result.vencordPlugins;
 
     // SpotifyControls is a well-known Vencord plugin with settings
@@ -44,12 +53,17 @@ describe.skipIf(!hasVencord)('Real-world: Vencord', () => {
       expect(name).toBeTruthy();
       expect(plugin.settings).toBeDefined();
     }
-  }, 60_000);
+  });
 });
 
 describe.skipIf(!hasEquicord)('Real-world: Equicord', () => {
-  test('parses Equicord plugins without throwing', async () => {
-    const result = await parsePlugins(EQUICORD_PATH);
+  let result: ParsedPluginsResult;
+
+  beforeAll(async () => {
+    result = await parseEquicord();
+  }, 60_000);
+
+  test('parses Equicord plugins without throwing', () => {
     const vencordCount = Object.keys(result.vencordPlugins).length;
     const equicordCount = Object.keys(result.equicordPlugins).length;
     const totalCount = vencordCount + equicordCount;
@@ -74,13 +88,18 @@ describe.skipIf(!hasEquicord)('Real-world: Equicord', () => {
       `Equicord: ${withSettings}/${totalCount} plugins have settings (${totalSettings} total settings)`
     );
     expect(withSettings).toBeGreaterThan(20);
-  }, 60_000);
+  });
 });
 
 describe.skipIf(!hasVencord || !hasEquicord)('Real-world: categorize', () => {
-  test('categorizes plugins from both repos', async () => {
-    const vencordResult = await parsePlugins(VENCORD_PATH);
-    const equicordResult = await parsePlugins(EQUICORD_PATH);
+  let vencordResult: ParsedPluginsResult;
+  let equicordResult: ParsedPluginsResult;
+
+  beforeAll(async () => {
+    [vencordResult, equicordResult] = await Promise.all([parseVencord(), parseEquicord()]);
+  }, 120_000);
+
+  test('categorizes plugins from both repos', () => {
     const categorized = categorizePlugins(vencordResult, equicordResult);
 
     const genericCount = Object.keys(categorized.generic).length;
@@ -93,10 +112,9 @@ describe.skipIf(!hasVencord || !hasEquicord)('Real-world: categorize', () => {
 
     expect(genericCount).toBeGreaterThan(0);
     expect(vencordOnlyCount + equicordOnlyCount).toBeGreaterThan(0);
-  }, 120_000);
+  });
 
-  test('settings have valid types', async () => {
-    const result = await parsePlugins(VENCORD_PATH);
+  test('settings have valid types', () => {
     const validTypes = new Set([
       'types.str',
       'types.bool',
@@ -111,7 +129,7 @@ describe.skipIf(!hasVencord || !hasEquicord)('Real-world: categorize', () => {
     let enumCount = 0;
     let totalCount = 0;
 
-    for (const plugin of Object.values(result.vencordPlugins)) {
+    for (const plugin of Object.values(vencordResult.vencordPlugins)) {
       for (const setting of Object.values(plugin.settings)) {
         if ('type' in setting) {
           totalCount++;
@@ -129,5 +147,5 @@ describe.skipIf(!hasVencord || !hasEquicord)('Real-world: categorize', () => {
       `Setting types: ${validCount} standard, ${enumCount} enum, ${totalCount - validCount - enumCount} other (total: ${totalCount})`
     );
     expect(validCount + enumCount).toBeGreaterThan(totalCount * 0.8);
-  }, 60_000);
+  });
 });
