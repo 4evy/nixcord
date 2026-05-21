@@ -84,7 +84,7 @@ export function generateDeprecatedJson(data: DeprecatedData): string {
     output.settingRenames[pluginName] = Object.fromEntries(sortedEntries(settings));
   }
 
-  return JSON.stringify(output, null, 2);
+  return `${JSON.stringify(output, null, 2)}\n`;
 }
 
 /**

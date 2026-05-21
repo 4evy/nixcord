@@ -10,7 +10,7 @@
   skipGitMigrations ? true,
 }:
 let
-  nodeModulesHash = "sha256-6MSNe+cEXjxc92oIX+5PCVVyBD7VwOIIlUbAEu0qGnM=";
+  nodeModulesHash = "sha256-/1H8CLr7QVXecHhxOZouRUtfA6lD2vME7IFcwrZYsCM=";
 in
 stdenvNoCC.mkDerivation (finalAttrs: {
   name = "nixcord-plugin-options";

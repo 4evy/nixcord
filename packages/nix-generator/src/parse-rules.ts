@@ -80,7 +80,7 @@ export function generateParseRulesModule(
   const lowerPluginTitles = collectLowerPluginTitles(shared, vencordOnly, equicordOnly);
   const settingRenames = collectSettingRenames(shared, vencordOnly, equicordOnly);
 
-  return JSON.stringify(
+  return `${JSON.stringify(
     {
       lowerPluginTitles,
       settingRenames,
@@ -88,5 +88,5 @@ export function generateParseRulesModule(
     },
     null,
     2
-  );
+  )}\n`;
 }

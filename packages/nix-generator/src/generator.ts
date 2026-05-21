@@ -165,5 +165,5 @@ export const generatePluginModule = (
     output[toNixIdentifier(pluginName)] = generatePluginJson(pluginName, config, category);
   }
 
-  return JSON.stringify(output, null, 2);
+  return `${JSON.stringify(output, null, 2)}\n`;
 };

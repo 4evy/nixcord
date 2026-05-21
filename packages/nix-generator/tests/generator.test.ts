@@ -365,6 +365,11 @@ describe('generatePluginModule()', () => {
     expect(() => JSON.parse(result)).not.toThrow();
   });
 
+  test('ends generated JSON with a newline', () => {
+    const result = generatePluginModule({});
+    expect(result.endsWith('\n')).toBe(true);
+  });
+
   test('sorts plugins alphabetically', () => {
     const plugins: ReadonlyDeep<Record<string, PluginConfig>> = {
       ZuluPlugin: {

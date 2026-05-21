@@ -166,5 +166,5 @@ export function generateMigrationsJson(
   allPlugins: ReadonlyDeep<Record<string, PluginConfig>>,
   pluginSources?: ReadonlyDeep<Record<string, PluginConfig>>[]
 ): string {
-  return JSON.stringify(generateMigrationsData(deprecated, allPlugins, pluginSources), null, 2);
+  return `${JSON.stringify(generateMigrationsData(deprecated, allPlugins, pluginSources), null, 2)}\n`;
 }

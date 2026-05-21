@@ -123,7 +123,7 @@ async function applyOverrides(expectedDir: string, generatedDir: string): Promis
 
     const generatedPath = join(generatedDir, filename);
     const generated = await readJson<unknown>(generatedPath);
-    await writeFile(generatedPath, JSON.stringify(mergeJson(generated, override), null, 2));
+    await writeFile(generatedPath, `${JSON.stringify(mergeJson(generated, override), null, 2)}\n`);
   }
 }
 

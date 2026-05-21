@@ -32,6 +32,11 @@ describe('generateParseRulesModule()', () => {
     expect(() => JSON.parse(output)).not.toThrow();
   });
 
+  test('ends generated JSON with a newline', () => {
+    const output = generateParseRulesModule({}, {}, {});
+    expect(output.endsWith('\n')).toBe(true);
+  });
+
   test('includes auto-detected lowercase plugin names', () => {
     const output = generateParseRulesModule(shared, vencordOnly, equicordOnly);
     const parsed = JSON.parse(output);

@@ -167,7 +167,7 @@ describe('generateMigrationsData()', () => {
 
     const result = generateMigrationsJson(deprecated, allPlugins);
 
-    expect(result).toBe('{\n  "renames": [],\n  "removals": [\n    "deadPlugin"\n  ]\n}');
+    expect(result).toBe('{\n  "renames": [],\n  "removals": [\n    "deadPlugin"\n  ]\n}\n');
   });
 });
 
