@@ -1,10 +1,10 @@
 import { existsSync } from 'node:fs';
-import type { PluginSetting } from '@nixcord/shared';
+import { CLI_CONFIG, type PluginSetting } from '@nixcord/shared';
 import { describe, expect, test } from 'vitest';
 import { categorizePlugins, parsePlugins } from '../../src/index.js';
 
-const VENCORD_PATH = '/tmp/vencord';
-const EQUICORD_PATH = '/tmp/equicord';
+const VENCORD_PATH = CLI_CONFIG.sources.vencord;
+const EQUICORD_PATH = CLI_CONFIG.sources.equicord;
 const hasVencord = existsSync(VENCORD_PATH);
 const hasEquicord = existsSync(EQUICORD_PATH);
 
