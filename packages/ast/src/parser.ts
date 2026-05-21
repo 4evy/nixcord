@@ -1,4 +1,4 @@
-import { isObject, isPrimitive, OptionTypeMap } from '@nixcord/shared';
+import { isObject, isPrimitive } from '@nixcord/shared';
 import type { Node, Program, TypeChecker } from 'ts-morph';
 import { SyntaxKind } from 'ts-morph';
 import {
@@ -27,8 +27,38 @@ import {
 } from './extractor/constants.js';
 import { evaluate, isBooleanEnumValues, typeMatches } from './foundation/index.js';
 
+type EnumLiteral = string | number | boolean;
+
+type TypeResolution = Readonly<{
+  readonly nixType: string;
+  readonly enumValues?: readonly EnumLiteral[];
+}>;
+
+type TypeResolutionSetting = Readonly<{ type?: unknown; default?: unknown; options?: unknown }>;
+
+const OPTION_TYPE_NAMES_BY_VALUE = [
+  OPTION_TYPE_STRING,
+  OPTION_TYPE_NUMBER,
+  OPTION_TYPE_BIGINT,
+  OPTION_TYPE_BOOLEAN,
+  OPTION_TYPE_SELECT,
+  OPTION_TYPE_SLIDER,
+  OPTION_TYPE_COMPONENT,
+  OPTION_TYPE_CUSTOM,
+] as const;
+
+type OptionTypeName = (typeof OPTION_TYPE_NAMES_BY_VALUE)[number];
+
+const OPTION_TYPE_NAME_SET: ReadonlySet<string> = new Set(OPTION_TYPE_NAMES_BY_VALUE);
+
+const isOptionTypeName = (value: string): value is OptionTypeName =>
+  OPTION_TYPE_NAME_SET.has(value);
+
 const isNode = (value: unknown): value is Node =>
   typeof value === 'object' && value !== null && typeof (value as Node).getKind === 'function';
+
+const resolveOptionTypeNameFromNumericValue = (value: number): OptionTypeName | undefined =>
+  OPTION_TYPE_NAMES_BY_VALUE[value];
 
 const inferNixTypeFromRuntimeDefault = (defaultValue: unknown): string => {
   if (defaultValue === undefined) return NIX_TYPE_STR;
@@ -41,58 +71,78 @@ const inferNixTypeFromRuntimeDefault = (defaultValue: unknown): string => {
   return NIX_TYPE_STR;
 };
 
-const extractEnumValueFromDeclaration = (valueDeclaration: Node): number | undefined => {
-  if (valueDeclaration.getKind() !== SyntaxKind.EnumMember) return undefined;
-  try {
-    const value = (valueDeclaration as { getValue?: () => number }).getValue?.();
-    if (typeof value === 'number') return value;
-  } catch {}
+const resolveOptionTypeNameFromDeclaration = (
+  valueDeclaration: Node
+): OptionTypeName | undefined => {
   const enumMember = valueDeclaration.asKind(SyntaxKind.EnumMember);
-  const initializer = enumMember?.getInitializer();
-  if (initializer?.getKind() === SyntaxKind.NumericLiteral) {
-    return parseInt(
+  if (!enumMember) return undefined;
+
+  const memberName = enumMember.getName();
+  if (isOptionTypeName(memberName)) return memberName;
+
+  try {
+    const value = enumMember.getValue();
+    if (typeof value === 'number') return resolveOptionTypeNameFromNumericValue(value);
+    if (typeof value === 'string' && isOptionTypeName(value)) return value;
+  } catch {}
+
+  const initializer = enumMember.getInitializer();
+  if (initializer?.getKind() !== SyntaxKind.NumericLiteral) return undefined;
+
+  return resolveOptionTypeNameFromNumericValue(
+    parseInt(
       initializer.asKindOrThrow(SyntaxKind.NumericLiteral).getLiteralValue().toString(),
       PARSE_INT_RADIX
-    );
-  }
-  return undefined;
+    )
+  );
 };
+
+const getInitializerFromDeclaration = (declaration: Node): Node | undefined =>
+  'getInitializer' in declaration
+    ? (declaration as { getInitializer: () => Node | undefined }).getInitializer()
+    : undefined;
 
 const resolveOptionTypeNameFromNode = (
   typeNode: Node,
   _checker: TypeChecker
-): string | undefined => {
-  const extractTypeValue = (): string | number | undefined => {
+): OptionTypeName | undefined => {
+  const extractTypeValue = (): OptionTypeName | number | undefined => {
     switch (typeNode.getKind()) {
       case SyntaxKind.PropertyAccessExpression: {
         const propAccess = typeNode.asKindOrThrow(SyntaxKind.PropertyAccessExpression);
         const propName = propAccess.getName();
+        if (isOptionTypeName(propName)) return propName;
         try {
           const symbol = propAccess.getSymbol();
           const valueDecl = symbol?.getValueDeclaration();
           if (valueDecl) {
-            const enumValue = extractEnumValueFromDeclaration(valueDecl);
-            return enumValue !== undefined
-              ? ((OptionTypeMap[enumValue] as string | number) ?? propName)
-              : propName;
+            return resolveOptionTypeNameFromDeclaration(valueDecl) ?? undefined;
           }
         } catch {}
-        return propName;
+        return undefined;
       }
       case SyntaxKind.Identifier: {
         const symbol = typeNode.asKindOrThrow(SyntaxKind.Identifier).getSymbol();
         const valueDecl = symbol?.getValueDeclaration();
         if (!valueDecl) return undefined;
-        const enumValue = extractEnumValueFromDeclaration(valueDecl);
-        return enumValue !== undefined ? (OptionTypeMap[enumValue] as string | number) : undefined;
+        const enumName = resolveOptionTypeNameFromDeclaration(valueDecl);
+        if (enumName) return enumName;
+
+        const init = getInitializerFromDeclaration(valueDecl);
+        if (init) return resolveOptionTypeNameFromNode(init, _checker);
+
+        const result = evaluate(typeNode, _checker);
+        return result.ok && typeof result.value === 'number'
+          ? resolveOptionTypeNameFromNumericValue(result.value)
+          : undefined;
       }
       case SyntaxKind.NumericLiteral:
-        return OptionTypeMap[
+        return resolveOptionTypeNameFromNumericValue(
           parseInt(
             typeNode.asKindOrThrow(SyntaxKind.NumericLiteral).getLiteralValue().toString(),
             PARSE_INT_RADIX
           )
-        ] as string | number;
+        );
       case SyntaxKind.BinaryExpression: {
         const binExpr = typeNode.asKindOrThrow(SyntaxKind.BinaryExpression);
         if (binExpr.getOperatorToken().getKind() === SyntaxKind.BarToken) {
@@ -108,7 +158,7 @@ const resolveOptionTypeNameFromNode = (
 
         const result = evaluate(typeNode, _checker);
         if (result.ok && typeof result.value === 'number') {
-          return OptionTypeMap[result.value] as string | number | undefined;
+          return resolveOptionTypeNameFromNumericValue(result.value);
         }
         return undefined;
       }
@@ -120,23 +170,17 @@ const resolveOptionTypeNameFromNode = (
   const typeValue = extractTypeValue();
   if (typeValue === undefined) return undefined;
 
-  if (typeof typeValue === 'string') return typeValue;
-  if (typeof typeValue === 'number') return OptionTypeMap[typeValue] as string;
-  return undefined;
+  return typeof typeValue === 'number'
+    ? resolveOptionTypeNameFromNumericValue(typeValue)
+    : typeValue;
 };
 
-const buildEnumValuesFromOptions = (
-  options: unknown
-): readonly (string | number | boolean)[] | undefined => {
-  // Handle case where options are already extracted as EnumLiteral[] (string | number | boolean)
+const buildEnumValuesFromOptions = (options: unknown): readonly EnumLiteral[] | undefined => {
   if (Array.isArray(options)) {
-    const validOptions = options.filter((opt): opt is string | number | boolean =>
-      isPrimitive(opt)
-    );
+    const validOptions = options.filter((opt): opt is EnumLiteral => isPrimitive(opt));
     if (validOptions.length > 0) return Object.freeze(validOptions);
   }
 
-  // Handle case where options are in object format [{ value: 'x' }, { value: 'y' }]
   if (!Array.isArray(options)) return Object.freeze([]);
 
   return Object.freeze(
@@ -146,7 +190,7 @@ const buildEnumValuesFromOptions = (
         const val = (option as Record<string, unknown>).value;
         return isPrimitive(val) ? val : null;
       })
-      .filter((val): val is string | number | boolean => val !== null)
+      .filter((val): val is EnumLiteral => val !== null)
   );
 };
 
@@ -168,6 +212,16 @@ const inferTypeFromTypeScriptType = (
   try {
     const type = checker.getTypeAtLocation(typeNode);
     if (!type) return undefined;
+
+    if (type.isString() || type.isStringLiteral()) return NIX_TYPE_STR;
+    if (type.isNumber() || type.isNumberLiteral())
+      return typeof defaultValue === 'number'
+        ? Number.isInteger(defaultValue)
+          ? NIX_TYPE_INT
+          : NIX_TYPE_FLOAT
+        : NIX_TYPE_INT;
+    if (type.isBoolean() || type.isBooleanLiteral()) return NIX_TYPE_BOOL;
+    if (type.isArray() || type.isTuple()) return NIX_TYPE_ATTRS;
 
     const typeName = type.getSymbol()?.getName() ?? type.getText();
 
@@ -199,21 +253,52 @@ const inferTypeFromTypeScriptType = (
   }
 };
 
+const resolveEnumType = (setting: TypeResolutionSetting): TypeResolution => {
+  const enumValues = buildEnumValuesFromOptions(setting.options) ?? Object.freeze([]);
+  if (isBooleanEnumValues(enumValues)) return { nixType: NIX_TYPE_BOOL };
+  if (enumValues.length === 0) return { nixType: NIX_TYPE_STR };
+  return { nixType: NIX_ENUM_TYPE, enumValues };
+};
+
+const resolveCustomType = (setting: TypeResolutionSetting): TypeResolution => {
+  const enumValues = buildEnumValuesFromOptions(setting.options) ?? Object.freeze([]);
+  if (isBooleanEnumValues(enumValues)) return { nixType: NIX_TYPE_BOOL };
+  if (enumValues.length > 0) return { nixType: NIX_ENUM_TYPE, enumValues };
+  return { nixType: nixTypeForComponentOrCustom(setting.default) };
+};
+
+const OPTION_TYPE_RESOLVERS = {
+  [OPTION_TYPE_BOOLEAN]: () => ({ nixType: NIX_TYPE_BOOL }),
+  [OPTION_TYPE_STRING]: () => ({ nixType: NIX_TYPE_STR }),
+  [OPTION_TYPE_NUMBER]: (setting) => ({
+    nixType:
+      typeof setting.default === 'number'
+        ? Number.isInteger(setting.default)
+          ? NIX_TYPE_INT
+          : NIX_TYPE_FLOAT
+        : NIX_TYPE_FLOAT,
+  }),
+  [OPTION_TYPE_BIGINT]: () => ({ nixType: NIX_TYPE_INT }),
+  [OPTION_TYPE_SELECT]: resolveEnumType,
+  [OPTION_TYPE_SLIDER]: () => ({ nixType: NIX_TYPE_FLOAT }),
+  [OPTION_TYPE_COMPONENT]: (setting) => ({
+    nixType: nixTypeForComponentOrCustom(setting.default),
+  }),
+  [OPTION_TYPE_CUSTOM]: resolveCustomType,
+} satisfies Record<OptionTypeName, (setting: TypeResolutionSetting) => TypeResolution>;
+
 export function tsTypeToNixType(
-  setting: Readonly<{ type?: unknown; default?: unknown; options?: unknown }>,
+  setting: TypeResolutionSetting,
   _program: Program,
   _checker: TypeChecker
-): Readonly<{
-  readonly nixType: string;
-  readonly enumValues?: readonly (string | number | boolean)[];
-}> {
+): TypeResolution {
   const type = setting.type;
 
   if (!type || !isNode(type)) {
-    if (typeof type === 'number' && type in OptionTypeMap) {
-      const typeValue = OptionTypeMap[type];
+    if (typeof type === 'number') {
+      const typeValue = resolveOptionTypeNameFromNumericValue(type);
       if (typeValue === OPTION_TYPE_COMPONENT || typeValue === OPTION_TYPE_CUSTOM)
-        return { nixType: nixTypeForComponentOrCustom(setting.default) };
+        return OPTION_TYPE_RESOLVERS[typeValue](setting);
     }
     const enumValues = buildEnumValuesFromOptions(setting.options);
     if (enumValues && enumValues.length > 0)
@@ -225,41 +310,7 @@ export function tsTypeToNixType(
 
   const typeName = resolveOptionTypeNameFromNode(type, _checker);
   if (typeName !== undefined) {
-    switch (typeName) {
-      case OPTION_TYPE_BOOLEAN:
-        return { nixType: NIX_TYPE_BOOL };
-      case OPTION_TYPE_STRING:
-        return { nixType: NIX_TYPE_STR };
-      case OPTION_TYPE_NUMBER:
-        return {
-          nixType:
-            typeof setting.default === 'number'
-              ? Number.isInteger(setting.default)
-                ? NIX_TYPE_INT
-                : NIX_TYPE_FLOAT
-              : NIX_TYPE_FLOAT,
-        };
-      case OPTION_TYPE_BIGINT:
-        return { nixType: NIX_TYPE_INT };
-      case OPTION_TYPE_SELECT: {
-        const enumValues = buildEnumValuesFromOptions(setting.options) ?? Object.freeze([]);
-        if (isBooleanEnumValues(enumValues)) return { nixType: NIX_TYPE_BOOL };
-        if (enumValues.length === 0) return { nixType: NIX_TYPE_STR };
-        return { nixType: NIX_ENUM_TYPE, enumValues };
-      }
-      case OPTION_TYPE_SLIDER:
-        return { nixType: NIX_TYPE_FLOAT };
-      case OPTION_TYPE_COMPONENT:
-        return { nixType: nixTypeForComponentOrCustom(setting.default) };
-      case OPTION_TYPE_CUSTOM: {
-        const enumValues = buildEnumValuesFromOptions(setting.options) ?? Object.freeze([]);
-        if (isBooleanEnumValues(enumValues)) return { nixType: NIX_TYPE_BOOL };
-        if (enumValues.length > 0) return { nixType: NIX_ENUM_TYPE, enumValues };
-        return { nixType: nixTypeForComponentOrCustom(setting.default) };
-      }
-      default:
-        return { nixType: inferNixTypeFromRuntimeDefault(setting.default) };
-    }
+    return OPTION_TYPE_RESOLVERS[typeName](setting);
   }
 
   const inferredType = inferTypeFromTypeScriptType(type, _checker, setting.default);

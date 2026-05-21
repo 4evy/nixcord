@@ -1,7 +1,17 @@
+import fc from 'fast-check';
 import { SyntaxKind } from 'ts-morph';
 import { describe, expect, test } from 'vitest';
 import { tsTypeToNixType } from '../../../src/parser.js';
 import { createProject } from '../../helpers/test-utils.js';
+
+const optionTypeCases = [
+  { name: 'STRING', expected: 'types.str' },
+  { name: 'NUMBER', expected: 'types.float' },
+  { name: 'BIGINT', expected: 'types.int' },
+  { name: 'BOOLEAN', expected: 'types.bool' },
+  { name: 'SELECT', expected: 'types.str' },
+  { name: 'SLIDER', expected: 'types.float' },
+] as const;
 
 describe('tsTypeToNixType()', () => {
   test('type inference from boolean default -> types.bool', () => {
@@ -331,5 +341,39 @@ describe('tsTypeToNixType()', () => {
       checker
     );
     expect(result.nixType).toBe('types.attrs');
+  });
+
+  test('resolves supported OptionType enum members by source enum name', () => {
+    fc.assert(
+      fc.property(fc.constantFrom(...optionTypeCases), ({ name, expected }) => {
+        const project = createProject();
+        const sourceFile = project.createSourceFile(
+          'test.ts',
+          `enum OptionType {
+            STRING,
+            NUMBER,
+            BIGINT,
+            BOOLEAN,
+            SELECT,
+            SLIDER,
+            COMPONENT,
+            CUSTOM
+          }
+          const obj = { type: OptionType.${name} };`
+        );
+        const objLiteral = sourceFile
+          .getVariableDeclarationOrThrow('obj')
+          .getInitializerIfKindOrThrow(SyntaxKind.ObjectLiteralExpression);
+        const typeNode = objLiteral
+          .getProperty('type')
+          ?.asKind(SyntaxKind.PropertyAssignment)
+          ?.getInitializer();
+        const checker = project.getTypeChecker();
+        const program = project.getProgram();
+        if (!typeNode) throw new Error('Type node not found');
+
+        expect(tsTypeToNixType({ type: typeNode }, program, checker).nixType).toBe(expected);
+      })
+    );
   });
 });

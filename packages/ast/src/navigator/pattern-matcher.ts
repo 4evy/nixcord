@@ -5,10 +5,8 @@
  * looking for. They're pure navigation functions that return nodes.
  */
 
-import type { CallExpression, Identifier, PropertyAccessExpression, SourceFile } from 'ts-morph';
+import type { CallExpression, SourceFile } from 'ts-morph';
 import { SyntaxKind } from 'ts-morph';
-
-import { asKind } from '../foundation/index.js';
 
 /**
  * Generic function to find a call expression by function name.
@@ -24,7 +22,7 @@ export function findCallExpressionByName(
 
   return callExpressions.find((callExpr) => {
     const expression = callExpr.getExpression();
-    const ident = asKind<Identifier>(expression, SyntaxKind.Identifier);
+    const ident = expression.asKind(SyntaxKind.Identifier);
     return ident?.getText() === functionName;
   });
 }
@@ -43,7 +41,7 @@ export function findAllCallExpressionsByName(
 
   return callExpressions.filter((callExpr) => {
     const expression = callExpr.getExpression();
-    const ident = asKind<Identifier>(expression, SyntaxKind.Identifier);
+    const ident = expression.asKind(SyntaxKind.Identifier);
     return ident?.getText() === functionName;
   });
 }
@@ -63,24 +61,18 @@ export function unwrapChainedCall(
   let expression = callExpr.getExpression();
   let targetCall: CallExpression = callExpr;
 
-  let propAccess = asKind<PropertyAccessExpression>(
-    expression,
-    SyntaxKind.PropertyAccessExpression
-  );
+  let propAccess = expression.asKind(SyntaxKind.PropertyAccessExpression);
 
   while (propAccess) {
     const propName = propAccess.getName();
 
     if (chainMethodNames.includes(propName)) {
       expression = propAccess.getExpression();
-      const innerCall = asKind<CallExpression>(expression, SyntaxKind.CallExpression);
+      const innerCall = expression.asKind(SyntaxKind.CallExpression);
       if (innerCall) {
         targetCall = innerCall;
         expression = innerCall.getExpression();
-        propAccess = asKind<PropertyAccessExpression>(
-          expression,
-          SyntaxKind.PropertyAccessExpression
-        );
+        propAccess = expression.asKind(SyntaxKind.PropertyAccessExpression);
         continue;
       }
     }
@@ -106,7 +98,7 @@ export function findCallExpressionByNameUnwrappingChains(
   for (const callExpr of callExpressions) {
     const unwrapped = unwrapChainedCall(callExpr, chainMethodNames);
     const expression = unwrapped.getExpression();
-    const identifier = asKind<Identifier>(expression, SyntaxKind.Identifier);
+    const identifier = expression.asKind(SyntaxKind.Identifier);
 
     if (identifier?.getText() === functionName) {
       return unwrapped;

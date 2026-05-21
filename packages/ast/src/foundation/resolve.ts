@@ -1,5 +1,4 @@
 import type {
-  CallExpression,
   Identifier,
   Node,
   ObjectLiteralExpression,
@@ -8,7 +7,7 @@ import type {
   TypeChecker,
 } from 'ts-morph';
 import { SyntaxKind } from 'ts-morph';
-import { asKind, iteratePropertyAssignments } from './property.js';
+import { iteratePropertyAssignments } from './property.js';
 import { unwrapNode } from './unwrap.js';
 
 const resolveSymbol = (
@@ -134,7 +133,7 @@ const resolvePropAccessMethod = (
   prop: PropertyAccessExpression,
   checker: TypeChecker
 ): Node | undefined => {
-  const baseIdent = asKind<Identifier>(prop.getExpression(), SyntaxKind.Identifier);
+  const baseIdent = prop.getExpression().asKind(SyntaxKind.Identifier);
   if (!baseIdent) return undefined;
 
   const obj = resolveToObjectLiteral(baseIdent, checker);
@@ -150,7 +149,7 @@ const resolvePropAccessMethod = (
 };
 
 export const resolveCallExpressionReturn = (node: Node, checker: TypeChecker): Node | undefined => {
-  const call = asKind<CallExpression>(node, SyntaxKind.CallExpression);
+  const call = node.asKind(SyntaxKind.CallExpression);
   if (!call) return undefined;
 
   const expr = call.getExpression();

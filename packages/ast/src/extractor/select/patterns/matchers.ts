@@ -4,11 +4,10 @@ import type {
   CallExpression,
   Identifier,
   Node,
-  PropertyAccessExpression,
   TypeChecker,
 } from 'ts-morph';
 import { SyntaxKind } from 'ts-morph';
-import { asKind, getFirstArgumentOfKind } from '../../../foundation/index.js';
+import { getFirstArgumentOfKind } from '../../../foundation/index.js';
 import {
   GLOBAL_ARRAY_NAME,
   METHOD_NAME_FROM,
@@ -39,10 +38,10 @@ export const isArrayMapCall = (call: CallExpression): boolean =>
 
 export const isArrayFromCall = (call: Node): boolean => {
   if (call.getKind() !== SyntaxKind.CallExpression) return false;
-  const propAccess = asKind<PropertyAccessExpression>(
-    call.asKindOrThrow(SyntaxKind.CallExpression).getExpression(),
-    SyntaxKind.PropertyAccessExpression
-  );
+  const propAccess = call
+    .asKindOrThrow(SyntaxKind.CallExpression)
+    .getExpression()
+    .asKind(SyntaxKind.PropertyAccessExpression);
   return (
     propAccess?.getExpression()?.getKind() === SyntaxKind.Identifier &&
     propAccess.getExpression().asKindOrThrow(SyntaxKind.Identifier).getText() ===

@@ -1,5 +1,4 @@
 import type {
-  ArrayLiteralExpression,
   CallExpression,
   Node,
   ObjectLiteralExpression,
@@ -12,7 +11,7 @@ export const typeMatches = (name: string, pattern: string): boolean =>
   name === pattern || name.includes(pattern);
 
 export const asKind = <T extends Node>(node: Node, kind: SyntaxKind): T | undefined =>
-  node.getKind() === kind ? (node as T) : undefined;
+  node.asKind(kind) as T | undefined;
 
 export const getPropertyAssignment = (
   obj: ObjectLiteralExpression,
@@ -100,7 +99,7 @@ export const isMethodCall = (
   methodName: string
 ): PropertyAccessExpression | undefined => {
   const expr = call.getExpression();
-  const propAccess = asKind<PropertyAccessExpression>(expr, SyntaxKind.PropertyAccessExpression);
+  const propAccess = expr.asKind(SyntaxKind.PropertyAccessExpression);
   if (!propAccess) return undefined;
   return propAccess.getName() === methodName ? propAccess : undefined;
 };
@@ -111,17 +110,8 @@ export const getFirstArgumentOfKind = <T extends Node>(
 ): T | undefined => {
   const args = call.getArguments();
   const firstArg = args[0];
-  return firstArg ? asKind<T>(firstArg, kind) : undefined;
+  return firstArg ? (firstArg.asKind(kind) as T | undefined) : undefined;
 };
-
-const isArrayOf = (arr: ArrayLiteralExpression, kind: SyntaxKind): boolean =>
-  arr.getElements().every((el) => el.getKind() === kind);
-
-const isArrayOfStringLiterals = (arr: ArrayLiteralExpression): boolean =>
-  isArrayOf(arr, SyntaxKind.StringLiteral);
-
-const isArrayOfObjectLiterals = (arr: ArrayLiteralExpression): boolean =>
-  isArrayOf(arr, SyntaxKind.ObjectLiteralExpression);
 
 export const getPropertyAssignments = (obj: ObjectLiteralExpression): PropertyAssignment[] =>
   Array.from(iteratePropertyAssignments(obj));

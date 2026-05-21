@@ -1,10 +1,6 @@
 import type { CallExpression, ObjectLiteralExpression, SourceFile, TypeChecker } from 'ts-morph';
 import { SyntaxKind } from 'ts-morph';
-import {
-  asKind,
-  extractBooleanLiteralValue,
-  extractStringLiteralValue,
-} from '../foundation/index.js';
+import { extractBooleanLiteralValue, extractStringLiteralValue } from '../foundation/index.js';
 import { findDefinePluginCall } from '../navigator/plugin-navigator.js';
 import { DESCRIPTION_PROPERTY, IS_MODIFIED_PROPERTY, NAME_PROPERTY } from './constants.js';
 import type { ExtractedPluginInfo } from './types.js';
@@ -12,9 +8,7 @@ import { ExtractedPluginInfoSchema } from './types.js';
 
 const getFirstObjectArg = (callExpr: CallExpression): ObjectLiteralExpression | undefined => {
   const args = callExpr.getArguments();
-  return args.length > 0
-    ? asKind<ObjectLiteralExpression>(args[0], SyntaxKind.ObjectLiteralExpression)
-    : undefined;
+  return args[0]?.asKind(SyntaxKind.ObjectLiteralExpression);
 };
 
 export function extractPluginInfo(

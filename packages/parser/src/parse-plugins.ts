@@ -29,7 +29,7 @@ import { z } from 'zod';
 import { createProject } from './project.js';
 
 const PLUGIN_SOURCE_FILE_PATTERNS = ['index.tsx', 'index.ts', 'settings.ts'] as const;
-const PARALLEL_PROCESSING_LIMIT = 1;
+const SERIAL_PROJECT_MUTATION_LIMIT = 1;
 const PROGRESS_REPORT_INTERVAL = 10;
 const PLUGIN_DIR_SEPARATOR_PATTERN = /[-_]/;
 const PLUGIN_FILE_GLOB_PATTERN = '*/index.{ts,tsx}';
@@ -63,6 +63,13 @@ interface SinglePluginResult {
   settingRenames: SettingRename[];
   pluginRenames: PluginRename[];
   diagnostics: ParseDiagnostic[];
+}
+
+interface PluginSourceFileSession {
+  readonly settingsSourceFile?: SourceFile;
+  readonly sourceFile: SourceFile;
+  readonly allSourceFiles: readonly SourceFile[];
+  readonly cleanup: () => void;
 }
 
 function classifyEmptySettingsExtraction(
@@ -139,14 +146,12 @@ function classifyEmptySettingsExtraction(
   };
 }
 
-async function parseSinglePlugin(
-  pluginDir: string,
+async function createPluginSourceFileSession(
   pluginPath: string,
+  entryPath: string,
+  settingsPath: string | undefined,
   project: Project
-): Promise<SinglePluginResult | undefined> {
-  const path = await findPluginSourceFile(pluginPath);
-  if (!path) return undefined;
-
+): Promise<PluginSourceFileSession> {
   const addedSourceFiles: SourceFile[] = [];
   const getOrAddSourceFile = (filePath: string) => {
     const existing = project.getSourceFile(filePath);
@@ -155,19 +160,9 @@ async function parseSinglePlugin(
     addedSourceFiles.push(sourceFile);
     return sourceFile;
   };
-  const cleanupSourceFiles = () => {
-    for (const sourceFile of addedSourceFiles.slice().reverse()) {
-      project.removeSourceFile(sourceFile);
-    }
-  };
 
-  const settingsPath = await findSettingsSourceFile(pluginPath);
   const settingsSourceFile = settingsPath ? getOrAddSourceFile(settingsPath) : undefined;
-  const sourceFile = getOrAddSourceFile(path);
-  if (!sourceFile) {
-    cleanupSourceFiles();
-    return undefined;
-  }
+  const sourceFile = getOrAddSourceFile(entryPath);
   const pluginSourceFiles = await fg(PLUGIN_SOURCE_GLOB_PATTERN, {
     cwd: pluginPath,
     absolute: true,
@@ -176,83 +171,74 @@ async function parseSinglePlugin(
   const allSourceFiles = pluginSourceFiles.map((filePath) =>
     getOrAddSourceFile(normalize(filePath))
   );
-  const pluginTypeChecker = project.getTypeChecker();
-  const pluginInfo = extractPluginInfo(sourceFile, pluginTypeChecker);
 
-  // Derive plugin name from directory if not explicitly defined
-  const pluginName =
-    pluginInfo.name ||
-    pluginDir
-      .split(PLUGIN_DIR_SEPARATOR_PATTERN)
-      .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
-      .join('');
-
-  // If we still don't have a plugin name, skip this plugin
-  if (!pluginName) {
-    cleanupSourceFiles();
-    return undefined;
-  }
-
-  let settingsCall =
-    (settingsSourceFile ? findDefinePluginSettings(settingsSourceFile) : undefined) ??
-    findDefinePluginSettings(sourceFile);
-  if (settingsCall === undefined) {
-    if (settingsPath) {
-      settingsCall = findDefinePluginSettings(getOrAddSourceFile(settingsPath));
-    }
-  }
-
-  if (settingsCall === undefined) {
-    for (const filePath of pluginSourceFiles) {
-      const candidate = findDefinePluginSettings(getOrAddSourceFile(normalize(filePath)));
-      if (candidate) {
-        settingsCall = candidate;
-        break;
+  return {
+    settingsSourceFile,
+    sourceFile,
+    allSourceFiles,
+    cleanup: () => {
+      for (const sourceFile of addedSourceFiles.slice().reverse()) {
+        project.removeSourceFile(sourceFile);
       }
-    }
+    },
+  };
+}
+
+const uniqueSourceFiles = (sourceFiles: readonly (SourceFile | undefined)[]): SourceFile[] => {
+  const seen = new Set<string>();
+  return sourceFiles.filter((sourceFile): sourceFile is SourceFile => {
+    if (!sourceFile) return false;
+    const filePath = sourceFile.getFilePath();
+    if (seen.has(filePath)) return false;
+    seen.add(filePath);
+    return true;
+  });
+};
+
+const findPluginSettingsCall = (
+  session: PluginSourceFileSession
+): ReturnType<typeof findDefinePluginSettings> | undefined => {
+  for (const sourceFile of uniqueSourceFiles([
+    session.settingsSourceFile,
+    session.sourceFile,
+    ...session.allSourceFiles,
+  ])) {
+    const settingsCall = findDefinePluginSettings(sourceFile);
+    if (settingsCall) return settingsCall;
   }
+  return undefined;
+};
 
-  let settings: Record<string, PluginSetting | PluginConfig> =
-    settingsCall !== undefined
-      ? extractSettingsFromCall(settingsCall, pluginTypeChecker, project.getProgram(), true)
-      : {};
+const inferPluginName = (pluginDir: string, pluginInfoName: string | undefined): string =>
+  pluginInfoName ||
+  pluginDir
+    .split(PLUGIN_DIR_SEPARATOR_PATTERN)
+    .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
+    .join('');
 
-  // Bug 1 fix: If no definePluginSettings() was found, fall back to extracting
-  // inline `options: {}` from the definePlugin() call.
-  if (settingsCall === undefined && Object.keys(settings).length === 0) {
-    const definePluginCallExpr = findDefinePluginCall(sourceFile);
-    if (definePluginCallExpr) {
-      const args = definePluginCallExpr.getArguments();
-      if (args.length > 0) {
-        const pluginObj = args[0].asKind(SyntaxKind.ObjectLiteralExpression);
-        if (pluginObj) {
-          const optionsProp = pluginObj
-            .getProperty('options')
-            ?.asKind(SyntaxKind.PropertyAssignment);
-          const optionsInit = optionsProp
-            ?.getInitializer()
-            ?.asKind(SyntaxKind.ObjectLiteralExpression);
-          if (optionsInit) {
-            settings = extractSettingsFromObject(
-              optionsInit,
-              pluginTypeChecker,
-              project.getProgram(),
-              true
-            );
-          }
-        }
-      }
-    }
-  }
+const extractInlineDefinePluginOptions = (
+  sourceFile: SourceFile,
+  project: Project,
+  pluginTypeChecker: ReturnType<Project['getTypeChecker']>
+): Record<string, PluginSetting | PluginConfig> => {
+  const definePluginCallExpr = findDefinePluginCall(sourceFile);
+  const pluginObj = definePluginCallExpr
+    ?.getArguments()[0]
+    ?.asKind(SyntaxKind.ObjectLiteralExpression);
+  const optionsInit = pluginObj
+    ?.getProperty('options')
+    ?.asKind(SyntaxKind.PropertyAssignment)
+    ?.getInitializer()
+    ?.asKind(SyntaxKind.ObjectLiteralExpression);
 
-  const diagnostics: ParseDiagnostic[] = [];
-  if (settingsCall !== undefined && Object.keys(settings).length === 0) {
-    diagnostics.push(classifyEmptySettingsExtraction(pluginName, settingsCall));
-  }
+  return optionsInit
+    ? extractSettingsFromObject(optionsInit, pluginTypeChecker, project.getProgram(), true)
+    : {};
+};
 
-  // Extract migratePluginSetting(pluginName, oldSetting, newSetting) calls from all plugin source files.
+const extractSettingRenames = (sourceFiles: readonly SourceFile[]): SettingRename[] => {
   const settingRenames: SettingRename[] = [];
-  const migrateCalls = allSourceFiles.flatMap(findMigratePluginSettingCalls);
+  const migrateCalls = sourceFiles.flatMap(findMigratePluginSettingCalls);
   for (const call of migrateCalls) {
     const args = call.getArguments();
     if (args.length >= 3) {
@@ -264,9 +250,12 @@ async function parseSinglePlugin(
       }
     }
   }
+  return settingRenames;
+};
 
+const extractPluginRenames = (sourceFiles: readonly SourceFile[]): PluginRename[] => {
   const pluginRenames: PluginRename[] = [];
-  const pluginRenameCalls = allSourceFiles.flatMap(findMigratePluginSettingsCalls);
+  const pluginRenameCalls = sourceFiles.flatMap(findMigratePluginSettingsCalls);
   for (const call of pluginRenameCalls) {
     const args = call.getArguments();
     const newName = args[0]?.asKind(SyntaxKind.StringLiteral)?.getLiteralValue();
@@ -276,17 +265,59 @@ async function parseSinglePlugin(
       if (oldName) pluginRenames.push({ oldName, newName });
     }
   }
+  return pluginRenames;
+};
 
-  const pluginConfig: PluginConfig = {
-    name: pluginName,
-    settings,
-    directoryName: pluginDir,
-    ...(pluginInfo.description ? { description: pluginInfo.description } : {}),
-    ...(pluginInfo.isModified !== undefined ? { isModified: pluginInfo.isModified } : {}),
-  };
+async function parseSinglePlugin(
+  pluginDir: string,
+  pluginPath: string,
+  project: Project
+): Promise<SinglePluginResult | undefined> {
+  const path = await findPluginSourceFile(pluginPath);
+  if (!path) return undefined;
 
-  cleanupSourceFiles();
-  return { entry: [pluginName, pluginConfig], settingRenames, pluginRenames, diagnostics };
+  const settingsPath = await findSettingsSourceFile(pluginPath);
+  const session = await createPluginSourceFileSession(pluginPath, path, settingsPath, project);
+
+  try {
+    const pluginTypeChecker = project.getTypeChecker();
+    const pluginInfo = extractPluginInfo(session.sourceFile, pluginTypeChecker);
+    const pluginName = inferPluginName(pluginDir, pluginInfo.name);
+
+    if (!pluginName) return undefined;
+
+    const settingsCall = findPluginSettingsCall(session);
+    let settings: Record<string, PluginSetting | PluginConfig> =
+      settingsCall !== undefined
+        ? extractSettingsFromCall(settingsCall, pluginTypeChecker, project.getProgram(), true)
+        : {};
+
+    if (settingsCall === undefined && Object.keys(settings).length === 0) {
+      settings = extractInlineDefinePluginOptions(session.sourceFile, project, pluginTypeChecker);
+    }
+
+    const diagnostics =
+      settingsCall !== undefined && Object.keys(settings).length === 0
+        ? [classifyEmptySettingsExtraction(pluginName, settingsCall)]
+        : [];
+
+    const pluginConfig: PluginConfig = {
+      name: pluginName,
+      settings,
+      directoryName: pluginDir,
+      ...(pluginInfo.description ? { description: pluginInfo.description } : {}),
+      ...(pluginInfo.isModified !== undefined ? { isModified: pluginInfo.isModified } : {}),
+    };
+
+    return {
+      entry: [pluginName, pluginConfig],
+      settingRenames: extractSettingRenames(session.allSourceFiles),
+      pluginRenames: extractPluginRenames(session.allSourceFiles),
+      diagnostics,
+    };
+  } finally {
+    session.cleanup();
+  }
 }
 
 interface DirectoryParseResult {
@@ -312,7 +343,7 @@ async function parsePluginsFromDirectory(
   if (!isTTY)
     console.log(`Found ${pluginDirsArray.length} plugin directories in ${basename(pluginsPath)}`);
 
-  const limit = pLimit(PARALLEL_PROCESSING_LIMIT);
+  const limit = pLimit(SERIAL_PROJECT_MUTATION_LIMIT);
   let processed = 0;
 
   const results = await Promise.all(
