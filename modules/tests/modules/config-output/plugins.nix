@@ -1,0 +1,97 @@
+{ testLib }:
+
+let
+  common = import ./common.nix { inherit testLib; };
+  inherit (common) baseConfig discordModSettingsJSON recursiveUpdate;
+in
+{
+  "enabled plugin appears in generated settings" =
+    let
+      config = testLib.eval.hm (
+        recursiveUpdate baseConfig {
+          config.plugins.alwaysAnimate.enable = true;
+        }
+      );
+      settingsJson = discordModSettingsJSON config;
+    in
+    assert settingsJson.plugins.AlwaysAnimate.enabled == true;
+    true;
+
+  "disabled plugin appears as disabled in generated settings" =
+    let
+      config = testLib.eval.hm (
+        recursiveUpdate baseConfig {
+          config.plugins.alwaysAnimate.enable = false;
+        }
+      );
+      settingsJson = discordModSettingsJSON config;
+    in
+    assert settingsJson.plugins.AlwaysAnimate.enabled == false;
+    true;
+
+  "plugin settings are copied to generated output" =
+    let
+      config = testLib.eval.hm (
+        recursiveUpdate baseConfig {
+          config.plugins.vcNarrator = {
+            enable = true;
+            volume = 0.5;
+            joinMessage = "hello {{USER}}";
+          };
+        }
+      );
+      settingsJson = discordModSettingsJSON config;
+    in
+    assert settingsJson.plugins.VcNarrator.enabled == true;
+    assert settingsJson.plugins.VcNarrator.volume == 0.5;
+    assert settingsJson.plugins.VcNarrator.joinMessage == "hello {{USER}}";
+    true;
+
+  "extraConfig is merged into generated output" =
+    let
+      config = testLib.eval.hm (
+        recursiveUpdate baseConfig {
+          extraConfig.customSetting = "myValue";
+        }
+      );
+      settingsJson = discordModSettingsJSON config;
+    in
+    assert settingsJson.customSetting == "myValue";
+    true;
+
+  "themeLinks are preserved in generated output" =
+    let
+      config = testLib.eval.hm (
+        recursiveUpdate baseConfig {
+          config.themeLinks = [ "https://example.com/theme.css" ];
+        }
+      );
+      settingsJson = discordModSettingsJSON config;
+    in
+    assert builtins.elem "https://example.com/theme.css" settingsJson.themeLinks;
+    true;
+
+  "enabledThemeLinks are preserved in generated output" =
+    let
+      config = testLib.eval.hm (
+        recursiveUpdate baseConfig {
+          config.enabledThemeLinks = [ "https://example.com/enabled-theme.css" ];
+        }
+      );
+      settingsJson = discordModSettingsJSON config;
+    in
+    assert builtins.elem "https://example.com/enabled-theme.css" settingsJson.enabledThemeLinks;
+    true;
+
+  "useQuickCss is renamed for generated output" =
+    let
+      config = testLib.eval.hm (
+        recursiveUpdate baseConfig {
+          config.useQuickCss = true;
+        }
+      );
+      settingsJson = discordModSettingsJSON config;
+    in
+    assert settingsJson.useQuickCSS == true;
+    true;
+}
