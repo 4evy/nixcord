@@ -41,6 +41,26 @@ let
 
   inherit (source) version;
 
+  launcherCFlags = [
+    "-std=c23"
+    "-Wall"
+    "-Wextra"
+    "-Wpedantic"
+    "-Wconversion"
+    "-Wsign-conversion"
+    "-Wcast-qual"
+    "-Wwrite-strings"
+    "-Wformat=2"
+    "-Wshadow"
+    "-Wstrict-prototypes"
+    "-Wmissing-prototypes"
+    "-Wold-style-definition"
+    "-Wundef"
+    "-Wvla"
+    "-Walloca"
+    "-Werror"
+  ];
+
   withoutOpenSSL11 = lib.filter (input: !(lib.hasPrefix "openssl-1.1.1" (lib.getName input)));
 
   src = fetchurl { inherit (source.distro) url hash; };
@@ -368,6 +388,25 @@ basePackage.overrideAttrs (oldAttrs: {
 
   dontStrip = (oldAttrs.dontStrip or false) || stdenvNoCC.isDarwin;
 
+  hardeningEnable = lib.unique (
+    (oldAttrs.hardeningEnable or [ ])
+    ++ lib.optionals stdenvNoCC.isDarwin [
+      "strictflexarrays3"
+      "trivialautovarinit"
+    ]
+  );
+
+  env =
+    (oldAttrs.env or { })
+    // lib.optionalAttrs (stdenvNoCC.isDarwin || ((oldAttrs.env or { }) ? NIX_CFLAGS_COMPILE)) {
+      NIX_CFLAGS_COMPILE = lib.concatStringsSep " " (
+        lib.optionals ((oldAttrs.env or { }) ? NIX_CFLAGS_COMPILE) [
+          (toString oldAttrs.env.NIX_CFLAGS_COMPILE)
+        ]
+        ++ lib.optionals stdenvNoCC.isDarwin launcherCFlags
+      );
+    };
+
   autoPatchelfIgnoreMissingDeps =
     (oldAttrs.autoPatchelfIgnoreMissingDeps or [ ])
     ++ lib.optionals stdenvNoCC.isLinux [
@@ -582,7 +621,10 @@ basePackage.overrideAttrs (oldAttrs: {
         --replace-fail "@enable_krisp@" "${if withKrisp && deployKrisp != null then "1" else "0"}" \
         --replace-fail "@enable_autoscroll@" "${if enableAutoscroll then "1" else "0"}"
 
-      ${stdenv.cc}/bin/cc -Os -o "$app_executable" nixcord-discord-launcher.c
+      ${stdenv.cc}/bin/cc \
+        -Os \
+        -o "$app_executable" \
+        nixcord-discord-launcher.c
       chmod +x "$app_executable"
 
       ${lib.getExe rcodesign} sign \
