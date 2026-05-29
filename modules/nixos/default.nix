@@ -150,12 +150,21 @@ in
           supportsDryActivation = false;
         };
       })
-      (mkIf (cfg.discord.enable || cfg.vesktop.enable || cfg.equibop.enable || cfg.dorion.enable || cfg.legcord.enable) {
-        system.activationScripts.nixcord-writeFiles = {
-          text = writeFilesScript;
-          supportsDryActivation = false;
-        };
-      })
+      (mkIf
+        (
+          cfg.discord.enable
+          || cfg.vesktop.enable
+          || cfg.equibop.enable
+          || cfg.dorion.enable
+          || cfg.legcord.enable
+        )
+        {
+          system.activationScripts.nixcord-writeFiles = {
+            text = writeFilesScript;
+            supportsDryActivation = false;
+          };
+        }
+      )
     ])
   );
 }

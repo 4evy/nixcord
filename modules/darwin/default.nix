@@ -131,27 +131,36 @@ in
           activationScripts.disableDiscordUpdates;
         system.activationScripts.nixcord-fixDiscordModules.text = activationScripts.fixDiscordModules;
       })
-      (mkIf (cfg.discord.enable || cfg.vesktop.enable || cfg.equibop.enable || cfg.dorion.enable || cfg.legcord.enable) {
-        system.activationScripts.applications.text = lib.mkAfter (
-          let
-            mkDir = dir: "${install} -d -o ${lib.escapeShellArg cfg.user} -g staff ${lib.escapeShellArg dir}";
-          in
-          ''
-            ${mkDir cfg.configDir}
-            ${lib.optionalString cfg.discord.enable (mkDir cfg.discord.configDir)}
-            ${lib.optionalString cfg.vesktop.enable (mkDir cfg.vesktop.configDir)}
-            ${lib.optionalString cfg.equibop.enable (mkDir cfg.equibop.configDir)}
-            ${lib.optionalString cfg.dorion.enable (mkDir cfg.dorion.configDir)}
-            ${lib.optionalString cfg.legcord.enable (mkDir cfg.legcord.configDir)}
+      (mkIf
+        (
+          cfg.discord.enable
+          || cfg.vesktop.enable
+          || cfg.equibop.enable
+          || cfg.dorion.enable
+          || cfg.legcord.enable
+        )
+        {
+          system.activationScripts.applications.text = lib.mkAfter (
+            let
+              mkDir = dir: "${install} -d -o ${lib.escapeShellArg cfg.user} -g staff ${lib.escapeShellArg dir}";
+            in
+            ''
+              ${mkDir cfg.configDir}
+              ${lib.optionalString cfg.discord.enable (mkDir cfg.discord.configDir)}
+              ${lib.optionalString cfg.vesktop.enable (mkDir cfg.vesktop.configDir)}
+              ${lib.optionalString cfg.equibop.enable (mkDir cfg.equibop.configDir)}
+              ${lib.optionalString cfg.dorion.enable (mkDir cfg.dorion.configDir)}
+              ${lib.optionalString cfg.legcord.enable (mkDir cfg.legcord.configDir)}
 
-            copy_file() {
-              sudo --user=${lib.escapeShellArg cfg.user} -- ${install} -D -m "$3" "$1" "$2"
-            }
+              copy_file() {
+                sudo --user=${lib.escapeShellArg cfg.user} -- ${install} -D -m "$3" "$1" "$2"
+              }
 
-            ${fileCommands}
-          ''
-        );
-      })
+              ${fileCommands}
+            ''
+          );
+        }
+      )
       (mkIf cfg.dorion.enable {
         system.activationScripts.nixcord-setupDorionVencordSettings.text =
           activationScripts.setupDorionVencordSettings;

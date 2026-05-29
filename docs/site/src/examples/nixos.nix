@@ -1,5 +1,6 @@
 # configuration.nix
-{ inputs, ... }: {
+{ inputs, ... }:
+{
   imports = [ inputs.nixcord.nixosModules.nixcord ];
 
   programs.nixcord = {

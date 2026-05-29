@@ -1,5 +1,6 @@
 # darwin-configuration.nix
-{ inputs, ... }: {
+{ inputs, ... }:
+{
   imports = [ inputs.nixcord.darwinModules.nixcord ];
 
   programs.nixcord = {
