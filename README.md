@@ -169,7 +169,7 @@ You can load custom Vencord/Equicord plugins that aren't in the upstream plugin 
 
 Dorion is a bit annoying because it needs `LocalStorage` databases that only exist after a successful launch. If you just enable it in Nix immediately, it won't work
 
-1.  Run it once temporarily: `nix run github:FlameFlag/nixcord#dorion` (or `nix-build https://github.com/FlameFlag/nixcord/archive/main.tar.gz -A packages.$(nix-instantiate --eval -E 'builtins.currentSystem' | tr -d '"').dorion` if you use "legacy" nix)
+1.  Run the upstream Dorion package once temporarily: `nix run nixpkgs#dorion`
 2.  Log in and close it.
 3.  Enable `dorion.enable = true` in your config and rebuild.
 
