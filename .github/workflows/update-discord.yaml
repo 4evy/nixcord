@@ -34,8 +34,8 @@ jobs:
       - name: Validate workspace
         run: |
           set -euo pipefail
-          if [[ ! -f "pkgs/sources.json" ]]; then
-            echo "::error::pkgs/sources.json not found"
+          if [[ ! -f "pkgs/discord/data/sources.json" ]]; then
+            echo "::error::pkgs/discord/data/sources.json not found"
             exit 1
           fi
           echo "::notice::Workspace validation passed"
@@ -46,8 +46,8 @@ jobs:
         run: |
           set -euo pipefail
           BRANCH="${{ matrix.branch }}"
-          linux_version=$(jq -r --arg k "linux-$BRANCH" '.[$k].version // ""' pkgs/sources.json)
-          darwin_version=$(jq -r --arg k "osx-$BRANCH" '.[$k].version // ""' pkgs/sources.json)
+          linux_version=$(jq -r --arg k "linux-$BRANCH" '.[$k].version // ""' pkgs/discord/data/sources.json)
+          darwin_version=$(jq -r --arg k "osx-$BRANCH" '.[$k].version // ""' pkgs/discord/data/sources.json)
           {
             echo "linux_$BRANCH=$linux_version"
             echo "darwin_$BRANCH=$darwin_version"
@@ -65,15 +65,15 @@ jobs:
           nixpkgs_config='{ allowUnfree = true; }'
 
           echo "::group::Building update script"
-          if ! nix build --impure --expr "let pkgs = import <nixpkgs> { config = $nixpkgs_config; }; in (pkgs.callPackage ./pkgs/discord.nix {}).passthru.updateScript" 2>&1; then
+          if ! nix build --impure --expr "let pkgs = import <nixpkgs> { config = $nixpkgs_config; }; in (pkgs.callPackage ./pkgs/discord {}).passthru.updateScript" 2>&1; then
             echo "::error::Failed to build the update script"
             exit 1
           fi
           echo "::endgroup::"
 
           echo "::group::Running update script"
-          if ! timeout 600 ./result/bin/discord-update 2>&1; then
-            echo "::error::Update script failed or timed out"
+          if ! ./result/bin/discord-update 2>&1; then
+            echo "::error::Update script failed"
             exit 1
           fi
           echo "::notice::Discord update script completed successfully"
@@ -86,13 +86,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if [[ ! -f ./pkgs/sources.json ]]; then
-            echo "::error::pkgs/sources.json not found after update script ran"
+          if [[ ! -f ./pkgs/discord/data/sources.json ]]; then
+            echo "::error::pkgs/discord/data/sources.json not found after update script ran"
             exit 1
           fi
           BRANCH="${{ matrix.branch }}"
-          linux_version=$(jq -r --arg k "linux-$BRANCH" '.[$k].version // ""' pkgs/sources.json)
-          darwin_version=$(jq -r --arg k "osx-$BRANCH" '.[$k].version // ""' pkgs/sources.json)
+          linux_version=$(jq -r --arg k "linux-$BRANCH" '.[$k].version // ""' pkgs/discord/data/sources.json)
+          darwin_version=$(jq -r --arg k "osx-$BRANCH" '.[$k].version // ""' pkgs/discord/data/sources.json)
           {
             echo "linux_$BRANCH=$linux_version"
             echo "darwin_$BRANCH=$darwin_version"
@@ -109,7 +109,7 @@ jobs:
           branch="${{ matrix.branch }}"
           nixpkgs_config='{ allowUnfree = true; }'
           echo "::notice::Testing build for $branch"
-          if ! timeout 600 nix-build -E "let pkgs = import <nixpkgs> { config = $nixpkgs_config; }; in pkgs.callPackage ./pkgs/discord.nix { branch = \"$branch\"; }" 2>&1; then
+          if ! nix-build -E "let pkgs = import <nixpkgs> { config = $nixpkgs_config; }; in pkgs.callPackage ./pkgs/discord { branch = \"$branch\"; }" 2>&1; then
              echo "::error::Failed to build $branch"
              exit 1
           fi
@@ -157,10 +157,10 @@ jobs:
 
           echo "::endgroup::"
 
-          if [[ -n "$(git status --porcelain pkgs/sources.json)" ]]; then
+          if [[ -n "$(git status --porcelain pkgs/discord/data/sources.json)" ]]; then
             echo "::group::Committing and pushing changes"
 
-            git add pkgs/sources.json
+            git add pkgs/discord/data/sources.json
             printf "%b" "$COMMIT_MSG" | git commit -F -
 
             echo "::notice::Pushing changes with retry logic..."
