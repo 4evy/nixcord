@@ -94,4 +94,22 @@ in
     in
     assert settingsJson.useQuickCSS == true;
     true;
+
+  "plugin UI element settings are copied to generated output" =
+    let
+      config = testLib.eval.hm (
+        recursiveUpdate baseConfig {
+          config.uiElements = {
+            chatBarButtons.MessageLatency.enable = false;
+            chatBarButtons.someCustomButton.enable = false;
+            messagePopoverButtons.Translate.enable = true;
+          };
+        }
+      );
+      settingsJson = discordModSettingsJSON config;
+    in
+    assert settingsJson.uiElements.chatBarButtons.MessageLatency.enabled == false;
+    assert settingsJson.uiElements.chatBarButtons.someCustomButton.enabled == false;
+    assert settingsJson.uiElements.messagePopoverButtons.Translate.enabled == true;
+    true;
 }

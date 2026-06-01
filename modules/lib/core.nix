@@ -71,7 +71,7 @@ let
       unNixify name
     else if lowerPluginTitlesMask ? ${name} then
       name
-    else if builtins.isAttrs value && value ? enable && isLowerCamel name then
+    else if context == "plugins" && builtins.isAttrs value && value ? enable && isLowerCamel name then
       toUpper name
     else
       name;

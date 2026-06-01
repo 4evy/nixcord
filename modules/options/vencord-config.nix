@@ -1,6 +1,23 @@
 { lib, ... }:
 let
   inherit (lib) mkEnableOption mkOption types;
+
+  uiElementOptions =
+    { name, ... }:
+    {
+      options.enable = mkEnableOption "the ${name} plugin UI element";
+    };
+
+  uiElementsOption =
+    description:
+    mkOption {
+      type = types.attrsOf (types.submodule uiElementOptions);
+      default = { };
+      description = "Plugin UI elements to configure for ${description}.";
+      example = {
+        MessageLatency.enable = false;
+      };
+    };
 in
 {
   options.programs.nixcord = {
@@ -49,6 +66,10 @@ in
       frameless = mkEnableOption "frameless client window";
       transparent = mkEnableOption "client transparency";
       disableMinSize = mkEnableOption "disabling the minimum window size";
+      uiElements = {
+        chatBarButtons = uiElementsOption "chat bar buttons";
+        messagePopoverButtons = uiElementsOption "message popover buttons";
+      };
       plugins = lib.foldl' lib.recursiveUpdate { } [
         (import ../plugins/mkPluginOptions.nix {
           inherit lib;
