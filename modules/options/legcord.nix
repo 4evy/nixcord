@@ -1,6 +1,11 @@
 { lib, pkgs, ... }:
 let
-  inherit (lib) mkEnableOption mkOption types;
+  inherit (lib)
+    mkEnableOption
+    mkOption
+    mkPackageOption
+    types
+    ;
 in
 {
   options.programs.nixcord.legcord = {
@@ -10,12 +15,7 @@ in
       default = true;
       description = "Whether to install the Legcord package.";
     };
-    package = mkOption {
-      type = types.package;
-      default = pkgs.legcord;
-      defaultText = lib.literalExpression "pkgs.legcord";
-      description = "The Legcord package to use.";
-    };
+    package = mkPackageOption pkgs "legcord" { };
     configDir = mkOption {
       type = types.path;
       description = "Config directory for Legcord.";

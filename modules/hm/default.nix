@@ -9,6 +9,10 @@ let
     mkIf
     mkMerge
     ;
+
+  inherit (import ../lib/shared.nix { inherit lib; })
+    mkInstalledPackages
+    ;
 in
 {
   imports = [
@@ -91,15 +95,7 @@ in
           inherit vencord equicord;
         };
 
-        home.packages = mkMerge [
-          (mkIf (cfg.discord.enable && cfg.discord.installPackage) [ cfg.finalPackage.discord ])
-          (mkIf (cfg.vesktop.enable && cfg.vesktop.installPackage) [ cfg.finalPackage.vesktop ])
-          (mkIf (cfg.equibop.enable && cfg.finalPackage.equibop != null && cfg.equibop.installPackage) [
-            cfg.finalPackage.equibop
-          ])
-          (mkIf (cfg.dorion.enable && cfg.dorion.installPackage) [ cfg.finalPackage.dorion ])
-          (mkIf (cfg.legcord.enable && cfg.legcord.installPackage) [ cfg.finalPackage.legcord ])
-        ];
+        home.packages = mkInstalledPackages cfg;
       }
       (mkIf cfg.discord.enable (mkMerge [
         {

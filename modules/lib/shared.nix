@@ -370,6 +370,20 @@ let
       }
     ];
 
+  # mkInstalledPackages :: cfg -> [package]
+  # Collects enabled client packages for platform package lists.
+  mkInstalledPackages =
+    cfg:
+    lib.optionals (cfg.discord.enable && cfg.discord.installPackage) [ cfg.finalPackage.discord ]
+    ++ lib.optionals (cfg.vesktop.enable && cfg.vesktop.installPackage) [ cfg.finalPackage.vesktop ]
+    ++
+      lib.optionals (cfg.equibop.enable && cfg.finalPackage.equibop != null && cfg.equibop.installPackage)
+        [
+          cfg.finalPackage.equibop
+        ]
+    ++ lib.optionals (cfg.dorion.enable && cfg.dorion.installPackage) [ cfg.finalPackage.dorion ]
+    ++ lib.optionals (cfg.legcord.enable && cfg.legcord.installPackage) [ cfg.finalPackage.legcord ];
+
   # mkSettingsFiles :: { pkgs, cfg, mkVencordCfg, ...configs } -> { *File :: path | null }
   # Creates derivations for all client settings/state JSON files.
   mkSettingsFiles =
@@ -383,6 +397,7 @@ let
       equibopFullConfig,
     }:
     let
+      jsonFormat = pkgs.formats.json { };
       disabledUpdateSettings = {
         SKIP_HOST_UPDATE = true;
         SKIP_MODULE_UPDATE = true;
@@ -391,45 +406,39 @@ let
       discordSettings = cfg.discord.settings // disabledUpdateSettings;
     in
     {
-      vencordSettingsFile = pkgs.writeText "nixcord-settings.json" (
-        builtins.toJSON (mkVencordCfg vencordFullConfig)
-      );
-      equicordSettingsFile = pkgs.writeText "nixcord-equicord-settings.json" (
-        builtins.toJSON (mkVencordCfg equicordFullConfig)
+      vencordSettingsFile = jsonFormat.generate "nixcord-settings.json" (mkVencordCfg vencordFullConfig);
+      equicordSettingsFile = jsonFormat.generate "nixcord-equicord-settings.json" (
+        mkVencordCfg equicordFullConfig
       );
       discordSettingsFile =
         if cfg.discord.settings != { } then
-          pkgs.writeText "nixcord-discord-settings.json" (builtins.toJSON (mkVencordCfg discordSettings))
+          jsonFormat.generate "nixcord-discord-settings.json" (mkVencordCfg discordSettings)
         else
           null;
-      vesktopSettingsFile = pkgs.writeText "nixcord-vesktop-settings.json" (
-        builtins.toJSON (mkVencordCfg vesktopFullConfig)
+      vesktopSettingsFile = jsonFormat.generate "nixcord-vesktop-settings.json" (
+        mkVencordCfg vesktopFullConfig
       );
       vesktopClientSettingsFile =
         if cfg.vesktop.settings != { } then
-          pkgs.writeText "nixcord-vesktop-client-settings.json" (
-            builtins.toJSON (mkVencordCfg cfg.vesktop.settings)
-          )
+          jsonFormat.generate "nixcord-vesktop-client-settings.json" (mkVencordCfg cfg.vesktop.settings)
         else
           null;
       vesktopStateFile =
         if cfg.vesktop.state != { } then
-          pkgs.writeText "nixcord-vesktop-state.json" (builtins.toJSON (mkVencordCfg cfg.vesktop.state))
+          jsonFormat.generate "nixcord-vesktop-state.json" (mkVencordCfg cfg.vesktop.state)
         else
           null;
-      equibopSettingsFile = pkgs.writeText "nixcord-equibop-settings.json" (
-        builtins.toJSON (mkVencordCfg equibopFullConfig)
+      equibopSettingsFile = jsonFormat.generate "nixcord-equibop-settings.json" (
+        mkVencordCfg equibopFullConfig
       );
       equibopClientSettingsFile =
         if cfg.equibop.settings != { } then
-          pkgs.writeText "nixcord-equibop-client-settings.json" (
-            builtins.toJSON (mkVencordCfg cfg.equibop.settings)
-          )
+          jsonFormat.generate "nixcord-equibop-client-settings.json" (mkVencordCfg cfg.equibop.settings)
         else
           null;
       equibopStateFile =
         if cfg.equibop.state != { } then
-          pkgs.writeText "nixcord-equibop-state.json" (builtins.toJSON (mkVencordCfg cfg.equibop.state))
+          jsonFormat.generate "nixcord-equibop-state.json" (mkVencordCfg cfg.equibop.state)
         else
           null;
     };
@@ -511,6 +520,7 @@ in
     toSnakeCase
     mkDorionConfigAttrs
     mkAssertions
+    mkInstalledPackages
     mkSettingsFiles
     mkThemeFile
     mkConfigDirs

@@ -1,6 +1,11 @@
 { lib, pkgs, ... }:
 let
-  inherit (lib) mkEnableOption mkOption types;
+  inherit (lib)
+    mkEnableOption
+    mkOption
+    mkPackageOption
+    types
+    ;
 in
 {
   options.programs.nixcord.vesktop = {
@@ -10,12 +15,7 @@ in
       default = true;
       description = "Whether to install the final Vesktop package.";
     };
-    package = mkOption {
-      type = types.package;
-      default = pkgs.vesktop;
-      defaultText = lib.literalExpression "pkgs.vesktop";
-      description = "The Vesktop package to use.";
-    };
+    package = mkPackageOption pkgs "vesktop" { };
     useSystemVencord = mkOption {
       type = types.bool;
       default = true;

@@ -49,6 +49,8 @@ let
 
   isQuickCssUsed = mkIsQuickCssUsed { inherit cfg; };
 
+  jsonFormat = pkgs.formats.json { };
+
   quickCssFile = pkgs.writeText "nixcord-quickcss.css" cfg.quickCss;
 
   settingsFiles = mkSettingsFiles {
@@ -67,11 +69,9 @@ let
 
   dorionConfigFile =
     if cfg.dorion.enable then
-      pkgs.writeText "nixcord-dorion-config.json" (
-        builtins.toJSON (mkDorionConfigAttrs {
-          inherit cfg;
-        })
-      )
+      jsonFormat.generate "nixcord-dorion-config.json" (mkDorionConfigAttrs {
+        inherit cfg;
+      })
     else
       null;
 
@@ -112,7 +112,7 @@ let
 
   legcordSettingsFile =
     if cfg.legcord.enable && legcordFinalSettings != { } then
-      pkgs.writeText "nixcord-legcord-config.json" (builtins.toJSON legcordFinalSettings)
+      jsonFormat.generate "nixcord-legcord-config.json" legcordFinalSettings
     else
       null;
 in
