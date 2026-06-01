@@ -78,7 +78,24 @@ in
       description = "Whether to enable OpenASAR for Discord (non-Vesktop).";
     };
     krisp.enable = mkEnableOption "Krisp noise cancellation";
-    autoscroll.enable = mkEnableOption "middle-click autoscrolling for Discord";
+    # TODO: Remove programs.nixcord.discord.autoscroll.enable after the
+    # deprecation window; use programs.nixcord.discord.commandLineArgs instead.
+    autoscroll.enable = mkOption {
+      type = types.bool;
+      default = false;
+      visible = false;
+      description = "Deprecated shim for adding the MiddleClickAutoscroll command line argument.";
+    };
+    commandLineArgs = mkOption {
+      type = types.listOf types.str;
+      default = [ ];
+      description = "Additional command line arguments to pass to Discord.";
+      example = [
+        "--enable-features=VaapiVideoDecoder,MiddleClickAutoscroll"
+        "--ozone-platform-hint=auto"
+        "--enable-wayland-ime"
+      ];
+    };
     settings = mkOption {
       type = types.attrs;
       default = { };

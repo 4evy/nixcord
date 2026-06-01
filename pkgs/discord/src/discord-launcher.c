@@ -13,21 +13,22 @@
 #define DEPLOY_KRISP "@deploy_krisp@"
 #define TARGET "@target@"
 #define ENABLE_KRISP @enable_krisp@
-#define ENABLE_AUTOSCROLL @enable_autoscroll@
+#define COMMAND_LINE_ARGS_COUNT @command_line_args_count@
 
 static_assert(__STDC_VERSION__ >= 202311L, "discord-launcher.c requires C23");
 
 extern char **environ;
 
 static constexpr bool enable_krisp = ENABLE_KRISP;
-static constexpr bool enable_autoscroll = ENABLE_AUTOSCROLL;
+static constexpr size_t command_line_argc = COMMAND_LINE_ARGS_COUNT;
 
 static char disable_breaking_updates_path[] = DISABLE_BREAKING_UPDATES;
 static char stage_modules_path[] = STAGE_MODULES;
 static char modules_dir[] = MODULES_DIR;
 static char deploy_krisp_path[] = DEPLOY_KRISP;
 static char target_path[] = TARGET;
-static char autoscroll_arg[] = "--enable-blink-features=MiddleClickAutoscroll";
+@command_line_arg_declarations@
+static char *const command_line_args[] = { @command_line_args@ nullptr };
 
 [[nodiscard]] static int wait_for_child(pid_t pid, const char *name) {
   int status = 0;
@@ -78,7 +79,7 @@ static void run_or_exit(char *const helper_argv[]) {
   }
 
   size_t base_argc = argc == 0 ? 1 : (size_t)argc;
-  size_t extra_argc = enable_autoscroll ? 1 : 0;
+  size_t extra_argc = command_line_argc;
   size_t next_argc_without_null = 0;
   size_t next_argc = 0;
   if (
@@ -105,8 +106,10 @@ static void run_or_exit(char *const helper_argv[]) {
   for (int i = 1; i < argc; i++) {
     next_argv[i] = argv[i];
   }
-  if (enable_autoscroll) {
-    next_argv[base_argc] = autoscroll_arg;
+  size_t next_index = base_argc;
+  for (size_t i = 0; i != command_line_argc; i++) {
+    next_argv[next_index] = command_line_args[i];
+    next_index++;
   }
   next_argv[next_argc - 1] = nullptr;
 

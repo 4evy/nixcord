@@ -7,7 +7,15 @@ let
     vesktopBaseConfig
     recursiveUpdate
     ;
-  inherit (testLib) lib;
+  inherit (testLib) lib pkgs;
+  stubDiscordPackage = pkgs.runCommand "nixcord-discord-stub" { } "mkdir $out" // {
+    override =
+      args:
+      pkgs.runCommand "nixcord-discord-final-stub" { } "mkdir $out"
+      // {
+        passthru.nixcordOverrideArgs = args;
+      };
+  };
 in
 {
   "configDir defaults to Equicord when equicord is enabled" =
@@ -47,6 +55,42 @@ in
     assert settingsJson.SKIP_HOST_UPDATE == true;
     assert settingsJson.SKIP_MODULE_UPDATE == true;
     assert settingsJson.USE_NEW_UPDATER == false;
+    true;
+
+  "discord autoscroll shim appends commandLineArgs" =
+    let
+      config = testLib.eval.hm (
+        recursiveUpdate baseConfig {
+          discord.package = stubDiscordPackage;
+          discord.autoscroll.enable = true;
+          discord.commandLineArgs = [ "--ozone-platform-hint=auto" ];
+        }
+      );
+      overrideArgs = config.programs.nixcord.finalPackage.discord.passthru.nixcordOverrideArgs;
+    in
+    assert
+      overrideArgs.commandLineArgs == [
+        "--ozone-platform-hint=auto"
+        "--enable-blink-features=MiddleClickAutoscroll"
+      ];
+    true;
+
+  "discord commandLineArgs are accepted" =
+    let
+      config = testLib.eval.hm (
+        recursiveUpdate baseConfig {
+          discord.commandLineArgs = [
+            "--ozone-platform-hint=auto"
+            "--enable-wayland-ime"
+          ];
+        }
+      );
+    in
+    assert
+      config.programs.nixcord.discord.commandLineArgs == [
+        "--ozone-platform-hint=auto"
+        "--enable-wayland-ime"
+      ];
     true;
 
   "vesktop settings are generated when vesktop is enabled" =

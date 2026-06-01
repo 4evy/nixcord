@@ -24,6 +24,31 @@ in
     assert warnings == [ ];
     true;
 
+  "deprecated discord autoscroll option warns" =
+    let
+      warnings = hmWarnings {
+        enable = true;
+        discord.autoscroll.enable = true;
+      };
+    in
+    assert builtins.any (
+      message: lib.strings.hasInfix "discord.autoscroll.enable is deprecated" message
+    ) warnings;
+    assert builtins.any (message: lib.strings.hasInfix "discord.commandLineArgs" message) warnings;
+    true;
+
+  "deprecated discord autoscroll false option warns" =
+    let
+      warnings = hmWarnings {
+        enable = true;
+        discord.autoscroll.enable = false;
+      };
+    in
+    assert builtins.any (
+      message: lib.strings.hasInfix "discord.autoscroll.enable is deprecated" message
+    ) warnings;
+    true;
+
   "deprecated typed plugin name warns with replacement" =
     let
       warnings = hmWarnings {

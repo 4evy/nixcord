@@ -57,6 +57,11 @@ let
     builtins.attrNames pluginNameMigrations
   );
 
+  autoscrollEnableOption = options.programs.nixcord.discord.autoscroll.enable;
+  autoscrollEnableWasDefined = lib.lists.any (
+    file: !(builtins.elem file autoscrollEnableOption.declarations)
+  ) autoscrollEnableOption.files;
+
   generateMigrationWarning =
     oldName:
     let
@@ -69,7 +74,11 @@ let
 in
 {
   config = lib.mkIf cfg.enable {
-    warnings = lib.map generateMigrationWarning deprecatedPluginsSorted;
+    warnings =
+      lib.lists.map generateMigrationWarning deprecatedPluginsSorted
+      ++ lib.lists.optional autoscrollEnableWasDefined ''
+        programs.nixcord.discord.autoscroll.enable is deprecated and will be removed in the future. Use `programs.nixcord.discord.commandLineArgs = [ "--enable-blink-features=MiddleClickAutoscroll" ];` instead.
+      '';
 
     assertions = mkAssertions {
       inherit cfg collectEnabledEquicordOnlyPlugins collectEnabledVencordOnlyPlugins;

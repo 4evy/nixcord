@@ -9,7 +9,7 @@ stage_modules=$2
 modules_dir=$3
 deploy_krisp=$4
 enable_krisp=$5
-enable_autoscroll=$6
+command_line_args=$6
 
 if [[ "$enable_krisp" = 1 ]]; then
   wrapProgramShell "$target" \
@@ -28,7 +28,7 @@ if [[ "$enable_krisp" = 1 ]]; then
     --run "$deploy_krisp"
 fi
 
-if [[ "$enable_autoscroll" = 1 ]]; then
+if [[ -n "$command_line_args" ]]; then
   wrapProgramShell "$target" \
-    --add-flags "--enable-blink-features=MiddleClickAutoscroll"
+    --add-flags "$command_line_args"
 fi

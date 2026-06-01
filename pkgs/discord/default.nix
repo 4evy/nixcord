@@ -29,7 +29,7 @@
   withEquicord ? false,
   equicord ? null,
   withOpenASAR ? false,
-  enableAutoscroll ? false,
+  commandLineArgs ? [ ],
   withKrisp ? false,
 }:
 let
@@ -231,7 +231,7 @@ import ./lib/override.nix {
     withOpenASAR
     withVencord
     withEquicord
-    enableAutoscroll
+    commandLineArgs
     resourcesDir
     binaryName
     configDirName

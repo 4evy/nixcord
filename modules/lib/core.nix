@@ -103,7 +103,13 @@ let
         withVencord = cfg.discord.vencord.enable;
         withEquicord = cfg.discord.equicord.enable;
         withOpenASAR = cfg.discord.openASAR.enable;
-        enableAutoscroll = cfg.discord.autoscroll.enable;
+        # TODO: Remove programs.nixcord.discord.autoscroll.enable after the
+        # deprecation window; until then it is a compatibility shim for
+        # programs.nixcord.discord.commandLineArgs.
+        commandLineArgs = lib.lists.unique (
+          cfg.discord.commandLineArgs
+          ++ lib.lists.optional cfg.discord.autoscroll.enable "--enable-blink-features=MiddleClickAutoscroll"
+        );
         withKrisp = cfg.discord.krisp.enable;
         branch = cfg.discord.branch;
         vencord = if cfg.discord.vencord.enable then vencord else null;

@@ -36,32 +36,51 @@ let
     "-fno-omit-frame-pointer"
   ];
 
-  trueBin = "${lib.getExe' pkgs.coreutils "true"}";
+  trueBin = "${lib.meta.getExe' pkgs.coreutils "true"}";
+  specialCommandLineArg = "--flag=quote\"backslash\\space y";
 
-  compileAndSmoke = name: enableKrisp: enableAutoscroll: ''
-    printf "" | cc -std=c23 -dM -E - | grep -F '#define __STDC_VERSION__ ${requiredCVersion}'
+  compileAndSmoke =
+    {
+      name,
+      enableKrisp,
+      commandLineArgDeclarations ? "",
+      commandLineArgs ? "",
+      commandLineArgsCount ? 0,
+      expectedArgs,
+    }:
+    ''
+      printf "" | cc -std=c23 -dM -E - | grep -F '#define __STDC_VERSION__ ${requiredCVersion}'
 
-    cp ${../../../pkgs/discord/src/discord-launcher.c} ${name}.c
-    substituteInPlace ${name}.c \
-      --replace-fail "@disable_breaking_updates@" "${trueBin}" \
-      --replace-fail "@stage_modules@" "${trueBin}" \
-      --replace-fail "@modules_dir@" "$TMPDIR/modules" \
-      --replace-fail "@deploy_krisp@" "${if enableKrisp then trueBin else ""}" \
-      --replace-fail "@target@" "${trueBin}" \
-      --replace-fail "@enable_krisp@" "${if enableKrisp then "1" else "0"}" \
-      --replace-fail "@enable_autoscroll@" "${if enableAutoscroll then "1" else "0"}"
+      cat > ${name}-target <<'EOF'
+      #!${pkgs.runtimeShell}
+      printf '%s\n' "$@" > ${name}.args
+      EOF
+      chmod +x ${name}-target
 
-      cc ${lib.escapeShellArgs strictCFlags} -o ${name} ${name}.c
-      cc ${lib.escapeShellArgs sanitizerCFlags} -o ${name}-sanitized ${name}.c
-      cppcheck \
-        --std=c23 \
-        --enable=warning,style,performance,portability \
-        --error-exitcode=1 \
-        --suppress=missingIncludeSystem \
-        --suppress=normalCheckLevelMaxBranches \
-        ${name}.c
-      ./${name} --nixcord-c-launcher-smoke
-  '';
+      cp ${../../../pkgs/discord/src/discord-launcher.c} ${name}.c
+      substituteInPlace ${name}.c \
+        --replace-fail "@disable_breaking_updates@" "${trueBin}" \
+        --replace-fail "@stage_modules@" "${trueBin}" \
+        --replace-fail "@modules_dir@" "$TMPDIR/modules" \
+        --replace-fail "@deploy_krisp@" "${if enableKrisp then trueBin else ""}" \
+        --replace-fail "@target@" "$PWD/${name}-target" \
+        --replace-fail "@enable_krisp@" "${if enableKrisp then "1" else "0"}" \
+        --replace-fail "@command_line_arg_declarations@" ${lib.strings.escapeShellArg commandLineArgDeclarations} \
+        --replace-fail "@command_line_args@" ${lib.strings.escapeShellArg commandLineArgs} \
+        --replace-fail "@command_line_args_count@" "${toString commandLineArgsCount}"
+
+        cc ${lib.strings.escapeShellArgs strictCFlags} -o ${name} ${name}.c
+        cc ${lib.strings.escapeShellArgs sanitizerCFlags} -o ${name}-sanitized ${name}.c
+        cppcheck \
+          --std=c23 \
+          --enable=warning,style,performance,portability \
+          --error-exitcode=1 \
+          --suppress=missingIncludeSystem \
+          --suppress=normalCheckLevelMaxBranches \
+          ${name}.c
+        ./${name} --nixcord-c-launcher-smoke
+        diff -u <(printf '%s\n' ${lib.strings.escapeShellArgs expectedArgs}) ${name}.args
+    '';
 in
 pkgs.runCommand "discord-launcher-c-check"
   {
@@ -71,8 +90,30 @@ pkgs.runCommand "discord-launcher-c-check"
     ];
   }
   ''
-    ${compileAndSmoke "discord-launcher-full" true true}
-    ${compileAndSmoke "discord-launcher-minimal" false false}
+    ${compileAndSmoke {
+      name = "discord-launcher-full";
+      enableKrisp = true;
+      commandLineArgDeclarations = ''
+        static char command_line_arg_0[] = "--enable-blink-features=MiddleClickAutoscroll";
+        static char command_line_arg_1[] = "--ozone-platform-hint=auto";
+        static char command_line_arg_2[] = "--enable-wayland-ime";
+        static char command_line_arg_3[] = "${lib.strings.escapeC (lib.strings.stringToCharacters specialCommandLineArg) specialCommandLineArg}";
+      '';
+      commandLineArgs = "command_line_arg_0, command_line_arg_1, command_line_arg_2, command_line_arg_3,";
+      commandLineArgsCount = 4;
+      expectedArgs = [
+        "--nixcord-c-launcher-smoke"
+        "--enable-blink-features=MiddleClickAutoscroll"
+        "--ozone-platform-hint=auto"
+        "--enable-wayland-ime"
+        specialCommandLineArg
+      ];
+    }}
+    ${compileAndSmoke {
+      name = "discord-launcher-minimal";
+      enableKrisp = false;
+      expectedArgs = [ "--nixcord-c-launcher-smoke" ];
+    }}
 
     touch "$out"
   ''

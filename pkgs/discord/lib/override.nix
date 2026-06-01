@@ -27,7 +27,7 @@
   withOpenASAR,
   withVencord,
   withEquicord,
-  enableAutoscroll,
+  commandLineArgs,
   resourcesDir,
   binaryName,
   configDirName,
@@ -55,6 +55,20 @@ let
   scriptEnv = ''
     export DISCORD_SCRIPT_SHELL=${stdenv.shell}
   '';
+  indexedCommandLineArgs = lib.lists.imap0 (index: arg: {
+    inherit index arg;
+  }) commandLineArgs;
+  commandLineArgDeclarations = lib.strings.concatMapStringsSep "\n" (
+    { index, arg }:
+    "static char command_line_arg_${toString index}[] = \"${lib.strings.escapeC (lib.strings.stringToCharacters arg) arg}\";"
+  ) indexedCommandLineArgs;
+  commandLineArgPointers = lib.strings.concatMapStringsSep ", " (
+    { index, ... }: "command_line_arg_${toString index}"
+  ) indexedCommandLineArgs;
+  commandLineArgPointersWithComma = lib.strings.optionalString (
+    commandLineArgPointers != ""
+  ) "${commandLineArgPointers},";
+  commandLineArgsString = lib.strings.escapeShellArgs commandLineArgs;
 in
 basePackage.overrideAttrs (oldAttrs: {
   inherit version src;
@@ -197,11 +211,11 @@ basePackage.overrideAttrs (oldAttrs: {
         "$out/opt/${binaryName}/modules" \
         ${deployKrispArg} \
         ${if hasDeployKrisp then "1" else "0"} \
-        ${if enableAutoscroll then "1" else "0"}
+        ${lib.strings.escapeShellArg commandLineArgsString}
     ''
-    + lib.optionalString stdenvNoCC.isDarwin ''
+    + lib.strings.optionalString stdenvNoCC.isDarwin ''
       source ${scripts.installDarwinLauncher} \
-        ${lib.escapeShellArg binaryName} \
+        ${lib.strings.escapeShellArg binaryName} \
         ${launcherC} \
         ${lib.getExe oldAttrs.passthru.disableBreakingUpdates} \
         ${lib.getExe stageModules} \
@@ -209,9 +223,11 @@ basePackage.overrideAttrs (oldAttrs: {
         ${deployKrispArg} \
         "$out/Applications/${binaryName}.app/Contents/MacOS/${binaryName}.unwrapped" \
         ${if hasDeployKrisp then "1" else "0"} \
-        ${if enableAutoscroll then "1" else "0"} \
+        ${lib.strings.escapeShellArg commandLineArgDeclarations} \
+        ${lib.strings.escapeShellArg commandLineArgPointersWithComma} \
+        ${toString (builtins.length commandLineArgs)} \
         ${stdenv.cc}/bin/cc \
-        ${lib.getExe rcodesign} \
+        ${lib.meta.getExe rcodesign} \
         ${darwinEntitlements}
     '';
 })

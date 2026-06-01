@@ -18,6 +18,7 @@ let
 in
 {
   inherit
+    pkgs
     lib
     fixtures
     stubs
