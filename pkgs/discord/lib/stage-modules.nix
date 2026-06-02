@@ -22,6 +22,13 @@ writeShellApplication {
         lib.mapAttrs (_: moduleVersion: { installedVersion = moduleVersion; }) stagedModuleVersions
       );
     }}
+    : \
+      "''${DISCORD_CONFIG_DIR_NAME}" \
+      "''${DISCORD_DISABLED_UPDATE_SETTINGS_JSON}" \
+      "''${DISCORD_INSTALLED_MODULES_JSON}" \
+      "''${DISCORD_STAGE_PLATFORM}" \
+      "''${DISCORD_STAGED_MODULES}" \
+      "''${DISCORD_VERSION}"
     # shellcheck disable=SC1091
     source ${../scripts/stage-modules.sh} "$@"
   '';
