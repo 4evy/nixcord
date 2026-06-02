@@ -144,17 +144,31 @@ let
           ]
       ) legcordWebMods;
 
-      themeSpecs = lib.optionals cfg.vesktop.enable (
-        lib.mapAttrsToList (
-          themeName: path:
-          copy {
-            name = "vesktop-theme-${themeName}";
-            enable = true;
-            src = path;
-            dest = "${cfg.vesktop.configDir}/themes/${themeName}.css";
-          }
-        ) themes
-      );
+      themeClients = with cfg; [
+        {
+          name = "vesktop";
+          client = vesktop;
+        }
+        {
+          name = "equibop";
+          client = equibop;
+        }
+      ];
+
+      themeSpecs = lib.concatMap (
+        themeClient:
+        lib.optionals themeClient.client.enable (
+          lib.mapAttrsToList (
+            themeName: path:
+            copy {
+              name = "${themeClient.name}-theme-${themeName}";
+              enable = true;
+              src = path;
+              dest = "${themeClient.client.configDir}/themes/${themeName}.css";
+            }
+          ) themes
+        )
+      ) themeClients;
 
       oneOffSpecs = with cfg; [
         (copy {

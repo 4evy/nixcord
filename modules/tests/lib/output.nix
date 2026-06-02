@@ -26,7 +26,10 @@ let
         SKIP_MODULE_UPDATE = true;
         USE_NEW_UPDATER = false;
       };
-      themeName = lib.removePrefix "vesktop-theme-" spec.name;
+      themeName = lib.pipe spec.name [
+        (lib.removePrefix "vesktop-theme-")
+        (lib.removePrefix "equibop-theme-")
+      ];
       theme = cfg.config.themes.${themeName};
     in
     if spec.name == "vencord-settings" then
@@ -51,7 +54,7 @@ let
       builtins.toJSON configs.dorionAttrs
     else if lib.hasSuffix "quick-css" spec.name then
       cfg.quickCss
-    else if lib.hasPrefix "vesktop-theme-" spec.name then
+    else if lib.hasPrefix "vesktop-theme-" spec.name || lib.hasPrefix "equibop-theme-" spec.name then
       if builtins.isPath theme || lib.isStorePath theme then builtins.readFile theme else theme
     else
       throw "generated file spec ${spec.name} is not text-backed in tests";
