@@ -6,6 +6,8 @@
 }:
 let
   inherit (lib) mkEnableOption mkOption types;
+  vencordPackage = pkgs.callPackage ../../pkgs/vencord.nix { unstable = false; };
+  equicordPackage = pkgs.callPackage ../../pkgs/equicord.nix { };
 in
 {
   options.programs.nixcord.discord = {
@@ -53,7 +55,7 @@ in
       };
       package = mkOption {
         type = types.package;
-        default = nixcordPkgs.vencord or (pkgs.callPackage ../../pkgs/vencord.nix { unstable = false; });
+        default = nixcordPkgs.vencord or vencordPackage;
         defaultText = lib.literalExpression "pkgs.callPackage ../../pkgs/vencord.nix { unstable = false; }";
         description = "The Vencord package to use.";
       };
@@ -67,7 +69,7 @@ in
       enable = mkEnableOption "Equicord (alternative to Vencord)";
       package = mkOption {
         type = types.package;
-        default = nixcordPkgs.equicord or (pkgs.callPackage ../../pkgs/equicord.nix { });
+        default = nixcordPkgs.equicord or equicordPackage;
         defaultText = lib.literalExpression "pkgs.callPackage ../../pkgs/equicord.nix { }";
         description = "The Equicord package to use.";
       };

@@ -1,8 +1,4 @@
-# Computes all shared intermediate values needed by every platform module.
-# Returns an attrset of { cfg, mkVencordCfg, mkFinalPackages,
-#   vencordFullConfig, equicordFullConfig, vesktopFullConfig, equibopFullConfig,
-#   vencord, equicord, isQuickCssUsed, mkDorionConfigAttrs, mkConfigDirs,
-#   settingsFiles, vesktopThemes, dorionConfigFile, legcordSettingsFile, quickCssFile }.
+# Computes the shared state used by every platform module.
 {
   config,
   lib,
@@ -22,15 +18,20 @@ let
     mkThemeFile
     mkConfigDirs
     mkAllFullConfigs
+    mkInstalledPackages
+    mkFileSpecs
+    mkCopyCommands
     ;
 
   parseRules = cfg.parseRules;
 
   inherit (pkgs.callPackage ./core.nix { inherit lib parseRules; }) mkVencordCfg mkFinalPackages;
 
-  pluginKit = mkPluginKit { inherit cfg; };
+  pluginKit = mkPluginKit cfg;
 
-  inherit (mkAllFullConfigs { inherit cfg pluginKit; })
+  fullConfigs = mkAllFullConfigs cfg pluginKit;
+
+  inherit (fullConfigs)
     vencordFullConfig
     equicordFullConfig
     vesktopFullConfig
@@ -47,7 +48,7 @@ let
     pkg = cfg.discord.equicord.package;
   };
 
-  isQuickCssUsed = mkIsQuickCssUsed { inherit cfg; };
+  isQuickCssUsed = mkIsQuickCssUsed cfg;
 
   jsonFormat = pkgs.formats.json { };
 
@@ -69,9 +70,7 @@ let
 
   dorionConfigFile =
     if cfg.dorion.enable then
-      jsonFormat.generate "nixcord-dorion-config.json" (mkDorionConfigAttrs {
-        inherit cfg;
-      })
+      jsonFormat.generate "nixcord-dorion-config.json" (mkDorionConfigAttrs cfg)
     else
       null;
 
@@ -100,42 +99,87 @@ let
   # Merge user legcord settings with auto-configured mods and noBundleUpdates.
   legcordFinalSettings =
     let
+      inherit (cfg) legcord;
       bundledMods =
-        lib.optional cfg.legcord.vencord.enable "vencord"
-        ++ lib.optional cfg.legcord.equicord.enable "equicord";
+        lib.optional legcord.vencord.enable "vencord" ++ lib.optional legcord.equicord.enable "equicord";
+      listSettings = {
+        mods = legcord.settings.mods or [ ];
+        noBundleUpdates = legcord.settings.noBundleUpdates or [ ];
+      };
       autoSettings = lib.optionalAttrs (bundledMods != [ ]) {
-        mods = lib.unique ((cfg.legcord.settings.mods or [ ]) ++ bundledMods);
-        noBundleUpdates = lib.unique ((cfg.legcord.settings.noBundleUpdates or [ ]) ++ bundledMods);
+        mods = lib.unique (listSettings.mods ++ bundledMods);
+        noBundleUpdates = lib.unique (listSettings.noBundleUpdates ++ bundledMods);
       };
     in
-    cfg.legcord.settings // autoSettings // { doneSetup = true; };
+    legcord.settings // autoSettings // { doneSetup = true; };
 
   legcordSettingsFile =
     if cfg.legcord.enable && legcordFinalSettings != { } then
       jsonFormat.generate "nixcord-legcord-config.json" legcordFinalSettings
     else
       null;
+
+  finalPackages = mkFinalPackages {
+    inherit cfg vencord equicord;
+  };
+
+  packages = {
+    inherit vencord equicord;
+    final = finalPackages;
+    installed = mkInstalledPackages cfg finalPackages;
+  };
+
+  configs = fullConfigs // {
+    dorionAttrs = mkDorionConfigAttrs cfg;
+  };
+
+  files = {
+    settings = settingsFiles;
+    themes = vesktopThemes;
+    quickCss = quickCssFile;
+    dorionConfig = dorionConfigFile;
+    legcordSettings = legcordSettingsFile;
+    legcordWeb = {
+      vencord = legcordVencordWeb;
+      equicord = legcordEquicordWeb;
+    };
+  };
+
+  mkActivationScripts =
+    wrapScript:
+    import ./activation.nix {
+      inherit
+        lib
+        pkgs
+        cfg
+        mkVencordCfg
+        wrapScript
+        ;
+    };
+
+  fileSpecArgs = {
+    inherit
+      cfg
+      files
+      isQuickCssUsed
+      ;
+  };
+
+  fileSpecs = mkFileSpecs fileSpecArgs;
+
+  fileCopyCommands = mkCopyCommands fileSpecArgs;
 in
 {
   inherit
     cfg
+    packages
+    configs
+    files
     mkVencordCfg
-    mkFinalPackages
-    vencordFullConfig
-    equicordFullConfig
-    vesktopFullConfig
-    equibopFullConfig
-    vencord
-    equicord
     isQuickCssUsed
-    mkDorionConfigAttrs
     mkConfigDirs
-    settingsFiles
-    vesktopThemes
-    dorionConfigFile
-    legcordSettingsFile
-    legcordVencordWeb
-    legcordEquicordWeb
-    quickCssFile
+    mkActivationScripts
+    fileSpecs
+    fileCopyCommands
     ;
 }

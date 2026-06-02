@@ -14,7 +14,7 @@ in
       );
     in
     assert
-      (builtins.getAttr "/home/testuser/.config/vesktop/themes/myTheme.css" config.home.file).text
+      testLib.output.homeFileText config "/home/testuser/.config/vesktop/themes/myTheme.css"
       == "body { background: black; }";
     true;
 }

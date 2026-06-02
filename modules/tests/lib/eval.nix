@@ -7,21 +7,30 @@
 {
   hm =
     nixcordConfig:
-    (lib.evalModules {
-      modules = [
-        stubs.hm
-        (import ../../hm/default.nix)
-        {
-          _module.args.nixcordPkgs = { };
-          programs.nixcord = {
-            homeDirectory = "/home/testuser";
-            xdgConfigHome = "/home/testuser/.config";
+    let
+      evaluated = lib.evalModules {
+        modules = [
+          stubs.hm
+          (import ../../hm/default.nix)
+          {
+            _module.args.nixcordPkgs = { };
+            programs.nixcord = {
+              homeDirectory = "/home/testuser";
+              xdgConfigHome = "/home/testuser/.config";
+            }
+            // nixcordConfig;
           }
-          // nixcordConfig;
-        }
-      ];
-      specialArgs = { inherit pkgs; };
-    }).config;
+        ];
+        specialArgs = { inherit pkgs; };
+      };
+    in
+    evaluated.config
+    // {
+      _nixcordTest.common = import ../../lib/mkCommonConfig.nix {
+        config = evaluated.config;
+        inherit lib pkgs;
+      };
+    };
 
   nixos =
     nixcordConfig:

@@ -2,7 +2,6 @@
 # Each plugin gets an `enable` option plus any declared settings.
 { lib, file, ... }:
 let
-  data = builtins.fromJSON (builtins.readFile file);
   inherit (lib)
     types
     mkEnableOption
@@ -24,9 +23,24 @@ let
     "types.listOf types.attrs" = types.listOf types.attrs;
   };
 
+  normalizeSetting =
+    setting:
+    let
+      normalized = {
+        description = "";
+        example = null;
+        type = null;
+        settings = { };
+      }
+      // setting;
+    in
+    normalized // { settings = mapAttrs (_: normalizeSetting) normalized.settings; };
+
+  data = mapAttrs (_: normalizeSetting) (lib.importJSON file);
+
   resolveDefault =
     value:
-    if builtins.isAttrs value && value ? __nixRaw then
+    if builtins.isAttrs value && builtins.attrNames value == [ "__nixRaw" ] then
       # Raw Nix expressions serialized as { __nixRaw = "1.0"; }
       builtins.fromJSON value.__nixRaw
     else
@@ -34,28 +48,29 @@ let
 
   mkSettingOption =
     _name: setting:
-    if setting ? settings then
+    if setting.type == null then
       # Nested plugin config (recursive)
       mkPlugin _name setting
     else
       let
-        commonAttrs =
-          lib.optionalAttrs (setting ? default) { default = resolveDefault setting.default; }
-          // lib.optionalAttrs (setting ? description) { description = setting.description; }
-          // lib.optionalAttrs (setting ? example) { example = setting.example; };
+        commonAttrs = {
+          default = resolveDefault setting.default;
+          description = setting.description;
+        }
+        // lib.optionalAttrs (setting.example != null) { example = setting.example; };
         typeAttr =
           if setting.type == "types.enum" then
             { type = types.enum setting.enumValues; }
           else
-            { type = typeMap.${setting.type} or types.str; };
+            { type = typeMap.${setting.type}; };
       in
       mkOption (typeAttr // commonAttrs);
 
   mkPlugin =
     _name: plugin:
     {
-      enable = mkEnableOption (plugin.description or "");
+      enable = mkEnableOption plugin.description;
     }
-    // mapAttrs mkSettingOption (plugin.settings or { });
+    // mapAttrs mkSettingOption plugin.settings;
 in
 mapAttrs mkPlugin data

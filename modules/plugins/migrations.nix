@@ -1,6 +1,6 @@
 { lib, ... }:
 let
-  data = builtins.fromJSON (builtins.readFile ./migrations.json);
+  data = lib.importJSON ./migrations.json;
 
   base = [
     "programs"
@@ -17,11 +17,10 @@ let
       from = base ++ migration.from;
       to = base ++ migration.to;
       visible = false;
-      warn = migration.warn or false;
+      warn = migration.warn;
       use = x: x;
     };
 in
 {
-  imports =
-    (map mkRenameModule (data.renames or [ ])) ++ (map mkRemovedPluginModule (data.removals or [ ]));
+  imports = (map mkRenameModule data.renames) ++ (map mkRemovedPluginModule data.removals);
 }

@@ -6,11 +6,6 @@
 }:
 let
   inherit (lib) mkIf mkMerge;
-
-  inherit (import ../lib/shared.nix { inherit lib; })
-    mkCopyCommands
-    mkInstalledPackages
-    ;
 in
 {
   imports = [
@@ -21,74 +16,24 @@ in
 
   config = mkIf config.programs.nixcord.enable (
     let
-      inherit (import ../lib/mkCommonConfig.nix { inherit config lib pkgs; })
+      common = import ../lib/mkCommonConfig.nix { inherit config lib pkgs; };
+
+      inherit (common)
         cfg
-        mkVencordCfg
-        mkFinalPackages
-        vencord
-        equicord
-        isQuickCssUsed
+        packages
         mkConfigDirs
-        settingsFiles
-        vesktopThemes
-        dorionConfigFile
-        legcordSettingsFile
-        legcordVencordWeb
-        legcordEquicordWeb
-        quickCssFile
+        fileSpecs
+        fileCopyCommands
         ;
 
-      inherit (settingsFiles)
-        vencordSettingsFile
-        equicordSettingsFile
-        discordSettingsFile
-        vesktopSettingsFile
-        vesktopClientSettingsFile
-        vesktopStateFile
-        equibopSettingsFile
-        equibopClientSettingsFile
-        equibopStateFile
-        ;
-
-      activationScripts = import ../lib/activation.nix {
-        inherit
-          lib
-          pkgs
-          cfg
-          mkVencordCfg
-          ;
-        wrapScript = script: ''
-          ${lib.getExe' pkgs.util-linux "runuser"} -u ${lib.escapeShellArg cfg.user} -- /bin/sh -c ${lib.escapeShellArg script}
-        '';
-      };
+      activationScripts = common.mkActivationScripts (script: ''
+        ${lib.getExe' pkgs.util-linux "runuser"} -u ${lib.escapeShellArg cfg.user} -- /bin/sh -c ${lib.escapeShellArg script}
+      '');
 
       writeFilesScript =
         let
           install = lib.getExe' pkgs.coreutils "install";
           idBin = lib.getExe' pkgs.coreutils "id";
-
-          fileCommands = mkCopyCommands {
-            inherit
-              lib
-              cfg
-              quickCssFile
-              vencordSettingsFile
-              equicordSettingsFile
-              discordSettingsFile
-              vesktopSettingsFile
-              vesktopClientSettingsFile
-              vesktopStateFile
-              vesktopThemes
-              equibopSettingsFile
-              equibopClientSettingsFile
-              equibopStateFile
-              dorionConfigFile
-              legcordSettingsFile
-              legcordVencordWeb
-              legcordEquicordWeb
-              isQuickCssUsed
-              ;
-          };
         in
         ''
           set -euo pipefail
@@ -107,7 +52,7 @@ in
             ${install} -D -m "$mode" -o "$target_user" -g "$target_group" "$src" "$dest"
           }
 
-          ${fileCommands}
+          ${fileCopyCommands}
         '';
     in
     mkMerge ([
@@ -115,17 +60,11 @@ in
         programs.nixcord = {
           homeDirectory = "/home/${cfg.user}";
           xdgConfigHome = "${"/home/${cfg.user}"}/.config";
-          finalPackage = mkFinalPackages {
-            inherit cfg;
-            inherit vencord equicord;
-          };
+          finalPackage = packages.final;
         }
-        // mkConfigDirs {
-          inherit cfg;
-          basePath = cfg.xdgConfigHome;
-        };
+        // mkConfigDirs cfg cfg.xdgConfigHome;
 
-        environment.systemPackages = mkInstalledPackages cfg;
+        environment.systemPackages = packages.installed;
       }
       (mkIf cfg.discord.enable {
         system.activationScripts.nixcord-disableDiscordUpdates = {
@@ -143,21 +82,12 @@ in
           supportsDryActivation = false;
         };
       })
-      (mkIf
-        (
-          cfg.discord.enable
-          || cfg.vesktop.enable
-          || cfg.equibop.enable
-          || cfg.dorion.enable
-          || cfg.legcord.enable
-        )
-        {
-          system.activationScripts.nixcord-writeFiles = {
-            text = writeFilesScript;
-            supportsDryActivation = false;
-          };
-        }
-      )
+      (mkIf (fileSpecs != [ ]) {
+        system.activationScripts.nixcord-writeFiles = {
+          text = writeFilesScript;
+          supportsDryActivation = false;
+        };
+      })
     ])
   );
 }

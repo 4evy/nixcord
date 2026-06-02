@@ -12,13 +12,7 @@ in
     };
     package = mkOption {
       type = types.nullOr types.package;
-      default =
-        if pkgs.stdenvNoCC.isDarwin then
-          null
-        else if pkgs ? equibop then
-          pkgs.equibop
-        else
-          null;
+      default = if pkgs.stdenvNoCC.isDarwin then null else pkgs.equibop or null;
       defaultText = lib.literalExpression "pkgs.equibop or null";
       description = "The Equibop package to use.";
     };

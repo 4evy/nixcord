@@ -6,6 +6,10 @@
 { lib }:
 pluginName:
 { config, ... }:
+let
+  pluginConfig = config.programs.nixcord.config.plugins.${pluginName};
+  pluginEnabled = builtins.isAttrs pluginConfig && pluginConfig ? enable && pluginConfig.enable;
+in
 {
   options.programs.nixcord.config.plugins.${pluginName} = lib.mkOption {
     type = lib.types.anything;
@@ -13,7 +17,5 @@ pluginName:
     visible = false;
     description = "REMOVED: Plugin '${pluginName}' was removed upstream.";
   };
-  config.warnings =
-    lib.optional (config.programs.nixcord.config.plugins.${pluginName}.enable or false)
-      "Plugin '${pluginName}' has been removed upstream. Please remove it from your nixcord configuration. This shim will be removed soon.";
+  config.warnings = lib.optional pluginEnabled "Plugin '${pluginName}' has been removed upstream. Please remove it from your nixcord configuration. This shim will be removed soon.";
 }

@@ -76,6 +76,11 @@ in
         default = [ ];
         example = [ "petpet" ];
       };
+      settingRenames = mkOption {
+        type = types.attrsOf (types.attrsOf types.str);
+        description = "Setting names to rename while generating JSON.";
+        default = { };
+      };
     };
   };
 }

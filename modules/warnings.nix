@@ -9,15 +9,13 @@
 let
   cfg = config.programs.nixcord;
 
-  inherit (import ./lib/shared.nix { inherit lib; })
-    mkPluginKit
-    mkAssertions
-    ;
+  inherit (import ./lib/shared.nix { inherit lib; }) mkPluginKit mkAssertions;
 
-  pluginKit = mkPluginKit { inherit cfg; };
+  pluginKit = mkPluginKit cfg;
 
   inherit (pluginKit)
     pluginNameMigrations
+    pluginsOf
     collectDeprecatedPlugins
     collectEnabledEquicordOnlyPlugins
     collectEnabledVencordOnlyPlugins
@@ -25,26 +23,38 @@ let
 
   isOption = value: builtins.isAttrs value && (value._type or null) == "option";
 
+  pluginsOptions = options.programs.nixcord.config.plugins;
+  configuredPlugins = cfg.config.plugins;
+
   oldPluginEnableWasDefined =
     oldName:
     let
-      oldEnableOption = options.programs.nixcord.config.plugins.${oldName}.enable or null;
+      oldEnableOption = pluginsOptions.${oldName}.enable or null;
     in
     isOption oldEnableOption && oldEnableOption.isDefined;
 
-  oldPluginIsEnabled = oldName: cfg.config.plugins.${oldName}.enable or false;
+  oldPluginIsEnabled =
+    oldName:
+    let
+      plugin = configuredPlugins.${oldName} or null;
+    in
+    builtins.isAttrs plugin && plugin ? enable && plugin.enable;
 
   deprecatedTypedPlugins = lib.filter (
     oldName: oldPluginIsEnabled oldName && oldPluginEnableWasDefined oldName
   ) (builtins.attrNames pluginNameMigrations);
 
   freeformPlugins = {
-    plugins =
-      (cfg.extraConfig.plugins or { })
-      // (cfg.vencordConfig.plugins or { })
-      // (cfg.equicordConfig.plugins or { })
-      // (cfg.vesktopConfig.plugins or { })
-      // (cfg.equibopConfig.plugins or { });
+    plugins = lib.mergeAttrsList (
+      with cfg;
+      map pluginsOf [
+        extraConfig
+        vencordConfig
+        equicordConfig
+        vesktopConfig
+        equibopConfig
+      ]
+    );
   };
 
   deprecatedFreeformPlugins = lib.filter (oldName: !(builtins.elem oldName deprecatedTypedPlugins)) (
@@ -65,12 +75,9 @@ let
   generateMigrationWarning =
     oldName:
     let
-      newName = pluginNameMigrations.${oldName} or null;
+      newName = pluginNameMigrations.${oldName};
     in
-    if newName != null then
-      "'${oldName}' has been renamed to '${newName}'. The old name will continue to work for now but will be removed in a future update. Please update your config to use '${newName}'."
-    else
-      "'${oldName}' is deprecated. Please check the documentation for the new name";
+    "'${oldName}' has been renamed to '${newName}'. The old name will continue to work for now but will be removed in a future update. Please update your config to use '${newName}'.";
 in
 {
   config = lib.mkIf cfg.enable {
@@ -81,7 +88,12 @@ in
       '';
 
     assertions = mkAssertions {
-      inherit cfg collectEnabledEquicordOnlyPlugins collectEnabledVencordOnlyPlugins;
+      inherit
+        cfg
+        pluginsOf
+        collectEnabledEquicordOnlyPlugins
+        collectEnabledVencordOnlyPlugins
+        ;
     };
   };
 }

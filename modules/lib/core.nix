@@ -10,35 +10,29 @@ let
 
   inherit (attrsets) mapAttrs' nameValuePair;
 
-  defaultParseRules = builtins.fromJSON (builtins.readFile ../plugins/parse-rules.json);
+  defaultParseRules = lib.importJSON ../plugins/parse-rules.json;
 
-  # mergeLists :: [a] -> [a] -> [a]
-  mergeLists = base: extra: lists.unique (base ++ extra);
-
-  upperNames = mergeLists defaultParseRules.upperNames parseRules.upperNames;
+  upperNames = lists.unique (defaultParseRules.upperNames ++ parseRules.upperNames);
   upperNamesMask = lib.genAttrs upperNames (_: null);
-  lowerPluginTitles = mergeLists defaultParseRules.lowerPluginTitles parseRules.lowerPluginTitles;
-  lowerPluginTitlesMask = lib.genAttrs lowerPluginTitles (_: null);
-  mergeSettingRenames = base: extra: lib.recursiveUpdate base extra;
-  settingRenames = mergeSettingRenames (defaultParseRules.settingRenames or { }) (
-    parseRules.settingRenames or { }
+  lowerPluginTitles = lists.unique (
+    defaultParseRules.lowerPluginTitles ++ parseRules.lowerPluginTitles
   );
+  lowerPluginTitlesMask = lib.genAttrs lowerPluginTitles (_: null);
+  settingRenames = lib.recursiveUpdate defaultParseRules.settingRenames parseRules.settingRenames;
 
   isLowerCase = s: strings.toLower s == s;
 
-  # Converts camelCase to UPPER_SNAKE_CASE using the same split approach as toSnakeCase.
-  unNixify =
-    nixName:
-    strings.toUpper (
-      lib.pipe nixName [
-        (builtins.split "([A-Z])")
-        (builtins.foldl' (
-          acc: part:
-          if builtins.isList part then acc + "_" + (strings.toLower (builtins.elemAt part 0)) else acc + part
-        ) "")
-        (builtins.replaceStrings [ "__" ] [ "_" ])
-      ]
-    );
+  camelWords =
+    str:
+    lib.pipe str [
+      (strings.splitStringBy (_prev: curr: builtins.match "[A-Z]" curr != null) true)
+      (lib.filter (part: part != ""))
+      (map strings.toLower)
+    ];
+
+  toSnakeCase = str: strings.concatStringsSep "_" (camelWords str);
+
+  unNixify = nixName: strings.toUpper (toSnakeCase nixName);
 
   isLowerCamel = string: isLowerCase (builtins.substring 0 1 string);
 
@@ -63,13 +57,18 @@ let
   # specialRenames, settingRenames, upperNames, and lowerPluginTitles.
   normalizeName =
     context: name: value:
-    if specialRenames ? ${name} then
-      specialRenames.${name}
-    else if settingRenames ? ${context} && settingRenames.${context} ? ${name} then
-      settingRenames.${context}.${name}
-    else if upperNamesMask ? ${name} then
+    let
+      contextRenames = settingRenames.${context} or { };
+      specialName = specialRenames.${name} or null;
+      renamedSetting = contextRenames.${name} or null;
+    in
+    if specialName != null then
+      specialName
+    else if renamedSetting != null then
+      renamedSetting
+    else if builtins.hasAttr name upperNamesMask then
       unNixify name
-    else if lowerPluginTitlesMask ? ${name} then
+    else if builtins.hasAttr name lowerPluginTitlesMask then
       name
     else if context == "plugins" && builtins.isAttrs value && value ? enable && isLowerCamel name then
       toUpper name

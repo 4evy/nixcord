@@ -32,6 +32,13 @@ let
     ];
   };
 
+  system = stdenvNoCC.hostPlatform.system;
+
+  outputHashes = {
+    x86_64-linux = "sha256-EWiLUaGkR9iUHV/WyXcEE2QPyDxgTWzhjxB/5y+uOYo=";
+    aarch64-darwin = "sha256-zEvt4UerNN2mf53UJc9zZUlmpVlVWUZno83STMc/Dk4=";
+  };
+
   deps = stdenvNoCC.mkDerivation {
     pname = "nixcord-docs-deps";
     version = "latest";
@@ -44,8 +51,10 @@ let
 
     buildPhase = ''
       runHook preBuild
-      export HOME="$TMPDIR"
-      export BUN_INSTALL_CACHE_DIR="$TMPDIR/bun-cache"
+      set -a
+      HOME="$TMPDIR"
+      BUN_INSTALL_CACHE_DIR="$TMPDIR/bun-cache"
+      set +a
       bun install --filter nixcord-docs --frozen-lockfile --no-progress
       runHook postBuild
     '';
@@ -61,13 +70,7 @@ let
 
     outputHashAlgo = "sha256";
     outputHashMode = "recursive";
-    outputHash =
-      {
-        x86_64-linux = "sha256-EWiLUaGkR9iUHV/WyXcEE2QPyDxgTWzhjxB/5y+uOYo=";
-        aarch64-darwin = "sha256-zEvt4UerNN2mf53UJc9zZUlmpVlVWUZno83STMc/Dk4=";
-      }
-      .${stdenvNoCC.hostPlatform.system}
-        or (throw "Unsupported system ${stdenvNoCC.hostPlatform.system}");
+    outputHash = outputHashes.${system} or (throw "Unsupported system: ${system}");
   };
 in
 stdenvNoCC.mkDerivation {
@@ -91,8 +94,12 @@ stdenvNoCC.mkDerivation {
 
   buildPhase = ''
     runHook preBuild
-    export HOME="$TMPDIR"
-    export NIXCORD_REVISION=${lib.escapeShellArg revision}
+    set -a
+    HOME="$TMPDIR"
+    ${lib.toShellVars {
+      NIXCORD_REVISION = revision;
+    }}
+    set +a
     cd docs/site
     node node_modules/vite/bin/vite.js build
     cd ../..

@@ -25,6 +25,13 @@
               allowUnfree = true;
             };
           };
+          revision =
+            if builtins.hasAttr "rev" inputs.self && inputs.self.rev != null then
+              inputs.self.rev
+            else if builtins.hasAttr "dirtyRev" inputs.self && inputs.self.dirtyRev != null then
+              inputs.self.dirtyRev
+            else
+              "main";
         in
         {
           _module.args.pkgs = pkgs;
@@ -44,13 +51,13 @@
               (import ./docs {
                 pkgs = pkgs;
                 lib = pkgs.lib;
-                revision = inputs.self.rev or inputs.self.dirtyRev or "main";
+                inherit revision;
               }).html;
             docs-json =
               (import ./docs {
                 pkgs = pkgs;
                 lib = pkgs.lib;
-                revision = inputs.self.rev or inputs.self.dirtyRev or "main";
+                inherit revision;
               }).json;
           };
 

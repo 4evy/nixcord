@@ -16,12 +16,17 @@ let
   };
 
   basePackageRaw = variantPackages.${branch};
+  basePackageOverride = basePackageRaw.override or null;
 
   emptyOpenSSL11 = runCommand "openssl-1.1.1w-ignored" { } ''
     mkdir -p "$out/lib"
   '';
+  basePackageCanOverrideOpenSSL11 =
+    basePackageOverride != null
+    && builtins.isFunction basePackageOverride
+    && builtins.functionArgs basePackageOverride ? openssl_1_1;
 in
-if stdenvNoCC.isLinux && ((basePackageRaw.override.__functionArgs or { }) ? openssl_1_1) then
-  basePackageRaw.override { openssl_1_1 = emptyOpenSSL11; }
+if stdenvNoCC.isLinux && basePackageCanOverrideOpenSSL11 then
+  basePackageOverride { openssl_1_1 = emptyOpenSSL11; }
 else
   basePackageRaw

@@ -101,145 +101,99 @@ let
     wrapLinuxDiscord = ./scripts/wrap-linux-discord.sh;
   };
 
-  sourceSet = import ./lib/sources.nix {
+  discordLib = lib.makeScope lib.callPackageWith (self: {
     inherit
       lib
       stdenvNoCC
+      stdenv
       fetchurl
-      branch
-      withKrisp
-      ;
-  };
-
-  inherit (sourceSet)
-    source
-    version
-    src
-    moduleSrcs
-    moduleVersions
-    krispSrc
-    stagedModuleSrcs
-    stagedModuleVersions
-    ;
-
-  krisp = import ./lib/krisp.nix {
-    inherit
-      lib
-      stdenvNoCC
-      fetchurl
-      brotli
-      python3
-      runCommand
-      darwin
-      withKrisp
-      version
-      binaryName
-      krispSrc
-      ;
-    installDeployKrispScript = ./scripts/install-deploy-krisp.sh;
-    patchKrispModuleScript = ./scripts/patch-krisp-module.sh;
-  };
-
-  inherit (krisp)
-    krispModule
-    deployKrisp
-    patchVoiceKrispPy
-    ;
-
-  disabledUpdateSettings = {
-    SKIP_HOST_UPDATE = true;
-    SKIP_MODULE_UPDATE = true;
-    USE_NEW_UPDATER = false;
-  };
-
-  disabledUpdateSettingsJson = builtins.toJSON disabledUpdateSettings;
-
-  updateScript = import ./lib/update-script.nix {
-    inherit
-      writeShellApplication
-      cacert
-      nix
-      curl
-      jq
-      python3
-      ;
-    updateSourcesPy = ./scripts/update-sources.py;
-  };
-
-  stageModules = import ./lib/stage-modules.nix {
-    inherit
-      lib
-      stdenvNoCC
-      writeShellApplication
-      jq
-      version
-      configDirName
-      stagedModuleVersions
-      disabledUpdateSettingsJson
-      ;
-  };
-
-  basePackage = import ./lib/base-package.nix {
-    inherit
-      stdenvNoCC
-      runCommand
-      branch
       discord
       discord-ptb
       discord-canary
       discord-development
+      writeShellApplication
+      cacert
+      curl
+      jq
+      nix
+      asar
+      openasar
+      brotli
+      libpulseaudio
+      python3
+      runCommand
+      darwin
+      rcodesign
+      branch
+      withVencord
+      vencord
+      withEquicord
+      equicord
+      withOpenASAR
+      commandLineArgs
+      withKrisp
+      launcherCFlags
+      withoutOpenSSL11
+      binaryName
+      configDirName
+      nodeModulesTargetPrefix
+      resourcesDir
+      scripts
       ;
-  };
 
-  darwinEntitlements = builtins.toFile "discord-entitlements.plist" (
-    lib.generators.toPlist { escape = true; } {
-      "com.apple.security.cs.allow-jit" = true;
-      "com.apple.security.cs.allow-unsigned-executable-memory" = true;
-      "com.apple.security.cs.disable-library-validation" = true;
-      "com.apple.security.device.audio-input" = true;
-      "com.apple.security.device.camera" = true;
-    }
-  );
+    sourceSet = self.callPackage ./lib/sources.nix { };
+
+    inherit (self.sourceSet)
+      source
+      version
+      src
+      moduleSrcs
+      moduleVersions
+      krispSrc
+      stagedModuleSrcs
+      stagedModuleVersions
+      ;
+
+    krisp = self.callPackage ./lib/krisp.nix {
+      installDeployKrispScript = ./scripts/install-deploy-krisp.sh;
+      patchKrispModuleScript = ./scripts/patch-krisp-module.sh;
+    };
+
+    inherit (self.krisp)
+      krispModule
+      deployKrisp
+      patchVoiceKrispPy
+      ;
+
+    disabledUpdateSettings = {
+      SKIP_HOST_UPDATE = true;
+      SKIP_MODULE_UPDATE = true;
+      USE_NEW_UPDATER = false;
+    };
+
+    disabledUpdateSettingsJson = builtins.toJSON self.disabledUpdateSettings;
+
+    updateScript = self.callPackage ./lib/update-script.nix {
+      updateSourcesPy = ./scripts/update-sources.py;
+    };
+
+    stageModules = self.callPackage ./lib/stage-modules.nix { };
+
+    basePackage = self.callPackage ./lib/base-package.nix { };
+
+    darwinEntitlements = builtins.toFile "discord-entitlements.plist" (
+      lib.generators.toPlist { escape = true; } {
+        "com.apple.security.cs.allow-jit" = true;
+        "com.apple.security.cs.allow-unsigned-executable-memory" = true;
+        "com.apple.security.cs.disable-library-validation" = true;
+        "com.apple.security.device.audio-input" = true;
+        "com.apple.security.device.camera" = true;
+      }
+    );
+
+    package = self.callPackage ./lib/override.nix {
+      launcherC = ./src/discord-launcher.c;
+    };
+  });
 in
-import ./lib/override.nix {
-  inherit
-    lib
-    stdenvNoCC
-    stdenv
-    python3
-    brotli
-    rcodesign
-    libpulseaudio
-    asar
-    openasar
-    vencord
-    equicord
-    basePackage
-    version
-    src
-    updateScript
-    stageModules
-    source
-    moduleSrcs
-    moduleVersions
-    stagedModuleSrcs
-    stagedModuleVersions
-    withKrisp
-    krispModule
-    deployKrisp
-    patchVoiceKrispPy
-    withOpenASAR
-    withVencord
-    withEquicord
-    commandLineArgs
-    resourcesDir
-    binaryName
-    configDirName
-    nodeModulesTargetPrefix
-    darwinEntitlements
-    launcherCFlags
-    withoutOpenSSL11
-    scripts
-    ;
-  launcherC = ./src/discord-launcher.c;
-}
+discordLib.package

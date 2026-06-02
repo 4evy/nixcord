@@ -12,6 +12,7 @@ let
     ;
   inherit (lib.attrsets)
     attrNames
+    hasAttr
     listToAttrs
     nameValuePair
     removeAttrs
@@ -157,7 +158,7 @@ let
     opt:
     let
       pluginName = elemAt opt.loc 4;
-      source = pluginSourceByName.${pluginName} or null;
+      source = if hasAttr pluginName pluginSourceByName then pluginSourceByName.${pluginName} else null;
       sourceSubpath = if source == null then "modules/plugins" else source.subpath;
       line =
         if source == null then

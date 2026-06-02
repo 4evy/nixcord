@@ -23,7 +23,7 @@ in
       );
     in
     assert
-      (builtins.getAttr "/home/testuser/.config/Vencord/settings/quickCss.css" config.home.file).text
+      testLib.output.homeFileText config "/home/testuser/.config/Vencord/settings/quickCss.css"
       == "body { color: red; }";
     true;
 

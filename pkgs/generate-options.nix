@@ -175,7 +175,9 @@ stdenvNoCC.mkDerivation (finalAttrs: {
   installCheckPhase = ''
     runHook preInstallCheck
 
-    export NIX_STATE_DIR="$TMPDIR/nix-state"
+    set -a
+    NIX_STATE_DIR="$TMPDIR/nix-state"
+    set +a
     mkdir -p "$NIX_STATE_DIR"
 
     for nixFile in "$out/plugins"/*.nix; do
