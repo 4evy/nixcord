@@ -1,5 +1,4 @@
 {
-  lib,
   writeShellApplication,
   cacert,
   nix,
@@ -10,6 +9,9 @@
 }:
 writeShellApplication {
   name = "discord-update";
+  runtimeEnv = {
+    DISCORD_UPDATE_SOURCES_PY = updateSourcesPy;
+  };
   runtimeInputs = [
     cacert
     nix
@@ -18,11 +20,6 @@ writeShellApplication {
     python3
   ];
   text = ''
-    set -a
-    ${lib.toShellVars {
-      DISCORD_UPDATE_SOURCES_PY = updateSourcesPy;
-    }}
-    set +a
     # shellcheck disable=SC1091
     source ${../scripts/update-sources.sh}
   '';
