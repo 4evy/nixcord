@@ -64,7 +64,7 @@
         };
         system.stateVersion = lib.mkOption {
           type = lib.types.str;
-          default = "25.11";
+          default = "26.05";
         };
         environment.systemPackages = lib.mkOption {
           type = lib.types.listOf lib.types.package;

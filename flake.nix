@@ -1,8 +1,8 @@
 {
   inputs = {
     flake-parts.url = "github:hercules-ci/flake-parts";
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
-    nixpkgs-nixcord.url = "github:NixOS/nixpkgs/nixos-25.11";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
+    nixpkgs-nixcord.url = "github:NixOS/nixpkgs/nixos-26.05";
     flake-compat.url = "https://flakehub.com/f/edolstra/flake-compat/1.tar.gz";
   };
 
@@ -67,7 +67,7 @@
               pkgs.writeShellApplication {
                 name = "generate-plugin-options";
                 runtimeInputs = [
-                  pkgs.nixfmt-rfc-style
+                  pkgs.nixfmt
                 ];
                 text = ''
                   nix build .#generate --out-link ./result

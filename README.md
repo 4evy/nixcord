@@ -11,7 +11,7 @@ Add to `flake.nix`:
 ```nix
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
     nixcord.url = "github:FlameFlag/nixcord";
     # ...
   };
@@ -98,7 +98,7 @@ You can configure Vencord (default), Equicord, Vesktop, Dorion, or Legcord
       frameless = true;
 
       plugins = {
-        hideAttachments.enable = true;
+        hideMedia.enable = true;
         ignoreActivities = {
           enable = true;
           ignorePlaying = true;

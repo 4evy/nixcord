@@ -21,7 +21,7 @@
       frameless = true;
 
       plugins = {
-        hideAttachments.enable = true;
+        hideMedia.enable = true;
         ignoreActivities = {
           enable = true;
           ignorePlaying = true;

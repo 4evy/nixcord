@@ -10,7 +10,7 @@
     discord.vencord.enable = true;
 
     config.plugins = {
-      hideAttachments.enable = true;
+      hideMedia.enable = true;
     };
   };
 }
