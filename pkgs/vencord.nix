@@ -16,7 +16,7 @@
 let
   stableVersion = "1.14.13";
   stableHash = "sha256-Xqk/akTa/NcHjSm6h77y6Fkvq7ayBcR0w0HG0Hwfkf8=";
-  stablePnpmDeps = "sha256-GiUV2x8i7ewzn66v5wBUq67oNvrxZzOsh5TuQUtpJNQ=";
+  stablePnpmDeps = "sha256-hk1rnNog5xvuIVI0M1ZJ5xrEuk0zcBiYsbROUycdi+A=";
 
   unstableVersion = "1.14.13-unstable-2026-05-29";
   unstableRev = "9f2e6e7baf0aa68d2e612e6669319056b3def66e";
