@@ -21,7 +21,7 @@ let
   unstableVersion = "1.14.13-unstable-2026-05-29";
   unstableRev = "9f2e6e7baf0aa68d2e612e6669319056b3def66e";
   unstableHash = "sha256-U1xgdTSoVCiYxL3q8SmsQFs+RznnIBjbmSC1zqiSgmY=";
-  unstablePnpmDeps = "sha256-GiUV2x8i7ewzn66v5wBUq67oNvrxZzOsh5TuQUtpJNQ=";
+  unstablePnpmDeps = "sha256-hk1rnNog5xvuIVI0M1ZJ5xrEuk0zcBiYsbROUycdi+A=";
 
   version = if unstable then unstableVersion else stableVersion;
   hash = if unstable then unstableHash else stableHash;
