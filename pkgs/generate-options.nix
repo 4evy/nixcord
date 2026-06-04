@@ -10,7 +10,9 @@
   skipGitMigrations ? true,
 }:
 let
-  nodeModulesHash = "sha256-/1H8CLr7QVXecHhxOZouRUtfA6lD2vME7IFcwrZYsCM=";
+  nodeModulesHashDarwin = "sha256-/1H8CLr7QVXecHhxOZouRUtfA6lD2vME7IFcwrZYsCM=";
+  nodeModulesHashLinux = "sha256-UFP1Hvs/PpuOuZSbFLARib82qcDNQ9HGEaO5ndZlH8E=";
+  nodeModulesHash = if stdenvNoCC.isDarwin then nodeModulesHashDarwin else nodeModulesHashLinux;
 in
 stdenvNoCC.mkDerivation (finalAttrs: {
   name = "nixcord-plugin-options";

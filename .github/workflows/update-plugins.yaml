@@ -326,17 +326,25 @@ jobs:
           NIX_FILE="./pkgs/generate-options.nix"
 
           echo "::group::Generating plugin options"
-          if ! output=$(nix run .#generate 2>&1); then
-            new_hash=$(echo "$output" | grep -oE "got:\s+sha256-[A-Za-z0-9+/=]+" | head -1 | sed 's/got:\s*//')
+          for attempt in {1..3}; do
+            if output=$(nix run .#generate 2>&1); then
+              break
+            fi
+
+            new_hash=$(echo "$output" | grep -oE "got:\s+sha256-[A-Za-z0-9+/=]+" | tail -1 | sed 's/got:\s*//' || true)
             if [[ -n "$new_hash" ]]; then
-              echo "::notice::Updating nodeModulesHashLinux to $new_hash"
+              echo "::notice::Updating nodeModulesHashLinux to $new_hash (attempt $attempt)"
               perl -pi -e "s|nodeModulesHashLinux = \".*\";|nodeModulesHashLinux = \"$new_hash\";|" "$NIX_FILE"
-              nix run .#generate
             else
               echo "$output"
               exit 1
             fi
-          fi
+
+            if [[ $attempt == 3 ]]; then
+              echo "$output"
+              exit 1
+            fi
+          done
           echo "::endgroup::"
 
       - name: Commit and push changes
