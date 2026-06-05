@@ -95,6 +95,7 @@ let
     installOpenASAR = ./scripts/install-openasar.sh;
     installPatcherASAR = ./scripts/install-patcher-asar.sh;
     linkNodeModules = ./scripts/link-node-modules.sh;
+    patchDiscordAppASAR = ./scripts/patch-discord-app-asar.sh;
     restoreDarwinSymlinks = ./scripts/restore-darwin-symlinks.py;
     setLocalModulesRoot = ./scripts/set-local-modules-root.py;
     unpackDistroModules = ./scripts/unpack-distro-modules.sh;

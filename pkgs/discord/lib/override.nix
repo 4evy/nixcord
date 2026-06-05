@@ -207,6 +207,11 @@ basePackage.overrideAttrs (
           ${lib.escapeShellArg nodeModulesTargetPrefix} \
           ${stagedModuleNameArgs}
       ''
+      + lib.optionalString (stdenvNoCC.isLinux && !withOpenASAR) ''
+        source ${scripts.patchDiscordAppASAR} \
+          "${resourcesDir}" \
+          ${lib.getExe asar}
+      ''
       + lib.optionalString (withOpenASAR && openasar != null) ''
         source ${scripts.installOpenASAR} \
           "${resourcesDir}" \
