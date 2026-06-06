@@ -1,7 +1,6 @@
 {
   lib,
   stdenvNoCC,
-  fetchurl,
   brotli,
   python3,
   runCommand,
@@ -22,29 +21,10 @@ let
     ps.capstone
   ]);
 
-  # Krisp helper scripts from upstream nixpkgs PR #506089
-  # (NixOS/nixpkgs@90cdc6283e794e7e276fa60f6d27b98a27454f15)
-  krispScriptsRev = "90cdc6283e794e7e276fa60f6d27b98a27454f15";
-
-  patchKrispPy = fetchurl {
-    url = "https://raw.githubusercontent.com/NixOS/nixpkgs/${krispScriptsRev}/pkgs/applications/networking/instant-messengers/discord/patch-krisp.py";
-    hash = "sha256-pj0+CCUZqApYE02zfXnLvOoiIHbtLTT1JMzrJN86WDo=";
-  };
-
-  patchKrispModulePy = fetchurl {
-    url = "https://raw.githubusercontent.com/NixOS/nixpkgs/${krispScriptsRev}/pkgs/applications/networking/instant-messengers/discord/patch-krisp-module.py";
-    hash = "sha256-WyiDHH0l8rtcG0Dn8acZoeO8Wd2u9ZqaqNZqQlsAGM8=";
-  };
-
-  patchVoiceKrispPy = fetchurl {
-    url = "https://raw.githubusercontent.com/NixOS/nixpkgs/${krispScriptsRev}/pkgs/applications/networking/instant-messengers/discord/patch-voice-krisp.py";
-    hash = "sha256-HEfIv9br3oimd+wtvlBUqOmgv4HS0XRaO2O92ZOupos=";
-  };
-
-  deployKrispPy = fetchurl {
-    url = "https://raw.githubusercontent.com/NixOS/nixpkgs/${krispScriptsRev}/pkgs/applications/networking/instant-messengers/discord/deploy-krisp.py";
-    hash = "sha256-3b1ymG+w3FIZtAIyw1wiRe3JC2vNDAC8d2YMHP9icxM=";
-  };
+  patchKrispPy = ../patches/krisp/patch-krisp.py;
+  patchKrispModulePy = ../patches/krisp/patch-krisp-module.py;
+  patchVoiceKrispPy = ../patches/krisp/patch-voice-krisp.py;
+  deployKrispPy = ../patches/krisp/deploy-krisp.py;
 
   # Patch the native module to bypass Discord's signature check. Darwin uses
   # nixpkgs' signingUtils so the patched module is ad-hoc signed with the
