@@ -30,6 +30,8 @@
   commandLineArgs,
   resourcesDir,
   binaryName,
+  executableName,
+  needsDiscordExecutableAlias,
   configDirName,
   nodeModulesTargetPrefix,
   darwinEntitlements,
@@ -92,9 +94,16 @@ basePackage.overrideAttrs (
     oldAutoPatchelfIgnoreMissingDeps = oldAttrs.autoPatchelfIgnoreMissingDeps or [ ];
     oldPostInstall = oldAttrs.postInstall or "";
     oldPostFixup = oldAttrs.postFixup or "";
+    oldMeta = oldAttrs.meta or { };
   in
   {
     inherit version src;
+    meta =
+      oldMeta
+      // lib.optionalAttrs needsDiscordExecutableAlias {
+        mainProgram = "discord";
+      };
+
     passthru = oldPassthru // {
       inherit
         updateScript
@@ -256,6 +265,16 @@ basePackage.overrideAttrs (
           ${stdenv.cc}/bin/cc \
           ${lib.meta.getExe rcodesign} \
           ${darwinEntitlements}
+      ''
+      + lib.optionalString needsDiscordExecutableAlias ''
+        if [[ ! -e "$out/bin/${executableName}" ]]; then
+          echo "expected Discord executable $out/bin/${executableName} to exist before creating alias" >&2
+          exit 1
+        fi
+
+        if [[ ! -e "$out/bin/discord" ]]; then
+          ln -s ${lib.escapeShellArg executableName} "$out/bin/discord"
+        fi
       '';
   }
 )

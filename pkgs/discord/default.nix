@@ -79,6 +79,10 @@ let
     else
       lib.toLower binaryName;
 
+  executableName = if stdenvNoCC.isLinux then configDirName else binaryName;
+
+  needsDiscordExecutableAlias = branch != "stable";
+
   nodeModulesTargetPrefix = if stdenvNoCC.isLinux then "../../modules" else "../modules";
 
   resourcesDir =
@@ -137,6 +141,8 @@ let
       withoutOpenSSL11
       binaryName
       configDirName
+      executableName
+      needsDiscordExecutableAlias
       nodeModulesTargetPrefix
       resourcesDir
       scripts
