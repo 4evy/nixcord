@@ -104,22 +104,26 @@ let
       equicord,
     }:
     {
-      discord = cfg.discord.package.override {
-        withVencord = cfg.discord.vencord.enable;
-        withEquicord = cfg.discord.equicord.enable;
-        withOpenASAR = cfg.discord.openASAR.enable;
-        # TODO: Remove programs.nixcord.discord.autoscroll.enable after the
-        # deprecation window; until then it is a compatibility shim for
-        # programs.nixcord.discord.commandLineArgs.
-        commandLineArgs = lib.lists.unique (
-          cfg.discord.commandLineArgs
-          ++ lib.lists.optional cfg.discord.autoscroll.enable "--enable-blink-features=MiddleClickAutoscroll"
-        );
-        withKrisp = cfg.discord.krisp.enable;
-        branch = cfg.discord.branch;
-        vencord = if cfg.discord.vencord.enable then vencord else null;
-        equicord = if cfg.discord.equicord.enable then equicord else null;
-      };
+      discord = cfg.discord.package.override (
+        {
+          withVencord = cfg.discord.vencord.enable;
+          withEquicord = cfg.discord.equicord.enable;
+          withOpenASAR = cfg.discord.openASAR.enable;
+          # TODO: Remove programs.nixcord.discord.autoscroll.enable after the
+          # deprecation window; until then it is a compatibility shim for
+          # programs.nixcord.discord.commandLineArgs.
+          commandLineArgs = lib.lists.unique (
+            cfg.discord.commandLineArgs
+            ++ lib.lists.optional cfg.discord.autoscroll.enable "--enable-blink-features=MiddleClickAutoscroll"
+          );
+          branch = cfg.discord.branch;
+          vencord = if cfg.discord.vencord.enable then vencord else null;
+          equicord = if cfg.discord.equicord.enable then equicord else null;
+        }
+        // lib.optionalAttrs cfg.discord.krisp.enable {
+          withKrisp = true;
+        }
+      );
 
       vesktop = cfg.vesktop.package.override {
         withSystemVencord = cfg.vesktop.useSystemVencord;

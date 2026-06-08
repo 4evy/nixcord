@@ -16,6 +16,17 @@ let
         passthru.nixcordOverrideArgs = args;
       };
   };
+  stubDiscordPackageWithoutKrisp =
+    pkgs.runCommand "nixcord-discord-no-krisp-stub" { } "mkdir $out"
+    // {
+      override =
+        args:
+        assert !(args ? withKrisp);
+        pkgs.runCommand "nixcord-discord-no-krisp-final-stub" { } "mkdir $out"
+        // {
+          passthru.nixcordOverrideArgs = args;
+        };
+    };
   stubEquicordPackage = pkgs.runCommand "nixcord-equicord-stub" { } "mkdir -p $out/equibop" // {
     overrideAttrs =
       f:
@@ -94,6 +105,38 @@ in
         "--ozone-platform-hint=auto"
         "--enable-blink-features=MiddleClickAutoscroll"
       ];
+    true;
+
+  "discord custom package does not receive disabled krisp override" =
+    let
+      config = testLib.eval.hm (
+        recursiveUpdate baseConfig {
+          discord = {
+            package = stubDiscordPackageWithoutKrisp;
+            vencord.enable = false;
+            equicord.enable = true;
+          };
+        }
+      );
+      overrideArgs = config.programs.nixcord.finalPackage.discord.passthru.nixcordOverrideArgs;
+    in
+    assert !(overrideArgs ? withKrisp);
+    assert overrideArgs.withEquicord == true;
+    true;
+
+  "discord krisp option passes krisp override when enabled" =
+    let
+      config = testLib.eval.hm (
+        recursiveUpdate baseConfig {
+          discord = {
+            package = stubDiscordPackage;
+            krisp.enable = true;
+          };
+        }
+      );
+      overrideArgs = config.programs.nixcord.finalPackage.discord.passthru.nixcordOverrideArgs;
+    in
+    assert overrideArgs.withKrisp == true;
     true;
 
   "discord commandLineArgs are accepted" =
