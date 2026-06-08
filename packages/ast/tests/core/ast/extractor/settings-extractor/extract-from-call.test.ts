@@ -2,6 +2,7 @@ import type { PluginConfig, PluginSetting } from '@nixcord/shared';
 import { SyntaxKind } from 'ts-morph';
 import { describe, expect, test } from 'vitest';
 import { extractSettingsFromCall } from '../../../../../src/extractor/settings-extractor.js';
+import { findDefinePluginSettings } from '../../../../../src/navigator/plugin-navigator.js';
 import { createProject } from '../../../../helpers/test-utils.js';
 
 describe('extractSettingsFromCall()', () => {
@@ -359,6 +360,132 @@ describe('extractSettingsFromCall()', () => {
     const program = project.getProgram();
     const result = extractSettingsFromCall(callExpr, checker, program);
     expect(Object.keys(result)).toHaveLength(0);
+  });
+
+  test('extracts private settings from withPrivateSettings type literals', () => {
+    const project = createProject();
+    const sourceFile = project.createSourceFile(
+      'test.tsx',
+      `export const enum OptionType {
+        STRING = 0,
+        NUMBER = 1,
+        BIGINT = 2,
+        BOOLEAN = 3,
+        SELECT = 4,
+        SLIDER = 5,
+        COMPONENT = 6,
+        CUSTOM = 7
+      }
+      export const enum ActivityType {
+        PLAYING,
+        STREAMING,
+        LISTENING,
+        WATCHING,
+        CUSTOM,
+        COMPETING
+      }
+      export const enum TimestampMode {
+        NONE,
+        NOW,
+        TIME,
+        CUSTOM
+      }
+      function definePluginSettings(settings: Record<string, unknown>) {
+        return {
+          ...settings,
+          withPrivateSettings<T extends object>() {
+            return this as typeof this & T;
+          }
+        };
+      }
+      const settings = definePluginSettings({
+        config: {
+          type: OptionType.COMPONENT,
+          component: () => null
+        },
+      }).withPrivateSettings<{
+        appID?: string;
+        appName?: string;
+        type?: ActivityType;
+        timestampMode?: TimestampMode;
+        startTime?: number;
+        loop?: boolean;
+        multiGreetChoices?: string[];
+        nestedFolders: Record<string, string>;
+        formats: {
+          cozyFormat: string;
+          compactFormat: string;
+        };
+      }>();`
+    );
+    const callExpr = findDefinePluginSettings(sourceFile);
+    if (!callExpr) throw new Error('Call expression not found');
+    const checker = project.getTypeChecker();
+    const program = project.getProgram();
+    const result = extractSettingsFromCall(callExpr, checker, program);
+
+    expect(result.config).toBeUndefined();
+
+    const appID = result.appID as PluginSetting;
+    expect(appID.type).toBe('types.nullOr types.str');
+    expect(appID.default).toBeNull();
+
+    const type = result.type as PluginSetting;
+    expect(type.type).toBe('types.enum');
+    expect(type.enumValues).toEqual([0, 1, 2, 3, 4, 5]);
+    expect(type.default).toBe(0);
+
+    const timestampMode = result.timestampMode as PluginSetting;
+    expect(timestampMode.enumValues).toEqual([0, 1, 2, 3]);
+
+    const startTime = result.startTime as PluginSetting;
+    expect(startTime.type).toBe('types.int');
+    expect(startTime.default).toBe(0);
+
+    const loop = result.loop as PluginSetting;
+    expect(loop.type).toBe('types.bool');
+    expect(loop.default).toBe(false);
+
+    const multiGreetChoices = result.multiGreetChoices as PluginSetting;
+    expect(multiGreetChoices.type).toBe('types.listOf types.str');
+    expect(multiGreetChoices.default).toEqual([]);
+
+    const nestedFolders = result.nestedFolders as PluginSetting;
+    expect(nestedFolders.type).toBe('types.attrs');
+    expect(nestedFolders.default).toEqual({});
+
+    const formats = result.formats as PluginConfig;
+    expect((formats.settings.cozyFormat as PluginSetting).type).toBe('types.nullOr types.str');
+  });
+
+  test('extracts known external enum private setting types without resolved imports', () => {
+    const project = createProject();
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      `function definePluginSettings(settings: Record<string, unknown>) {
+        return {
+          ...settings,
+          withPrivateSettings<T extends object>() {
+            return this as typeof this & T;
+          }
+        };
+      }
+      const settings = definePluginSettings({}).withPrivateSettings<{
+        type?: ActivityType;
+      }>();`
+    );
+    const callExpr = findDefinePluginSettings(sourceFile);
+    if (!callExpr) throw new Error('Call expression not found');
+    const result = extractSettingsFromCall(
+      callExpr,
+      project.getTypeChecker(),
+      project.getProgram()
+    );
+
+    const type = result.type as PluginSetting;
+    expect(type.type).toBe('types.enum');
+    expect(type.enumValues).toEqual([0, 1, 2, 3, 4, 5]);
+    expect(type.default).toBe(0);
   });
 
   test('handles missing arguments', () => {

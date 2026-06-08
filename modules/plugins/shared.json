@@ -329,7 +329,114 @@
   },
   "customRpc": {
     "description": "Add a fully customisable Rich Presence (Game status) to your Discord profile (Shared between Vencord and Equicord)",
-    "settings": {}
+    "settings": {
+      "appID": {
+        "type": "types.nullOr types.str",
+        "default": null
+      },
+      "appName": {
+        "type": "types.nullOr types.str",
+        "default": null
+      },
+      "details": {
+        "type": "types.nullOr types.str",
+        "default": null
+      },
+      "detailsURL": {
+        "type": "types.nullOr types.str",
+        "default": null
+      },
+      "state": {
+        "type": "types.nullOr types.str",
+        "default": null
+      },
+      "stateURL": {
+        "type": "types.nullOr types.str",
+        "default": null
+      },
+      "type": {
+        "type": "types.enum",
+        "enumValues": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "default": 0
+      },
+      "streamLink": {
+        "type": "types.nullOr types.str",
+        "default": null
+      },
+      "timestampMode": {
+        "type": "types.enum",
+        "enumValues": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "default": 0
+      },
+      "startTime": {
+        "type": "types.int",
+        "default": 0
+      },
+      "endTime": {
+        "type": "types.int",
+        "default": 0
+      },
+      "imageBig": {
+        "type": "types.nullOr types.str",
+        "default": null
+      },
+      "imageBigURL": {
+        "type": "types.nullOr types.str",
+        "default": null
+      },
+      "imageBigTooltip": {
+        "type": "types.nullOr types.str",
+        "default": null
+      },
+      "imageSmall": {
+        "type": "types.nullOr types.str",
+        "default": null
+      },
+      "imageSmallURL": {
+        "type": "types.nullOr types.str",
+        "default": null
+      },
+      "imageSmallTooltip": {
+        "type": "types.nullOr types.str",
+        "default": null
+      },
+      "buttonOneText": {
+        "type": "types.nullOr types.str",
+        "default": null
+      },
+      "buttonOneURL": {
+        "type": "types.nullOr types.str",
+        "default": null
+      },
+      "buttonTwoText": {
+        "type": "types.nullOr types.str",
+        "default": null
+      },
+      "buttonTwoURL": {
+        "type": "types.nullOr types.str",
+        "default": null
+      },
+      "partySize": {
+        "type": "types.int",
+        "default": 0
+      },
+      "partyMaxSize": {
+        "type": "types.int",
+        "default": 0
+      }
+    }
   },
   "dearrow": {
     "description": "Makes YouTube embed titles and thumbnails less sensationalist, powered by Dearrow (Shared between Vencord and Equicord)",

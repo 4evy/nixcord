@@ -180,6 +180,98 @@ describe('parseSinglePlugin()', () => {
     }
   });
 
+  test('extracts private settings from withPrivateSettings plugin schema', async () => {
+    const tempDir = await fse.mkdtemp(join(__dirname, 'test-'));
+    try {
+      await createPlugin(tempDir, 'custom-rpc', {
+        indexContent: `function definePlugin(definition: { name: string; description: string; settings: unknown }) {
+          return definition;
+        }
+
+        export const enum OptionType {
+          STRING = 0,
+          NUMBER = 1,
+          BIGINT = 2,
+          BOOLEAN = 3,
+          SELECT = 4,
+          SLIDER = 5,
+          COMPONENT = 6,
+          CUSTOM = 7
+        }
+
+        function definePluginSettings(settings: Record<string, unknown>) {
+          return {
+            ...settings,
+            withPrivateSettings<T extends object>() {
+              return this as typeof this & T;
+            }
+          };
+        }
+
+        export const enum ActivityType {
+          PLAYING,
+          STREAMING,
+          LISTENING,
+          WATCHING,
+          CUSTOM,
+          COMPETING
+        }
+
+        export const enum TimestampMode {
+          NONE,
+          NOW,
+          TIME,
+          CUSTOM
+        }
+
+        export const settings = definePluginSettings({
+          config: {
+            type: OptionType.COMPONENT,
+            component: () => null,
+          },
+        }).withPrivateSettings<{
+          appID?: string;
+          appName?: string;
+          type?: ActivityType;
+          timestampMode?: TimestampMode;
+          startTime?: number;
+          imageBig?: string;
+          buttonOneURL?: string;
+        }>();
+
+        export default definePlugin({
+          name: "CustomRPC",
+          description: "Add a fully customisable Rich Presence (Game status) to your Discord profile",
+          settings,
+        });`,
+      });
+
+      await createTsConfig(tempDir);
+
+      const result = await parsePlugins(tempDir);
+      const plugin = result.vencordPlugins.CustomRPC;
+      expect(plugin).toBeDefined();
+      expect(plugin?.settings.config).toBeUndefined();
+
+      const appID = plugin?.settings.appID as PluginSetting;
+      expect(appID.type).toBe('types.nullOr types.str');
+      expect(appID.default).toBeNull();
+
+      const activityType = plugin?.settings.type as PluginSetting;
+      expect(activityType.type).toBe('types.enum');
+      expect(activityType.enumValues).toEqual([0, 1, 2, 3, 4, 5]);
+
+      const timestampMode = plugin?.settings.timestampMode as PluginSetting;
+      expect(timestampMode.enumValues).toEqual([0, 1, 2, 3]);
+
+      const startTime = plugin?.settings.startTime as PluginSetting;
+      expect(startTime.type).toBe('types.int');
+      expect(startTime.default).toBe(0);
+    } finally {
+      await fse.remove(tempDir);
+    }
+  });
+
   test('extracts plugin renames from migratePluginSettings calls', async () => {
     const tempDir = await fse.mkdtemp(join(__dirname, 'test-'));
     try {
