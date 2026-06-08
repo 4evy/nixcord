@@ -4251,11 +4251,264 @@
     {
       "from": [
         "CustomRPC",
+        "appID"
+      ],
+      "to": [
+        "customRpc",
+        "appId"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "CustomRPC",
+        "appName"
+      ],
+      "to": [
+        "customRpc",
+        "appName"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "CustomRPC",
+        "buttonOneText"
+      ],
+      "to": [
+        "customRpc",
+        "buttonOneText"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "CustomRPC",
+        "buttonOneURL"
+      ],
+      "to": [
+        "customRpc",
+        "buttonOneUrl"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "CustomRPC",
+        "buttonTwoText"
+      ],
+      "to": [
+        "customRpc",
+        "buttonTwoText"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "CustomRPC",
+        "buttonTwoURL"
+      ],
+      "to": [
+        "customRpc",
+        "buttonTwoUrl"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "CustomRPC",
+        "details"
+      ],
+      "to": [
+        "customRpc",
+        "details"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "CustomRPC",
+        "detailsURL"
+      ],
+      "to": [
+        "customRpc",
+        "detailsUrl"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "CustomRPC",
         "enable"
       ],
       "to": [
         "customRpc",
         "enable"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "CustomRPC",
+        "endTime"
+      ],
+      "to": [
+        "customRpc",
+        "endTime"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "CustomRPC",
+        "imageBig"
+      ],
+      "to": [
+        "customRpc",
+        "imageBig"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "CustomRPC",
+        "imageBigTooltip"
+      ],
+      "to": [
+        "customRpc",
+        "imageBigTooltip"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "CustomRPC",
+        "imageBigURL"
+      ],
+      "to": [
+        "customRpc",
+        "imageBigUrl"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "CustomRPC",
+        "imageSmall"
+      ],
+      "to": [
+        "customRpc",
+        "imageSmall"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "CustomRPC",
+        "imageSmallTooltip"
+      ],
+      "to": [
+        "customRpc",
+        "imageSmallTooltip"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "CustomRPC",
+        "imageSmallURL"
+      ],
+      "to": [
+        "customRpc",
+        "imageSmallUrl"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "CustomRPC",
+        "partyMaxSize"
+      ],
+      "to": [
+        "customRpc",
+        "partyMaxSize"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "CustomRPC",
+        "partySize"
+      ],
+      "to": [
+        "customRpc",
+        "partySize"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "CustomRPC",
+        "startTime"
+      ],
+      "to": [
+        "customRpc",
+        "startTime"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "CustomRPC",
+        "state"
+      ],
+      "to": [
+        "customRpc",
+        "state"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "CustomRPC",
+        "stateURL"
+      ],
+      "to": [
+        "customRpc",
+        "stateUrl"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "CustomRPC",
+        "streamLink"
+      ],
+      "to": [
+        "customRpc",
+        "streamLink"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "CustomRPC",
+        "timestampMode"
+      ],
+      "to": [
+        "customRpc",
+        "timestampMode"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "CustomRPC",
+        "type"
+      ],
+      "to": [
+        "customRpc",
+        "type"
       ],
       "warn": true
     },
@@ -4801,11 +5054,33 @@
     {
       "from": [
         "ReviewDB",
+        "lastReviewId"
+      ],
+      "to": [
+        "reviewDb",
+        "lastReviewId"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "ReviewDB",
         "notifyReviews"
       ],
       "to": [
         "reviewDb",
         "notifyReviews"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "ReviewDB",
+        "reviewsDropdownState"
+      ],
+      "to": [
+        "reviewDb",
+        "reviewsDropdownState"
       ],
       "warn": true
     },

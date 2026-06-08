@@ -381,8 +381,9 @@ describe('extractSettingsFromCall()', () => {
         STREAMING,
         LISTENING,
         WATCHING,
-        CUSTOM,
-        COMPETING
+        CUSTOM_STATUS,
+        COMPETING,
+        HANG_STATUS
       }
       export const enum TimestampMode {
         NONE,
@@ -432,7 +433,7 @@ describe('extractSettingsFromCall()', () => {
 
     const type = result.type as PluginSetting;
     expect(type.type).toBe('types.enum');
-    expect(type.enumValues).toEqual([0, 1, 2, 3, 4, 5]);
+    expect(type.enumValues).toEqual([0, 1, 2, 3, 4, 5, 6]);
     expect(type.default).toBe(0);
 
     const timestampMode = result.timestampMode as PluginSetting;
@@ -484,7 +485,7 @@ describe('extractSettingsFromCall()', () => {
 
     const type = result.type as PluginSetting;
     expect(type.type).toBe('types.enum');
-    expect(type.enumValues).toEqual([0, 1, 2, 3, 4, 5]);
+    expect(type.enumValues).toEqual([0, 1, 2, 3, 4, 5, 6]);
     expect(type.default).toBe(0);
   });
 

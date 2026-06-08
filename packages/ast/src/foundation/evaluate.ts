@@ -29,7 +29,16 @@ const evaluateLiteral = (node: Node): EvaluationResult => {
 };
 
 const EXTERNAL_ENUMS: Record<string, Record<string, number>> = {
-  ActivityType: { PLAYING: 0, STREAMING: 1, LISTENING: 2, WATCHING: 3, CUSTOM: 4, COMPETING: 5 },
+  ActivityType: {
+    PLAYING: 0,
+    STREAMING: 1,
+    LISTENING: 2,
+    WATCHING: 3,
+    CUSTOM_STATUS: 4,
+    CUSTOM: 4,
+    COMPETING: 5,
+    HANG_STATUS: 6,
+  },
   StatusType: { ONLINE: 0, IDLE: 1, DND: 2, INVISIBLE: 3 },
   ChannelType: { GUILD_TEXT: 0, DM: 1, GUILD_VOICE: 2 },
 };

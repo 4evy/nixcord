@@ -73,6 +73,28 @@ in
     assert !(settingsJson.plugins.XSOverlay ? preferUdp);
     true;
 
+  "CustomRPC private settings emit upstream JSON keys" =
+    let
+      config = testLib.eval.hm (
+        recursiveUpdate baseConfig {
+          config.plugins.customRpc = {
+            enable = true;
+            appId = "1234567890";
+            detailsUrl = "https://example.com/details";
+            type = 6;
+          };
+        }
+      );
+      settingsJson = discordModSettingsJSON config;
+    in
+    assert settingsJson.plugins.CustomRPC.enabled == true;
+    assert settingsJson.plugins.CustomRPC.appID == "1234567890";
+    assert settingsJson.plugins.CustomRPC.detailsURL == "https://example.com/details";
+    assert settingsJson.plugins.CustomRPC.type == 6;
+    assert !(settingsJson.plugins.CustomRPC ? appId);
+    assert !(settingsJson.plugins.CustomRPC ? detailsUrl);
+    true;
+
   "disabled plugin appears as disabled in generated settings" =
     let
       config = testLib.eval.hm (

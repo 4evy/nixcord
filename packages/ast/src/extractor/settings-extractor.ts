@@ -42,7 +42,7 @@ import { extractSelectOptions } from './select/index.js';
 const BOOLEAN_NIX_TYPE = 'types.bool';
 const WITH_PRIVATE_SETTINGS_METHOD_NAME = 'withPrivateSettings';
 const EXTERNAL_ENUM_VALUES: Readonly<Record<string, readonly EnumLiteral[]>> = {
-  ActivityType: Object.freeze([0, 1, 2, 3, 4, 5]),
+  ActivityType: Object.freeze([0, 1, 2, 3, 4, 5, 6]),
   ChannelType: Object.freeze([0, 1, 2]),
   StatusType: Object.freeze([0, 1, 2, 3]),
 };

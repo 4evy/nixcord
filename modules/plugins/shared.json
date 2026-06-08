@@ -330,7 +330,7 @@
   "customRpc": {
     "description": "Add a fully customisable Rich Presence (Game status) to your Discord profile (Shared between Vencord and Equicord)",
     "settings": {
-      "appID": {
+      "appId": {
         "type": "types.nullOr types.str",
         "default": null
       },
@@ -342,7 +342,7 @@
         "type": "types.nullOr types.str",
         "default": null
       },
-      "detailsURL": {
+      "detailsUrl": {
         "type": "types.nullOr types.str",
         "default": null
       },
@@ -350,7 +350,7 @@
         "type": "types.nullOr types.str",
         "default": null
       },
-      "stateURL": {
+      "stateUrl": {
         "type": "types.nullOr types.str",
         "default": null
       },
@@ -362,7 +362,8 @@
           2,
           3,
           4,
-          5
+          5,
+          6
         ],
         "default": 0
       },
@@ -392,7 +393,7 @@
         "type": "types.nullOr types.str",
         "default": null
       },
-      "imageBigURL": {
+      "imageBigUrl": {
         "type": "types.nullOr types.str",
         "default": null
       },
@@ -404,7 +405,7 @@
         "type": "types.nullOr types.str",
         "default": null
       },
-      "imageSmallURL": {
+      "imageSmallUrl": {
         "type": "types.nullOr types.str",
         "default": null
       },
@@ -416,7 +417,7 @@
         "type": "types.nullOr types.str",
         "default": null
       },
-      "buttonOneURL": {
+      "buttonOneUrl": {
         "type": "types.nullOr types.str",
         "default": null
       },
@@ -424,7 +425,7 @@
         "type": "types.nullOr types.str",
         "default": null
       },
-      "buttonTwoURL": {
+      "buttonTwoUrl": {
         "type": "types.nullOr types.str",
         "default": null
       },
@@ -682,6 +683,14 @@
         ],
         "default": "Greet",
         "description": "Choose the greet mode"
+      },
+      "multiGreetChoices": {
+        "type": "types.listOf types.str",
+        "default": []
+      },
+      "unholyMultiGreetEnabled": {
+        "type": "types.bool",
+        "default": false
       }
     }
   },
@@ -1809,6 +1818,10 @@
         "type": "types.bool",
         "default": true,
         "description": "Show a tooltip on the chat bar button when a message is auto-translated"
+      },
+      "showAutoTranslateAlert": {
+        "type": "types.bool",
+        "default": false
       }
     }
   },

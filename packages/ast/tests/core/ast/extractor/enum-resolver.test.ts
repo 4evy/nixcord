@@ -196,6 +196,18 @@ describe('resolveEnumLikeValue()', () => {
     }
   });
 
+  test('resolves ActivityType.HANG_STATUS fallback', () => {
+    const project = createProject();
+    const sourceFile = project.createSourceFile('test.ts', `const x = ActivityType.HANG_STATUS;`);
+    const varDecl = sourceFile.getVariableDeclarationOrThrow('x');
+    const initializer = varDecl.getInitializer();
+    if (initializer) {
+      const checker = project.getTypeChecker();
+      const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
+      expect(resolved).toBe(6);
+    }
+  });
+
   test('returns null for unresolved property access', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile('test.ts', `const x = Unknown.UnknownMember;`);

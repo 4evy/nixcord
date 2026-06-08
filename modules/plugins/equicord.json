@@ -349,6 +349,10 @@
         ],
         "default": 1,
         "description": "Show the folder icon above the folder guilds in the BetterFolders sidebar (restart required)\n\nValues: 0 = Never, 1 = Always, 2 = When more than one folder is expanded"
+      },
+      "nestedFolders": {
+        "type": "types.attrs",
+        "default": {}
       }
     }
   },
@@ -1274,7 +1278,45 @@
   },
   "customTimestamps": {
     "description": "Custom timestamps on messages and tooltips (Equicord-only)",
-    "settings": {}
+    "settings": {
+      "formats": {
+        "description": " (Equicord-only)",
+        "settings": {
+          "cozyFormat": {
+            "type": "types.nullOr types.str",
+            "default": null
+          },
+          "compactFormat": {
+            "type": "types.nullOr types.str",
+            "default": null
+          },
+          "tooltipFormat": {
+            "type": "types.nullOr types.str",
+            "default": null
+          },
+          "ariaLabelFormat": {
+            "type": "types.nullOr types.str",
+            "default": null
+          },
+          "sameDayFormat": {
+            "type": "types.nullOr types.str",
+            "default": null
+          },
+          "lastDayFormat": {
+            "type": "types.nullOr types.str",
+            "default": null
+          },
+          "lastWeekFormat": {
+            "type": "types.nullOr types.str",
+            "default": null
+          },
+          "sameElseFormat": {
+            "type": "types.nullOr types.str",
+            "default": null
+          }
+        }
+      }
+    }
   },
   "customUserColors": {
     "description": "Lets you add a custom color to any user, anywhere! Highly recommend to use with typingTweaks and roleColorEverywhere (Equicord-only)",
@@ -4373,6 +4415,14 @@
         "type": "types.bool",
         "default": true,
         "description": "Hide reviews from blocked users"
+      },
+      "lastReviewId": {
+        "type": "types.int",
+        "default": 0
+      },
+      "reviewsDropdownState": {
+        "type": "types.bool",
+        "default": false
       }
     }
   },

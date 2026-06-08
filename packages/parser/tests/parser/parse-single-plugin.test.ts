@@ -213,8 +213,9 @@ describe('parseSinglePlugin()', () => {
           STREAMING,
           LISTENING,
           WATCHING,
-          CUSTOM,
-          COMPETING
+          CUSTOM_STATUS,
+          COMPETING,
+          HANG_STATUS
         }
 
         export const enum TimestampMode {
@@ -259,7 +260,7 @@ describe('parseSinglePlugin()', () => {
 
       const activityType = plugin?.settings.type as PluginSetting;
       expect(activityType.type).toBe('types.enum');
-      expect(activityType.enumValues).toEqual([0, 1, 2, 3, 4, 5]);
+      expect(activityType.enumValues).toEqual([0, 1, 2, 3, 4, 5, 6]);
 
       const timestampMode = plugin?.settings.timestampMode as PluginSetting;
       expect(timestampMode.enumValues).toEqual([0, 1, 2, 3]);

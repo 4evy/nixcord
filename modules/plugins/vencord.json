@@ -382,6 +382,14 @@
         "type": "types.bool",
         "default": true,
         "description": "Hide reviews from blocked users"
+      },
+      "lastReviewId": {
+        "type": "types.int",
+        "default": 0
+      },
+      "reviewsDropdownState": {
+        "type": "types.bool",
+        "default": false
       }
     }
   },

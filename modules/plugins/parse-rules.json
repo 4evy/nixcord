@@ -365,6 +365,15 @@
     "channelBadges": {
       "showNsfwBadge": "showNSFWBadge"
     },
+    "customRpc": {
+      "appId": "appID",
+      "buttonOneUrl": "buttonOneURL",
+      "buttonTwoUrl": "buttonTwoURL",
+      "detailsUrl": "detailsURL",
+      "imageBigUrl": "imageBigURL",
+      "imageSmallUrl": "imageSmallURL",
+      "stateUrl": "stateURL"
+    },
     "declutter": {
       "removeQuestsAboveDm": "removeQuestsAboveDM",
       "removeShopAboveDm": "removeShopAboveDM"
