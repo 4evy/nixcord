@@ -13,8 +13,8 @@
   replaceVars,
 }:
 let
-  version = "v1.14.13.2";
-  hash = "sha256-QaFRPasy2QlJKy28FsDKKPD205AViZLXNSiYSMHCY2U=";
+  version = "v1.14.13.3";
+  hash = "sha256-inLli2is0GUWOZlLTGA3E8dIzCnkWWYGhu7ebXiZAl0=";
   pnpmDepsHashDarwin = "sha256-RwppRWrEzIKZDb3QLVAMd1bHXyFwiatYNiNccVgrcWA=";
   pnpmDepsHashLinux = "sha256-RwppRWrEzIKZDb3QLVAMd1bHXyFwiatYNiNccVgrcWA=";
   pnpmDepsHash = if stdenvNoCC.isDarwin then pnpmDepsHashDarwin else pnpmDepsHashLinux;
