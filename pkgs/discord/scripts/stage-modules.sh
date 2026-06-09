@@ -29,20 +29,6 @@ replace_link() {
   ln -s "$src" "$dest"
 }
 
-copy_module() {
-  local src=$1
-  local dest=$2
-
-  if [[ -L "$dest" ]]; then
-    rm "$dest"
-  elif [[ -e "$dest" ]]; then
-    chmod -R u+w "$dest" 2>/dev/null || true
-    rm -rf "$dest"
-  fi
-  cp -R "$src" "$dest"
-  chmod -R u+w "$dest"
-}
-
 prune_unstaged_modules() {
   local dir=$1
   local path
@@ -88,17 +74,15 @@ fi
 
 for module in ${DISCORD_STAGED_MODULES:-}; do
   if [[ "$module" = discord_krisp ]]; then
-    copy_module "$store_modules/$module" "$modules_dir/$module"
-  else
-    replace_link "$store_modules/$module" "$modules_dir/$module"
+    # The dedicated Krisp deployer owns this writable module and its repair
+    # watcher. Keep it in the manifest/prune allow-list, but do not stage it here.
+    continue
   fi
 
+  replace_link "$store_modules/$module" "$modules_dir/$module"
+
   if [[ "${DISCORD_STAGE_PLATFORM:?}" = darwin ]]; then
-    if [[ "$module" = discord_krisp ]]; then
-      copy_module "$store_modules/$module" "$module_data_dir/$module"
-    else
-      replace_link "$store_modules/$module" "$module_data_dir/$module"
-    fi
+    replace_link "$store_modules/$module" "$module_data_dir/$module"
   fi
 done
 

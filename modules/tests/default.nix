@@ -132,6 +132,7 @@ in
 }
 // pkgs.lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
   discord-executable-alias = discordExecutableAliasCheck;
+  discord-linux-scripts = import ./discord-linux-scripts.nix { inherit pkgs; };
 }
 // pkgs.lib.optionalAttrs pkgs.stdenv.hostPlatform.isDarwin {
   darwin-eval = import ./eval/darwin.nix { inherit pkgs; };

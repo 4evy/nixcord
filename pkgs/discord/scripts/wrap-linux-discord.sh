@@ -23,11 +23,6 @@ fi
 wrapProgramShell "$target" \
   --prefix LD_LIBRARY_PATH : /run/opengl-driver/lib
 
-if [[ "$enable_krisp" = 1 ]]; then
-  wrapProgramShell "$target" \
-    --run "$deploy_krisp"
-fi
-
 if [[ -n "$command_line_args" ]]; then
   wrapProgramShell "$target" \
     --add-flags "$command_line_args"
