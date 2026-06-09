@@ -15,10 +15,15 @@ stable_tag_regex="@stableTagRegex@"
 branch="@branch@"
 version_prefix_mode="@versionPrefixMode@"
 skip_if_current="@skipIfCurrent@"
+dependency_name="@dependencyName@"
 
 wrong_hash="sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+package_json_file="./package.json"
+bun_lock_file="./bun.lock"
 parsed_nix_expr=""
 original_nix_content=""
+original_package_json_content=""
+original_bun_lock_content=""
 
 die() {
   printf '%s\n' "$*" >&2
@@ -38,11 +43,15 @@ read_file_into() {
 }
 
 read_file_into "$nix_file" original_nix_content
+read_file_into "$package_json_file" original_package_json_content
+read_file_into "$bun_lock_file" original_bun_lock_content
 
 cleanup() {
   local exit_code=$?
   if [[ $exit_code -ne 0 ]]; then
     printf '%s' "$original_nix_content" > "$nix_file"
+    printf '%s' "$original_package_json_content" > "$package_json_file"
+    printf '%s' "$original_bun_lock_content" > "$bun_lock_file"
   fi
   exit "$exit_code"
 }
@@ -255,6 +264,17 @@ update_pnpm_deps_hash() {
   fi
 }
 
+update_bun_dependency() {
+  local revision="$1"
+  local dependency_spec
+
+  [[ -n "$dependency_name" ]] || return
+
+  dependency_spec="${dependency_name}@github:${owner}/${repo}#${revision}"
+  log "Updating Bun dependency $dependency_name to $revision..."
+  bun add --dev --no-progress "$dependency_spec"
+}
+
 determine_update() {
   update_version=""
   update_revision=""
@@ -311,7 +331,8 @@ run_update() {
   determine_update
 
   if [[ "$skip_if_current" == "true" && "$(get_nix_value "$version_var")" == "$update_version" ]]; then
-    log "Already at latest version $update_version, updating pnpm deps only"
+    log "Already at latest version $update_version, updating dependencies only"
+    update_bun_dependency "$update_revision"
     update_pnpm_deps_hash
     return
   fi
@@ -324,6 +345,7 @@ run_update() {
   fi
 
   update_value "$hash_var" "$(prefetch_github_hash "$update_revision")"
+  update_bun_dependency "$update_revision"
   update_pnpm_deps_hash
   log "Update complete"
 }

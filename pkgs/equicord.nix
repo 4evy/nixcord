@@ -4,6 +4,7 @@
   fetchPnpmDeps,
   stdenvNoCC,
   buildWebExtension ? false,
+  bun,
   writeShellApplication,
   cacert,
   curl,
@@ -28,6 +29,7 @@ let
   updateScript = writeShellApplication {
     name = "equicord-update";
     runtimeInputs = [
+      bun
       cacert
       curl
       jq
@@ -52,6 +54,7 @@ let
           branch = "main";
           versionPrefixMode = "keep-v";
           skipIfCurrent = "true";
+          dependencyName = "equicord";
         }
       } "$@"
     '';

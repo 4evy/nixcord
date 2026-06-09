@@ -5,6 +5,7 @@
   vencord,
   buildWebExtension ? false,
   unstable ? false,
+  bun,
   writeShellApplication,
   cacert,
   curl,
@@ -47,6 +48,7 @@ in
   passthru.updateScript = writeShellApplication {
     name = "vencord-update";
     runtimeInputs = [
+      bun
       cacert
       curl
       jq
@@ -71,6 +73,7 @@ in
           branch = "main";
           versionPrefixMode = "strip-v";
           skipIfCurrent = "false";
+          dependencyName = "vencord";
         }
       } "$@"
     '';
