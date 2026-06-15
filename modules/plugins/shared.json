@@ -740,8 +740,8 @@
         "description": "Ignore all competing activities (These are normally special game activities)"
       },
       "ignoredActivities": {
-        "type": "types.attrs",
-        "default": {}
+        "type": "types.listOf types.attrs",
+        "default": []
       }
     }
   },
@@ -1174,41 +1174,6 @@
     "description": "Allows you to jump to messages of blocked or ignored users and likely spammers without unblocking them (Shared between Vencord and Equicord)",
     "settings": {}
   },
-  "openInApp": {
-    "description": "Open links in their respective apps instead of your browser (Shared between Vencord and Equicord)",
-    "settings": {
-      "spotify": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Open Spotify links in the Spotify app"
-      },
-      "steam": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Open Steam links in the Steam app"
-      },
-      "epic": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Open Epic Games links in the Epic Games Launcher"
-      },
-      "tidal": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Open Tidal links in the Tidal app"
-      },
-      "itunes": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Open Apple Music links in the iTunes app"
-      },
-      "vrcx": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Open VRChat links in the VRCX app"
-      }
-    }
-  },
   "overrideForumDefaults": {
     "description": "Allows you to override default forum layout/sort order. you can still change it on a per-channel basis (Shared between Vencord and Equicord)",
     "settings": {
@@ -1620,6 +1585,11 @@
         "type": "types.bool",
         "default": true,
         "description": "Remove requirement to hold shift for pinning a message."
+      },
+      "noQuickReacts": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Hide quick reacts. By default, showing the full menu hides quick react buttons. (restart required)"
       }
     }
   },
@@ -1819,7 +1789,7 @@
         "default": true,
         "description": "Show a tooltip on the chat bar button when a message is auto-translated"
       },
-      "showAutoTranslateAlert": {
+      "dismissedAutoTranslateAlert": {
         "type": "types.bool",
         "default": false
       }

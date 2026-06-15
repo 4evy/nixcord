@@ -113,11 +113,11 @@
     {
       "from": [
         "anammox",
-        "removeQuestsAboveDM"
+        "removeQuestsAboveDms"
       ],
       "to": [
         "declutter",
-        "removeQuestsAboveDm"
+        "removeQuestsAboveDms"
       ],
       "warn": false
     },
@@ -135,11 +135,11 @@
     {
       "from": [
         "anammox",
-        "removeShopAboveDM"
+        "removeShopAboveDms"
       ],
       "to": [
         "declutter",
-        "removeShopAboveDm"
+        "removeShopAboveDms"
       ],
       "warn": false
     },
@@ -850,11 +850,11 @@
     {
       "from": [
         "betterUserArea",
-        "removeQuestsAboveDM"
+        "removeQuestsAboveDms"
       ],
       "to": [
         "declutter",
-        "removeQuestsAboveDm"
+        "removeQuestsAboveDms"
       ],
       "warn": false
     },
@@ -872,11 +872,11 @@
     {
       "from": [
         "betterUserArea",
-        "removeShopAboveDM"
+        "removeShopAboveDms"
       ],
       "to": [
         "declutter",
-        "removeShopAboveDm"
+        "removeShopAboveDms"
       ],
       "warn": false
     },
@@ -3402,61 +3402,6 @@
     {
       "from": [
         "timelessClips",
-        "enableAdvancedSignals"
-      ],
-      "to": [
-        "clipsEnhancements",
-        "enableAdvancedSignals"
-      ],
-      "warn": false
-    },
-    {
-      "from": [
-        "timelessClips",
-        "enableScreenshotKeybind"
-      ],
-      "to": [
-        "clipsEnhancements",
-        "enableScreenshotKeybind"
-      ],
-      "warn": false
-    },
-    {
-      "from": [
-        "timelessClips",
-        "enableSpeakingIndicators"
-      ],
-      "to": [
-        "clipsEnhancements",
-        "enableSpeakingIndicators"
-      ],
-      "warn": false
-    },
-    {
-      "from": [
-        "timelessClips",
-        "enableVoiceOnlyClips"
-      ],
-      "to": [
-        "clipsEnhancements",
-        "enableVoiceOnlyClips"
-      ],
-      "warn": false
-    },
-    {
-      "from": [
-        "timelessClips",
-        "ignorePlatformRestriction"
-      ],
-      "to": [
-        "clipsEnhancements",
-        "ignorePlatformRestriction"
-      ],
-      "warn": false
-    },
-    {
-      "from": [
-        "timelessClips",
         "richPresenceTagging"
       ],
       "to": [
@@ -4129,116 +4074,6 @@
     },
     {
       "from": [
-        "CollapsibleUI",
-        "channelListCollapsed"
-      ],
-      "to": [
-        "collapsibleUi",
-        "channelListCollapsed"
-      ],
-      "warn": true
-    },
-    {
-      "from": [
-        "CollapsibleUI",
-        "chatButtonsCollapsed"
-      ],
-      "to": [
-        "collapsibleUi",
-        "chatButtonsCollapsed"
-      ],
-      "warn": true
-    },
-    {
-      "from": [
-        "CollapsibleUI",
-        "collapsedSize"
-      ],
-      "to": [
-        "collapsibleUi",
-        "collapsedSize"
-      ],
-      "warn": true
-    },
-    {
-      "from": [
-        "CollapsibleUI",
-        "enable"
-      ],
-      "to": [
-        "collapsibleUi",
-        "enable"
-      ],
-      "warn": true
-    },
-    {
-      "from": [
-        "CollapsibleUI",
-        "guildBarCollapsed"
-      ],
-      "to": [
-        "collapsibleUi",
-        "guildBarCollapsed"
-      ],
-      "warn": true
-    },
-    {
-      "from": [
-        "CollapsibleUI",
-        "headerBarCollapsed"
-      ],
-      "to": [
-        "collapsibleUi",
-        "headerBarCollapsed"
-      ],
-      "warn": true
-    },
-    {
-      "from": [
-        "CollapsibleUI",
-        "membersListCollapsed"
-      ],
-      "to": [
-        "collapsibleUi",
-        "membersListCollapsed"
-      ],
-      "warn": true
-    },
-    {
-      "from": [
-        "CollapsibleUI",
-        "titleBarCollapsed"
-      ],
-      "to": [
-        "collapsibleUi",
-        "titleBarCollapsed"
-      ],
-      "warn": true
-    },
-    {
-      "from": [
-        "CollapsibleUI",
-        "transitionMs"
-      ],
-      "to": [
-        "collapsibleUi",
-        "transitionMs"
-      ],
-      "warn": true
-    },
-    {
-      "from": [
-        "CollapsibleUI",
-        "userAreaCollapsed"
-      ],
-      "to": [
-        "collapsibleUi",
-        "userAreaCollapsed"
-      ],
-      "warn": true
-    },
-    {
-      "from": [
         "CopyUserURLs",
         "enable"
       ],
@@ -4514,28 +4349,6 @@
     },
     {
       "from": [
-        "declutter",
-        "removeQuestsAboveDM"
-      ],
-      "to": [
-        "declutter",
-        "removeQuestsAboveDm"
-      ],
-      "warn": true
-    },
-    {
-      "from": [
-        "declutter",
-        "removeShopAboveDM"
-      ],
-      "to": [
-        "declutter",
-        "removeShopAboveDm"
-      ],
-      "warn": true
-    },
-    {
-      "from": [
         "FullVCPFP",
         "enable"
       ],
@@ -4740,6 +4553,17 @@
       "to": [
         "lastFmRichPresence",
         "username"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "limitlessScreenshare",
+        "maxFPS"
+      ],
+      "to": [
+        "limitlessScreenshare",
+        "maxFps"
       ],
       "warn": true
     },
@@ -5103,94 +4927,6 @@
       "to": [
         "rpcEditor",
         "enable"
-      ],
-      "warn": true
-    },
-    {
-      "from": [
-        "RPCStats",
-        "albumCoverImage"
-      ],
-      "to": [
-        "rpcStats",
-        "albumCoverImage"
-      ],
-      "warn": true
-    },
-    {
-      "from": [
-        "RPCStats",
-        "assetURL"
-      ],
-      "to": [
-        "rpcStats",
-        "assetUrl"
-      ],
-      "warn": true
-    },
-    {
-      "from": [
-        "RPCStats",
-        "enable"
-      ],
-      "to": [
-        "rpcStats",
-        "enable"
-      ],
-      "warn": true
-    },
-    {
-      "from": [
-        "RPCStats",
-        "lastFMApiKey"
-      ],
-      "to": [
-        "rpcStats",
-        "lastFmApiKey"
-      ],
-      "warn": true
-    },
-    {
-      "from": [
-        "RPCStats",
-        "lastFMStatFormat"
-      ],
-      "to": [
-        "rpcStats",
-        "lastFmStatFormat"
-      ],
-      "warn": true
-    },
-    {
-      "from": [
-        "RPCStats",
-        "lastFMUsername"
-      ],
-      "to": [
-        "rpcStats",
-        "lastFmUsername"
-      ],
-      "warn": true
-    },
-    {
-      "from": [
-        "RPCStats",
-        "RPCTitle"
-      ],
-      "to": [
-        "rpcStats",
-        "rpcTitle"
-      ],
-      "warn": true
-    },
-    {
-      "from": [
-        "RPCStats",
-        "statDisplay"
-      ],
-      "to": [
-        "rpcStats",
-        "statDisplay"
       ],
       "warn": true
     },

@@ -350,6 +350,36 @@
       }
     }
   },
+  "openInApp": {
+    "description": "Open links in their respective apps instead of your browser (Vencord-only)",
+    "settings": {
+      "spotify": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Open Spotify links in the Spotify app"
+      },
+      "steam": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Open Steam links in the Steam app"
+      },
+      "epic": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Open Epic Games links in the Epic Games Launcher"
+      },
+      "tidal": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Open Tidal links in the Tidal app"
+      },
+      "itunes": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Open Apple Music links in the iTunes app"
+      }
+    }
+  },
   "platformIndicators": {
     "description": "Adds platform indicators (Desktop, Mobile, Web...) to users (Vencord-only)",
     "settings": {

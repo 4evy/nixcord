@@ -105,10 +105,11 @@
         "enumValues": [
           0,
           1,
-          2
+          2,
+          3
         ],
         "default": 0,
-        "description": "Anonymising method\n\nValues: 0 = Random Characters, 1 = Consistent, 2 = Timestamp"
+        "description": "Anonymising method\n\nValues: 0 = Random Characters, 1 = Consistent, 2 = Timestamp, 3 = Date"
       },
       "randomisedLength": {
         "type": "types.int",
@@ -119,6 +120,11 @@
         "type": "types.str",
         "default": "image",
         "description": "Consistent filename"
+      },
+      "dateFormat": {
+        "type": "types.str",
+        "default": "YYYY-MM-DD_HH-mm-ss-SSS",
+        "description": "Date format (YYYY, MM, DD, HH, mm, ss, SSS are supported)"
       }
     }
   },
@@ -262,8 +268,8 @@
     "description": "Create custom reasons to use in the Discord ban modal, and/or show a text input by default instead of the options. (Equicord-only)",
     "settings": {
       "reasons": {
-        "type": "types.attrs",
-        "default": {},
+        "type": "types.listOf types.attrs",
+        "default": [],
         "description": "Your custom reasons"
       },
       "isTextInputDefault": {
@@ -396,7 +402,7 @@
       "blockedWords": {
         "type": "types.str",
         "default": "",
-        "description": "Comma-seperated list of words to block (restart required)"
+        "description": "Comma-separated list of words to block (restart required)"
       },
       "useRegex": {
         "type": "types.bool",
@@ -1120,87 +1126,12 @@
         ],
         "default": "whenMatched",
         "description": "When should clips be tagged with the current Rich Presence?"
-      },
-      "enableScreenshotKeybind": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Enable the screenshot keybind feature (restart required)"
-      },
-      "enableVoiceOnlyClips": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Enable voice-only clips (audio without video) (restart required)"
-      },
-      "enableSpeakingIndicators": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Enable speaking indicators (restart required)"
-      },
-      "enableAdvancedSignals": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Enable advanced clip signals (auto-clip triggers) (restart required)"
-      },
-      "ignorePlatformRestriction": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Allow Platform Restricted Clipping (may cause save errors) (restart required)"
       }
     }
   },
-  "collapsibleUi": {
-    "description": "Native collapsible channel, member, chat button, and user area surfaces. (Equicord-only)",
-    "settings": {
-      "collapsedSize": {
-        "type": "types.float",
-        "default": {
-          "__nixRaw": "12.0"
-        },
-        "description": "Collapsed hover area size in pixels."
-      },
-      "transitionMs": {
-        "type": "types.float",
-        "default": {
-          "__nixRaw": "160.0"
-        },
-        "description": "Panel transition speed in milliseconds."
-      },
-      "guildBarCollapsed": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Persist the guild bar as collapsed."
-      },
-      "channelListCollapsed": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Persist the channel list as collapsed."
-      },
-      "membersListCollapsed": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Persist the members list as collapsed."
-      },
-      "chatButtonsCollapsed": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Persist the message button row as collapsed."
-      },
-      "titleBarCollapsed": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Persist the title bar as collapsed."
-      },
-      "headerBarCollapsed": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Persist the header bar as collapsed."
-      },
-      "userAreaCollapsed": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Persist the user area as collapsed."
-      }
-    }
+  "clipUpload": {
+    "description": "Adds a button to upload a local video file as a Discord clip. (Equicord-only)",
+    "settings": {}
   },
   "commandPalette": {
     "description": "Quickly run actions through a searchable command palette (Equicord-only)",
@@ -1208,11 +1139,6 @@
       "hotkey": {
         "type": "types.attrs",
         "default": {}
-      },
-      "compactStartEnabled": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Open the palette in compact mode first."
       },
       "closeAfterExecute": {
         "type": "types.bool",
@@ -1377,12 +1303,12 @@
         "default": true,
         "description": "Always show username instead of status. (restart required)"
       },
-      "removeShopAboveDm": {
+      "removeShopAboveDms": {
         "type": "types.bool",
         "default": false,
         "description": "Remove shops above DMs list. (restart required)"
       },
-      "removeQuestsAboveDm": {
+      "removeQuestsAboveDms": {
         "type": "types.bool",
         "default": false,
         "description": "Remove quests above DMs list. (restart required)"
@@ -1462,9 +1388,13 @@
     "settings": {
       "format": {
         "type": "types.str",
-        "default": "{buildChannel} {buildNumber} ({buildHash}) | {equicordName} {equicordVersion} ({equicordHash})"
+        "default": "{equicordIcon} Equicord {equicordVersion} ({equicordHash})"
       }
     }
+  },
+  "downloadAllAttachments": {
+    "description": "Adds a popover button to download all attachments in a message at once. (Equicord-only)",
+    "settings": {}
   },
   "dragFavoriteEmotes": {
     "description": "Adds the ability to change the order of your favourite emotes (Equicord-only)",
@@ -1693,6 +1623,11 @@
         "type": "types.bool",
         "default": false,
         "description": "Forces JSON on gateway reconnect (restart required)"
+      },
+      "hideVoiceIndicatorForMutedChannels": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Hide voice indicator in server list when only active channels are muted (restart required)"
       }
     }
   },
@@ -1787,6 +1722,7 @@
           "zipline",
           "ezhost",
           "nest",
+          "encryptinghost",
           "s3",
           "catbox",
           "litterbox",
@@ -1826,6 +1762,42 @@
         "type": "types.str",
         "default": "",
         "description": "Nest API token"
+      },
+      "encryptingHostKey": {
+        "type": "types.str",
+        "default": "",
+        "description": "Encrypting.host API key"
+      },
+      "encryptingHostUrlStyle": {
+        "type": "types.enum",
+        "enumValues": [
+          "query",
+          "param",
+          "fakelink",
+          "embed"
+        ],
+        "default": "query",
+        "description": "Encrypting.host URL style"
+      },
+      "encryptingHostDomains": {
+        "type": "types.str",
+        "default": "[\"offensive\"]",
+        "description": "Encrypting.host domains JSON list"
+      },
+      "encryptingHostTitle": {
+        "type": "types.str",
+        "default": "",
+        "description": "Optional Encrypting.host embed title"
+      },
+      "encryptingHostColor": {
+        "type": "types.str",
+        "default": "",
+        "description": "Optional Encrypting.host embed color"
+      },
+      "encryptingHostFakelink": {
+        "type": "types.str",
+        "default": "",
+        "description": "Optional Encrypting.host fake link"
       },
       "s3Endpoint": {
         "type": "types.str",
@@ -2306,7 +2278,7 @@
     }
   },
   "hideMessages": {
-    "description": "A plugin to temporarily hide messages until you restart. (Equicord-only)",
+    "description": "Temporarily hide messages and DMs until you restart. (Equicord-only)",
     "settings": {
       "hidePopoverButton": {
         "type": "types.bool",
@@ -2591,9 +2563,34 @@
     "description": "A plugin to jump to last active message from yourself or another user in a channel/server. (Equicord-only)",
     "settings": {}
   },
+  "limitlessScreenshare": {
+    "description": "Adds a slider for screenshare resolution and fps. (Equicord-only)",
+    "settings": {
+      "maxFps": {
+        "type": "types.int",
+        "default": 120,
+        "description": "Max FPS for the range slider"
+      },
+      "maxResolution": {
+        "type": "types.int",
+        "default": 1080,
+        "description": "Max Resolution for the range slider"
+      }
+    }
+  },
   "loginWithQr": {
     "description": "Allows you to login to another device by scanning a login QR code, just like on mobile! (Equicord-only)",
     "settings": {}
+  },
+  "markdownTables": {
+    "description": "Render GitHub-style markdown tables in Discord messages. (Equicord-only)",
+    "settings": {
+      "hideToggle": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Hide the Table/Raw toggle and always show rendered tables."
+      }
+    }
   },
   "mediaPlaybackSpeed": {
     "description": "Allows changing the (default) playback speed of media embeds (Equicord-only)",
@@ -3625,6 +3622,46 @@
       }
     }
   },
+  "openInApp": {
+    "description": "Open links in their respective apps instead of your browser (Equicord-only)",
+    "settings": {
+      "spotify": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Open Spotify links in the Spotify app"
+      },
+      "steam": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Open Steam links in the Steam app"
+      },
+      "epic": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Open Epic Games links in the Epic Games Launcher"
+      },
+      "tidal": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Open Tidal links in the Tidal app"
+      },
+      "itunes": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Open Apple Music links in the iTunes app"
+      },
+      "vrcx": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Open VRChat links in the VRCX app"
+      },
+      "telegram": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Open Telegram links in the Telegram app"
+      }
+    }
+  },
   "orbolayBridge": {
     "description": "Bridge plugin to connect Orbolay to Discord (Equicord-only)",
     "settings": {
@@ -3636,7 +3673,7 @@
       "isKeybindEnabled": {
         "type": "types.bool",
         "default": true,
-        "description": "Enable/disable the global keybind (Ctrl + `) (restart required)"
+        "description": "Enable/disable the global keybind (Ctrl + `)"
       },
       "messageAlignment": {
         "type": "types.enum",
@@ -3644,10 +3681,24 @@
           "topleft",
           "topright",
           "bottomleft",
-          "bottomright"
+          "bottomright",
+          "topcenter",
+          "bottomcenter",
+          "centerleft",
+          "centerright"
         ],
         "default": "topright",
-        "description": "Alignment of messages in the overlay (restart required)"
+        "description": "Alignment of messages in the overlay"
+      },
+      "messageOffsetX": {
+        "type": "types.int",
+        "default": 0,
+        "description": "Horizontal offset for messages, in pixels"
+      },
+      "messageOffsetY": {
+        "type": "types.int",
+        "default": 0,
+        "description": "Vertical offset for messages, in pixels"
       },
       "userAlignment": {
         "type": "types.enum",
@@ -3655,20 +3706,34 @@
           "topleft",
           "topright",
           "bottomleft",
-          "bottomright"
+          "bottomright",
+          "topcenter",
+          "bottomcenter",
+          "centerleft",
+          "centerright"
         ],
         "default": "topleft",
-        "description": "Alignment of users in the overlay (restart required)"
+        "description": "Alignment of users in the overlay"
+      },
+      "userOffsetX": {
+        "type": "types.int",
+        "default": 0,
+        "description": "Horizontal offset for users, in pixels"
+      },
+      "userOffsetY": {
+        "type": "types.int",
+        "default": 0,
+        "description": "Vertical offset for users, in pixels"
       },
       "voiceSemitransparent": {
         "type": "types.bool",
         "default": true,
-        "description": "Make voice channel members transparent (restart required)"
+        "description": "Make voice channel members transparent"
       },
       "messagesSemitransparent": {
         "type": "types.bool",
         "default": false,
-        "description": "Make message notifications transparent (restart required)"
+        "description": "Make message notifications transparent"
       }
     }
   },
@@ -4203,6 +4268,15 @@
   "randomVoice": {
     "description": "Adds a button near mute to join a random voice channel. (Equicord-only)",
     "settings": {
+      "keybind": {
+        "type": "types.attrs",
+        "default": {}
+      },
+      "keybindEnabled": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Show the random voice keybind controls"
+      },
       "userAmountOperation": {
         "type": "types.enum",
         "enumValues": [
@@ -4732,51 +4806,6 @@
     "description": "Edit the type and content of any Rich Presence (Equicord-only)",
     "settings": {}
   },
-  "rpcStats": {
-    "description": "Displays stats about your activity as an rpc (Equicord-only)",
-    "settings": {
-      "assetUrl": {
-        "type": "types.str",
-        "default": "",
-        "description": "The image to use for your rpc. Your profile picture is used if left blank"
-      },
-      "rpcTitle": {
-        "type": "types.str",
-        "default": "RPCStats",
-        "description": "The title for the rpc"
-      },
-      "statDisplay": {
-        "type": "types.enum",
-        "enumValues": [
-          0,
-          1,
-          2
-        ],
-        "default": 0,
-        "description": "What should the rpc display? (you can only have one line i'm pretty sure)\n\nValues: 0 = The amount of messages sent today, 1 = The amount of messages sent all time, 2 = Your most listened album for the week"
-      },
-      "lastFmApiKey": {
-        "type": "types.str",
-        "default": "",
-        "description": "Your last.fm API key"
-      },
-      "lastFmUsername": {
-        "type": "types.str",
-        "default": "",
-        "description": "Your last.fm username"
-      },
-      "albumCoverImage": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Should the album cover image be used as the rpc image? (if you have the last fm display chosen)"
-      },
-      "lastFmStatFormat": {
-        "type": "types.str",
-        "default": "Top album this week: \"$album - $artist\"",
-        "description": "How should the last fm stat be formatted? $album is replaced with the album name, and $artist is replaced with the artist name"
-      }
-    }
-  },
   "saveFavoriteGifs": {
     "description": "Export favorited GIF urls (Equicord-only)",
     "settings": {
@@ -5206,6 +5235,21 @@
         "default": true,
         "description": "If enabled, the plugin will hide your typing from others in any DMs/channels/guilds not listed in \"Disabled Locations\" below. If disabled, the plugin will show your typing to others for any DMs/channels/guilds not listed in \"Enabled Locations\" below."
       },
+      "alwaysEnableInActiveVoiceChat": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Always allow your typing indicator to show when typing in a voice channel you are connected to."
+      },
+      "temporaryEnableThresholdServers": {
+        "type": "types.int",
+        "default": 0,
+        "description": "Temporarily allow your typing indicator to show for this many seconds after sending a message in a server channel. If the typing indicator is already visible in the channel, this setting will have no effect."
+      },
+      "temporaryEnableThresholdDirectMessages": {
+        "type": "types.int",
+        "default": 0,
+        "description": "Temporarily allow your typing indicator to show for this many seconds after sending a message in a DM or Group DM. If the typing indicator is already visible in the channel, this setting will have no effect."
+      },
       "enabledLocations": {
         "type": "types.str",
         "default": "",
@@ -5493,6 +5537,46 @@
         "type": "types.str",
         "default": "",
         "description": "The list of blocked sticker IDs (don't edit unless you know what you're doing)"
+      }
+    }
+  },
+  "streaks": {
+    "description": "Shows a streak next to a user when you exchange DMs with them on consecutive days. (Equicord-only)",
+    "settings": {
+      "eliteColor": {
+        "type": "types.str",
+        "default": "#9b39fe",
+        "description": "Elite Streak Color (100+ days)"
+      },
+      "diamondColor": {
+        "type": "types.str",
+        "default": "#f7409c",
+        "description": "Diamond Streak Color (60+ days)"
+      },
+      "platinumColor": {
+        "type": "types.str",
+        "default": "#856bfe",
+        "description": "Platinum Streak Color (45+ days)"
+      },
+      "goldColor": {
+        "type": "types.str",
+        "default": "#f75340",
+        "description": "Gold Streak Color (30+ days)"
+      },
+      "silverColor": {
+        "type": "types.str",
+        "default": "#f57b0b",
+        "description": "Silver Streak Color (14+ days)"
+      },
+      "bronzeColor": {
+        "type": "types.str",
+        "default": "#b08d57",
+        "description": "Bronze Streak Color (7+ days)"
+      },
+      "defaultColor": {
+        "type": "types.str",
+        "default": "#f59e0b",
+        "description": "Default Streak Color (1+ days)"
       }
     }
   },
@@ -5952,8 +6036,8 @@
     "description": "Highlights URLs in messages that match your patterns. (Equicord-only)",
     "settings": {
       "patterns": {
-        "type": "types.attrs",
-        "default": {},
+        "type": "types.listOf types.attrs",
+        "default": [],
         "description": "URL patterns to highlight using glob patterns."
       },
       "boldUrls": {
@@ -6092,17 +6176,44 @@
       "joinMessage": {
         "type": "types.str",
         "default": "{{DISPLAY_NAME}} joined",
-        "description": "Placeholders: {{USER}}, {{DISPLAY_NAME}}, {{NICKNAME}}, {{CHANNEL}}"
+        "description": "Placeholders: {{USER}}, {{DISPLAY_NAME}}, {{NICKNAME}}, {{CHANNEL}}, {{SOUND}}."
+      },
+      "joinSound": {
+        "type": "types.str",
+        "default": ""
+      },
+      "joinSoundName": {
+        "type": "types.str",
+        "default": "",
+        "description": "Join sound file name."
       },
       "leaveMessage": {
         "type": "types.str",
         "default": "{{DISPLAY_NAME}} left",
-        "description": "Leave Message"
+        "description": "Placeholders: {{USER}}, {{DISPLAY_NAME}}, {{NICKNAME}}, {{CHANNEL}}, {{SOUND}}."
+      },
+      "leaveSound": {
+        "type": "types.str",
+        "default": ""
+      },
+      "leaveSoundName": {
+        "type": "types.str",
+        "default": "",
+        "description": "Leave sound file name."
       },
       "moveMessage": {
         "type": "types.str",
         "default": "{{DISPLAY_NAME}} moved to {{CHANNEL}}",
-        "description": "Move Message"
+        "description": "Placeholders: {{USER}}, {{DISPLAY_NAME}}, {{NICKNAME}}, {{CHANNEL}}, {{SOUND}}."
+      },
+      "moveSound": {
+        "type": "types.str",
+        "default": ""
+      },
+      "moveSoundName": {
+        "type": "types.str",
+        "default": "",
+        "description": "Move sound file name."
       },
       "announceOthersMute": {
         "type": "types.bool",

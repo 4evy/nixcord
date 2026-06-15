@@ -119,6 +119,10 @@
   },
   "removals": {},
   "settingRenames": {
+    "declutter": {
+      "removeQuestsAboveDms": "removeQuestsAboveDM",
+      "removeShopAboveDms": "removeShopAboveDM"
+    },
     "fontLoader": {
       "applyOnClodeBlocks": "applyOnCodeBlocks",
       "applyOnCodeBlocks": "applyOnClodeBlocks"
