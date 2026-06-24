@@ -15,8 +15,8 @@
   replaceVars,
 }:
 let
-  stableVersion = "1.14.14";
-  stableHash = "sha256-4rB+4gk0rGe4IQH8QyJplaXVycv6ZWdaz9SVDzTZW08=";
+  stableVersion = "1.14.15";
+  stableHash = "sha256-jQeLZa1rpKDkzWSpAqOa8snGRKLpv9xf9cwJ6hUwMzA=";
   stablePnpmDeps = "sha256-hk1rnNog5xvuIVI0M1ZJ5xrEuk0zcBiYsbROUycdi+A=";
 
   unstableVersion = "1.14.15-unstable-2026-06-24";
