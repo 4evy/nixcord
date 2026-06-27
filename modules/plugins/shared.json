@@ -63,6 +63,26 @@
         "default": "{artist} · {album}",
         "description": "Activity state format string"
       },
+      "detailsLink": {
+        "type": "types.enum",
+        "enumValues": [
+          "Album",
+          "Artist",
+          "Disabled"
+        ],
+        "default": "Album",
+        "description": "Activity details link"
+      },
+      "stateLink": {
+        "type": "types.enum",
+        "enumValues": [
+          "Album",
+          "Artist",
+          "Disabled"
+        ],
+        "default": "Artist",
+        "description": "Activity state link"
+      },
       "largeImageType": {
         "type": "types.enum",
         "enumValues": [
@@ -78,6 +98,16 @@
         "default": "{album}",
         "description": "Activity assets large text format string"
       },
+      "largeImageLink": {
+        "type": "types.enum",
+        "enumValues": [
+          "Album",
+          "Artist",
+          "Disabled"
+        ],
+        "default": "Album",
+        "description": "Activity assets large image link"
+      },
       "smallImageType": {
         "type": "types.enum",
         "enumValues": [
@@ -92,6 +122,16 @@
         "type": "types.str",
         "default": "{artist}",
         "description": "Activity assets small text format string"
+      },
+      "smallImageLink": {
+        "type": "types.enum",
+        "enumValues": [
+          "Album",
+          "Artist",
+          "Disabled"
+        ],
+        "default": "Artist",
+        "description": "Activity assets small image link"
       }
     }
   },
@@ -100,7 +140,7 @@
     "settings": {}
   },
   "betterRoleContext": {
-    "description": "Adds options to copy role color / edit role / view role icon when right clicking roles in the user profile (Shared between Vencord and Equicord)",
+    "description": "Adds options to copy role color / edit role / view role icon when right clicking roles in the user profile or in the member list (Shared between Vencord and Equicord)",
     "settings": {
       "roleIconFileFormat": {
         "type": "types.enum",
@@ -511,10 +551,6 @@
   },
   "friendInvites": {
     "description": "Create and manage friend invite links via slash commands (/create friend invite, /view friend invites, /revoke friend invites). (Shared between Vencord and Equicord)",
-    "settings": {}
-  },
-  "friendsSince": {
-    "description": "Shows when you became friends with someone in the user popout (Shared between Vencord and Equicord)",
     "settings": {}
   },
   "fullSearchContext": {
@@ -1572,6 +1608,65 @@
   "themeAttributes": {
     "description": "Adds data attributes to various elements for theming purposes (Shared between Vencord and Equicord)",
     "settings": {}
+  },
+  "translate": {
+    "description": "Translate messages with Google Translate, DeepL or Kagi. (Shared between Vencord and Equicord)",
+    "settings": {
+      "receivedInput": {
+        "type": "types.str",
+        "default": "auto",
+        "description": "Language incoming messages are translated from"
+      },
+      "receivedOutput": {
+        "type": "types.str",
+        "default": "en",
+        "description": "Language incoming messages are translated to"
+      },
+      "sentInput": {
+        "type": "types.str",
+        "default": "auto",
+        "description": "Language your messages are translated from"
+      },
+      "sentOutput": {
+        "type": "types.str",
+        "default": "en",
+        "description": "Language your messages are translated to"
+      },
+      "service": {
+        "type": "types.enum",
+        "enumValues": [
+          "google",
+          "deepl",
+          "deepl-pro",
+          "kagi"
+        ],
+        "default": "google"
+      },
+      "deeplApiKey": {
+        "type": "types.str",
+        "default": "",
+        "description": "Your DeepL API key (from deepl.com/your-account)"
+      },
+      "kagiSession": {
+        "type": "types.str",
+        "default": "",
+        "description": "Your Kagi session token (from kagi.com/settings?p=user_details)"
+      },
+      "autoTranslate": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Automatically translate your messages before sending. You can also Shift+click or right-click the translate button to toggle this"
+      },
+      "showAutoTranslateTooltip": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Show a tooltip on the chat bar button when a message is auto-translated"
+      },
+      "dismissedAutoTranslateAlert": {
+        "type": "types.bool",
+        "default": false
+      }
+    }
   },
   "unindent": {
     "description": "Trims leading indentation from codeblocks (Shared between Vencord and Equicord)",

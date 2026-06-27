@@ -596,6 +596,61 @@
     },
     {
       "from": [
+        "forwardAnywhere",
+        "dontFollowForwards"
+      ],
+      "to": [
+        "betterForwards",
+        "dontFollowForwards"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "forwardAnywhere",
+        "enable"
+      ],
+      "to": [
+        "betterForwards",
+        "enable"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "forwardAnywhere",
+        "forwardPreface"
+      ],
+      "to": [
+        "betterForwards",
+        "forwardPreface"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "forwardAnywhere",
+        "resendOnFail"
+      ],
+      "to": [
+        "betterForwards",
+        "resendOnFail"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "forwardAnywhere",
+        "selfForward"
+      ],
+      "to": [
+        "betterForwards",
+        "selfForward"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
         "friendCloud",
         "addFreakyEnding"
       ],
@@ -3605,6 +3660,39 @@
       "to": [
         "richPresence",
         "tosuEnabled"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "viewRawVariant",
+        "clickMethod"
+      ],
+      "to": [
+        "viewRaw",
+        "clickMethod"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "viewRawVariant",
+        "enable"
+      ],
+      "to": [
+        "viewRaw",
+        "enable"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "viewRawVariant",
+        "messageContextMenu"
+      ],
+      "to": [
+        "viewRaw",
+        "messageContextMenu"
       ],
       "warn": false
     },

@@ -535,7 +535,7 @@
           3
         ],
         "default": 2,
-        "description": "mode\n\nValues: 2 = Only online friend count, 1 = Only server count, 3 = Both server and online friend counts"
+        "description": "Mode\n\nValues: 2 = Only online friend count, 1 = Only server count, 3 = Both server and online friend counts"
       }
     }
   },
@@ -674,65 +674,6 @@
             "onlyIfIncludes": ""
           }
         ]
-      }
-    }
-  },
-  "translate": {
-    "description": "Translate messages with Google Translate, DeepL or Kagi. (Vencord-only)",
-    "settings": {
-      "receivedInput": {
-        "type": "types.str",
-        "default": "auto",
-        "description": "Language incoming messages are translated from"
-      },
-      "receivedOutput": {
-        "type": "types.str",
-        "default": "en",
-        "description": "Language incoming messages are translated to"
-      },
-      "sentInput": {
-        "type": "types.str",
-        "default": "auto",
-        "description": "Language your messages are translated from"
-      },
-      "sentOutput": {
-        "type": "types.str",
-        "default": "en",
-        "description": "Language your messages are translated to"
-      },
-      "service": {
-        "type": "types.enum",
-        "enumValues": [
-          "google",
-          "deepl",
-          "deepl-pro",
-          "kagi"
-        ],
-        "default": "google"
-      },
-      "deeplApiKey": {
-        "type": "types.str",
-        "default": "",
-        "description": "Your DeepL API key (from deepl.com/your-account)"
-      },
-      "kagiSession": {
-        "type": "types.str",
-        "default": "",
-        "description": "Your Kagi session token (from kagi.com/settings?p=user_details)"
-      },
-      "autoTranslate": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Automatically translate your messages before sending. You can also Shift+click or right-click the translate button to toggle this"
-      },
-      "showAutoTranslateTooltip": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Show a tooltip on the chat bar button when a message is auto-translated"
-      },
-      "showAutoTranslateAlert": {
-        "type": "types.bool",
-        "default": false
       }
     }
   },

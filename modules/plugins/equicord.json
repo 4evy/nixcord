@@ -392,6 +392,35 @@
       }
     }
   },
+  "betterForwards": {
+    "description": "Message forward utilities including NSFW bypass and UI improvements. (Equicord-only)",
+    "settings": {
+      "resendOnFail": {
+        "type": "types.bool",
+        "default": true,
+        "description": "This will attempt to resend a forwarded message if the forward fails. Could cause unintentional pings or text spam. Bypasses NSFW restrictions. (restart required)"
+      },
+      "forwardPreface": {
+        "type": "types.enum",
+        "enumValues": [
+          ">",
+          "-#"
+        ],
+        "default": ">",
+        "description": "What should the forwarded message be prefaced with"
+      },
+      "dontFollowForwards": {
+        "type": "types.bool",
+        "default": false,
+        "description": "After forwarding a single message, don't jump to it. Hold shift to ignore this behavior. (restart required)"
+      },
+      "selfForward": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Show the current channel in the forward list popup. (restart required)"
+      }
+    }
+  },
   "betterGifLoad": {
     "description": "Change the quality of GIFs in the GIF picker. Improves performance and lowers internet usage. (Equicord-only)",
     "settings": {
@@ -1164,7 +1193,7 @@
     "settings": {}
   },
   "commandPalette": {
-    "description": "Quickly run actions through a searchable command palette (Equicord-only)",
+    "description": "Raycast style command palette for running actions anywhere in Discord (Equicord-only)",
     "settings": {
       "hotkey": {
         "type": "types.listOf types.str",
@@ -1173,22 +1202,22 @@
       "closeAfterExecute": {
         "type": "types.bool",
         "default": true,
-        "description": "Close palette after executing a command."
+        "description": "Close the palette after running a command."
       }
     }
   },
   "contentWarning": {
     "description": "Allows you to specify certain trigger words that will be blurred by default. Hovering/Clicking on the blurred content will reveal it. (Equicord-only)",
     "settings": {
-      "triggerWords": {
-        "type": "types.nullOr (types.listOf types.str)",
-        "default": null,
-        "description": "Words to blur in messages (restart required)"
-      },
       "onClick": {
         "type": "types.bool",
         "default": false,
         "description": "Only show trigger content on click instead of hover"
+      },
+      "triggerWords": {
+        "type": "types.nullOr (types.listOf types.str)",
+        "default": null,
+        "description": "Words to blur in messages (restart required)"
       }
     }
   },
@@ -2158,7 +2187,7 @@
     "settings": {}
   },
   "fileUpload": {
-    "description": "Upload images and videos to file hosting services like Zipline and Nest (Equicord-only)",
+    "description": "Upload files to hosting services like Zipline, Nest, S3, and WebDAV (Equicord-only)",
     "settings": {
       "serviceType": {
         "type": "types.enum",
@@ -2177,7 +2206,8 @@
           "filebin",
           "pixelvault",
           "pixeldrain",
-          "sharex"
+          "sharex",
+          "webdav"
         ],
         "default": "zipline",
         "description": "Selected uploader service"
@@ -2402,6 +2432,51 @@
         "type": "types.bool",
         "default": false,
         "description": "Automatically upload files from clipboard to image host when pasting in chat input."
+      },
+      "webdavUrl": {
+        "type": "types.str",
+        "default": "",
+        "description": "WebDAV server URL"
+      },
+      "webdavUsername": {
+        "type": "types.str",
+        "default": "",
+        "description": "WebDAV username"
+      },
+      "webdavPassword": {
+        "type": "types.str",
+        "default": "",
+        "description": "WebDAV password or app token"
+      },
+      "webdavDirectory": {
+        "type": "types.str",
+        "default": "",
+        "description": "Optional subdirectory on the WebDAV server"
+      },
+      "webdavServerType": {
+        "type": "types.enum",
+        "enumValues": [
+          "nextcloud",
+          "owncloud",
+          "generic"
+        ],
+        "default": "nextcloud",
+        "description": "WebDAV server type"
+      },
+      "webdavShareType": {
+        "type": "types.enum",
+        "enumValues": [
+          "share-page",
+          "direct-download",
+          "markdown"
+        ],
+        "default": "share-page",
+        "description": "WebDAV share link format"
+      },
+      "uploadAllowedFileTypes": {
+        "type": "types.str",
+        "default": "",
+        "description": "Comma-separated list of allowed file extensions (e.g. png,jpg,gif,mp4). Leave empty to allow all files."
       }
     }
   },
@@ -2466,20 +2541,6 @@
         "type": "types.bool",
         "default": false,
         "description": "Apply the font to code blocks"
-      }
-    }
-  },
-  "forwardAnywhere": {
-    "description": "If a forward fails send it as a normal message also allows nsfw forwards (Equicord-only)",
-    "settings": {
-      "forwardPreface": {
-        "type": "types.enum",
-        "enumValues": [
-          ">",
-          "-#"
-        ],
-        "default": ">",
-        "description": "What should forwarded from be prefaced with"
       }
     }
   },
@@ -2592,6 +2653,49 @@
         "type": "types.str",
         "default": "asc",
         "description": "The order of sorting for collections."
+      }
+    }
+  },
+  "gifMaker": {
+    "description": "Create and caption GIFs from any media in chat or the GIF picker. (Equicord-only)",
+    "settings": {
+      "lastWidth": {
+        "type": "types.int",
+        "default": 256
+      },
+      "lastHeight": {
+        "type": "types.int",
+        "default": 256
+      },
+      "lastCaptionMode": {
+        "type": "types.str",
+        "default": "none"
+      },
+      "lastCaptionText": {
+        "type": "types.str",
+        "default": ""
+      },
+      "lastCaptionSize": {
+        "type": "types.int",
+        "default": 40
+      },
+      "lastFontFamily": {
+        "type": "types.str",
+        "default": "Arial"
+      },
+      "lastBubbleTipBase": {
+        "type": "types.float",
+        "default": 0.1
+      },
+      "maxWidth": {
+        "type": "types.int",
+        "default": 1280,
+        "description": "Maximum auto-fit width."
+      },
+      "maxHeight": {
+        "type": "types.int",
+        "default": 720,
+        "description": "Maximum auto-fit height."
       }
     }
   },
@@ -3553,7 +3657,7 @@
       "attachmentFileExtensions": {
         "type": "types.str",
         "default": "png,jpg,jpeg,gif,webp,mp4,webm,mp3,ogg,wav",
-        "description": "Comma separated list of file extensions to save. Attachments with file extensions not in this list will not be saved. Leave empty to save all attachments."
+        "description": "Comma separated list of file extensions to save. Attachments with file extensions not in this list will not be saved."
       },
       "cacheLimit": {
         "type": "types.int",
@@ -4283,71 +4387,6 @@
         "type": "types.int",
         "default": 6888,
         "description": "Port to connect to (restart required)"
-      },
-      "isKeybindEnabled": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Enable/disable the global keybind (Ctrl + `)"
-      },
-      "messageAlignment": {
-        "type": "types.enum",
-        "enumValues": [
-          "topleft",
-          "topright",
-          "bottomleft",
-          "bottomright",
-          "topcenter",
-          "bottomcenter",
-          "centerleft",
-          "centerright"
-        ],
-        "default": "topright",
-        "description": "Alignment of messages in the overlay"
-      },
-      "messageOffsetX": {
-        "type": "types.int",
-        "default": 0,
-        "description": "Horizontal offset for messages, in pixels"
-      },
-      "messageOffsetY": {
-        "type": "types.int",
-        "default": 0,
-        "description": "Vertical offset for messages, in pixels"
-      },
-      "userAlignment": {
-        "type": "types.enum",
-        "enumValues": [
-          "topleft",
-          "topright",
-          "bottomleft",
-          "bottomright",
-          "topcenter",
-          "bottomcenter",
-          "centerleft",
-          "centerright"
-        ],
-        "default": "topleft",
-        "description": "Alignment of users in the overlay"
-      },
-      "userOffsetX": {
-        "type": "types.int",
-        "default": 0,
-        "description": "Horizontal offset for users, in pixels"
-      },
-      "userOffsetY": {
-        "type": "types.int",
-        "default": 0,
-        "description": "Vertical offset for users, in pixels"
-      },
-      "voiceSemitransparent": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Make voice channel members transparent"
-      },
-      "messagesSemitransparent": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Make message notifications transparent"
       }
     }
   },
@@ -5505,6 +5544,16 @@
     "description": "Fixes the annoying \"We dropped the magnifying glass!\" error. (Equicord-only)",
     "settings": {}
   },
+  "sedEnhanced": {
+    "description": "Expands on Discord's rudimentary `sed` support. (Equicord-only)",
+    "settings": {
+      "regexByDefault": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Inverts the `r` flag, so using the `r` flag enables non-regex mode, and omitting it uses regex mode."
+      }
+    }
+  },
   "sekaiStickers": {
     "description": "Sekai Stickers built in discord originally from github.com/TheOriginalAyaka (Equicord-only)",
     "settings": {
@@ -5514,10 +5563,6 @@
         "description": "Auto close modal when done"
       }
     }
-  },
-  "selfForward": {
-    "description": "Adds the current channel to the forward list popup (Equicord-only)",
-    "settings": {}
   },
   "serverInfo": {
     "description": "Allows you to view info about a server (Equicord-only)",
@@ -6317,6 +6362,10 @@
       }
     }
   },
+  "stopAutoUnread": {
+    "description": "Stops Discord from automatically bumping a channels notification setting to \"All Messages\" (Equicord-only)",
+    "settings": {}
+  },
   "streaks": {
     "description": "Shows a streak next to a user when you exchange DMs with them on consecutive days. (Equicord-only)",
     "settings": {
@@ -6619,65 +6668,6 @@
         "type": "types.str",
         "default": "",
         "description": "Custom tone indicators (format: jk=Joking; srs=Serious)"
-      }
-    }
-  },
-  "translate": {
-    "description": "Translate messages with Google Translate, DeepL or Kagi. (Equicord-only)",
-    "settings": {
-      "receivedInput": {
-        "type": "types.str",
-        "default": "auto",
-        "description": "Language incoming messages are translated from"
-      },
-      "receivedOutput": {
-        "type": "types.str",
-        "default": "en",
-        "description": "Language incoming messages are translated to"
-      },
-      "sentInput": {
-        "type": "types.str",
-        "default": "auto",
-        "description": "Language your messages are translated from"
-      },
-      "sentOutput": {
-        "type": "types.str",
-        "default": "en",
-        "description": "Language your messages are translated to"
-      },
-      "service": {
-        "type": "types.enum",
-        "enumValues": [
-          "google",
-          "deepl",
-          "deepl-pro",
-          "kagi"
-        ],
-        "default": "google"
-      },
-      "deeplApiKey": {
-        "type": "types.str",
-        "default": "",
-        "description": "Your DeepL API key (from deepl.com/your-account)"
-      },
-      "kagiSession": {
-        "type": "types.str",
-        "default": "",
-        "description": "Your Kagi session token (from kagi.com/settings?p=user_details)"
-      },
-      "autoTranslate": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Automatically translate your messages before sending. You can also Shift+click or right-click the translate button to toggle this"
-      },
-      "showAutoTranslateTooltip": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Show a tooltip on the chat bar button when a message is auto-translated"
-      },
-      "dismissedAutoTranslateAlert": {
-        "type": "types.bool",
-        "default": false
       }
     }
   },
@@ -7187,10 +7177,6 @@
         "description": "Show header above camera selector"
       }
     }
-  },
-  "viewRawVariant": {
-    "description": "Copy/View raw content of any message, channel, or guild, but show in the right click menu. (Equicord-only)",
-    "settings": {}
   },
   "voiceButtons": {
     "description": "Quickly DM, mute, or deafen any user right from the voice-call panel. (Equicord-only)",

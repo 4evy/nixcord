@@ -12,6 +12,10 @@
       "to": "ExpressionCloner",
       "date": "2026-06-24"
     },
+    "ForwardAnywhere": {
+      "to": "BetterForwards",
+      "date": "2026-06-26"
+    },
     "FriendCloud": {
       "to": "MoreCommands",
       "date": "2026-06-24"
@@ -103,6 +107,10 @@
     "VencordToolbox": {
       "to": "EquicordToolbox",
       "date": "2026-06-24"
+    },
+    "ViewRawVariant": {
+      "to": "ViewRaw",
+      "date": "2026-06-26"
     },
     "YoutubeDescription": {
       "to": "FixYoutubeEmbeds",
