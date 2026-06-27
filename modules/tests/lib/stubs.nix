@@ -9,6 +9,10 @@
           type = lib.types.path;
           default = "/home/testuser";
         };
+        home.stateVersion = lib.mkOption {
+          type = lib.types.str;
+          default = "26.05";
+        };
         home.username = lib.mkOption {
           type = lib.types.str;
           default = "testuser";
@@ -62,9 +66,25 @@
           );
           default = { };
         };
+        boot.loader.grub.devices = lib.mkOption {
+          type = lib.types.listOf lib.types.str;
+          default = [ ];
+        };
+        fileSystems = lib.mkOption {
+          type = lib.types.attrsOf lib.types.anything;
+          default = { };
+        };
         system.stateVersion = lib.mkOption {
           type = lib.types.str;
           default = "26.05";
+        };
+        nixpkgs.config.allowUnfree = lib.mkOption {
+          type = lib.types.bool;
+          default = false;
+        };
+        nixpkgs.hostPlatform = lib.mkOption {
+          type = lib.types.anything;
+          default = null;
         };
         environment.systemPackages = lib.mkOption {
           type = lib.types.listOf lib.types.package;
@@ -106,6 +126,18 @@
         environment.systemPackages = lib.mkOption {
           type = lib.types.listOf lib.types.package;
           default = [ ];
+        };
+        nixpkgs.config.allowUnfree = lib.mkOption {
+          type = lib.types.bool;
+          default = false;
+        };
+        nixpkgs.hostPlatform = lib.mkOption {
+          type = lib.types.anything;
+          default = null;
+        };
+        system.stateVersion = lib.mkOption {
+          type = lib.types.anything;
+          default = 6;
         };
         system.activationScripts = lib.mkOption {
           type = lib.types.attrsOf lib.types.anything;

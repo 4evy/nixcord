@@ -3,6 +3,7 @@
 {
   hm-eval = import ./eval/hm.nix { inherit pkgs; };
   nixos-eval = import ./eval/nixos.nix { inherit pkgs; };
+  regression-matrix = import ./examples/regression-matrix.nix { inherit pkgs; };
   config-output = import ./modules/config-output { inherit pkgs; };
   assertions = import ./modules/assertions { inherit pkgs; };
   discord-launcher-c = import ./c/discord-launcher.nix { inherit pkgs; };
