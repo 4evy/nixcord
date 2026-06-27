@@ -18,11 +18,13 @@ skip_if_current="@skipIfCurrent@"
 dependency_name="@dependencyName@"
 
 wrong_hash="sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
-package_json_file="./package.json"
+root_package_json_file="./package.json"
+shared_package_json_file="./packages/shared/package.json"
 bun_lock_file="./bun.lock"
 parsed_nix_expr=""
 original_nix_content=""
-original_package_json_content=""
+original_root_package_json_content=""
+original_shared_package_json_content=""
 original_bun_lock_content=""
 
 die() {
@@ -43,14 +45,16 @@ read_file_into() {
 }
 
 read_file_into "$nix_file" original_nix_content
-read_file_into "$package_json_file" original_package_json_content
+read_file_into "$root_package_json_file" original_root_package_json_content
+read_file_into "$shared_package_json_file" original_shared_package_json_content
 read_file_into "$bun_lock_file" original_bun_lock_content
 
 cleanup() {
   local exit_code=$?
   if [[ $exit_code -ne 0 ]]; then
     printf '%s' "$original_nix_content" > "$nix_file"
-    printf '%s' "$original_package_json_content" > "$package_json_file"
+    printf '%s' "$original_root_package_json_content" > "$root_package_json_file"
+    printf '%s' "$original_shared_package_json_content" > "$shared_package_json_file"
     printf '%s' "$original_bun_lock_content" > "$bun_lock_file"
   fi
   exit "$exit_code"
@@ -273,6 +277,7 @@ update_bun_dependency() {
   dependency_spec="${dependency_name}@github:${owner}/${repo}#${revision}"
   log "Updating Bun dependency $dependency_name to $revision..."
   bun add --dev --no-progress "$dependency_spec"
+  bun add --dev --no-progress --cwd "$(dirname "$shared_package_json_file")" "$dependency_spec"
 }
 
 determine_update() {
