@@ -10,43 +10,49 @@ let
   inherit (testLib) lib pkgs;
   stubDiscordPackage = pkgs.runCommand "nixcord-discord-stub" { } "mkdir $out" // {
     passthru.nixcordCommandLineArgsList = true;
-    override = lib.setFunctionArgs (
-      args:
-      pkgs.runCommand "nixcord-discord-final-stub" { } "mkdir $out"
-      // {
-        passthru.nixcordOverrideArgs = args;
-      }
-    ) {
-      branch = true;
-      commandLineArgs = true;
-      equicord = true;
-      vencord = true;
-      withEquicord = true;
-      withKrisp = true;
-      withOpenASAR = true;
-      withVencord = true;
-    };
+    override =
+      lib.setFunctionArgs
+        (
+          args:
+          pkgs.runCommand "nixcord-discord-final-stub" { } "mkdir $out"
+          // {
+            passthru.nixcordOverrideArgs = args;
+          }
+        )
+        {
+          branch = true;
+          commandLineArgs = true;
+          equicord = true;
+          vencord = true;
+          withEquicord = true;
+          withKrisp = true;
+          withOpenASAR = true;
+          withVencord = true;
+        };
   };
   stubDiscordPackageWithoutKrisp =
     pkgs.runCommand "nixcord-discord-no-krisp-stub" { } "mkdir $out"
     // {
       passthru.nixcordCommandLineArgsList = true;
-      override = lib.setFunctionArgs (
-        args:
-        assert !(args ? withKrisp);
-        pkgs.runCommand "nixcord-discord-no-krisp-final-stub" { } "mkdir $out"
-        // {
-          passthru.nixcordOverrideArgs = args;
-        }
-      ) {
-        branch = true;
-        commandLineArgs = true;
-        equicord = true;
-        vencord = true;
-        withEquicord = true;
-        withOpenASAR = true;
-        withVencord = true;
-      };
+      override =
+        lib.setFunctionArgs
+          (
+            args:
+            assert !(args ? withKrisp);
+            pkgs.runCommand "nixcord-discord-no-krisp-final-stub" { } "mkdir $out"
+            // {
+              passthru.nixcordOverrideArgs = args;
+            }
+          )
+          {
+            branch = true;
+            commandLineArgs = true;
+            equicord = true;
+            vencord = true;
+            withEquicord = true;
+            withOpenASAR = true;
+            withVencord = true;
+          };
     };
   stubEquicordPackage = pkgs.runCommand "nixcord-equicord-stub" { } "mkdir -p $out/equibop" // {
     overrideAttrs =
@@ -262,5 +268,16 @@ in
       postPatch = builtins.unsafeDiscardStringContext equibop.postPatch;
     in
     assert !(lib.hasInfix "equicordPatchTarget" postPatch);
+    true;
+
+  "dorion defaults to nixpkgs package" =
+    let
+      config = testLib.eval.hm {
+        enable = true;
+        discord.enable = false;
+        dorion.enable = true;
+      };
+    in
+    assert toString config.programs.nixcord.dorion.package == toString pkgs.dorion;
     true;
 }

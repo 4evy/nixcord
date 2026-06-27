@@ -7,6 +7,7 @@
 }:
 let
   inherit (lib) mkEnableOption mkOption types;
+  jsonFormat = pkgs.formats.json { };
   vencordPackage = pkgs.callPackage ../../pkgs/vencord.nix { };
   equicordPackage = pkgs.callPackage ../../pkgs/equicord.nix { };
 in
@@ -100,7 +101,7 @@ in
       ];
     };
     settings = mkOption {
-      type = types.attrs;
+      type = types.attrsOf jsonFormat.type;
       default = { };
       description = "Settings to be placed in Discord's settings.json. Set atomically; the entire attrset replaces any previous definition.";
       example = {

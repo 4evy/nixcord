@@ -1,31 +1,33 @@
-{ lib, ... }:
+{ lib, pkgs, ... }:
 let
   inherit (lib) mkOption types;
+  jsonFormat = pkgs.formats.json { };
+  jsonAttrs = types.attrsOf jsonFormat.type;
 in
 {
   options.programs.nixcord = {
     vesktopConfig = mkOption {
-      type = types.attrsOf types.anything;
+      type = jsonAttrs;
       default = { };
       description = "Additional config merged into `programs.nixcord.config` for Vesktop only.";
     };
     equibopConfig = mkOption {
-      type = types.attrsOf types.anything;
+      type = jsonAttrs;
       default = { };
       description = "Additional config merged into `programs.nixcord.config` for Equibop only.";
     };
     vencordConfig = mkOption {
-      type = types.attrsOf types.anything;
+      type = jsonAttrs;
       default = { };
       description = "Additional config merged into `programs.nixcord.config` for Vencord (Discord) only.";
     };
     equicordConfig = mkOption {
-      type = types.attrsOf types.anything;
+      type = jsonAttrs;
       default = { };
       description = "Additional config merged into `programs.nixcord.config` for Equicord (Discord) only.";
     };
     extraConfig = mkOption {
-      type = types.attrsOf types.anything;
+      type = jsonAttrs;
       default = { };
       description = "Additional config merged into `programs.nixcord.config` for all clients.";
     };

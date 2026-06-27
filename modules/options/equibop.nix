@@ -1,6 +1,7 @@
 { lib, pkgs, ... }:
 let
   inherit (lib) mkEnableOption mkOption types;
+  jsonFormat = pkgs.formats.json { };
 in
 {
   options.programs.nixcord.equibop = {
@@ -26,12 +27,12 @@ in
       description = "Config directory for Equibop.";
     };
     settings = mkOption {
-      type = types.attrsOf types.anything;
+      type = types.attrsOf jsonFormat.type;
       default = { };
       description = "Settings to be placed in Equibop's settings.json.";
     };
     state = mkOption {
-      type = types.attrsOf types.anything;
+      type = types.attrsOf jsonFormat.type;
       default = { };
       description = "State to be placed in Equibop's state.json.";
     };

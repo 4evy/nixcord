@@ -6,6 +6,7 @@ let
     mkPackageOption
     types
     ;
+  jsonFormat = pkgs.formats.json { };
 in
 {
   options.programs.nixcord.legcord = {
@@ -27,7 +28,7 @@ in
       enable = mkEnableOption "bundling Equicord for Legcord (includes userPlugins)";
     };
     settings = mkOption {
-      type = types.attrsOf types.anything;
+      type = types.attrsOf jsonFormat.type;
       default = { };
       description = "Settings to be written to Legcord's storage/settings.json.";
       example = {

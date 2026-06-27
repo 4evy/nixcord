@@ -6,6 +6,7 @@ let
     mkPackageOption
     types
     ;
+  jsonFormat = pkgs.formats.json { };
 in
 {
   options.programs.nixcord.vesktop = {
@@ -26,12 +27,12 @@ in
       description = "Config directory for Vesktop.";
     };
     settings = mkOption {
-      type = types.attrsOf types.anything;
+      type = types.attrsOf jsonFormat.type;
       default = { };
       description = "Settings to be placed in Vesktop's settings.json.";
     };
     state = mkOption {
-      type = types.attrsOf types.anything;
+      type = types.attrsOf jsonFormat.type;
       default = { };
       description = "State to be placed in Vesktop's state.json.";
     };

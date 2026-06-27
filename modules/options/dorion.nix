@@ -1,6 +1,12 @@
 { lib, pkgs, ... }:
 let
-  inherit (lib) mkEnableOption mkOption types;
+  inherit (lib)
+    mkEnableOption
+    mkOption
+    mkPackageOption
+    types
+    ;
+  jsonFormat = pkgs.formats.json { };
 in
 {
   options.programs.nixcord.dorion = {
@@ -10,19 +16,7 @@ in
       default = true;
       description = "Whether to install the final Dorion package.";
     };
-    package = mkOption {
-      type = types.package;
-      default = pkgs.callPackage "${
-        pkgs.fetchFromGitHub {
-          owner = "FlameFlag";
-          repo = "nixpkgs";
-          rev = "687fe3c6346172edb78fa0116860c4af1109b5fc";
-          hash = "sha256-D4rM3zHNe94aZW0w7jC5TP+A1OFdcW9DbXzNdrerpg4=";
-        }
-      }/pkgs/by-name/do/dorion/package.nix" { };
-      defaultText = lib.literalMD "custom Dorion package from FlameFlag/nixpkgs";
-      description = "The Dorion package to use.";
-    };
+    package = mkPackageOption pkgs "dorion" { };
     configDir = mkOption {
       type = types.path;
       description = "Config directory for Dorion.";
@@ -146,7 +140,7 @@ in
       example = "socks5://127.0.0.1:1080";
     };
     keybinds = mkOption {
-      type = types.attrsOf types.anything;
+      type = types.attrsOf jsonFormat.type;
       default = { };
       description = "Custom keybind mappings.";
     };
@@ -156,7 +150,7 @@ in
       description = "Whether to enable custom keybinds.";
     };
     extraSettings = mkOption {
-      type = types.attrs;
+      type = types.attrsOf jsonFormat.type;
       default = { };
       description = "Additional settings to merge into config.json. These override any conflicting auto-generated settings.";
     };
