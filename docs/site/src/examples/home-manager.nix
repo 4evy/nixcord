@@ -6,7 +6,7 @@
   programs.nixcord = {
     enable = true;
 
-    # Explicit; this is also the default client.
+    # Explicitly enable Vencord for Discord.
     discord.vencord.enable = true;
 
     config.plugins = {

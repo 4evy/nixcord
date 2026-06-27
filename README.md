@@ -70,7 +70,7 @@ If you are managing your Mac system-wide
 
 ## Configuration
 
-You can configure Vencord (default), Equicord, Vesktop, Dorion, or Legcord
+You can configure Vencord, Equicord, Vesktop, Dorion, or Legcord
 
 **Tip:** Launch your client once manually to look through the plugins list so you know what you actually want to enable
 
@@ -79,7 +79,7 @@ You can configure Vencord (default), Equicord, Vesktop, Dorion, or Legcord
   programs.nixcord = {
     enable = true;
 
-    # Choose your client (enable only one of these two)
+    # Choose your Discord mod client (enable at most one of these two)
     discord.vencord.enable = true;      # Standard Vencord
     # discord.equicord.enable = true;   # Equicord (has more plugins)
 
