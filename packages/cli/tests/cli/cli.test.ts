@@ -60,6 +60,7 @@ describe('buildCli', () => {
 describe('CLI Argument Parsing', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(runGeneratePluginOptions).mockReset();
     process.exitCode = undefined;
   });
 
@@ -444,6 +445,7 @@ describe('CLI Argument Parsing', () => {
 describe('CLI Error Handling', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(runGeneratePluginOptions).mockReset();
     process.exitCode = undefined;
   });
 
@@ -502,6 +504,7 @@ describe('CLI Error Handling', () => {
 describe('runCli', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(runGeneratePluginOptions).mockReset();
   });
 
   test('calls buildCli and parses argv', async () => {

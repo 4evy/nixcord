@@ -19,7 +19,7 @@ import {
 } from '@nixcord/shared';
 import fse from 'fs-extra';
 import { dirname, join, normalize, resolve } from 'pathe';
-import { z } from 'zod';
+import * as z from 'zod';
 import { oraPromise } from './spinner.js';
 
 type SourceLabel = 'Vencord' | 'Equicord';

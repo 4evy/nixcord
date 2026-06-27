@@ -7,7 +7,7 @@ import {
   run,
 } from '@stricli/core';
 import { resolve } from 'pathe';
-import { z } from 'zod';
+import * as z from 'zod';
 import { fromZodError } from 'zod-validation-error';
 import type { GeneratePluginOptionsParams } from './runner/index.js';
 import { runGeneratePluginOptions } from './runner/index.js';
@@ -129,7 +129,7 @@ export const buildCli = (): Application<CommandContext> => {
       const validationResult = CliOptionsSchema.safeParse(flags);
       if (!validationResult.success) {
         const zodError = fromZodError(validationResult.error);
-        return new CliExecutionError(new Error(`Invalid CLI options: ${zodError.message}`), false);
+        throw new CliExecutionError(new Error(`Invalid CLI options: ${zodError.message}`), false);
       }
 
       if (validationResult.data.version) {
@@ -158,7 +158,7 @@ export const buildCli = (): Application<CommandContext> => {
       const result = await runGeneratePluginOptions(params);
 
       if (!result.ok) {
-        return new CliExecutionError(result.error, validationResult.data.verbose);
+        throw new CliExecutionError(result.error, validationResult.data.verbose);
       }
 
       logGeneratePluginOptionsSummary(logger, result.value);
@@ -167,6 +167,7 @@ export const buildCli = (): Application<CommandContext> => {
 
   return buildApplication(command, {
     name: 'generate-plugin-options',
+    determineExitCode: () => 1,
     scanner: {
       caseStyle: 'allow-kebab-for-camel',
     },
@@ -178,11 +179,23 @@ export const buildCli = (): Application<CommandContext> => {
 
 export const runCli = async (argv = process.argv): Promise<void> => {
   const cli = buildCli();
-  await run(cli, argv.slice(2), { process });
-
-  if (typeof process.exitCode === 'number' && process.exitCode < 0) {
-    process.exitCode = 1;
+  const cliProcess = {
+    env: process.env,
+    stderr: process.stderr,
+    stdout: process.stdout,
+    exitCode: undefined as NodeJS.Process['exitCode'],
+  };
+  try {
+    await run(cli, argv.slice(2), { process: cliProcess });
+  } catch (error) {
+    handleCliError(error);
+    return;
   }
+
+  if (typeof cliProcess.exitCode === 'number' && cliProcess.exitCode < 0) {
+    cliProcess.exitCode = 1;
+  }
+  process.exitCode = cliProcess.exitCode;
 };
 
 export const handleCliError = (error: unknown): void => {

@@ -5,7 +5,7 @@
 import type { PluginConfig, PluginSetting, ReadonlyDeep } from '@nixcord/shared';
 import { Err, Ok, type Result } from '@nixcord/shared';
 import type { Node } from 'ts-morph';
-import { z } from 'zod';
+import * as z from 'zod';
 import type { EnumLiteral } from '../foundation/index.js';
 
 /**

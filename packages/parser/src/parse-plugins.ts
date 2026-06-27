@@ -21,7 +21,7 @@ import fse from 'fs-extra';
 import pLimit from 'p-limit';
 import { basename, dirname, join, normalize } from 'pathe';
 import { type Project, SyntaxKind } from 'ts-morph';
-import { z } from 'zod';
+import * as z from 'zod';
 import { diagnosticsFromSettingsExtraction } from './diagnostics.js';
 import {
   createPluginSourceFileSession,

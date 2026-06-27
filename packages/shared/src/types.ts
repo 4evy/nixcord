@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import type { Exact, ReadonlyDeep, SetRequired, Simplify } from './type-utils.js';
 
 export interface PluginSetting {

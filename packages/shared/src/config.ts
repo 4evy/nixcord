@@ -1,6 +1,6 @@
 import type equicordPackage from 'equicord/package.json';
 import type vencordPackage from 'vencord/package.json';
-import { z } from 'zod';
+import * as z from 'zod';
 import type { Simplify } from './type-utils.js';
 
 type PackageName<T extends { name: string }> = T['name'];
