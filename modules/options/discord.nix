@@ -6,8 +6,8 @@
   ...
 }:
 let
-  inherit (lib) mkDefault mkEnableOption mkOption types;
-  vencordPackage = pkgs.callPackage ../../pkgs/vencord.nix { unstable = false; };
+  inherit (lib) mkEnableOption mkOption types;
+  vencordPackage = pkgs.callPackage ../../pkgs/vencord.nix { };
   equicordPackage = pkgs.callPackage ../../pkgs/equicord.nix { };
 in
 {
@@ -51,19 +51,19 @@ in
     vencord = {
       enable = mkOption {
         type = types.bool;
-        default = true;
+        default = false;
         description = "Whether to enable Vencord for Discord (non-Vesktop).";
       };
       package = mkOption {
         type = types.package;
         default = nixcordPkgs.vencord or vencordPackage;
-        defaultText = lib.literalExpression "pkgs.callPackage ../../pkgs/vencord.nix { unstable = false; }";
+        defaultText = lib.literalExpression "pkgs.callPackage ../../pkgs/vencord.nix { }";
         description = "The Vencord package to use.";
       };
       unstable = mkOption {
         type = types.bool;
         default = false;
-        description = "Whether to use the unstable Vencord build from the master branch.";
+        description = "Deprecated. Vencord now tracks the latest upstream branch build by default.";
       };
     };
     equicord = {
@@ -109,8 +109,4 @@ in
       };
     };
   };
-
-  config.programs.nixcord.discord.vencord.enable = mkDefault (
-    !config.programs.nixcord.discord.equicord.enable
-  );
 }
