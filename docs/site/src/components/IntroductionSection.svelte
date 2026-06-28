@@ -22,9 +22,9 @@ import TitlePage from './TitlePage.svelte';
   <p class={paragraphClass}>Nixcord lets you manage <a class={`link ${linkClass}`} href="https://github.com/Vendicated/Vencord">Vencord</a>, <a class={`link ${linkClass}`} href="https://github.com/Equicord/Equicord">Equicord</a>, and clients like <a class={`link ${linkClass}`} href="https://github.com/Vencord/Vesktop">Vesktop</a>, <a class={`link ${linkClass}`} href="https://github.com/SpikeHD/Dorion">Dorion</a>, and <a class={`link ${linkClass}`} href="https://github.com/Legcord/Legcord">Legcord</a> declaratively</p>
   <p class={paragraphClass}>Instead of configuring your plugins via the UI (and losing them when you reinstall), you define everything in Nix. It handles patching the client, injecting the config, and keeping your setup reproducible</p>
 
-  <blockquote class="my-4 rounded-r-sm border-l-4 border-[#167cb9] bg-sky-50 px-4 py-3 text-neutral-900">
+  <aside class="callout my-4 rounded-r-sm border-l-4 border-[#167cb9] bg-sky-50 px-4 py-3 text-neutral-900" aria-label="Heads up">
     <p class="m-0 max-w-[72ch]"><strong>Heads up:</strong> Since this is declarative, the in-app "Plugins" menu won't save changes permanently. You have to update your <code class={literalCodeClass}>.nix</code> file to make settings stick</p>
-  </blockquote>
+  </aside>
 
   <p class={paragraphClass}>It supports:</p>
   <ul class="my-3 ml-8 list-disc">
@@ -39,18 +39,20 @@ import TitlePage from './TitlePage.svelte';
     <p class={paragraphClass}>Add Nixcord to your <code class={literalCodeClass}>flake.nix</code> inputs:</p>
     <CodeBlock code={flakeExample} />
     <p class={paragraphClass}>Then import the module:</p>
-    <p class={paragraphClass}><strong>Home Manager (Recommended)</strong></p>
+    <h4 class="mt-5 mb-2 text-[1.05rem] leading-snug font-semibold text-neutral-900">Home Manager (Recommended)</h4>
     <CodeBlock code={homeManagerExample} />
-    <p class={paragraphClass}><strong>NixOS (System-wide)</strong></p>
+    <h4 class="mt-5 mb-2 text-[1.05rem] leading-snug font-semibold text-neutral-900">NixOS (System-wide)</h4>
     <CodeBlock code={nixosExample} />
-    <p class={paragraphClass}><strong>nix-darwin (macOS)</strong></p>
+    <h4 class="mt-5 mb-2 text-[1.05rem] leading-snug font-semibold text-neutral-900">nix-darwin (macOS)</h4>
     <CodeBlock code={darwinExample} />
   </section>
 
   <section class={sectionClass} aria-labelledby="sec-configuration">
     <TitlePage id="sec-configuration" title="Configuration" level={3} />
     <p class={paragraphClass}>Enable your client and configure plugins:</p>
-    <p class={paragraphClass}><strong>Tip:</strong> Launch your client once manually to look through the plugins list so you know what you actually want to enable</p>
+    <aside class="callout my-4 rounded-r-sm border-l-4 border-[#268598] bg-sky-50 px-4 py-3 text-neutral-900" aria-label="Tip">
+      <p class="m-0 max-w-[72ch]"><strong>Tip:</strong> Launch your client once manually to look through the plugins list so you know what you actually want to enable</p>
+    </aside>
     <CodeBlock code={configurationExample} />
   </section>
 
@@ -74,6 +76,8 @@ import TitlePage from './TitlePage.svelte';
       <li class="my-1"><p class={paragraphClass}>Log in and close it</p></li>
       <li class="my-1"><p class={paragraphClass}>Enable <code class={literalCodeClass}>dorion.enable = true</code> in your config and rebuild</p></li>
     </ol>
-    <p class={paragraphClass}><em>Dorion uses WebKitGTK, so voice/video might fail with "Unsupported Browser" errors. Can't fix that on our end</em></p>
+    <aside class="callout my-4 rounded-r-sm border-l-4 border-neutral-400 bg-neutral-50 px-4 py-3 text-neutral-900" aria-label="Dorion compatibility note">
+      <p class="m-0 max-w-[72ch]">Dorion uses WebKitGTK, so voice/video might fail with "Unsupported Browser" errors. Can't fix that on our end</p>
+    </aside>
   </section>
 </section>

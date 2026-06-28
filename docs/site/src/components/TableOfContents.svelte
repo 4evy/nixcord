@@ -16,6 +16,7 @@ let {
 
 const isMainToc = $derived(title != null);
 const tocTitle = $derived(title ?? 'In This Section');
+const tocTitleId = $derived(`${items[0]?.href.replace(/^#/, '') ?? 'root'}-toc-title`);
 </script>
 
 <nav
@@ -24,9 +25,13 @@ const tocTitle = $derived(title ?? 'In This Section');
       ? 'my-7 border-l-4 border-l-[#268598] px-5 py-4'
       : 'my-5 max-w-md border-l-4 border-l-neutral-300 px-4 py-3'
   }`}
-  aria-label={tocTitle}
+  aria-labelledby={tocTitleId}
 >
-  <p class="toc-title mt-0 mb-2 text-[0.95rem] font-semibold text-neutral-900">{tocTitle}</p>
+  {#if isMainToc}
+    <h2 id={tocTitleId} class="toc-title mt-0 mb-2 text-[0.95rem] font-semibold text-neutral-900">{tocTitle}</h2>
+  {:else}
+    <h3 id={tocTitleId} class="toc-title mt-0 mb-2 text-[0.95rem] font-semibold text-neutral-900">{tocTitle}</h3>
+  {/if}
   <ul class="toc-list m-0 list-none p-0">
     {#each items as item (item.href)}
       <li class="my-1">

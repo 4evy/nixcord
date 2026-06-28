@@ -54,19 +54,25 @@ function revealCurrentHash() {
   <TitlePage id="sec-options" title="Configuration Options" level={2} />
   <p class={paragraphClass}>Here is the complete reference for every available option in Nixcord. This list is auto-generated directly from the source modules</p>
 
-  <section id="appendix-configuration-options" class="variablelist mt-5 scroll-mt-4" aria-label="Configuration options reference">
+  <section
+    id="appendix-configuration-options"
+    class="variablelist mt-5 scroll-mt-4"
+    aria-labelledby="appendix-configuration-options-heading"
+  >
+    <h3 id="appendix-configuration-options-heading" class="sr-only">Configuration options reference</h3>
     {#if optionsError}
-      <p class="my-3 max-w-[72ch] rounded-r-sm border-l-4 border-[#ff6700] bg-orange-50 px-4 py-3 text-neutral-950">
+      <p
+        class="my-3 max-w-[72ch] rounded-r-sm border-l-4 border-[#ff6700] bg-orange-50 px-4 py-3 text-neutral-950"
+        role="alert"
+      >
         Unable to load options.json: {optionsError}
       </p>
     {:else if optionsLoading}
-      <p class={paragraphClass}>Loading options...</p>
+      <p class={paragraphClass} role="status">Loading options...</p>
     {:else}
-      <section class="option-sections mt-5" aria-label={`${options.length} configuration options grouped by source`}>
-        {#each sections as section (section.id)}
-          <OptionSection {section} />
-        {/each}
-      </section>
+      {#each sections as section (section.id)}
+        <OptionSection {section} />
+      {/each}
     {/if}
   </section>
 </section>
