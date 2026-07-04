@@ -13,6 +13,7 @@ export const revision = __NIXCORD_REVISION__;
 export const mainToc = [
   { href: '#sec-preface', label: 'Preface' },
   { href: '#sec-introduction', label: 'Introduction' },
+  { href: '#sec-converter', label: 'Settings Converter' },
   { href: '#sec-options', label: 'Configuration Options' },
 ];
 

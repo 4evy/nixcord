@@ -5,6 +5,7 @@ import IntroductionSection from './components/IntroductionSection.svelte';
 import ModeToggle from './components/ModeToggle.svelte';
 import OptionsReference from './components/OptionsReference.svelte';
 import PrefaceSection from './components/PrefaceSection.svelte';
+import SettingsConverter from './components/SettingsConverter.svelte';
 import TableOfContents from './components/TableOfContents.svelte';
 import TitlePage from './components/TitlePage.svelte';
 </script>
@@ -36,6 +37,7 @@ import TitlePage from './components/TitlePage.svelte';
     <TableOfContents title="Table of Contents" items={mainToc} />
     <PrefaceSection />
     <IntroductionSection />
+    <SettingsConverter />
     <OptionsReference />
   </main>
 </div>

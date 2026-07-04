@@ -13,6 +13,10 @@ let
     fileset = lib.fileset.unions [
       ../bun.lock
       ../package.json
+      ../modules/plugins/equicord.json
+      ../modules/plugins/parse-rules.json
+      ../modules/plugins/shared.json
+      ../modules/plugins/vencord.json
       ./site
     ];
   };
@@ -35,8 +39,8 @@ let
   system = stdenvNoCC.hostPlatform.system;
 
   outputHashes = {
-    x86_64-linux = "sha256-1UXUse+syu7PaJv5iv4Edja8Tsy/WB5XOHD8yPqYEx8=";
-    aarch64-darwin = "sha256-W3v1MN+st9F2GNEATY5LaRP5/X+nDFGyWSUuLhV5gbo=";
+    x86_64-linux = "sha256-d0jLAPJzE/zv5CLhNFb4zrcmJvo+VJHmPSBh5Z11bts=";
+    aarch64-darwin = "sha256-iVswuO/5wuraRUrVyYymjkJ0WXV5/ielX5+W5DFdjSA=";
   };
 
   deps = stdenvNoCC.mkDerivation {

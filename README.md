@@ -14,7 +14,7 @@ Manage [Vencord](https://github.com/Vendicated/Vencord), [Equicord](https://gith
 [![GitHub stars](https://img.shields.io/github/stars/4evy/nixcord?style=flat-square&logo=github)](https://github.com/4evy/nixcord/stargazers)
 [![Built with Nix](https://img.shields.io/badge/built%20with-Nix-5277C3?style=flat-square&logo=nixos&logoColor=white)](https://nixos.org/)
 
-[Quickstart](#quickstart) | [Configuration](#configuration) | [Options](https://4evy.github.io/nixcord/) | [User Plugins](#third-party-user-plugins)
+[Quickstart](#quickstart) | [Configuration](#configuration) | [Settings Converter](#settings-converter) | [Options](https://4evy.github.io/nixcord/) | [User Plugins](#third-party-user-plugins)
 
 </div>
 
@@ -130,6 +130,10 @@ You can configure Vencord, Equicord, Vesktop, Dorion, or Legcord
 ```
 
 Check the [online docs](https://4evy.github.io/nixcord/) for the full list of options
+
+## Settings Converter
+
+Already have Vencord or Equicord configured? The docs include a browser-side [settings converter](https://4evy.github.io/nixcord/#sec-converter) that turns an exported `settings.json` into Nixcord config.
 
 ## Legcord
 
