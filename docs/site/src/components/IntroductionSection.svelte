@@ -22,7 +22,7 @@ import TitlePage from './TitlePage.svelte';
   <p class={paragraphClass}>Nixcord lets you manage <a class={`link ${linkClass}`} href="https://github.com/Vendicated/Vencord">Vencord</a>, <a class={`link ${linkClass}`} href="https://github.com/Equicord/Equicord">Equicord</a>, and clients like <a class={`link ${linkClass}`} href="https://github.com/Vencord/Vesktop">Vesktop</a>, <a class={`link ${linkClass}`} href="https://github.com/SpikeHD/Dorion">Dorion</a>, and <a class={`link ${linkClass}`} href="https://github.com/Legcord/Legcord">Legcord</a> declaratively</p>
   <p class={paragraphClass}>Instead of configuring your plugins via the UI (and losing them when you reinstall), you define everything in Nix. It handles patching the client, injecting the config, and keeping your setup reproducible</p>
 
-  <aside class="callout my-4 rounded-r-sm border-l-4 border-[#167cb9] bg-sky-50 px-4 py-3 text-neutral-900" aria-label="Heads up">
+  <aside class="callout my-4 rounded-r-sm border-l-4 border-[#167cb9] bg-sky-50 px-4 py-3 text-neutral-900 dark:bg-[#142633] dark:text-neutral-100" aria-label="Heads up">
     <p class="m-0 max-w-[72ch]"><strong>Heads up:</strong> Since this is declarative, the in-app "Plugins" menu won't save changes permanently. You have to update your <code class={literalCodeClass}>.nix</code> file to make settings stick</p>
   </aside>
 
@@ -39,18 +39,18 @@ import TitlePage from './TitlePage.svelte';
     <p class={paragraphClass}>Add Nixcord to your <code class={literalCodeClass}>flake.nix</code> inputs:</p>
     <CodeBlock code={flakeExample} />
     <p class={paragraphClass}>Then import the module:</p>
-    <h4 class="mt-5 mb-2 text-[1.05rem] leading-snug font-semibold text-neutral-900">Home Manager (Recommended)</h4>
+    <h4 class="mt-5 mb-2 text-[1.05rem] leading-snug font-semibold text-neutral-900 dark:text-neutral-100">Home Manager (Recommended)</h4>
     <CodeBlock code={homeManagerExample} />
-    <h4 class="mt-5 mb-2 text-[1.05rem] leading-snug font-semibold text-neutral-900">NixOS (System-wide)</h4>
+    <h4 class="mt-5 mb-2 text-[1.05rem] leading-snug font-semibold text-neutral-900 dark:text-neutral-100">NixOS (System-wide)</h4>
     <CodeBlock code={nixosExample} />
-    <h4 class="mt-5 mb-2 text-[1.05rem] leading-snug font-semibold text-neutral-900">nix-darwin (macOS)</h4>
+    <h4 class="mt-5 mb-2 text-[1.05rem] leading-snug font-semibold text-neutral-900 dark:text-neutral-100">nix-darwin (macOS)</h4>
     <CodeBlock code={darwinExample} />
   </section>
 
   <section class={sectionClass} aria-labelledby="sec-configuration">
     <TitlePage id="sec-configuration" title="Configuration" level={3} />
     <p class={paragraphClass}>Enable your client and configure plugins:</p>
-    <aside class="callout my-4 rounded-r-sm border-l-4 border-[#268598] bg-sky-50 px-4 py-3 text-neutral-900" aria-label="Tip">
+    <aside class="callout my-4 rounded-r-sm border-l-4 border-[#268598] bg-sky-50 px-4 py-3 text-neutral-900 dark:bg-[#142633] dark:text-neutral-100" aria-label="Tip">
       <p class="m-0 max-w-[72ch]"><strong>Tip:</strong> Launch your client once manually to look through the plugins list so you know what you actually want to enable</p>
     </aside>
     <CodeBlock code={configurationExample} />
@@ -76,7 +76,7 @@ import TitlePage from './TitlePage.svelte';
       <li class="my-1"><p class={paragraphClass}>Log in, wait for Discord to finish loading, then close it</p></li>
       <li class="my-1"><p class={paragraphClass}>Enable <code class={literalCodeClass}>dorion.enable = true</code> in your config and rebuild</p></li>
     </ol>
-    <aside class="callout my-4 rounded-r-sm border-l-4 border-neutral-400 bg-neutral-50 px-4 py-3 text-neutral-900" aria-label="Dorion compatibility note">
+    <aside class="callout my-4 rounded-r-sm border-l-4 border-neutral-400 bg-neutral-50 px-4 py-3 text-neutral-900 dark:border-neutral-500 dark:bg-[#171d24] dark:text-neutral-100" aria-label="Dorion compatibility note">
       <p class="m-0 max-w-[72ch]">Upstream Dorion still marks Linux voice as unsupported because WebKitGTK WebRTC support is incomplete. Voice/video may fail even after Nixcord is configured.</p>
     </aside>
   </section>

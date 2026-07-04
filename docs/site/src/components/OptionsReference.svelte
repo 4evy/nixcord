@@ -62,7 +62,7 @@ function revealCurrentHash() {
     <h3 id="appendix-configuration-options-heading" class="sr-only">Configuration options reference</h3>
     {#if optionsError}
       <p
-        class="my-3 max-w-[72ch] rounded-r-sm border-l-4 border-[#ff6700] bg-orange-50 px-4 py-3 text-neutral-950"
+        class="my-3 max-w-[72ch] rounded-r-sm border-l-4 border-[#ff6700] bg-orange-50 px-4 py-3 text-neutral-950 dark:bg-[#2a1d18] dark:text-neutral-100"
         role="alert"
       >
         Unable to load options.json: {optionsError}
