@@ -5,6 +5,12 @@ on:
     - cron: "0 */8 * * *" # Every 8 hours
   workflow_dispatch:
 
+env:
+  NIXPKGS_EXPR: >-
+    let flake = builtins.getFlake (toString ./.);
+        pkgs = import flake.inputs.nixpkgs { system = builtins.currentSystem; };
+    in
+
 jobs:
   update-plugin:
     name: Update ${{ matrix.variant }}
@@ -63,7 +69,7 @@ jobs:
           set -eo pipefail
           VERSION_EXPR="${{ matrix.version_expr }}"
           OLD_VERSION=$(nix eval --impure --raw --expr \
-            "with import <nixpkgs> {}; (callPackage ./pkgs/${{ matrix.package_file }} ${{ matrix.nix_call_args }}).$VERSION_EXPR")
+            "$NIXPKGS_EXPR (pkgs.callPackage ./pkgs/${{ matrix.package_file }} ${{ matrix.nix_call_args }}).$VERSION_EXPR")
           if [ "${{ matrix.version_truncate }}" == "true" ]; then
             OLD_VERSION=${OLD_VERSION:0:7}
           fi
@@ -78,7 +84,7 @@ jobs:
         run: |
           set -eo pipefail
           echo "::group::Updating ${{ matrix.variant }}"
-          nix build --impure --expr 'let pkgs = import <nixpkgs> {}; in (pkgs.callPackage ./pkgs/${{ matrix.package_file }} ${{ matrix.nix_call_args }}).passthru.updateScript'
+          nix build --impure --expr "$NIXPKGS_EXPR (pkgs.callPackage ./pkgs/${{ matrix.package_file }} ${{ matrix.nix_call_args }}).passthru.updateScript"
           ./result/bin/${{ matrix.update_bin }}
           echo "::notice::${{ matrix.variant }} update finished."
           echo "::endgroup::"
@@ -91,7 +97,7 @@ jobs:
           set -eo pipefail
           VERSION_EXPR="${{ matrix.version_expr }}"
           NEW_VERSION=$(nix eval --impure --raw --expr \
-            "with import <nixpkgs> {}; (callPackage ./pkgs/${{ matrix.package_file }} ${{ matrix.nix_call_args }}).$VERSION_EXPR")
+            "$NIXPKGS_EXPR (pkgs.callPackage ./pkgs/${{ matrix.package_file }} ${{ matrix.nix_call_args }}).$VERSION_EXPR")
           if [ "${{ matrix.version_truncate }}" == "true" ]; then
             NEW_VERSION=${NEW_VERSION:0:7}
           fi
@@ -111,7 +117,7 @@ jobs:
         run: |
           set -eo pipefail
           echo "::group::Testing build of ${{ matrix.variant }}"
-          nix-build -E 'with import <nixpkgs> {}; callPackage ./pkgs/${{ matrix.package_file }} ${{ matrix.nix_call_args }}'
+          nix-build -E "$NIXPKGS_EXPR pkgs.callPackage ./pkgs/${{ matrix.package_file }} ${{ matrix.nix_call_args }}"
           echo "::notice::Build succeeded"
           echo "::endgroup::"
           unlink result
@@ -217,7 +223,7 @@ jobs:
         run: |
           set -eo pipefail
           echo "::group::Updating Equicord Darwin pnpmDeps"
-          nix build --impure --expr 'let pkgs = import <nixpkgs> {}; in (pkgs.callPackage ./pkgs/equicord.nix {}).passthru.updateScript'
+          nix build --impure --expr "$NIXPKGS_EXPR (pkgs.callPackage ./pkgs/equicord.nix {}).passthru.updateScript"
           ./result/bin/equicord-update --pnpm-only
           echo "::endgroup::"
           rm ./result
@@ -229,7 +235,7 @@ jobs:
         run: |
           set -eo pipefail
           echo "::group::Testing build of Equicord (Darwin)"
-          nix-build -E 'with import <nixpkgs> {}; callPackage ./pkgs/equicord.nix {}'
+          nix-build -E "$NIXPKGS_EXPR pkgs.callPackage ./pkgs/equicord.nix {}"
           echo "::notice::Build succeeded"
           echo "::endgroup::"
           unlink result
