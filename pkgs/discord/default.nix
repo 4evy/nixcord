@@ -90,10 +90,7 @@ let
       "$out/Applications/${binaryName}.app/Contents/Resources";
 
   modulesDir =
-    if stdenvNoCC.isLinux then
-      "$out/opt/${binaryName}/modules"
-    else
-      "${resourcesDir}/modules";
+    if stdenvNoCC.isLinux then "$out/opt/${binaryName}/modules" else "${resourcesDir}/modules";
 
   sourceSet = import ./lib/sources.nix {
     inherit
@@ -196,19 +193,18 @@ let
     else
       "require('path').join(require('os').userInfo().homedir, 'Library', 'Application Support', '${configDirName}', '${version}', 'modules', 'discord_krisp')";
 
-  overrideArgs =
-    {
-      inherit
-        source
-        withVencord
-        withEquicord
-        withOpenASAR
-        ;
-      commandLineArgs = if stdenvNoCC.isDarwin then "" else commandLineArgsString;
-    }
-    // lib.optionalAttrs (vencord != null) { inherit vencord; }
-    // lib.optionalAttrs (equicord != null) { inherit equicord; }
-    // lib.optionalAttrs (openasar != null) { inherit openasar; };
+  overrideArgs = {
+    inherit
+      source
+      withVencord
+      withEquicord
+      withOpenASAR
+      ;
+    commandLineArgs = if stdenvNoCC.isDarwin then "" else commandLineArgsString;
+  }
+  // lib.optionalAttrs (vencord != null) { inherit vencord; }
+  // lib.optionalAttrs (equicord != null) { inherit equicord; }
+  // lib.optionalAttrs (openasar != null) { inherit openasar; };
 
   package = basePackage.override overrideArgs;
 
