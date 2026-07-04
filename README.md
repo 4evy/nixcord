@@ -1,8 +1,25 @@
+<div align="center">
+
+<img src="https://repository-images.githubusercontent.com/818567152/b2e5b9af-ce34-430e-a2ec-e98e0d3470d8" alt="Nixcord" width="240">
+
 # Nixcord
 
-Manage [Vencord](https://github.com/Vendicated/Vencord), [Equicord](https://github.com/Equicord/Equicord), [Vesktop](https://github.com/Vencord/Vesktop), and [Dorion](https://github.com/SpikeHD/Dorion) configuration declaratively
+**One Nix config for your Discord mods, themes, and clients.**
 
-> **Heads up:** Since this is declarative, the in-app "Plugins" menu won't save changes permanently. You have to update your `.nix` file to make settings stick
+Manage [Vencord](https://github.com/Vendicated/Vencord), [Equicord](https://github.com/Equicord/Equicord), [Vesktop](https://github.com/Vencord/Vesktop), [Dorion](https://github.com/SpikeHD/Dorion), and [Legcord](https://github.com/Legcord/Legcord) from your Nix config.
+
+[![Flake Checks](https://github.com/4evy/nixcord/actions/workflows/check.yaml/badge.svg?branch=main)](https://github.com/4evy/nixcord/actions/workflows/check.yaml)
+[![Docs](https://github.com/4evy/nixcord/actions/workflows/github-pages.yaml/badge.svg?branch=main)](https://github.com/4evy/nixcord/actions/workflows/github-pages.yaml)
+[![MIT License](https://img.shields.io/github/license/4evy/nixcord?style=flat-square)](https://github.com/4evy/nixcord/blob/main/LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/4evy/nixcord?style=flat-square&logo=github)](https://github.com/4evy/nixcord/stargazers)
+[![Built with Nix](https://img.shields.io/badge/built%20with-Nix-5277C3?style=flat-square&logo=nixos&logoColor=white)](https://nixos.org/)
+
+[Quickstart](#quickstart) | [Configuration](#configuration) | [Options](https://4evy.github.io/nixcord/) | [User Plugins](#third-party-user-plugins)
+
+</div>
+
+> [!IMPORTANT]
+> Nixcord is declarative, so changes made in the client's in-app "Plugins" menu are not persistent. Update your `.nix` file to make settings stick.
 
 ## Quickstart
 
@@ -15,10 +32,10 @@ Add to `flake.nix`:
     nixcord.url = "github:4evy/nixcord";
     # ...
   };
-  
+
   # ...
 }
-````
+```
 
 Then import the module
 
@@ -167,20 +184,20 @@ You can load custom Vencord/Equicord plugins that aren't in the upstream plugin 
 
 ## A Note on Dorion
 
-Dorion is a bit annoying because it needs `LocalStorage` databases that only exist after a successful launch. If you just enable it in Nix immediately, it won't work
+Dorion can read its Nix-managed `config.json` immediately, but Vencord settings live in Discord's WebKit `LocalStorage`. That SQLite database is only created after Dorion has successfully loaded Discord once, so Nixcord cannot patch `VencordSettings` on a completely fresh profile.
 
-1.  Run the upstream Dorion package once temporarily: `nix run nixpkgs#dorion`
-2.  Log in and close it.
-3.  Enable `dorion.enable = true` in your config and rebuild.
+1. Run Dorion once before enabling Nixcord's Dorion module: `nix run nixpkgs#dorion`
+2. Log in, wait for Discord to finish loading, then close it.
+3. Enable `dorion.enable = true` in your config and rebuild.
 
-*Also, Dorion uses WebKitGTK, so voice/video might fail with "Unsupported Browser" errors. Can't fix that on our end, sorry.*
+> [!WARNING]
+> Upstream Dorion still marks Linux voice as unsupported because WebKitGTK WebRTC support is incomplete. Voice/video may fail even after Nixcord is configured.
 
 ## Docs
 
-  * **Web:** [4evy.github.io/nixcord](https://4evy.github.io/nixcord/)
-  * **Build locally:** `nix build .#docs`
-  * **JSON:** `nix build .#docs-json`
+- **Web:** [4evy.github.io/nixcord](https://4evy.github.io/nixcord/)
+- **Build locally:** `nix build .#docs`
+- **JSON:** `nix build .#docs-json`
 
------
-
-*Disclaimer: Vencord violates Discord ToS. You probably know this already, but use at your own risk.*
+> [!CAUTION]
+> Vencord & Equicord violates Discord ToS. You probably know this already, but use at your own risk!

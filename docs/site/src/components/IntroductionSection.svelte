@@ -70,14 +70,14 @@ import TitlePage from './TitlePage.svelte';
 
   <section class={sectionClass} aria-labelledby="sec-dorion">
     <TitlePage id="sec-dorion" title="A Note on Dorion" level={3} />
-    <p class={paragraphClass}>Dorion needs <code class={literalCodeClass}>LocalStorage</code> databases that only exist after a successful launch. If you just enable it in Nix immediately, it won't work</p>
+    <p class={paragraphClass}>Dorion can read its Nix-managed <code class={literalCodeClass}>config.json</code> immediately, but Vencord settings live in Discord's WebKit <code class={literalCodeClass}>LocalStorage</code>. That SQLite database is only created after Dorion has successfully loaded Discord once, so Nixcord cannot patch <code class={literalCodeClass}>VencordSettings</code> on a completely fresh profile.</p>
     <ol class="my-3 ml-8 list-decimal">
-      <li class="my-1"><p class={paragraphClass}>Run it once temporarily: <code class={literalCodeClass}>nix run github:4evy/nixcord#dorion</code></p></li>
-      <li class="my-1"><p class={paragraphClass}>Log in and close it</p></li>
+      <li class="my-1"><p class={paragraphClass}>Run Dorion once before enabling Nixcord's Dorion module: <code class={literalCodeClass}>nix run nixpkgs#dorion</code></p></li>
+      <li class="my-1"><p class={paragraphClass}>Log in, wait for Discord to finish loading, then close it</p></li>
       <li class="my-1"><p class={paragraphClass}>Enable <code class={literalCodeClass}>dorion.enable = true</code> in your config and rebuild</p></li>
     </ol>
     <aside class="callout my-4 rounded-r-sm border-l-4 border-neutral-400 bg-neutral-50 px-4 py-3 text-neutral-900" aria-label="Dorion compatibility note">
-      <p class="m-0 max-w-[72ch]">Dorion uses WebKitGTK, so voice/video might fail with "Unsupported Browser" errors. Can't fix that on our end</p>
+      <p class="m-0 max-w-[72ch]">Upstream Dorion still marks Linux voice as unsupported because WebKitGTK WebRTC support is incomplete. Voice/video may fail even after Nixcord is configured.</p>
     </aside>
   </section>
 </section>
