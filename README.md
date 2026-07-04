@@ -112,7 +112,7 @@ You can configure Vencord, Equicord, Vesktop, Dorion, or Legcord
 }
 ```
 
-Check the [online docs](https://flameflag.github.io/nixcord/) for the full list of options
+Check the [online docs](https://4evy.github.io/nixcord/) for the full list of options
 
 ## Legcord
 
@@ -177,7 +177,7 @@ Dorion is a bit annoying because it needs `LocalStorage` databases that only exi
 
 ## Docs
 
-  * **Web:** [flameflag.github.io/nixcord](https://flameflag.github.io/nixcord/)
+  * **Web:** [4evy.github.io/nixcord](https://4evy.github.io/nixcord/)
   * **Build locally:** `nix build .#docs`
   * **JSON:** `nix build .#docs-json`
 
