@@ -81,7 +81,7 @@ let
 
   mkGitHubDeclaration = subpath: line: {
     url =
-      "https://github.com/FlameFlag/nixcord/blob/${revision}/${subpath}"
+      "https://github.com/4evy/nixcord/blob/${revision}/${subpath}"
       + optionalString (line != null) "#L${toString line}";
     name = "<nixcord/${subpath}>";
   };

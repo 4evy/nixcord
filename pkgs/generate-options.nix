@@ -196,7 +196,7 @@ stdenvNoCC.mkDerivation (finalAttrs: {
 
   meta = {
     description = "Generate nixcord Vencord and Equicord plugin option files";
-    homepage = "https://github.com/FlameFlag/nixcord";
+    homepage = "https://github.com/4evy/nixcord";
     license = lib.licenses.mit;
     platforms = lib.platforms.unix;
   };

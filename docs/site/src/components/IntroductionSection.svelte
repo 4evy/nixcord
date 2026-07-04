@@ -72,7 +72,7 @@ import TitlePage from './TitlePage.svelte';
     <TitlePage id="sec-dorion" title="A Note on Dorion" level={3} />
     <p class={paragraphClass}>Dorion needs <code class={literalCodeClass}>LocalStorage</code> databases that only exist after a successful launch. If you just enable it in Nix immediately, it won't work</p>
     <ol class="my-3 ml-8 list-decimal">
-      <li class="my-1"><p class={paragraphClass}>Run it once temporarily: <code class={literalCodeClass}>nix run github:FlameFlag/nixcord#dorion</code></p></li>
+      <li class="my-1"><p class={paragraphClass}>Run it once temporarily: <code class={literalCodeClass}>nix run github:4evy/nixcord#dorion</code></p></li>
       <li class="my-1"><p class={paragraphClass}>Log in and close it</p></li>
       <li class="my-1"><p class={paragraphClass}>Enable <code class={literalCodeClass}>dorion.enable = true</code> in your config and rebuild</p></li>
     </ol>

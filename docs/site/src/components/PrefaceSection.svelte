@@ -16,7 +16,7 @@ import TitlePage from './TitlePage.svelte';
 
   <section class={sectionClass} aria-labelledby="reporting-issues">
     <TitlePage id="reporting-issues" title="Reporting Issues" level={3} />
-    <p class={paragraphClass}>Found a bug? Check the <a class={`link ${linkClass}`} href="https://github.com/FlameFlag/nixcord/issues">issue tracker</a> first to see if we're already working on it</p>
+    <p class={paragraphClass}>Found a bug? Check the <a class={`link ${linkClass}`} href="https://github.com/4evy/nixcord/issues">issue tracker</a> first to see if we're already working on it</p>
     <p class={paragraphClass}>If it's new, open a ticket with your config, system info, and logs. The more details you give us, the faster we can fix it</p>
   </section>
 
