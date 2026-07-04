@@ -18,10 +18,6 @@
     "zod": "^4.4.3",
     "zod-validation-error": "^5.0.0"
   },
-  "devDependencies": {
-    "equicord": "github:Equicord/Equicord#07867310d7e6cf7e77b1fa78ed04a1176bf76247",
-    "vencord": "github:Vendicated/Vencord#70d41b0584d8e8b094cbaa771b170dc6e7cf68b3"
-  },
   "files": [
     "dist"
   ]

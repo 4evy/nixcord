@@ -19,12 +19,10 @@ dependency_name="@dependencyName@"
 
 wrong_hash="sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
 root_package_json_file="./package.json"
-shared_package_json_file="./packages/shared/package.json"
 bun_lock_file="./bun.lock"
 parsed_nix_expr=""
 original_nix_content=""
 original_root_package_json_content=""
-original_shared_package_json_content=""
 original_bun_lock_content=""
 
 die() {
@@ -46,7 +44,6 @@ read_file_into() {
 
 read_file_into "$nix_file" original_nix_content
 read_file_into "$root_package_json_file" original_root_package_json_content
-read_file_into "$shared_package_json_file" original_shared_package_json_content
 read_file_into "$bun_lock_file" original_bun_lock_content
 
 cleanup() {
@@ -54,7 +51,6 @@ cleanup() {
   if [[ $exit_code -ne 0 ]]; then
     printf '%s' "$original_nix_content" > "$nix_file"
     printf '%s' "$original_root_package_json_content" > "$root_package_json_file"
-    printf '%s' "$original_shared_package_json_content" > "$shared_package_json_file"
     printf '%s' "$original_bun_lock_content" > "$bun_lock_file"
   fi
   exit "$exit_code"
@@ -270,14 +266,13 @@ update_pnpm_deps_hash() {
 
 update_bun_dependency() {
   local revision="$1"
-  local dependency_spec
+  local dependency_value
 
   [[ -n "$dependency_name" ]] || return
 
-  dependency_spec="${dependency_name}@github:${owner}/${repo}#${revision}"
+  dependency_value="github:${owner}/${repo}#${revision}"
   log "Updating Bun dependency $dependency_name to $revision..."
-  bun add --dev --no-progress "$dependency_spec"
-  bun add --dev --no-progress --cwd "$(dirname "$shared_package_json_file")" "$dependency_spec"
+  bun add --dev --no-progress "${dependency_name}@${dependency_value}"
 }
 
 determine_update() {

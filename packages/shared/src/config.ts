@@ -1,12 +1,8 @@
-import type equicordPackage from 'equicord/package.json';
-import type vencordPackage from 'vencord/package.json';
 import * as z from 'zod';
 import type { Simplify } from './type-utils.js';
 
-type PackageName<T extends { name: string }> = T['name'];
-
-const VENCORD_PACKAGE: PackageName<typeof vencordPackage> = 'vencord';
-const EQUICORD_PACKAGE: PackageName<typeof equicordPackage> = 'equicord';
+const VENCORD_PACKAGE = 'vencord';
+const EQUICORD_PACKAGE = 'equicord';
 
 const CliConfigSchema = z.object({
   version: z.string().min(1),
