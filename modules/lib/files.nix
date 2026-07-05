@@ -182,6 +182,7 @@ let
           enable = discord.enable && discord.settings != { };
           src = settings.discordSettingsFile;
           dest = "${discord.configDir}/settings.json";
+          writable = true;
         })
         (copy {
           name = "dorion-config";

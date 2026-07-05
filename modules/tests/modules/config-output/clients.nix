@@ -138,6 +138,8 @@ in
       );
       settingsJson = testLib.output.homeFileJSON config "/home/testuser/.config/discord/settings.json";
     in
+    assert !(builtins.hasAttr "/home/testuser/.config/discord/settings.json" config.home.file);
+    assert config.home.activation ? nixcord-discord-settings;
     assert settingsJson.BACKGROUND_COLOR == "#2c2d32";
     assert settingsJson.SKIP_HOST_UPDATE == true;
     assert settingsJson.SKIP_MODULE_UPDATE == true;
