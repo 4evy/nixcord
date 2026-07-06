@@ -76,6 +76,15 @@ in
         description = "The Equicord package to use.";
       };
     };
+    silenceNoModClientWarning = mkOption {
+      type = types.bool;
+      default = false;
+      example = true;
+      description = ''
+        Whether to acknowledge and silence the warning shown when Discord is
+        enabled without Vencord or Equicord.
+      '';
+    };
     openASAR.enable = mkOption {
       type = types.bool;
       default = true;

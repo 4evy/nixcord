@@ -45,6 +45,18 @@ in
     in
     assert builtins.any (message: lib.hasInfix "both disabled" message) warnings;
     assert builtins.any (message: lib.hasInfix "without Vencord or Equicord" message) warnings;
+    assert builtins.any (message: lib.hasInfix "silenceNoModClientWarning" message) warnings;
+    true;
+
+  "discord mod disabled warning can be acknowledged" =
+    let
+      warnings = hmWarnings {
+        enable = true;
+        discord.silenceNoModClientWarning = true;
+      };
+    in
+    assert !(builtins.any (message: lib.hasInfix "both disabled" message) warnings);
+    assert !(builtins.any (message: lib.hasInfix "without Vencord or Equicord" message) warnings);
     true;
 
   "discord mod disabled warning is skipped when discord is disabled" =
