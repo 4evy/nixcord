@@ -876,7 +876,7 @@
     }
   },
   "memberCount": {
-    "description": "Shows the number of online members, total members, and users in voice channels on the server — in the member list and tooltip. (Shared between Vencord and Equicord)",
+    "description": "Shows the number of online members, total members, and users in voice channels on the server - in the member list and tooltip. (Shared between Vencord and Equicord)",
     "settings": {
       "toolTip": {
         "type": "types.bool",
