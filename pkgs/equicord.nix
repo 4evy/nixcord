@@ -14,9 +14,9 @@
   replaceVars,
 }:
 let
-  version = "1.14.15.1-unstable-2026-07-08";
-  rev = "5acf0141bf4e20cb0244ce122a92fc6df03b6e71";
-  hash = "sha256-6K/8G2FgMIF8VwcXzJuM51tVdB2q+H9sSNMpsbbl1m8=";
+  version = "1.14.15.1-unstable-2026-07-09";
+  rev = "5f4210e7b9c4af4f3a9403fd6dbd03984cead700";
+  hash = "sha256-XbFgmR78cWiKs7dWfzK1pM+MfOYY4FSfl71y1cjAcw0=";
   pnpmDepsHashDarwin = "sha256-UiatcvcmMkegod1QGSyfKV3Gp/pP612pHEDmkgq6uS0=";
   pnpmDepsHashLinux = "sha256-UiatcvcmMkegod1QGSyfKV3Gp/pP612pHEDmkgq6uS0=";
   pnpmDepsHash = if stdenvNoCC.isDarwin then pnpmDepsHashDarwin else pnpmDepsHashLinux;
