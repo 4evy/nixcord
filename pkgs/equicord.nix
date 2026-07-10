@@ -17,7 +17,7 @@ let
   version = "1.14.15.2-unstable-2026-07-10";
   rev = "f06917ad86e9285cfe4523af2b05ab3a12276bda";
   hash = "sha256-noA8iw7cixzNH3ZherQiEr2CXMpU+XR3vSxk3gldx1E=";
-  pnpmDepsHashDarwin = "sha256-UiatcvcmMkegod1QGSyfKV3Gp/pP612pHEDmkgq6uS0=";
+  pnpmDepsHashDarwin = "sha256-dcBFN5NxFzZVWW8L3Cnvcp3LFR0WF4Ff5+I1H5XgZ3Q=";
   pnpmDepsHashLinux = "sha256-dcBFN5NxFzZVWW8L3Cnvcp3LFR0WF4Ff5+I1H5XgZ3Q=";
   pnpmDepsHash = if stdenvNoCC.isDarwin then pnpmDepsHashDarwin else pnpmDepsHashLinux;
   owner = equicord.src.owner;
