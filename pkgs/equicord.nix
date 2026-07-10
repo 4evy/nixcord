@@ -14,11 +14,11 @@
   replaceVars,
 }:
 let
-  version = "1.14.15.1-unstable-2026-07-09";
-  rev = "5f4210e7b9c4af4f3a9403fd6dbd03984cead700";
-  hash = "sha256-XbFgmR78cWiKs7dWfzK1pM+MfOYY4FSfl71y1cjAcw0=";
+  version = "1.14.15.2-unstable-2026-07-10";
+  rev = "f06917ad86e9285cfe4523af2b05ab3a12276bda";
+  hash = "sha256-noA8iw7cixzNH3ZherQiEr2CXMpU+XR3vSxk3gldx1E=";
   pnpmDepsHashDarwin = "sha256-UiatcvcmMkegod1QGSyfKV3Gp/pP612pHEDmkgq6uS0=";
-  pnpmDepsHashLinux = "sha256-UiatcvcmMkegod1QGSyfKV3Gp/pP612pHEDmkgq6uS0=";
+  pnpmDepsHashLinux = "sha256-dcBFN5NxFzZVWW8L3Cnvcp3LFR0WF4Ff5+I1H5XgZ3Q=";
   pnpmDepsHash = if stdenvNoCC.isDarwin then pnpmDepsHashDarwin else pnpmDepsHashLinux;
   owner = equicord.src.owner;
   repo = equicord.src.repo;
