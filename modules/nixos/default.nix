@@ -84,7 +84,13 @@ in
       })
       (mkIf (fileSpecs != [ ]) {
         system.activationScripts.nixcord-writeFiles = {
-          text = writeFilesScript;
+          # NixOS concatenates activation snippets in one shell, so keep this
+          # snippet's strict shell options from affecting later snippets.
+          text = ''
+            (
+              ${writeFilesScript}
+            )
+          '';
           supportsDryActivation = false;
         };
       })
