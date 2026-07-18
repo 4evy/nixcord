@@ -1,78 +1,78 @@
 {
   "linux-canary": {
     "distro": {
-      "hash": "sha256-8Wfhtj559RTNJGP633uTeSJuou03LVBZz5z5pRoGsE4=",
-      "url": "https://canary.dl2.discordapp.net/distro/app/canary/linux/x64/1.0.1469/full.distro"
+      "hash": "sha256-wZfj9arx6/6MWO4O57NCEVaeINU47b+k1fsROSPfDJE=",
+      "url": "https://canary.dl2.discordapp.net/distro/app/canary/linux/x64/1.0.1472/full.distro"
     },
     "kind": "distro",
     "modules": {
       "discord_arborium": {
-        "hash": "sha256-0LTcj28AjBIwCfNg5ryQMQ8Yw1gK1g9rZtE5OKKFxFA=",
-        "url": "https://canary.dl2.discordapp.net/distro/app/canary/linux/x64/1.0.1469/discord_arborium/1/full.distro",
+        "hash": "sha256-BnXH/wgqvJc9otGHvOBs2fIUqCGwQroxTc5g0+IrYeM=",
+        "url": "https://canary.dl2.discordapp.net/distro/app/canary/linux/x64/1.0.1472/discord_arborium/1/full.distro",
         "version": 1
       },
       "discord_cloudsync": {
-        "hash": "sha256-9rdVMPcjVab7+740F+Niuno1cb/AJ8c4fDoaJCvAR4I=",
-        "url": "https://canary.dl2.discordapp.net/distro/app/canary/linux/x64/1.0.1469/discord_cloudsync/1/full.distro",
+        "hash": "sha256-Z1ndFhjeZumY3rwsTSye/Bo1RJ5utYtIb4b0/pxho7Y=",
+        "url": "https://canary.dl2.discordapp.net/distro/app/canary/linux/x64/1.0.1472/discord_cloudsync/1/full.distro",
         "version": 1
       },
       "discord_desktop_core": {
-        "hash": "sha256-CAGd18b3JoMWJOxwkxpOVWb+kgh6CLjntBq0rGf1Eh4=",
-        "url": "https://canary.dl2.discordapp.net/distro/app/canary/linux/x64/1.0.1469/discord_desktop_core/1/full.distro",
+        "hash": "sha256-m/Bd8zT8CEZL6PjEpYRuRg0JcGjr24Z2iLaeyW/WJy8=",
+        "url": "https://canary.dl2.discordapp.net/distro/app/canary/linux/x64/1.0.1472/discord_desktop_core/1/full.distro",
         "version": 1
       },
       "discord_dispatch": {
-        "hash": "sha256-yfRUXxrPhKhXfDrHqSrMdr42xnJuNkgCh2lw7dyVCNg=",
-        "url": "https://canary.dl2.discordapp.net/distro/app/canary/linux/x64/1.0.1469/discord_dispatch/1/full.distro",
+        "hash": "sha256-ROyuzmXVGNmqJCefC+RS2FiCvu3ql57yoLNzURE+q5s=",
+        "url": "https://canary.dl2.discordapp.net/distro/app/canary/linux/x64/1.0.1472/discord_dispatch/1/full.distro",
         "version": 1
       },
       "discord_erlpack": {
-        "hash": "sha256-4RliHFDbkZcFzgwSHs81+pdYiJy+mBCA6//Hgdk2FBA=",
-        "url": "https://canary.dl2.discordapp.net/distro/app/canary/linux/x64/1.0.1469/discord_erlpack/1/full.distro",
+        "hash": "sha256-MnDfcXU/ug7oP8DAJF3JF/KeaRh0gjBQ0jpddMAi4JE=",
+        "url": "https://canary.dl2.discordapp.net/distro/app/canary/linux/x64/1.0.1472/discord_erlpack/1/full.distro",
         "version": 1
       },
       "discord_game_utils": {
-        "hash": "sha256-eU/m6nh6/6Rbh6/+RtS0y5vdOeFweWtEIJgS82UZnoU=",
-        "url": "https://canary.dl2.discordapp.net/distro/app/canary/linux/x64/1.0.1469/discord_game_utils/1/full.distro",
+        "hash": "sha256-Gm9QDiT7DVIv9R8PgImths5o/uHUux83+t6/wIa45j0=",
+        "url": "https://canary.dl2.discordapp.net/distro/app/canary/linux/x64/1.0.1472/discord_game_utils/1/full.distro",
         "version": 1
       },
       "discord_krisp": {
-        "hash": "sha256-DlubJu3bODH9h2GaCmnZ7bdFT3FocQhGw6hz4zTeIlQ=",
-        "url": "https://canary.dl2.discordapp.net/distro/app/canary/linux/x64/1.0.1469/discord_krisp/1/full.distro",
+        "hash": "sha256-hE1afBMyMC+hCLIAzBHQ9T79oaexL+5L7QIFNGtQTpU=",
+        "url": "https://canary.dl2.discordapp.net/distro/app/canary/linux/x64/1.0.1472/discord_krisp/1/full.distro",
         "version": 1
       },
       "discord_modules": {
-        "hash": "sha256-pVVxjd53t6yge+KXquSWX6LgJdXNqegWCXHQD2aS8Jc=",
-        "url": "https://canary.dl2.discordapp.net/distro/app/canary/linux/x64/1.0.1469/discord_modules/1/full.distro",
+        "hash": "sha256-pZ/sZyxX8PC4CM7plJ8Np6lS7ROsFCP7cf9zLgsfFQA=",
+        "url": "https://canary.dl2.discordapp.net/distro/app/canary/linux/x64/1.0.1472/discord_modules/1/full.distro",
         "version": 1
       },
       "discord_rpc": {
-        "hash": "sha256-lIXUR74MP2RuMG5K80N7JRTnqy3rML6GQimtmLLzpmw=",
-        "url": "https://canary.dl2.discordapp.net/distro/app/canary/linux/x64/1.0.1469/discord_rpc/1/full.distro",
+        "hash": "sha256-+h0HMZ2Hawe6giBvcTi0ru6Oi1Vqu7b4qDcVYO1fkl8=",
+        "url": "https://canary.dl2.discordapp.net/distro/app/canary/linux/x64/1.0.1472/discord_rpc/1/full.distro",
         "version": 1
       },
       "discord_spellcheck": {
-        "hash": "sha256-UjXbRdjBowvY227GE9LGGWCuzMok10KfzsjRbID8xwc=",
-        "url": "https://canary.dl2.discordapp.net/distro/app/canary/linux/x64/1.0.1469/discord_spellcheck/1/full.distro",
+        "hash": "sha256-6CAPNnrk2YZaG1BfQB587deGjghAuuM8gN7nobY9KA8=",
+        "url": "https://canary.dl2.discordapp.net/distro/app/canary/linux/x64/1.0.1472/discord_spellcheck/1/full.distro",
         "version": 1
       },
       "discord_utils": {
-        "hash": "sha256-R+xgKhwcnHPi8gCtx2gIaaniElYRRRanSuoh0ON4qhc=",
-        "url": "https://canary.dl2.discordapp.net/distro/app/canary/linux/x64/1.0.1469/discord_utils/1/full.distro",
+        "hash": "sha256-ifm7ZHNR8uhBcfgbZHHyoeO5oFonwdomLJnMFuP0BlA=",
+        "url": "https://canary.dl2.discordapp.net/distro/app/canary/linux/x64/1.0.1472/discord_utils/1/full.distro",
         "version": 1
       },
       "discord_voice": {
-        "hash": "sha256-+K2W7GIrHobeekaEXZRdjn3NTYTc714+CEypuEiM3AY=",
-        "url": "https://canary.dl2.discordapp.net/distro/app/canary/linux/x64/1.0.1469/discord_voice/1/full.distro",
+        "hash": "sha256-kDVwOdVsZdLtnzcEhH036Glls44e6Saf/HefD8uXw6M=",
+        "url": "https://canary.dl2.discordapp.net/distro/app/canary/linux/x64/1.0.1472/discord_voice/1/full.distro",
         "version": 1
       },
       "discord_zstd": {
-        "hash": "sha256-PLXyUs3wkKyB84WMRige0GpsNj6xtQPj4De3StfS31E=",
-        "url": "https://canary.dl2.discordapp.net/distro/app/canary/linux/x64/1.0.1469/discord_zstd/1/full.distro",
+        "hash": "sha256-5MCBXAMXQ5LRXyYAgCyEKuDVgw6Em9SLqsBDC21sU2Y=",
+        "url": "https://canary.dl2.discordapp.net/distro/app/canary/linux/x64/1.0.1472/discord_zstd/1/full.distro",
         "version": 1
       }
     },
-    "version": "1.0.1469"
+    "version": "1.0.1472"
   },
   "linux-development": {
     "distro": {
@@ -296,93 +296,93 @@
   },
   "osx-canary": {
     "distro": {
-      "hash": "sha256-U3oa+Rtpy1yzxq4tIifAyRQs5zjXcyLOVXKppgoR6RY=",
-      "url": "https://canary.dl2.discordapp.net/distro/app/canary/osx/universal/0.0.1207/full.distro"
+      "hash": "sha256-UOKjfQFRwvwOfZS9w+/41KKyida0J5NZcMymGJ+/vU0=",
+      "url": "https://canary.dl2.discordapp.net/distro/app/canary/osx/universal/0.0.1210/full.distro"
     },
     "kind": "distro",
     "modules": {
       "discord_arborium": {
-        "hash": "sha256-87wtm5oZ771kHmOpLa7s8IZrza8RXhyGg0WKscqiSgw=",
-        "url": "https://canary.dl2.discordapp.net/distro/app/canary/osx/universal/0.0.1207/discord_arborium/1/full.distro",
+        "hash": "sha256-52BcIf4c1u8OO/UhuPKKCSvbDH0A8loGRGlq3EBXoDo=",
+        "url": "https://canary.dl2.discordapp.net/distro/app/canary/osx/universal/0.0.1210/discord_arborium/1/full.distro",
         "version": 1
       },
       "discord_cloudsync": {
-        "hash": "sha256-5tQzxF3gDrIOptDieVzAps8ExiWxUONkUzIlj3LLPFo=",
-        "url": "https://canary.dl2.discordapp.net/distro/app/canary/osx/universal/0.0.1207/discord_cloudsync/1/full.distro",
+        "hash": "sha256-yhB1IaF+Jc4lB8SogwDIiFGnQoPCYPQ4Odm4eGLDKy4=",
+        "url": "https://canary.dl2.discordapp.net/distro/app/canary/osx/universal/0.0.1210/discord_cloudsync/1/full.distro",
         "version": 1
       },
       "discord_desktop_core": {
-        "hash": "sha256-YuS4uF+XxRxLJxNHY8WLLB4t1kMFBllHpAnTvlnG1JQ=",
-        "url": "https://canary.dl2.discordapp.net/distro/app/canary/osx/universal/0.0.1207/discord_desktop_core/1/full.distro",
+        "hash": "sha256-ZTY9e14OONvgEY9pLb3Jy1SK1EWyU4TSsfH8SETOU6w=",
+        "url": "https://canary.dl2.discordapp.net/distro/app/canary/osx/universal/0.0.1210/discord_desktop_core/1/full.distro",
         "version": 1
       },
       "discord_dispatch": {
-        "hash": "sha256-QAzZVCCGcQkFmKm7kFWdN5IeVwChS8pxFO4kDl34bsE=",
-        "url": "https://canary.dl2.discordapp.net/distro/app/canary/osx/universal/0.0.1207/discord_dispatch/1/full.distro",
+        "hash": "sha256-/0NkyZBbuYzUeUhhwAqgzLDs97XNBZmSm7U9et3GyqU=",
+        "url": "https://canary.dl2.discordapp.net/distro/app/canary/osx/universal/0.0.1210/discord_dispatch/1/full.distro",
         "version": 1
       },
       "discord_erlpack": {
-        "hash": "sha256-xROMOHGbQ7EpDH3mpLPxacXivexT6zspXiEOy7GE3Q4=",
-        "url": "https://canary.dl2.discordapp.net/distro/app/canary/osx/universal/0.0.1207/discord_erlpack/1/full.distro",
+        "hash": "sha256-iAxZC5koCini89PFfYj4WLHVLl3jGVxSUPR+tHGJYZM=",
+        "url": "https://canary.dl2.discordapp.net/distro/app/canary/osx/universal/0.0.1210/discord_erlpack/1/full.distro",
         "version": 1
       },
       "discord_game_utils": {
-        "hash": "sha256-FXXKb/VDG5+l/nonz2RxFq/qg6FrFUczO0Rr3m3KM+s=",
-        "url": "https://canary.dl2.discordapp.net/distro/app/canary/osx/universal/0.0.1207/discord_game_utils/1/full.distro",
+        "hash": "sha256-ir034GPXPHgDAA8AzBkaBo3wekeblxKo2cyLZ3d9LQ8=",
+        "url": "https://canary.dl2.discordapp.net/distro/app/canary/osx/universal/0.0.1210/discord_game_utils/1/full.distro",
         "version": 1
       },
       "discord_intents": {
-        "hash": "sha256-AGwrqkV7JKASwyxwWzT87Sg4wC36v2cGHJNsiKv85QI=",
-        "url": "https://canary.dl2.discordapp.net/distro/app/canary/osx/universal/0.0.1207/discord_intents/1/full.distro",
+        "hash": "sha256-OZPLYlih9Rk1qlsCJb84pKlEZjmsX8FQ6sQP/1dul7I=",
+        "url": "https://canary.dl2.discordapp.net/distro/app/canary/osx/universal/0.0.1210/discord_intents/1/full.distro",
         "version": 1
       },
       "discord_krisp": {
-        "hash": "sha256-MMRpc4w4L2AUC7Pz4STcQ0o80tmMlTYhzs35iInjGUg=",
-        "url": "https://canary.dl2.discordapp.net/distro/app/canary/osx/universal/0.0.1207/discord_krisp/1/full.distro",
+        "hash": "sha256-VxVrs7YrdFbnIhQbcoQf60e2lFVuaHjc2wUfQWyMj+s=",
+        "url": "https://canary.dl2.discordapp.net/distro/app/canary/osx/universal/0.0.1210/discord_krisp/1/full.distro",
         "version": 1
       },
       "discord_modules": {
-        "hash": "sha256-XziynzaW7a5CBewqRybJCBQp7NtIm4gmpS60c4qdlgU=",
-        "url": "https://canary.dl2.discordapp.net/distro/app/canary/osx/universal/0.0.1207/discord_modules/1/full.distro",
+        "hash": "sha256-lQDPxJYqC3JrQzaj6uvR56T5Kw10+smgtZdXjzlSo1I=",
+        "url": "https://canary.dl2.discordapp.net/distro/app/canary/osx/universal/0.0.1210/discord_modules/1/full.distro",
         "version": 1
       },
       "discord_notifications": {
-        "hash": "sha256-/fyhNdrxS0TLunRwa2eNWu01gZRAcDZP52S+wLYgPqg=",
-        "url": "https://canary.dl2.discordapp.net/distro/app/canary/osx/universal/0.0.1207/discord_notifications/1/full.distro",
+        "hash": "sha256-+7nN5PmiZmiTzDu39/dw3T6u0JSLm9wdSldDUXUg5oE=",
+        "url": "https://canary.dl2.discordapp.net/distro/app/canary/osx/universal/0.0.1210/discord_notifications/1/full.distro",
         "version": 1
       },
       "discord_rpc": {
-        "hash": "sha256-LAS75ZXdkeMh4ULzdwjqYpAiAXNxqlfIF2/+brV9P0Y=",
-        "url": "https://canary.dl2.discordapp.net/distro/app/canary/osx/universal/0.0.1207/discord_rpc/1/full.distro",
+        "hash": "sha256-FOWVjF6rzbEC7ykod7nfxS47/TX3X9Zwr8rxZqQomd4=",
+        "url": "https://canary.dl2.discordapp.net/distro/app/canary/osx/universal/0.0.1210/discord_rpc/1/full.distro",
         "version": 1
       },
       "discord_spellcheck": {
-        "hash": "sha256-6w+MSZuHrnlXSoNK17CK6lnKWpsgA1QulIFVTrq3sj8=",
-        "url": "https://canary.dl2.discordapp.net/distro/app/canary/osx/universal/0.0.1207/discord_spellcheck/1/full.distro",
+        "hash": "sha256-nLjw1MZxcT/88WiIfcww+oI1gddkqM0z/ux0yOG8Sv8=",
+        "url": "https://canary.dl2.discordapp.net/distro/app/canary/osx/universal/0.0.1210/discord_spellcheck/1/full.distro",
         "version": 1
       },
       "discord_utils": {
-        "hash": "sha256-VVQj7pjfsI8BgKmzpcFnWYzTEbyINuxKE3U/atS145s=",
-        "url": "https://canary.dl2.discordapp.net/distro/app/canary/osx/universal/0.0.1207/discord_utils/4/full.distro",
-        "version": 4
+        "hash": "sha256-t8f7nWhRYuTpHe4eE6JRHu6MXx48//xIxpbshFFCJuE=",
+        "url": "https://canary.dl2.discordapp.net/distro/app/canary/osx/universal/0.0.1210/discord_utils/1/full.distro",
+        "version": 1
       },
       "discord_voice": {
-        "hash": "sha256-uTFFtO2FHksceWOszECTS+RgldGNWploBxHZvScxBVY=",
-        "url": "https://canary.dl2.discordapp.net/distro/app/canary/osx/universal/0.0.1207/discord_voice/1/full.distro",
+        "hash": "sha256-LAYQRCXNya2bMzEfbdpaHwrprRJjsYSURwS8iz16w0U=",
+        "url": "https://canary.dl2.discordapp.net/distro/app/canary/osx/universal/0.0.1210/discord_voice/1/full.distro",
         "version": 1
       },
       "discord_webauthn": {
-        "hash": "sha256-lFcurVl0ToGj+dMPscLFjzRwyIyDTmV1R8mjUuc0KB8=",
-        "url": "https://canary.dl2.discordapp.net/distro/app/canary/osx/universal/0.0.1207/discord_webauthn/1/full.distro",
+        "hash": "sha256-hL2jmqS6ihdN5W6zx9uxgB7+7AFyghuZ132EyxIUQeQ=",
+        "url": "https://canary.dl2.discordapp.net/distro/app/canary/osx/universal/0.0.1210/discord_webauthn/1/full.distro",
         "version": 1
       },
       "discord_zstd": {
-        "hash": "sha256-R2UoJY4iG+5DZ4Ng/MHERuwVTcKtFvz0jqxKndR8RxE=",
-        "url": "https://canary.dl2.discordapp.net/distro/app/canary/osx/universal/0.0.1207/discord_zstd/1/full.distro",
+        "hash": "sha256-hTE6fJIieq9nbHM/9CfF29NRM8C2g5byVsVcps6CQzU=",
+        "url": "https://canary.dl2.discordapp.net/distro/app/canary/osx/universal/0.0.1210/discord_zstd/1/full.distro",
         "version": 1
       }
     },
-    "version": "0.0.1207"
+    "version": "0.0.1210"
   },
   "osx-development": {
     "distro": {
