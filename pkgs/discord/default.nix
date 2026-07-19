@@ -9,9 +9,7 @@
   discord-development ? null,
   writeShellApplication,
   cacert,
-  curl,
   jq,
-  nix,
   brotli,
   python3,
   runCommand,
@@ -114,9 +112,6 @@ let
     inherit
       writeShellApplication
       cacert
-      nix
-      curl
-      jq
       python3
       ;
     updateSourcesPy = ./scripts/update-sources.py;
@@ -281,5 +276,8 @@ package.overrideAttrs (
           ${lib.meta.getExe rcodesign} \
           ${darwinEntitlements}
       '';
+  }
+  // lib.optionalAttrs stdenvNoCC.isLinux {
+    inherit stageModules;
   }
 )

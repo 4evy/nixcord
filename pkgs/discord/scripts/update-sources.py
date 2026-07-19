@@ -2,10 +2,11 @@
 """Refresh pkgs/discord/data/sources.json with the latest Discord builds.
 
 Adapted from upstream nixpkgs (NixOS/nixpkgs PR #506089). Honors the
-DISCORD_BRANCHES env var (comma-separated) so CI matrix jobs can update one
-branch at a time without churning unrelated entries.
+DISCORD_BRANCHES env var (comma-separated) for targeted refreshes without
+churning unrelated entries.
 """
 
+import base64
 import json
 import os
 import os.path
@@ -13,7 +14,6 @@ import sys
 import urllib.request
 from dataclasses import asdict, dataclass, field
 from enum import StrEnum
-from subprocess import PIPE, Popen
 from typing import List
 
 # The distributions API rejects requests that don't send a Discord-Updater
@@ -71,26 +71,19 @@ def distro_manifest_url_for_variant(variant: Variant) -> str:
     )
 
 
-def prefetch(url: str) -> str:
-    with Popen(["nix-prefetch-url", "--name", "source", url], stdout=PIPE) as p:
-        assert p.stdout
-        b32_hash = p.stdout.read().decode("utf-8").strip()
-    with Popen(
-        ["nix-hash", "--to-sri", "--type", "sha256", b32_hash], stdout=PIPE
-    ) as p:
-        assert p.stdout
-        return p.stdout.read().decode("utf-8").strip()
-
-
 def fetch_distro_manifest(variant: Variant) -> dict:
     url = distro_manifest_url_for_variant(variant)
     req = urllib.request.Request(url, headers={"User-Agent": DISTRO_USER_AGENT})
-    with urllib.request.urlopen(req) as response:
+    with urllib.request.urlopen(req, timeout=30) as response:
         return json.loads(response.read())
 
 
 def version_triple_to_str(triple: list) -> str:
     return ".".join(str(x) for x in triple)
+
+
+def sri_from_sha256_hex(hex_hash: str) -> str:
+    return "sha256-" + base64.b64encode(bytes.fromhex(hex_hash)).decode("utf-8")
 
 
 def fetch_distro_source(variant: Variant) -> DistroSource:
@@ -101,14 +94,17 @@ def fetch_distro_source(variant: Variant) -> DistroSource:
         name: DistroModule(
             version=mod["full"]["module_version"],
             url=mod["full"]["url"],
-            hash=prefetch(mod["full"]["url"]),
+            hash=sri_from_sha256_hex(mod["full"]["package_sha256"]),
         )
         for name, mod in manifest["modules"].items()
     }
 
     return DistroSource(
         version=version_triple_to_str(manifest["full"]["host_version"]),
-        distro=DistroRef(url=distro_url, hash=prefetch(distro_url)),
+        distro=DistroRef(
+            url=distro_url,
+            hash=sri_from_sha256_hex(manifest["full"]["package_sha256"]),
+        ),
         modules=modules,
     )
 
@@ -131,6 +127,10 @@ def selected_variants() -> List[Variant]:
     if not raw:
         return ALL_VARIANTS
     wanted = {b.strip() for b in raw.split(",") if b.strip()}
+    valid = {branch.value for branch in Branch}
+    unknown = wanted - valid
+    if unknown:
+        raise SystemExit(f"Unknown Discord branches: {', '.join(sorted(unknown))}")
     return [v for v in ALL_VARIANTS if v.branch.value in wanted]
 
 
@@ -174,27 +174,30 @@ def main() -> None:
         print("No matching branches selected; nothing to do.", file=sys.stderr)
         return
 
+    updated_sources = sources.copy()
     for v in variants:
         key = serialize_variant(v)
         print(f"Fetching {key} (distro)...")
-        try:
-            source = fetch_distro_source(v)
-            sources[key] = asdict(source)
-            print(f"  -> version {source.version}")
-        except Exception as exc:
-            print(f"  Failed to fetch {key}: {exc}", file=sys.stderr)
-            continue
+        source = fetch_distro_source(v)
+        updated_sources[key] = asdict(source)
+        print(f"  -> version {source.version}")
 
     for v in variants:
         key = serialize_variant(v)
-        if key not in sources:
+        if key not in updated_sources:
             continue
         # Distro builds embed krisp inside source.modules.
-        sources.pop(f"{key}-krisp", None)
+        updated_sources.pop(f"{key}-krisp", None)
 
-    with open(sources_path, "w") as f:
-        json.dump(sources, f, indent=2, sort_keys=True)
-        f.write("\n")
+    temporary_path = f"{sources_path}.tmp"
+    try:
+        with open(temporary_path, "w") as f:
+            json.dump(updated_sources, f, indent=2, sort_keys=True)
+            f.write("\n")
+        os.replace(temporary_path, sources_path)
+    finally:
+        if os.path.exists(temporary_path):
+            os.unlink(temporary_path)
     print(f"Wrote {sources_path}")
 
 

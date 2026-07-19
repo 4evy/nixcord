@@ -7,185 +7,110 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
+
+env:
+  NIXPKGS_EXPR: >-
+    let flake = builtins.getFlake (toString ./.);
+        pkgs = import flake.inputs.nixpkgs-nixcord {
+          system = builtins.currentSystem;
+          config.allowUnfree = true;
+        };
+    in
 
 jobs:
   update-discord:
-    name: Update Discord (${{ matrix.branch }})
+    name: Update and verify Discord
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        branch: [stable, ptb, canary, development]
-      max-parallel: 1
-    timeout-minutes: 15
+    timeout-minutes: 30
     permissions:
       contents: write
 
     steps:
       - uses: actions/checkout@v6.0.1
         with:
-          fetch-depth: 1
+          ref: ${{ github.ref_name }}
 
       - uses: DeterminateSystems/nix-installer-action@v21
         with:
-          extra-conf: |
-            extra-nix-path = nixpkgs=flake:github:NixOS/nixpkgs/nixos-25.11
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Validate workspace
+      - name: Update sources
         run: |
           set -euo pipefail
-          if [[ ! -f "pkgs/discord/data/sources.json" ]]; then
-            echo "::error::pkgs/discord/data/sources.json not found"
-            exit 1
-          fi
-          echo "::notice::Workspace validation passed"
+          test -f pkgs/discord/data/sources.json
+          cp pkgs/discord/data/sources.json "$RUNNER_TEMP/discord-sources-before.json"
 
-      - name: Get old versions
-        id: old-versions
-        shell: bash
+          update_script=$(nix build --no-link --print-out-paths --impure --expr \
+            "$NIXPKGS_EXPR (pkgs.callPackage ./pkgs/discord {}).passthru.updateScript")
+          "$update_script/bin/discord-update"
+
+      - name: Validate sources
         run: |
           set -euo pipefail
-          BRANCH="${{ matrix.branch }}"
-          linux_version=$(jq -r --arg k "linux-$BRANCH" '.[$k].version // ""' pkgs/discord/data/sources.json)
-          darwin_version=$(jq -r --arg k "osx-$BRANCH" '.[$k].version // ""' pkgs/discord/data/sources.json)
-          {
-            echo "linux_$BRANCH=$linux_version"
-            echo "darwin_$BRANCH=$darwin_version"
-          } >> "$GITHUB_OUTPUT"
-          echo "::notice::Old: linux=$linux_version, darwin=$darwin_version"
+          jq -e '
+            def validSource:
+              .kind == "distro"
+              and (.version | type == "string" and length > 0)
+              and (.distro.url | type == "string" and startswith("https://"))
+              and (.distro.hash | type == "string" and startswith("sha256-"))
+              and (.modules | type == "object" and length > 0)
+              and all(.modules[];
+                (.version | type == "number")
+                and (.url | type == "string" and startswith("https://"))
+                and (.hash | type == "string" and startswith("sha256-"))
+              );
+            ([keys[] | select(test("^(linux|osx)-(stable|ptb|canary|development)$"))] | length) == 8
+            and all(.[]; validSource)
+          ' pkgs/discord/data/sources.json
 
-      - name: Update Discord
-        id: update
-        env:
-          NIXPKGS_ALLOW_UNFREE: 1
-          DISCORD_BRANCHES: ${{ matrix.branch }}
+      - name: Build all Discord channels
         run: |
           set -euo pipefail
+          nix build --no-link --print-build-logs \
+            .#discord \
+            .#discord-ptb \
+            .#discord-canary \
+            .#discord-development
 
-          nixpkgs_config='{ allowUnfree = true; }'
-
-          echo "::group::Building update script"
-          if ! nix build --impure --expr "let pkgs = import <nixpkgs> { config = $nixpkgs_config; }; in (pkgs.callPackage ./pkgs/discord {}).passthru.updateScript" 2>&1; then
-            echo "::error::Failed to build the update script"
-            exit 1
-          fi
-          echo "::endgroup::"
-
-          echo "::group::Running update script"
-          if ! ./result/bin/discord-update 2>&1; then
-            echo "::error::Update script failed"
-            exit 1
-          fi
-          echo "::notice::Discord update script completed successfully"
-          echo "::endgroup::"
-
-          rm -f ./result
-
-      - name: Get new versions
-        id: new-versions
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [[ ! -f ./pkgs/discord/data/sources.json ]]; then
-            echo "::error::pkgs/discord/data/sources.json not found after update script ran"
-            exit 1
-          fi
-          BRANCH="${{ matrix.branch }}"
-          linux_version=$(jq -r --arg k "linux-$BRANCH" '.[$k].version // ""' pkgs/discord/data/sources.json)
-          darwin_version=$(jq -r --arg k "osx-$BRANCH" '.[$k].version // ""' pkgs/discord/data/sources.json)
-          {
-            echo "linux_$BRANCH=$linux_version"
-            echo "darwin_$BRANCH=$darwin_version"
-          } >> "$GITHUB_OUTPUT"
-          echo "::notice::New: linux=$linux_version, darwin=$darwin_version"
-
-      - name: Test Build
-        env:
-          NIXPKGS_ALLOW_UNFREE: 1
-        run: |
-          set -euo pipefail
-
-          echo "::group::Testing builds"
-          branch="${{ matrix.branch }}"
-          nixpkgs_config='{ allowUnfree = true; }'
-          echo "::notice::Testing build for $branch"
-          if ! nix-build -E "let pkgs = import <nixpkgs> { config = $nixpkgs_config; }; in pkgs.callPackage ./pkgs/discord { branch = \"$branch\"; }" 2>&1; then
-             echo "::error::Failed to build $branch"
-             exit 1
-          fi
-          rm -f result || true
-          echo "::notice::Linux build for $branch tested successfully"
-          echo "::endgroup::"
-
-      - name: Commit changes
-        if: |
-          success() && (
-            steps.old-versions.outputs[format('linux_{0}', matrix.branch)] != steps.new-versions.outputs[format('linux_{0}', matrix.branch)] ||
-            steps.old-versions.outputs[format('darwin_{0}', matrix.branch)] != steps.new-versions.outputs[format('darwin_{0}', matrix.branch)]
-          )
+      - name: Commit and push changes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BRANCH: ${{ matrix.branch }}
-          OLD_LINUX: ${{ steps.old-versions.outputs[format('linux_{0}', matrix.branch)] }}
-          OLD_DARWIN: ${{ steps.old-versions.outputs[format('darwin_{0}', matrix.branch)] }}
-          NEW_LINUX: ${{ steps.new-versions.outputs[format('linux_{0}', matrix.branch)] }}
-          NEW_DARWIN: ${{ steps.new-versions.outputs[format('darwin_{0}', matrix.branch)] }}
         run: |
           set -euo pipefail
-
-          echo "::group::Preparing commit"
-
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-
-          commit_body=""
-          if [[ "$OLD_LINUX" != "$NEW_LINUX" ]]; then
-            commit_body+="linux:"$'\n'"  $BRANCH: $OLD_LINUX -> $NEW_LINUX"$'\n'
-          fi
-          if [[ "$OLD_DARWIN" != "$NEW_DARWIN" ]]; then
-            [[ -n "$commit_body" ]] && commit_body+=$'\n'
-            commit_body+="darwin:"$'\n'"  $BRANCH: $OLD_DARWIN -> $NEW_DARWIN"$'\n'
-          fi
-
-          if [[ -z "$commit_body" ]]; then
-            echo "::notice::No version changes detected, skipping commit"
+          if git diff --quiet -- pkgs/discord/data/sources.json; then
+            echo "::notice::Discord sources are already current"
             exit 0
           fi
 
-          commit_body=$(echo -n "$commit_body" | sed '/^$/d')
-          COMMIT_MSG="discord: update $BRANCH"$'\n\n'"$commit_body"
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git config pull.rebase true
+          git config rebase.autoStash true
 
-          echo "::endgroup::"
-
-          if [[ -n "$(git status --porcelain pkgs/discord/data/sources.json)" ]]; then
-            echo "::group::Committing and pushing changes"
-
-            git add pkgs/discord/data/sources.json
-            printf "%b" "$COMMIT_MSG" | git commit -F -
-
-            echo "::notice::Pushing changes with retry logic..."
-            for attempt in {1..5}; do
-              echo "::debug::Push attempt $attempt/5"
-
-              git rebase --abort 2>/dev/null || true
-
-              if git fetch origin 2>&1 && \
-                 git pull --rebase origin ${{ github.ref_name }} 2>&1 && \
-                 git push origin HEAD:${{ github.ref_name }} 2>&1; then
-                echo "::notice::Successfully pushed changes on attempt $attempt"
-                break
-              fi
-
-              if [[ $attempt == 5 ]]; then
-                echo "::error::Failed to push after 5 attempts"
-                exit 1
-              fi
-
-              echo "::warning::Push attempt $attempt failed, retrying in $((attempt * 2)) seconds..."
-              sleep $((attempt * 2))
-            done
-
-            echo "::endgroup::"
-          else
-            echo "::notice::No changes to commit (git status shows no modifications)"
+          changes=$(jq -r --slurpfile old "$RUNNER_TEMP/discord-sources-before.json" '
+            to_entries[]
+            | select(.value.version != $old[0][.key].version)
+            | "  \(.key): \($old[0][.key].version) -> \(.value.version)"
+          ' pkgs/discord/data/sources.json)
+          message="discord: update sources"
+          if [[ -n "$changes" ]]; then
+            message+=$'\n\n'"$changes"
           fi
+
+          git add pkgs/discord/data/sources.json
+          git commit -m "$message"
+
+          for attempt in {1..5}; do
+            git rebase --abort 2>/dev/null || true
+            if git fetch origin \
+              && git pull --rebase origin "${{ github.ref_name }}" \
+              && git push origin "HEAD:${{ github.ref_name }}"; then
+              exit 0
+            fi
+            if [[ "$attempt" -eq 5 ]]; then
+              echo "::error::Failed to push after 5 attempts"
+              exit 1
+            fi
+            sleep $((attempt * 2))
+          done

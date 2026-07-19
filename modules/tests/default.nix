@@ -8,6 +8,7 @@
   config-output = import ./modules/config-output { inherit pkgs; };
   assertions = import ./modules/assertions { inherit pkgs; };
   discord-launcher-c = import ./c/discord-launcher.nix { inherit pkgs; };
+  discord-update-sources = import ./discord-update-sources.nix { inherit pkgs; };
 }
 // pkgs.lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
   discord-linux-scripts = import ./discord-linux-scripts.nix { inherit pkgs; };
