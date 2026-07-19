@@ -1938,6 +1938,171 @@
     },
     {
       "from": [
+        "LastFMRichPresence",
+        "apiKey"
+      ],
+      "to": [
+        "musicRichPresence",
+        "apiKey"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "LastFMRichPresence",
+        "clickableLinks"
+      ],
+      "to": [
+        "musicRichPresence",
+        "clickableLinks"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "LastFMRichPresence",
+        "enable"
+      ],
+      "to": [
+        "musicRichPresence",
+        "enable"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "LastFMRichPresence",
+        "hideWithActivity"
+      ],
+      "to": [
+        "musicRichPresence",
+        "hideWithActivity"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "LastFMRichPresence",
+        "hideWithSpotify"
+      ],
+      "to": [
+        "musicRichPresence",
+        "hideWithSpotify"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "LastFMRichPresence",
+        "missingArt"
+      ],
+      "to": [
+        "musicRichPresence",
+        "missingArt"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "LastFMRichPresence",
+        "nameFormat"
+      ],
+      "to": [
+        "musicRichPresence",
+        "nameFormat"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "LastFMRichPresence",
+        "scrobblerBackend"
+      ],
+      "to": [
+        "musicRichPresence",
+        "scrobblerBackend"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "LastFMRichPresence",
+        "shareUsername"
+      ],
+      "to": [
+        "musicRichPresence",
+        "shareUsername"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "LastFMRichPresence",
+        "showAlbumCover"
+      ],
+      "to": [
+        "musicRichPresence",
+        "showAlbumCover"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "LastFMRichPresence",
+        "showLogo"
+      ],
+      "to": [
+        "musicRichPresence",
+        "showLogo"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "LastFMRichPresence",
+        "statusDisplayType"
+      ],
+      "to": [
+        "musicRichPresence",
+        "statusDisplayType"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "LastFMRichPresence",
+        "statusName"
+      ],
+      "to": [
+        "musicRichPresence",
+        "statusName"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "LastFMRichPresence",
+        "useListeningStatus"
+      ],
+      "to": [
+        "musicRichPresence",
+        "useListeningStatus"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "LastFMRichPresence",
+        "username"
+      ],
+      "to": [
+        "musicRichPresence",
+        "username"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
         "ListenBrainzRPC",
         "absEnabled"
       ],
@@ -4564,160 +4729,6 @@
       "to": [
         "iRememberYou",
         "enable"
-      ],
-      "warn": true
-    },
-    {
-      "from": [
-        "LastFMRichPresence",
-        "apiKey"
-      ],
-      "to": [
-        "lastFmRichPresence",
-        "apiKey"
-      ],
-      "warn": true
-    },
-    {
-      "from": [
-        "LastFMRichPresence",
-        "clickableLinks"
-      ],
-      "to": [
-        "lastFmRichPresence",
-        "clickableLinks"
-      ],
-      "warn": true
-    },
-    {
-      "from": [
-        "LastFMRichPresence",
-        "enable"
-      ],
-      "to": [
-        "lastFmRichPresence",
-        "enable"
-      ],
-      "warn": true
-    },
-    {
-      "from": [
-        "LastFMRichPresence",
-        "hideWithActivity"
-      ],
-      "to": [
-        "lastFmRichPresence",
-        "hideWithActivity"
-      ],
-      "warn": true
-    },
-    {
-      "from": [
-        "LastFMRichPresence",
-        "hideWithSpotify"
-      ],
-      "to": [
-        "lastFmRichPresence",
-        "hideWithSpotify"
-      ],
-      "warn": true
-    },
-    {
-      "from": [
-        "LastFMRichPresence",
-        "missingArt"
-      ],
-      "to": [
-        "lastFmRichPresence",
-        "missingArt"
-      ],
-      "warn": true
-    },
-    {
-      "from": [
-        "LastFMRichPresence",
-        "nameFormat"
-      ],
-      "to": [
-        "lastFmRichPresence",
-        "nameFormat"
-      ],
-      "warn": true
-    },
-    {
-      "from": [
-        "LastFMRichPresence",
-        "shareUsername"
-      ],
-      "to": [
-        "lastFmRichPresence",
-        "shareUsername"
-      ],
-      "warn": true
-    },
-    {
-      "from": [
-        "LastFMRichPresence",
-        "showAlbumCover"
-      ],
-      "to": [
-        "lastFmRichPresence",
-        "showAlbumCover"
-      ],
-      "warn": true
-    },
-    {
-      "from": [
-        "LastFMRichPresence",
-        "showLastFmLogo"
-      ],
-      "to": [
-        "lastFmRichPresence",
-        "showLastFmLogo"
-      ],
-      "warn": true
-    },
-    {
-      "from": [
-        "LastFMRichPresence",
-        "statusDisplayType"
-      ],
-      "to": [
-        "lastFmRichPresence",
-        "statusDisplayType"
-      ],
-      "warn": true
-    },
-    {
-      "from": [
-        "LastFMRichPresence",
-        "statusName"
-      ],
-      "to": [
-        "lastFmRichPresence",
-        "statusName"
-      ],
-      "warn": true
-    },
-    {
-      "from": [
-        "LastFMRichPresence",
-        "useListeningStatus"
-      ],
-      "to": [
-        "lastFmRichPresence",
-        "useListeningStatus"
-      ],
-      "warn": true
-    },
-    {
-      "from": [
-        "LastFMRichPresence",
-        "username"
-      ],
-      "to": [
-        "lastFmRichPresence",
-        "username"
       ],
       "warn": true
     },
