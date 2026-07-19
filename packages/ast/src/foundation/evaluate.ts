@@ -168,6 +168,43 @@ const isSupportedBinaryExpression = (node: Node): boolean => {
   return binExpr !== undefined && binExpr.getOperatorToken().getKind() in BINARY_OPERATORS;
 };
 
+const evaluatePrefixUnaryExpression = (node: Node, checker: TypeChecker): EvaluationResult => {
+  const expression = node.asKind(SyntaxKind.PrefixUnaryExpression);
+  if (!expression) {
+    return Err(
+      createEvaluationError(`Expected PrefixUnaryExpression, got ${node.getKindName()}`, node)
+    );
+  }
+
+  const operandResult = evaluate(expression.getOperand(), checker);
+  if (!operandResult.ok) return Err(operandResult.error);
+
+  const operand = operandResult.value;
+  switch (expression.getOperatorToken()) {
+    case SyntaxKind.PlusToken:
+      return typeof operand === 'number'
+        ? Ok(operand)
+        : Err(createEvaluationError('Unary + operand must be a number', expression));
+    case SyntaxKind.MinusToken:
+      return typeof operand === 'number'
+        ? Ok(-operand)
+        : Err(createEvaluationError('Unary - operand must be a number', expression));
+    case SyntaxKind.TildeToken:
+      return typeof operand === 'number'
+        ? Ok(~operand)
+        : Err(createEvaluationError('Unary ~ operand must be a number', expression));
+    case SyntaxKind.ExclamationToken:
+      return Ok(!operand);
+    default:
+      return Err(
+        createEvaluationError(
+          `Unsupported prefix unary operator: ${expression.getOperatorToken()}`,
+          expression
+        )
+      );
+  }
+};
+
 export const evaluate = (node: Node, checker: TypeChecker): EvaluationResult => {
   const kind = node.getKind();
 
@@ -195,6 +232,10 @@ export const evaluate = (node: Node, checker: TypeChecker): EvaluationResult => 
 
   if (isSupportedBinaryExpression(node)) {
     return evaluateBinaryExpression(node, checker, evaluate);
+  }
+
+  if (kind === SyntaxKind.PrefixUnaryExpression) {
+    return evaluatePrefixUnaryExpression(node, checker);
   }
 
   return Err(createEvaluationError(`Cannot evaluate node of type ${node.getKindName()}`, node));

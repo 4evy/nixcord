@@ -12,6 +12,7 @@ import {
   isMethodCall,
   iteratePropertyAssignments,
   resolveIdentifierInitializerNode,
+  tryEvaluate,
 } from '../../../../src/foundation/index.js';
 import { createProject } from '../../../helpers/test-utils.js';
 
@@ -201,5 +202,21 @@ describe('identifier-resolver', () => {
       const result = resolveIdentifierInitializerNode(init, checker);
       expect(result).toBeDefined();
     });
+  });
+});
+
+describe('evaluate', () => {
+  test('evaluates prefix unary expressions', () => {
+    const project = createProject();
+    const sourceFile = project.createSourceFile('unary.ts', `const values = [-1, +2, ~1, !false];`);
+    const checker = project.getTypeChecker();
+    const expressions = sourceFile.getDescendantsOfKind(SyntaxKind.PrefixUnaryExpression);
+
+    expect(expressions.map((expression) => tryEvaluate(expression, checker))).toEqual([
+      -1,
+      2,
+      -2,
+      true,
+    ]);
   });
 });
