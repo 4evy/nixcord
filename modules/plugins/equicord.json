@@ -1,4 +1,24 @@
 {
+  "advancedPermissions": {
+    "description": "Show advanced permissions card by default. (Equicord-only)",
+    "settings": {
+      "simplifiedCard": {
+        "type": "types.enum",
+        "enumValues": [
+          "hide",
+          "collapse",
+          "show"
+        ],
+        "default": "hide",
+        "description": "What to do with Discord's simplified permissions card"
+      },
+      "collapsedByDefault": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Start the simplified permissions collapsed."
+      }
+    }
+  },
   "altKrispSwitch": {
     "description": "Makes the Noise Suppression Popout switch between None and Krisp instead of Krisp and Standard (Equicord-only)",
     "settings": {}
@@ -319,7 +339,7 @@
       "autoFillArguments": {
         "type": "types.bool",
         "default": true,
-        "description": "Automatically fill command with all arguements instead of just required ones"
+        "description": "Automatically fill command with all arguments instead of just required ones."
       },
       "allowNewlinesInCommands": {
         "type": "types.bool",
@@ -366,11 +386,6 @@
         "default": false,
         "description": "Force a folder to open when switching to a server of that folder"
       },
-      "enableNestedFolders": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Allow nesting folders inside other folders by dragging."
-      },
       "keepIcons": {
         "type": "types.bool",
         "default": false,
@@ -385,10 +400,6 @@
         ],
         "default": 1,
         "description": "Show the folder icon above the folder guilds in the BetterFolders sidebar (restart required)\n\nValues: 0 = Never, 1 = Always, 2 = When more than one folder is expanded"
-      },
-      "nestedFolders": {
-        "type": "types.attrs",
-        "default": {}
       }
     }
   },
@@ -1175,6 +1186,61 @@
   "clipUpload": {
     "description": "Adds a button to upload a local video file as a Discord clip. (Equicord-only)",
     "settings": {}
+  },
+  "collapsibleUi": {
+    "description": "Native collapsible channel, member, chat button, and user area surfaces. (Equicord-only)",
+    "settings": {
+      "detachUserArea": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Detach the user area so it can be moved freely when it is not collapsed."
+      },
+      "detachedUserAreaX": {
+        "type": "types.int",
+        "default": -1,
+        "description": "Persist the detached user area x position."
+      },
+      "detachedUserAreaY": {
+        "type": "types.int",
+        "default": -1,
+        "description": "Persist the detached user area y position."
+      },
+      "guildBarCollapsed": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Persist the guild bar as collapsed."
+      },
+      "channelListCollapsed": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Persist the channel list as collapsed."
+      },
+      "membersListCollapsed": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Persist the members list as collapsed."
+      },
+      "chatButtonsCollapsed": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Persist the message button row as collapsed."
+      },
+      "titleBarCollapsed": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Persist the title bar as collapsed."
+      },
+      "headerBarCollapsed": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Persist the header bar as collapsed."
+      },
+      "userAreaCollapsed": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Persist the user area as collapsed."
+      }
+    }
   },
   "commandPalette": {
     "description": "Raycast style command palette for running actions anywhere in Discord (Equicord-only)",
@@ -2701,15 +2767,20 @@
   "globalBadges": {
     "description": "Adds global badges from other client mods (Equicord-only)",
     "settings": {
-      "showPrefix": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Shows the Mod as Prefix"
+      "showModStyle": {
+        "type": "types.enum",
+        "enumValues": [
+          "none",
+          "prefix",
+          "suffix"
+        ],
+        "default": "none",
+        "description": "Mod Style"
       },
-      "showSuffix": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Shows the Mod as Suffix"
+      "apiUrl": {
+        "type": "types.str",
+        "default": "https://badges.equicord.org/",
+        "description": "API to use"
       },
       "showCustom": {
         "type": "types.bool",
@@ -2756,10 +2827,40 @@
         "default": true,
         "description": "Show Paicord Badges"
       },
-      "apiUrl": {
-        "type": "types.str",
-        "default": "https://badges.equicord.org/",
-        "description": "API to use"
+      "showBunny": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Show Bunny Badges"
+      },
+      "showGooseMod": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Show GooseMod Badges"
+      },
+      "showReplugged": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Show Replugged Badges"
+      },
+      "showBetterDiscord": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Show BetterDiscord Badges"
+      },
+      "showVendroidEnhanced": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Show Vendroid Enhanced Badges"
+      },
+      "showRevenge": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Show Revenge Badges"
+      },
+      "showReCord": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Show ReCord Badges"
       }
     }
   },
@@ -3026,26 +3127,6 @@
     "description": "Locally saves everyone you've been communicating with (including servers), in case of lose (Equicord-only)",
     "settings": {}
   },
-  "jumpscare": {
-    "description": "Adds a configurable chance of jumpscaring you whenever you open a channel. Inspired by Geometry Dash Mega Hack (Equicord-only)",
-    "settings": {
-      "imageSource": {
-        "type": "types.str",
-        "default": "https://github.com/Equicord/Equibored/blob/main/icons/jumpscare/troll.gif?raw=true",
-        "description": "Sets the image url of the jumpscare"
-      },
-      "audioSource": {
-        "type": "types.str",
-        "default": "https://github.com/Equicord/Equibored/raw/main/sounds/jumpscare/trollolol.mp3?raw=true",
-        "description": "Sets the audio url of the jumpscare"
-      },
-      "chance": {
-        "type": "types.int",
-        "default": 1000,
-        "description": "The chance of a jumpscare happening (1 in X so: 100 = 1/100 or 1%, 50 = 1/50 or 2%, etc.)"
-      }
-    }
-  },
   "jumpTo": {
     "description": "Adds context menu options to jump to the start or bottom of a channel/DM. (Equicord-only)",
     "settings": {}
@@ -3109,6 +3190,93 @@
     "description": "A plugin to jump to last active message from yourself or another user in a channel/server. (Equicord-only)",
     "settings": {}
   },
+  "lastFmRichPresence": {
+    "description": "Little plugin for Last.fm rich presence (Equicord-only)",
+    "settings": {
+      "apiKey": {
+        "type": "types.nullOr types.str",
+        "default": null,
+        "description": "Custom Last.fm API key. Not required but highly recommended to avoid rate limiting with our shared key"
+      },
+      "username": {
+        "type": "types.nullOr types.str",
+        "default": null,
+        "description": "Last.fm username"
+      },
+      "shareUsername": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Show link to Last.fm profile"
+      },
+      "clickableLinks": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Make track, artist and album names clickable links"
+      },
+      "hideWithSpotify": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Hide Last.fm presence if spotify is running"
+      },
+      "hideWithActivity": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Hide Last.fm presence if you have any other presence"
+      },
+      "statusName": {
+        "type": "types.str",
+        "default": "some music",
+        "description": "Custom status text. You can use the following variables: {artist} | {album} | {title}"
+      },
+      "statusDisplayType": {
+        "type": "types.enum",
+        "enumValues": [
+          "off",
+          "artist",
+          "track"
+        ],
+        "default": "artist",
+        "description": "Show the track / artist name in the member list"
+      },
+      "nameFormat": {
+        "type": "types.enum",
+        "enumValues": [
+          "status-name",
+          "artist-first",
+          "song-first",
+          "artist",
+          "song",
+          "album"
+        ],
+        "default": "status-name",
+        "description": "Show name of song and artist in status name"
+      },
+      "useListeningStatus": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Show \"Listening to\" status instead of \"Playing\""
+      },
+      "missingArt": {
+        "type": "types.enum",
+        "enumValues": [
+          "lastfmLogo",
+          "placeholder"
+        ],
+        "default": "lastfmLogo",
+        "description": "When album or album art is missing"
+      },
+      "showLastFmLogo": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Show the Last.fm logo by the album cover"
+      },
+      "showAlbumCover": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Show album cover. Disabling this will display a placeholder. Useful if your Music has inappropriate art"
+      }
+    }
+  },
   "limitlessScreenshare": {
     "description": "Adds a slider for screenshare resolution and fps. (Equicord-only)",
     "settings": {
@@ -3121,6 +3289,53 @@
         "type": "types.int",
         "default": 1080,
         "description": "Max Resolution for the range slider"
+      },
+      "roundResolution": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Round resolution to the nearest 10p"
+      },
+      "resolutions": {
+        "type": "types.listOf types.attrs",
+        "default": [
+          {
+            "label": "480p",
+            "value": 480
+          },
+          {
+            "label": "720p",
+            "value": 720
+          },
+          {
+            "label": "1080p",
+            "value": 1080
+          },
+          {
+            "label": "1440p",
+            "value": 1440
+          },
+          {
+            "label": "Source",
+            "value": 0
+          }
+        ]
+      },
+      "fpss": {
+        "type": "types.listOf types.attrs",
+        "default": [
+          {
+            "label": "15fps",
+            "value": 15
+          },
+          {
+            "label": "30fps",
+            "value": 30
+          },
+          {
+            "label": "60fps",
+            "value": 60
+          }
+        ]
       }
     }
   },
@@ -5201,7 +5416,7 @@
     "settings": {}
   },
   "richPresence": {
-    "description": "Unified rich presence hub for AudioBookShelf, osu!, stats.fm, Jellyfin, ListenBrainz, and Gensokyo Radio. (Equicord-only)",
+    "description": "Unified rich presence hub for AudioBookShelf, osu!, stats.fm, Jellyfin, Navidrome, and Gensokyo Radio. (Equicord-only)",
     "settings": {
       "enabled": {
         "type": "types.bool",
@@ -5228,15 +5443,15 @@
         "default": false,
         "description": "Enable Jellyfin presence."
       },
-      "lbEnabled": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Enable ListenBrainz presence."
-      },
       "grEnabled": {
         "type": "types.bool",
         "default": false,
         "description": "Enable Gensokyo Radio presence."
+      },
+      "ndEnabled": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Enable Navidrome presence."
       },
       "absServerUrl": {
         "type": "types.str",
@@ -5396,84 +5611,109 @@
         "default": false,
         "description": "Hide media details."
       },
-      "lbUsername": {
-        "type": "types.str",
-        "default": "",
-        "description": "ListenBrainz username."
-      },
-      "lbMbContact": {
-        "type": "types.str",
-        "default": "",
-        "description": "MusicBrainz contact for user agent."
-      },
-      "lbShareUsername": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Show link to ListenBrainz profile."
-      },
-      "lbShareSong": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Show link to song on ListenBrainz."
-      },
-      "lbHideWithSpotify": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Hide presence if Spotify is running."
-      },
-      "lbHideWithActivity": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Hide presence if any other presence exists."
-      },
-      "lbUseTimeBar": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Use track duration to display a time bar."
-      },
-      "lbStatusName": {
-        "type": "types.str",
-        "default": "some music",
-        "description": "Custom status text."
-      },
-      "lbNameFormat": {
-        "type": "types.enum",
-        "enumValues": [
-          "status-name",
-          "artist-first",
-          "song-first",
-          "artist",
-          "song",
-          "album"
-        ],
-        "default": "status-name",
-        "description": "Name format."
-      },
-      "lbUseListeningStatus": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Show listening status."
-      },
-      "lbMissingArt": {
-        "type": "types.enum",
-        "enumValues": [
-          "listenbrainzLogo",
-          "placeholder"
-        ],
-        "default": "listenbrainzLogo",
-        "description": "Fallback when art is missing."
-      },
-      "lbUseLogo": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Show ListenBrainz logo on album art."
-      },
       "grRefreshInterval": {
         "type": "types.float",
         "default": {
           "__nixRaw": "15.0"
         },
         "description": "Refresh interval in seconds."
+      },
+      "ndServerUrl": {
+        "type": "types.str",
+        "default": "",
+        "description": "Navidrome Server URL (e.g. https://navidrome.example.com)"
+      },
+      "ndUsername": {
+        "type": "types.str",
+        "default": "",
+        "description": "Navidrome Username"
+      },
+      "ndPassword": {
+        "type": "types.str",
+        "default": "",
+        "description": "Navidrome Password"
+      },
+      "ndClientId": {
+        "type": "types.str",
+        "default": "",
+        "description": "Optional Discord Application Client ID"
+      },
+      "ndShowSmallImage": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Show Navidrome logo in bottom right of album art."
+      },
+      "ndShowAlbum": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Show album name in presence."
+      },
+      "ndAlbumArtMode": {
+        "type": "types.enum",
+        "enumValues": [
+          "none",
+          "instance",
+          "lastfm"
+        ],
+        "default": "none",
+        "description": "How to fetch album art."
+      },
+      "ndLastfmApiKey": {
+        "type": "types.str",
+        "default": "",
+        "description": "Optional Last.fm API Key"
+      },
+      "ndRefreshInterval": {
+        "type": "types.float",
+        "default": {
+          "__nixRaw": "10.0"
+        },
+        "description": "Refresh interval in seconds."
+      },
+      "ndActivityType": {
+        "type": "types.enum",
+        "enumValues": [
+          2,
+          0,
+          3
+        ],
+        "default": 2,
+        "description": "Which type of activity\n\nValues: 2 = Listening, 0 = Playing (Fixes hidden lines), 3 = Watching"
+      },
+      "ndNameString": {
+        "type": "types.str",
+        "default": "Navidrome",
+        "description": "Activity name format string"
+      },
+      "ndDetailsString": {
+        "type": "types.str",
+        "default": "{song}",
+        "description": "Activity details format string"
+      },
+      "ndStateString": {
+        "type": "types.str",
+        "default": "{artist}",
+        "description": "Activity state format string"
+      },
+      "ndLargeTextString": {
+        "type": "types.str",
+        "default": "{album}",
+        "description": "Activity large text format string"
+      },
+      "ndStatusDisplayType": {
+        "type": "types.enum",
+        "enumValues": [
+          "off",
+          "artist",
+          "track"
+        ],
+        "default": "artist",
+        "description": "Show the track / artist name in the member list"
+      },
+      "ndHideOnPause": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Hide Rich Presence when music is paused"
       }
     }
   },
@@ -5846,9 +6086,53 @@
     "description": "shows the channels hidden behind the server resources in the channel list (Equicord-only)",
     "settings": {}
   },
+  "showRolesInChat": {
+    "description": "Shows a user's highest role next to their name in chat messages. Hide/show specific roles in their context menu (right-click). (Equicord-only)",
+    "settings": {
+      "showBots": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Whether to show the highest role on bots."
+      },
+      "useRoleColor": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Use the role's color for the icon."
+      },
+      "excludedRoles": {
+        "type": "types.listOf types.str",
+        "default": []
+      }
+    }
+  },
   "showSongName": {
     "description": "Shows song name instead of artist for Spotify activity (Equicord-only)",
     "settings": {}
+  },
+  "sidebarChat": {
+    "description": "Open a channel or DM as a sidebar or a popout. (Equicord-only)",
+    "settings": {
+      "persistSidebar": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Keep the sidebar chat open across Discord restarts"
+      },
+      "persistPopoutWindows": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Restore open popout chats after Discord restarts."
+      },
+      "persistedPopoutWindowIds": {
+        "type": "types.listOf types.str",
+        "default": [],
+        "description": "Persisted popout chat channel IDs."
+      },
+      "popoutAlwaysOnTop": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Keep popout chat windows above all others."
+      }
+    }
   },
   "signature": {
     "description": "Automated fingerprint/end text (Equicord-only)",
@@ -6173,6 +6457,13 @@
           "__nixRaw": "6.0"
         },
         "description": "How many songs are shown when initially clicking on a user"
+      },
+      "previewVolume": {
+        "type": "types.float",
+        "default": {
+          "__nixRaw": "100.0"
+        },
+        "description": "Volume of song previews when played"
       }
     }
   },
@@ -6187,39 +6478,36 @@
     }
   },
   "splitLargeMessages": {
-    "description": "Splits large messages into multiple to fit Discord's message limit. (Equicord-only)",
+    "description": "Splits oversized messages into Discord-sized chunks before sending. (Equicord-only)",
     "settings": {
-      "maxLength": {
-        "type": "types.int",
-        "default": 0,
-        "description": "Maximum length of a message before it is split. Set to 0 to automatically detect."
-      },
-      "disableFileConversion": {
-        "type": "types.bool",
-        "default": true,
-        "description": "If true, disables file conversion for large messages."
-      },
       "sendDelay": {
         "type": "types.float",
         "default": {
           "__nixRaw": "1.0"
         },
-        "description": "Delay between each chunk in seconds."
+        "description": "Minimum delay between each chunk in seconds."
       },
-      "hardSplit": {
-        "type": "types.bool",
-        "default": false,
-        "description": "If true, splits on the last character instead of the last space/newline."
+      "splitMode": {
+        "type": "types.enum",
+        "enumValues": [
+          "newlines",
+          "spaces",
+          "characters"
+        ],
+        "default": "newlines",
+        "description": "Prefer this boundary when splitting a message."
       },
       "splitInSlowmode": {
         "type": "types.bool",
         "default": false,
-        "description": "Should messages be split if the channel has slowmode enabled?"
+        "description": "Allow splitting in slowmode when its delay is within the configured maximum."
       },
       "slowmodeMax": {
-        "type": "types.int",
-        "default": 5,
-        "description": "Maximum slowmode time if splitting in slowmode."
+        "type": "types.float",
+        "default": {
+          "__nixRaw": "5.0"
+        },
+        "description": "Maximum slowmode duration allowed when splitting messages."
       }
     }
   },
@@ -6469,18 +6757,6 @@
     "description": "Embeds TIDAL songs to make them playable in Discord. (Equicord-only)",
     "settings": {}
   },
-  "tiktokTts": {
-    "description": "Adds a context menu option to read out chat messages with the good ol' Tiktok TTS voice :sob: (Equicord-only)",
-    "settings": {
-      "volume": {
-        "type": "types.float",
-        "default": {
-          "__nixRaw": "50.0"
-        },
-        "description": "Playback volume"
-      }
-    }
-  },
   "timezones": {
     "description": "Shows the local time of users in profiles and message headers (Equicord-only)",
     "settings": {
@@ -6489,7 +6765,7 @@
         "default": true,
         "description": "Show your own timezone in profiles and message headers"
       },
-      "_24hTime": {
+      "twentyFourHourFormat": {
         "type": "types.bool",
         "default": false,
         "description": "Show time in 24h format"
@@ -6503,6 +6779,11 @@
         "type": "types.bool",
         "default": true,
         "description": "Show time in message headers"
+      },
+      "recipientTimezoneInDms": {
+        "type": "types.bool",
+        "default": false,
+        "description": "In DMs, show the recipient's timezone on your messages"
       },
       "showProfileTime": {
         "type": "types.bool",
@@ -6518,6 +6799,11 @@
         "type": "types.bool",
         "default": true,
         "description": "Prefer database over local storage for timezones"
+      },
+      "showLocalTimezone": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Show Local Timezone instead of just local"
       },
       "databaseUrl": {
         "type": "types.str",
@@ -6741,6 +7027,11 @@
         "type": "types.bool",
         "default": true,
         "description": "Pass images to the AI for context (if any). This is not supported by all models."
+      },
+      "sendImagesAsBase64": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Send images to the AI as base64."
       }
     }
   },
@@ -6915,190 +7206,6 @@
         "type": "types.str",
         "default": "",
         "description": "Never show update notifications for these plugins (you can still update them from the UserPlugins tab)"
-      }
-    }
-  },
-  "vcNarratorCustom": {
-    "description": "Announces when users join, leave, or move voice channels via narrator using TikTok TTS. Revamped and back from the dead. (Equicord-only)",
-    "settings": {
-      "customVoice": {
-        "type": "types.enum",
-        "enumValues": [
-          "id_001",
-          "jp_001",
-          "jp_003",
-          "jp_005",
-          "jp_006",
-          "kr_003",
-          "kr_002",
-          "kr_004",
-          "en_au_001",
-          "en_au_002",
-          "en_male_funny",
-          "en_male_narration",
-          "en_female_emotional",
-          "en_male_cody",
-          "en_uk_001",
-          "en_uk_003",
-          "en_us_001",
-          "en_us_002",
-          "en_us_006",
-          "en_us_007",
-          "en_us_009",
-          "en_us_010",
-          "fr_001",
-          "fr_002",
-          "de_001",
-          "de_002",
-          "it_male_m18",
-          "es_002",
-          "en_us_c3po",
-          "en_us_chewbacca",
-          "en_us_ghostface",
-          "en_male_ghosthost",
-          "en_female_madam_leota",
-          "en_male_pirate",
-          "en_us_rocket",
-          "en_us_stitch",
-          "en_us_stormtrooper",
-          "br_001",
-          "br_003",
-          "br_004",
-          "br_005",
-          "es_mx_002"
-        ],
-        "default": "en_us_001",
-        "description": "Narrator voice"
-      },
-      "volume": {
-        "type": "types.float",
-        "default": {
-          "__nixRaw": "1.0"
-        },
-        "description": "Narrator Volume"
-      },
-      "rate": {
-        "type": "types.float",
-        "default": {
-          "__nixRaw": "1.0"
-        },
-        "description": "Narrator Speed"
-      },
-      "sayOwnName": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Say own name"
-      },
-      "ignoreSelf": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Ignore yourself for all events."
-      },
-      "latinOnly": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Strip non latin characters from names before saying them"
-      },
-      "joinMessage": {
-        "type": "types.str",
-        "default": "{{DISPLAY_NAME}} joined",
-        "description": "Placeholders: {{USER}}, {{DISPLAY_NAME}}, {{NICKNAME}}, {{CHANNEL}}, {{SOUND}}."
-      },
-      "joinSound": {
-        "type": "types.str",
-        "default": ""
-      },
-      "joinSoundName": {
-        "type": "types.str",
-        "default": "",
-        "description": "Join sound file name."
-      },
-      "leaveMessage": {
-        "type": "types.str",
-        "default": "{{DISPLAY_NAME}} left",
-        "description": "Placeholders: {{USER}}, {{DISPLAY_NAME}}, {{NICKNAME}}, {{CHANNEL}}, {{SOUND}}."
-      },
-      "leaveSound": {
-        "type": "types.str",
-        "default": ""
-      },
-      "leaveSoundName": {
-        "type": "types.str",
-        "default": "",
-        "description": "Leave sound file name."
-      },
-      "moveMessage": {
-        "type": "types.str",
-        "default": "{{DISPLAY_NAME}} moved to {{CHANNEL}}",
-        "description": "Placeholders: {{USER}}, {{DISPLAY_NAME}}, {{NICKNAME}}, {{CHANNEL}}, {{SOUND}}."
-      },
-      "moveSound": {
-        "type": "types.str",
-        "default": ""
-      },
-      "moveSoundName": {
-        "type": "types.str",
-        "default": "",
-        "description": "Move sound file name."
-      },
-      "announceOthersMute": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Announce when other users mute/unmute in your current VC"
-      },
-      "announceOthersDeafen": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Announce when other users deafen/undeafen in your current VC"
-      },
-      "announceOthersStream": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Announce when other users start/stop streaming in your current VC"
-      },
-      "announceSelfStream": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Announce when you start/stop streaming"
-      },
-      "stateChangeCooldownMs": {
-        "type": "types.float",
-        "default": {
-          "__nixRaw": "1500.0"
-        },
-        "description": "State-change announce cooldown (ms)"
-      },
-      "userVoiceMap": {
-        "type": "types.str",
-        "default": "",
-        "description": "Per-user voice overrides (format: userId:voiceId,userId2:voiceId2). Right-click users to set."
-      },
-      "stateChangeFilterMode": {
-        "type": "types.enum",
-        "enumValues": [
-          "off",
-          "whitelist",
-          "blacklist"
-        ],
-        "default": "off",
-        "description": "Filter which users trigger state-change announcements"
-      },
-      "stateChangeFilterList": {
-        "type": "types.str",
-        "default": "",
-        "description": "Comma-separated user IDs for whitelist/blacklist. Right-click users to add/remove."
-      },
-      "ignoredUsers": {
-        "type": "types.str",
-        "default": "",
-        "description": "Comma-separated user IDs to completely ignore (no join/leave/move/state announcements). Right-click users to add/remove."
-      },
-      "joinLeaveTimeout": {
-        "type": "types.float",
-        "default": {
-          "__nixRaw": "0.0"
-        },
-        "description": "Per-user cooldown for join/leave/move announcements (seconds). Prevents spam from rapid rejoiners."
       }
     }
   },

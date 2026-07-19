@@ -223,143 +223,187 @@
     {
       "from": [
         "audioBookShelfRichPresence",
-        "lbEnabled"
+        "ndActivityType"
       ],
       "to": [
         "richPresence",
-        "lbEnabled"
+        "ndActivityType"
       ],
       "warn": false
     },
     {
       "from": [
         "audioBookShelfRichPresence",
-        "lbHideWithActivity"
+        "ndAlbumArtMode"
       ],
       "to": [
         "richPresence",
-        "lbHideWithActivity"
+        "ndAlbumArtMode"
       ],
       "warn": false
     },
     {
       "from": [
         "audioBookShelfRichPresence",
-        "lbHideWithSpotify"
+        "ndClientId"
       ],
       "to": [
         "richPresence",
-        "lbHideWithSpotify"
+        "ndClientId"
       ],
       "warn": false
     },
     {
       "from": [
         "audioBookShelfRichPresence",
-        "lbMbContact"
+        "ndDetailsString"
       ],
       "to": [
         "richPresence",
-        "lbMbContact"
+        "ndDetailsString"
       ],
       "warn": false
     },
     {
       "from": [
         "audioBookShelfRichPresence",
-        "lbMissingArt"
+        "ndEnabled"
       ],
       "to": [
         "richPresence",
-        "lbMissingArt"
+        "ndEnabled"
       ],
       "warn": false
     },
     {
       "from": [
         "audioBookShelfRichPresence",
-        "lbNameFormat"
+        "ndHideOnPause"
       ],
       "to": [
         "richPresence",
-        "lbNameFormat"
+        "ndHideOnPause"
       ],
       "warn": false
     },
     {
       "from": [
         "audioBookShelfRichPresence",
-        "lbShareSong"
+        "ndLargeTextString"
       ],
       "to": [
         "richPresence",
-        "lbShareSong"
+        "ndLargeTextString"
       ],
       "warn": false
     },
     {
       "from": [
         "audioBookShelfRichPresence",
-        "lbShareUsername"
+        "ndLastfmApiKey"
       ],
       "to": [
         "richPresence",
-        "lbShareUsername"
+        "ndLastfmApiKey"
       ],
       "warn": false
     },
     {
       "from": [
         "audioBookShelfRichPresence",
-        "lbStatusName"
+        "ndNameString"
       ],
       "to": [
         "richPresence",
-        "lbStatusName"
+        "ndNameString"
       ],
       "warn": false
     },
     {
       "from": [
         "audioBookShelfRichPresence",
-        "lbUseListeningStatus"
+        "ndPassword"
       ],
       "to": [
         "richPresence",
-        "lbUseListeningStatus"
+        "ndPassword"
       ],
       "warn": false
     },
     {
       "from": [
         "audioBookShelfRichPresence",
-        "lbUseLogo"
+        "ndRefreshInterval"
       ],
       "to": [
         "richPresence",
-        "lbUseLogo"
+        "ndRefreshInterval"
       ],
       "warn": false
     },
     {
       "from": [
         "audioBookShelfRichPresence",
-        "lbUsername"
+        "ndServerUrl"
       ],
       "to": [
         "richPresence",
-        "lbUsername"
+        "ndServerUrl"
       ],
       "warn": false
     },
     {
       "from": [
         "audioBookShelfRichPresence",
-        "lbUseTimeBar"
+        "ndShowAlbum"
       ],
       "to": [
         "richPresence",
-        "lbUseTimeBar"
+        "ndShowAlbum"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "audioBookShelfRichPresence",
+        "ndShowSmallImage"
+      ],
+      "to": [
+        "richPresence",
+        "ndShowSmallImage"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "audioBookShelfRichPresence",
+        "ndStateString"
+      ],
+      "to": [
+        "richPresence",
+        "ndStateString"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "audioBookShelfRichPresence",
+        "ndStatusDisplayType"
+      ],
+      "to": [
+        "richPresence",
+        "ndStatusDisplayType"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "audioBookShelfRichPresence",
+        "ndUsername"
+      ],
+      "to": [
+        "richPresence",
+        "ndUsername"
       ],
       "warn": false
     },
@@ -916,143 +960,187 @@
     {
       "from": [
         "GensokyoRadioRPC",
-        "lbEnabled"
+        "ndActivityType"
       ],
       "to": [
         "richPresence",
-        "lbEnabled"
+        "ndActivityType"
       ],
       "warn": false
     },
     {
       "from": [
         "GensokyoRadioRPC",
-        "lbHideWithActivity"
+        "ndAlbumArtMode"
       ],
       "to": [
         "richPresence",
-        "lbHideWithActivity"
+        "ndAlbumArtMode"
       ],
       "warn": false
     },
     {
       "from": [
         "GensokyoRadioRPC",
-        "lbHideWithSpotify"
+        "ndClientId"
       ],
       "to": [
         "richPresence",
-        "lbHideWithSpotify"
+        "ndClientId"
       ],
       "warn": false
     },
     {
       "from": [
         "GensokyoRadioRPC",
-        "lbMbContact"
+        "ndDetailsString"
       ],
       "to": [
         "richPresence",
-        "lbMbContact"
+        "ndDetailsString"
       ],
       "warn": false
     },
     {
       "from": [
         "GensokyoRadioRPC",
-        "lbMissingArt"
+        "ndEnabled"
       ],
       "to": [
         "richPresence",
-        "lbMissingArt"
+        "ndEnabled"
       ],
       "warn": false
     },
     {
       "from": [
         "GensokyoRadioRPC",
-        "lbNameFormat"
+        "ndHideOnPause"
       ],
       "to": [
         "richPresence",
-        "lbNameFormat"
+        "ndHideOnPause"
       ],
       "warn": false
     },
     {
       "from": [
         "GensokyoRadioRPC",
-        "lbShareSong"
+        "ndLargeTextString"
       ],
       "to": [
         "richPresence",
-        "lbShareSong"
+        "ndLargeTextString"
       ],
       "warn": false
     },
     {
       "from": [
         "GensokyoRadioRPC",
-        "lbShareUsername"
+        "ndLastfmApiKey"
       ],
       "to": [
         "richPresence",
-        "lbShareUsername"
+        "ndLastfmApiKey"
       ],
       "warn": false
     },
     {
       "from": [
         "GensokyoRadioRPC",
-        "lbStatusName"
+        "ndNameString"
       ],
       "to": [
         "richPresence",
-        "lbStatusName"
+        "ndNameString"
       ],
       "warn": false
     },
     {
       "from": [
         "GensokyoRadioRPC",
-        "lbUseListeningStatus"
+        "ndPassword"
       ],
       "to": [
         "richPresence",
-        "lbUseListeningStatus"
+        "ndPassword"
       ],
       "warn": false
     },
     {
       "from": [
         "GensokyoRadioRPC",
-        "lbUseLogo"
+        "ndRefreshInterval"
       ],
       "to": [
         "richPresence",
-        "lbUseLogo"
+        "ndRefreshInterval"
       ],
       "warn": false
     },
     {
       "from": [
         "GensokyoRadioRPC",
-        "lbUsername"
+        "ndServerUrl"
       ],
       "to": [
         "richPresence",
-        "lbUsername"
+        "ndServerUrl"
       ],
       "warn": false
     },
     {
       "from": [
         "GensokyoRadioRPC",
-        "lbUseTimeBar"
+        "ndShowAlbum"
       ],
       "to": [
         "richPresence",
-        "lbUseTimeBar"
+        "ndShowAlbum"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "GensokyoRadioRPC",
+        "ndShowSmallImage"
+      ],
+      "to": [
+        "richPresence",
+        "ndShowSmallImage"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "GensokyoRadioRPC",
+        "ndStateString"
+      ],
+      "to": [
+        "richPresence",
+        "ndStateString"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "GensokyoRadioRPC",
+        "ndStatusDisplayType"
+      ],
+      "to": [
+        "richPresence",
+        "ndStatusDisplayType"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "GensokyoRadioRPC",
+        "ndUsername"
+      ],
+      "to": [
+        "richPresence",
+        "ndUsername"
       ],
       "warn": false
     },
@@ -1521,143 +1609,187 @@
     {
       "from": [
         "jellyfinRichPresence",
-        "lbEnabled"
+        "ndActivityType"
       ],
       "to": [
         "richPresence",
-        "lbEnabled"
+        "ndActivityType"
       ],
       "warn": false
     },
     {
       "from": [
         "jellyfinRichPresence",
-        "lbHideWithActivity"
+        "ndAlbumArtMode"
       ],
       "to": [
         "richPresence",
-        "lbHideWithActivity"
+        "ndAlbumArtMode"
       ],
       "warn": false
     },
     {
       "from": [
         "jellyfinRichPresence",
-        "lbHideWithSpotify"
+        "ndClientId"
       ],
       "to": [
         "richPresence",
-        "lbHideWithSpotify"
+        "ndClientId"
       ],
       "warn": false
     },
     {
       "from": [
         "jellyfinRichPresence",
-        "lbMbContact"
+        "ndDetailsString"
       ],
       "to": [
         "richPresence",
-        "lbMbContact"
+        "ndDetailsString"
       ],
       "warn": false
     },
     {
       "from": [
         "jellyfinRichPresence",
-        "lbMissingArt"
+        "ndEnabled"
       ],
       "to": [
         "richPresence",
-        "lbMissingArt"
+        "ndEnabled"
       ],
       "warn": false
     },
     {
       "from": [
         "jellyfinRichPresence",
-        "lbNameFormat"
+        "ndHideOnPause"
       ],
       "to": [
         "richPresence",
-        "lbNameFormat"
+        "ndHideOnPause"
       ],
       "warn": false
     },
     {
       "from": [
         "jellyfinRichPresence",
-        "lbShareSong"
+        "ndLargeTextString"
       ],
       "to": [
         "richPresence",
-        "lbShareSong"
+        "ndLargeTextString"
       ],
       "warn": false
     },
     {
       "from": [
         "jellyfinRichPresence",
-        "lbShareUsername"
+        "ndLastfmApiKey"
       ],
       "to": [
         "richPresence",
-        "lbShareUsername"
+        "ndLastfmApiKey"
       ],
       "warn": false
     },
     {
       "from": [
         "jellyfinRichPresence",
-        "lbStatusName"
+        "ndNameString"
       ],
       "to": [
         "richPresence",
-        "lbStatusName"
+        "ndNameString"
       ],
       "warn": false
     },
     {
       "from": [
         "jellyfinRichPresence",
-        "lbUseListeningStatus"
+        "ndPassword"
       ],
       "to": [
         "richPresence",
-        "lbUseListeningStatus"
+        "ndPassword"
       ],
       "warn": false
     },
     {
       "from": [
         "jellyfinRichPresence",
-        "lbUseLogo"
+        "ndRefreshInterval"
       ],
       "to": [
         "richPresence",
-        "lbUseLogo"
+        "ndRefreshInterval"
       ],
       "warn": false
     },
     {
       "from": [
         "jellyfinRichPresence",
-        "lbUsername"
+        "ndServerUrl"
       ],
       "to": [
         "richPresence",
-        "lbUsername"
+        "ndServerUrl"
       ],
       "warn": false
     },
     {
       "from": [
         "jellyfinRichPresence",
-        "lbUseTimeBar"
+        "ndShowAlbum"
       ],
       "to": [
         "richPresence",
-        "lbUseTimeBar"
+        "ndShowAlbum"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "jellyfinRichPresence",
+        "ndShowSmallImage"
+      ],
+      "to": [
+        "richPresence",
+        "ndShowSmallImage"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "jellyfinRichPresence",
+        "ndStateString"
+      ],
+      "to": [
+        "richPresence",
+        "ndStateString"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "jellyfinRichPresence",
+        "ndStatusDisplayType"
+      ],
+      "to": [
+        "richPresence",
+        "ndStatusDisplayType"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "jellyfinRichPresence",
+        "ndUsername"
+      ],
+      "to": [
+        "richPresence",
+        "ndUsername"
       ],
       "warn": false
     },
@@ -2027,143 +2159,187 @@
     {
       "from": [
         "ListenBrainzRPC",
-        "lbEnabled"
+        "ndActivityType"
       ],
       "to": [
         "richPresence",
-        "lbEnabled"
+        "ndActivityType"
       ],
       "warn": false
     },
     {
       "from": [
         "ListenBrainzRPC",
-        "lbHideWithActivity"
+        "ndAlbumArtMode"
       ],
       "to": [
         "richPresence",
-        "lbHideWithActivity"
+        "ndAlbumArtMode"
       ],
       "warn": false
     },
     {
       "from": [
         "ListenBrainzRPC",
-        "lbHideWithSpotify"
+        "ndClientId"
       ],
       "to": [
         "richPresence",
-        "lbHideWithSpotify"
+        "ndClientId"
       ],
       "warn": false
     },
     {
       "from": [
         "ListenBrainzRPC",
-        "lbMbContact"
+        "ndDetailsString"
       ],
       "to": [
         "richPresence",
-        "lbMbContact"
+        "ndDetailsString"
       ],
       "warn": false
     },
     {
       "from": [
         "ListenBrainzRPC",
-        "lbMissingArt"
+        "ndEnabled"
       ],
       "to": [
         "richPresence",
-        "lbMissingArt"
+        "ndEnabled"
       ],
       "warn": false
     },
     {
       "from": [
         "ListenBrainzRPC",
-        "lbNameFormat"
+        "ndHideOnPause"
       ],
       "to": [
         "richPresence",
-        "lbNameFormat"
+        "ndHideOnPause"
       ],
       "warn": false
     },
     {
       "from": [
         "ListenBrainzRPC",
-        "lbShareSong"
+        "ndLargeTextString"
       ],
       "to": [
         "richPresence",
-        "lbShareSong"
+        "ndLargeTextString"
       ],
       "warn": false
     },
     {
       "from": [
         "ListenBrainzRPC",
-        "lbShareUsername"
+        "ndLastfmApiKey"
       ],
       "to": [
         "richPresence",
-        "lbShareUsername"
+        "ndLastfmApiKey"
       ],
       "warn": false
     },
     {
       "from": [
         "ListenBrainzRPC",
-        "lbStatusName"
+        "ndNameString"
       ],
       "to": [
         "richPresence",
-        "lbStatusName"
+        "ndNameString"
       ],
       "warn": false
     },
     {
       "from": [
         "ListenBrainzRPC",
-        "lbUseListeningStatus"
+        "ndPassword"
       ],
       "to": [
         "richPresence",
-        "lbUseListeningStatus"
+        "ndPassword"
       ],
       "warn": false
     },
     {
       "from": [
         "ListenBrainzRPC",
-        "lbUseLogo"
+        "ndRefreshInterval"
       ],
       "to": [
         "richPresence",
-        "lbUseLogo"
+        "ndRefreshInterval"
       ],
       "warn": false
     },
     {
       "from": [
         "ListenBrainzRPC",
-        "lbUsername"
+        "ndServerUrl"
       ],
       "to": [
         "richPresence",
-        "lbUsername"
+        "ndServerUrl"
       ],
       "warn": false
     },
     {
       "from": [
         "ListenBrainzRPC",
-        "lbUseTimeBar"
+        "ndShowAlbum"
       ],
       "to": [
         "richPresence",
-        "lbUseTimeBar"
+        "ndShowAlbum"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "ListenBrainzRPC",
+        "ndShowSmallImage"
+      ],
+      "to": [
+        "richPresence",
+        "ndShowSmallImage"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "ListenBrainzRPC",
+        "ndStateString"
+      ],
+      "to": [
+        "richPresence",
+        "ndStateString"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "ListenBrainzRPC",
+        "ndStatusDisplayType"
+      ],
+      "to": [
+        "richPresence",
+        "ndStatusDisplayType"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "ListenBrainzRPC",
+        "ndUsername"
+      ],
+      "to": [
+        "richPresence",
+        "ndUsername"
       ],
       "warn": false
     },
@@ -2819,143 +2995,187 @@
     {
       "from": [
         "statsfmPresence",
-        "lbEnabled"
+        "ndActivityType"
       ],
       "to": [
         "richPresence",
-        "lbEnabled"
+        "ndActivityType"
       ],
       "warn": false
     },
     {
       "from": [
         "statsfmPresence",
-        "lbHideWithActivity"
+        "ndAlbumArtMode"
       ],
       "to": [
         "richPresence",
-        "lbHideWithActivity"
+        "ndAlbumArtMode"
       ],
       "warn": false
     },
     {
       "from": [
         "statsfmPresence",
-        "lbHideWithSpotify"
+        "ndClientId"
       ],
       "to": [
         "richPresence",
-        "lbHideWithSpotify"
+        "ndClientId"
       ],
       "warn": false
     },
     {
       "from": [
         "statsfmPresence",
-        "lbMbContact"
+        "ndDetailsString"
       ],
       "to": [
         "richPresence",
-        "lbMbContact"
+        "ndDetailsString"
       ],
       "warn": false
     },
     {
       "from": [
         "statsfmPresence",
-        "lbMissingArt"
+        "ndEnabled"
       ],
       "to": [
         "richPresence",
-        "lbMissingArt"
+        "ndEnabled"
       ],
       "warn": false
     },
     {
       "from": [
         "statsfmPresence",
-        "lbNameFormat"
+        "ndHideOnPause"
       ],
       "to": [
         "richPresence",
-        "lbNameFormat"
+        "ndHideOnPause"
       ],
       "warn": false
     },
     {
       "from": [
         "statsfmPresence",
-        "lbShareSong"
+        "ndLargeTextString"
       ],
       "to": [
         "richPresence",
-        "lbShareSong"
+        "ndLargeTextString"
       ],
       "warn": false
     },
     {
       "from": [
         "statsfmPresence",
-        "lbShareUsername"
+        "ndLastfmApiKey"
       ],
       "to": [
         "richPresence",
-        "lbShareUsername"
+        "ndLastfmApiKey"
       ],
       "warn": false
     },
     {
       "from": [
         "statsfmPresence",
-        "lbStatusName"
+        "ndNameString"
       ],
       "to": [
         "richPresence",
-        "lbStatusName"
+        "ndNameString"
       ],
       "warn": false
     },
     {
       "from": [
         "statsfmPresence",
-        "lbUseListeningStatus"
+        "ndPassword"
       ],
       "to": [
         "richPresence",
-        "lbUseListeningStatus"
+        "ndPassword"
       ],
       "warn": false
     },
     {
       "from": [
         "statsfmPresence",
-        "lbUseLogo"
+        "ndRefreshInterval"
       ],
       "to": [
         "richPresence",
-        "lbUseLogo"
+        "ndRefreshInterval"
       ],
       "warn": false
     },
     {
       "from": [
         "statsfmPresence",
-        "lbUsername"
+        "ndServerUrl"
       ],
       "to": [
         "richPresence",
-        "lbUsername"
+        "ndServerUrl"
       ],
       "warn": false
     },
     {
       "from": [
         "statsfmPresence",
-        "lbUseTimeBar"
+        "ndShowAlbum"
       ],
       "to": [
         "richPresence",
-        "lbUseTimeBar"
+        "ndShowAlbum"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "statsfmPresence",
+        "ndShowSmallImage"
+      ],
+      "to": [
+        "richPresence",
+        "ndShowSmallImage"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "statsfmPresence",
+        "ndStateString"
+      ],
+      "to": [
+        "richPresence",
+        "ndStateString"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "statsfmPresence",
+        "ndStatusDisplayType"
+      ],
+      "to": [
+        "richPresence",
+        "ndStatusDisplayType"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "statsfmPresence",
+        "ndUsername"
+      ],
+      "to": [
+        "richPresence",
+        "ndUsername"
       ],
       "warn": false
     },
@@ -3380,143 +3600,187 @@
     {
       "from": [
         "TosuRPC",
-        "lbEnabled"
+        "ndActivityType"
       ],
       "to": [
         "richPresence",
-        "lbEnabled"
+        "ndActivityType"
       ],
       "warn": false
     },
     {
       "from": [
         "TosuRPC",
-        "lbHideWithActivity"
+        "ndAlbumArtMode"
       ],
       "to": [
         "richPresence",
-        "lbHideWithActivity"
+        "ndAlbumArtMode"
       ],
       "warn": false
     },
     {
       "from": [
         "TosuRPC",
-        "lbHideWithSpotify"
+        "ndClientId"
       ],
       "to": [
         "richPresence",
-        "lbHideWithSpotify"
+        "ndClientId"
       ],
       "warn": false
     },
     {
       "from": [
         "TosuRPC",
-        "lbMbContact"
+        "ndDetailsString"
       ],
       "to": [
         "richPresence",
-        "lbMbContact"
+        "ndDetailsString"
       ],
       "warn": false
     },
     {
       "from": [
         "TosuRPC",
-        "lbMissingArt"
+        "ndEnabled"
       ],
       "to": [
         "richPresence",
-        "lbMissingArt"
+        "ndEnabled"
       ],
       "warn": false
     },
     {
       "from": [
         "TosuRPC",
-        "lbNameFormat"
+        "ndHideOnPause"
       ],
       "to": [
         "richPresence",
-        "lbNameFormat"
+        "ndHideOnPause"
       ],
       "warn": false
     },
     {
       "from": [
         "TosuRPC",
-        "lbShareSong"
+        "ndLargeTextString"
       ],
       "to": [
         "richPresence",
-        "lbShareSong"
+        "ndLargeTextString"
       ],
       "warn": false
     },
     {
       "from": [
         "TosuRPC",
-        "lbShareUsername"
+        "ndLastfmApiKey"
       ],
       "to": [
         "richPresence",
-        "lbShareUsername"
+        "ndLastfmApiKey"
       ],
       "warn": false
     },
     {
       "from": [
         "TosuRPC",
-        "lbStatusName"
+        "ndNameString"
       ],
       "to": [
         "richPresence",
-        "lbStatusName"
+        "ndNameString"
       ],
       "warn": false
     },
     {
       "from": [
         "TosuRPC",
-        "lbUseListeningStatus"
+        "ndPassword"
       ],
       "to": [
         "richPresence",
-        "lbUseListeningStatus"
+        "ndPassword"
       ],
       "warn": false
     },
     {
       "from": [
         "TosuRPC",
-        "lbUseLogo"
+        "ndRefreshInterval"
       ],
       "to": [
         "richPresence",
-        "lbUseLogo"
+        "ndRefreshInterval"
       ],
       "warn": false
     },
     {
       "from": [
         "TosuRPC",
-        "lbUsername"
+        "ndServerUrl"
       ],
       "to": [
         "richPresence",
-        "lbUsername"
+        "ndServerUrl"
       ],
       "warn": false
     },
     {
       "from": [
         "TosuRPC",
-        "lbUseTimeBar"
+        "ndShowAlbum"
       ],
       "to": [
         "richPresence",
-        "lbUseTimeBar"
+        "ndShowAlbum"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "TosuRPC",
+        "ndShowSmallImage"
+      ],
+      "to": [
+        "richPresence",
+        "ndShowSmallImage"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "TosuRPC",
+        "ndStateString"
+      ],
+      "to": [
+        "richPresence",
+        "ndStateString"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "TosuRPC",
+        "ndStatusDisplayType"
+      ],
+      "to": [
+        "richPresence",
+        "ndStatusDisplayType"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "TosuRPC",
+        "ndUsername"
+      ],
+      "to": [
+        "richPresence",
+        "ndUsername"
       ],
       "warn": false
     },
@@ -3742,6 +4006,17 @@
     },
     {
       "from": [
+        "musicRichPresence",
+        "showLastFmLogo"
+      ],
+      "to": [
+        "musicRichPresence",
+        "showLogo"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
         "noBlockedMessages",
         "ignoreBlockedMessages"
       ],
@@ -3838,6 +4113,127 @@
       "to": [
         "clearUrls",
         "enable"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "CollapsibleUI",
+        "channelListCollapsed"
+      ],
+      "to": [
+        "collapsibleUi",
+        "channelListCollapsed"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "CollapsibleUI",
+        "chatButtonsCollapsed"
+      ],
+      "to": [
+        "collapsibleUi",
+        "chatButtonsCollapsed"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "CollapsibleUI",
+        "detachedUserAreaX"
+      ],
+      "to": [
+        "collapsibleUi",
+        "detachedUserAreaX"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "CollapsibleUI",
+        "detachedUserAreaY"
+      ],
+      "to": [
+        "collapsibleUi",
+        "detachedUserAreaY"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "CollapsibleUI",
+        "detachUserArea"
+      ],
+      "to": [
+        "collapsibleUi",
+        "detachUserArea"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "CollapsibleUI",
+        "enable"
+      ],
+      "to": [
+        "collapsibleUi",
+        "enable"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "CollapsibleUI",
+        "guildBarCollapsed"
+      ],
+      "to": [
+        "collapsibleUi",
+        "guildBarCollapsed"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "CollapsibleUI",
+        "headerBarCollapsed"
+      ],
+      "to": [
+        "collapsibleUi",
+        "headerBarCollapsed"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "CollapsibleUI",
+        "membersListCollapsed"
+      ],
+      "to": [
+        "collapsibleUi",
+        "membersListCollapsed"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "CollapsibleUI",
+        "titleBarCollapsed"
+      ],
+      "to": [
+        "collapsibleUi",
+        "titleBarCollapsed"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "CollapsibleUI",
+        "userAreaCollapsed"
+      ],
+      "to": [
+        "collapsibleUi",
+        "userAreaCollapsed"
       ],
       "warn": true
     },
@@ -4985,28 +5381,6 @@
     },
     {
       "from": [
-        "TiktokTTS",
-        "enable"
-      ],
-      "to": [
-        "tiktokTts",
-        "enable"
-      ],
-      "warn": true
-    },
-    {
-      "from": [
-        "TiktokTTS",
-        "volume"
-      ],
-      "to": [
-        "tiktokTts",
-        "volume"
-      ],
-      "warn": true
-    },
-    {
-      "from": [
         "translate",
         "shavian"
       ],
@@ -5134,6 +5508,17 @@
       "to": [
         "triviaAi",
         "passMessageAuthorName"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "TriviaAI",
+        "sendImagesAsBase64"
+      ],
+      "to": [
+        "triviaAi",
+        "sendImagesAsBase64"
       ],
       "warn": true
     },

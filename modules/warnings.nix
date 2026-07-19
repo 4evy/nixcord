@@ -72,11 +72,6 @@ let
     file: !(builtins.elem file autoscrollEnableOption.declarations)
   ) autoscrollEnableOption.files;
 
-  vencordUnstableOption = options.programs.nixcord.discord.vencord.unstable;
-  vencordUnstableWasDefined = lib.lists.any (
-    file: !(builtins.elem file vencordUnstableOption.declarations)
-  ) vencordUnstableOption.files;
-
   discordHasNoModClient =
     cfg.discord.enable
     && !cfg.discord.vencord.enable
@@ -108,9 +103,6 @@ in
       lib.lists.map generateMigrationWarning deprecatedPluginsSorted
       ++ lib.lists.optional autoscrollEnableWasDefined ''
         programs.nixcord.discord.autoscroll.enable is deprecated and will be removed in the future. Use `programs.nixcord.discord.commandLineArgs = [ "--enable-blink-features=MiddleClickAutoscroll" ];` instead.
-      ''
-      ++ lib.lists.optional vencordUnstableWasDefined ''
-        programs.nixcord.discord.vencord.unstable is deprecated and will be removed soon. Vencord now tracks the latest upstream branch build by default; please remove this option from your nixcord configuration.
       ''
       ++ lib.lists.optional discordHasNoModClient ''
         programs.nixcord.discord.vencord.enable and programs.nixcord.discord.equicord.enable are both disabled. Discord will be installed without Vencord or Equicord.

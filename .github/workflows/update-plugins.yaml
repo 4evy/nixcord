@@ -1,206 +1,36 @@
 name: Update Plugins
 
 on:
+  push:
+    paths:
+      - "package.json"
+      - "bun.lock"
+      - "pkgs/generate-options.nix"
+      - "docs/site.nix"
   schedule:
     - cron: "0 */8 * * *" # Every 8 hours
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 env:
   NIXPKGS_EXPR: >-
     let flake = builtins.getFlake (toString ./.);
-        pkgs = import flake.inputs.nixpkgs { system = builtins.currentSystem; };
+        pkgs = import flake.inputs.nixpkgs-nixcord {
+          system = builtins.currentSystem;
+          config.allowUnfree = true;
+        };
     in
 
 jobs:
-  update-plugin:
-    name: Update ${{ matrix.variant }}
-    outputs:
-      changes: ${{ steps.commit.outputs.changes }}
+  update-plugins:
+    name: Update and verify plugins
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    permissions:
-      contents: write
-      actions: write
-    concurrency:
-      group: ${{ github.workflow }}-${{ matrix.commit_prefix }}-${{ github.ref }}
-      cancel-in-progress: false
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - variant: "Equicord"
-            package: "equicord"
-            package_file: "equicord.nix"
-            update_bin: "equicord-update"
-            commit_prefix: "equicord"
-            version_expr: "version"
-            nix_call_args: "{}"
-            version_truncate: false
-          - variant: "Vencord Stable"
-            package: "vencord"
-            package_file: "vencord.nix"
-            update_bin: "vencord-update"
-            commit_prefix: "vencord"
-            version_expr: "version"
-            nix_call_args: "{ unstable = false; }"
-            version_truncate: false
-          - variant: "Vencord Unstable"
-            package: "vencord"
-            package_file: "vencord.nix"
-            update_bin: "vencord-update"
-            commit_prefix: "vencord-unstable"
-            version_expr: "src.rev"
-            nix_call_args: "{ unstable = true; }"
-            version_truncate: true
-
-    steps:
-      - uses: actions/checkout@v6.0.1
-
-      - uses: DeterminateSystems/nix-installer-action@v21
-        with:
-          extra-conf: |
-            extra-nix-path = nixpkgs=flake:github:NixOS/nixpkgs/nixos-25.11
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Get old version
-        id: old-version
-        shell: bash
-        run: |
-          set -eo pipefail
-          VERSION_EXPR="${{ matrix.version_expr }}"
-          OLD_VERSION=$(nix eval --impure --raw --expr \
-            "$NIXPKGS_EXPR (pkgs.callPackage ./pkgs/${{ matrix.package_file }} ${{ matrix.nix_call_args }}).$VERSION_EXPR")
-          if [ "${{ matrix.version_truncate }}" == "true" ]; then
-            OLD_VERSION=${OLD_VERSION:0:7}
-          fi
-          echo "version=$OLD_VERSION" >> $GITHUB_OUTPUT
-          echo "Old ${{ matrix.variant }} version: $OLD_VERSION"
-
-      - name: Update ${{ matrix.variant }}
-        id: update
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        shell: bash
-        run: |
-          set -eo pipefail
-          echo "::group::Updating ${{ matrix.variant }}"
-          nix build --impure --expr "$NIXPKGS_EXPR (pkgs.callPackage ./pkgs/${{ matrix.package_file }} ${{ matrix.nix_call_args }}).passthru.updateScript"
-          ./result/bin/${{ matrix.update_bin }}
-          echo "::notice::${{ matrix.variant }} update finished."
-          echo "::endgroup::"
-          rm ./result
-
-      - name: Get new version
-        id: new-version
-        shell: bash
-        run: |
-          set -eo pipefail
-          VERSION_EXPR="${{ matrix.version_expr }}"
-          NEW_VERSION=$(nix eval --impure --raw --expr \
-            "$NIXPKGS_EXPR (pkgs.callPackage ./pkgs/${{ matrix.package_file }} ${{ matrix.nix_call_args }}).$VERSION_EXPR")
-          if [ "${{ matrix.version_truncate }}" == "true" ]; then
-            NEW_VERSION=${NEW_VERSION:0:7}
-          fi
-          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
-          echo "New ${{ matrix.variant }} version: $NEW_VERSION"
-
-          if [[ "${{ steps.old-version.outputs.version }}" == "$NEW_VERSION" ]]; then
-            echo "::warning::No version change detected for ${{ matrix.variant }} - no commit needed"
-          else
-            echo "::notice::Version changed for ${{ matrix.variant }}: ${{ steps.old-version.outputs.version }} -> $NEW_VERSION"
-          fi
-
-      - name: Test Build
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        shell: bash
-        run: |
-          set -eo pipefail
-          echo "::group::Testing build of ${{ matrix.variant }}"
-          nix-build -E "$NIXPKGS_EXPR pkgs.callPackage ./pkgs/${{ matrix.package_file }} ${{ matrix.nix_call_args }}"
-          echo "::notice::Build succeeded"
-          echo "::endgroup::"
-          unlink result
-
-      - name: Commit changes
-        id: commit
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        if: success()
-        shell: bash
-        run: |
-          set -eo pipefail
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git config --global pull.rebase true
-          git config --global rebase.autoStash true
-
-          if [[ -n "$(git status --porcelain pkgs/${{ matrix.package_file }} modules/plugins/)" ]]; then
-            git add pkgs/${{ matrix.package_file }} modules/plugins/
-            COMMIT_MSG=$(cat <<EOF
-          ${{ matrix.commit_prefix }}: update to ${{ steps.new-version.outputs.version }}
-
-          Bump ${{ matrix.variant }} from ${{ steps.old-version.outputs.version }} to ${{ steps.new-version.outputs.version }}.
-          EOF
-          )
-            git commit -m "$COMMIT_MSG"
-            echo "changes=true" >> $GITHUB_OUTPUT
-          else
-            echo "changes=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Push changes
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        if: success() && steps.commit.outputs.changes == 'true'
-        shell: bash
-        run: |
-          echo "::group::Pushing changes"
-          for i in {1..5}; do
-            # Abort any in-progress rebase from a previous failed attempt
-            git rebase --abort 2>/dev/null || true
-
-            echo "Attempt $i: Fetching latest changes..."
-            git fetch origin
-
-            echo "Rebasing local changes..."
-            if ! git pull --rebase origin ${{ github.ref_name }}; then
-              echo "::warning::Rebase failed on attempt $i, retrying..."
-              sleep $((i * 2))
-              continue
-            fi
-
-            echo "Pushing changes..."
-            if git push origin HEAD:${{ github.ref_name }}; then
-              echo "::notice::Successfully pushed changes on attempt $i"
-              echo "::endgroup::"
-              break
-            fi
-
-            echo "::warning::Push failed on attempt $i, retrying in $((i * 2)) seconds..."
-            sleep $((i * 2))
-
-            if [ $i -eq 5 ]; then
-              echo "::error::Failed to push after 5 attempts"
-              git log --oneline -5
-              git status
-              echo "::endgroup::"
-              exit 1
-            fi
-          done
-
-  update-equicord-darwin:
-    name: Update Equicord (Darwin pnpmDeps)
-    needs: update-plugin
-    if: needs.update-plugin.result == 'success'
-    runs-on: macos-latest
     timeout-minutes: 30
     permissions:
       contents: write
-      actions: write
-    concurrency:
-      group: ${{ github.workflow }}-equicord-darwin-${{ github.ref }}
-      cancel-in-progress: false
 
     steps:
       - uses: actions/checkout@v6.0.1
@@ -209,194 +39,212 @@ jobs:
 
       - uses: DeterminateSystems/nix-installer-action@v21
         with:
-          extra-conf: |
-            extra-nix-path = nixpkgs=flake:github:NixOS/nixpkgs/nixos-25.11
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Pull latest changes
-        run: git pull --rebase origin ${{ github.ref_name }}
-
-      - name: Update Equicord Darwin pnpmDeps
+      - name: Update Equicord and Vencord
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        shell: bash
         run: |
-          set -eo pipefail
-          echo "::group::Updating Equicord Darwin pnpmDeps"
-          nix build --impure --expr "$NIXPKGS_EXPR (pkgs.callPackage ./pkgs/equicord.nix {}).passthru.updateScript"
-          ./result/bin/equicord-update --pnpm-only
-          echo "::endgroup::"
-          rm ./result
-
-      - name: Test Build
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        shell: bash
-        run: |
-          set -eo pipefail
-          echo "::group::Testing build of Equicord (Darwin)"
-          nix-build -E "$NIXPKGS_EXPR pkgs.callPackage ./pkgs/equicord.nix {}"
-          echo "::notice::Build succeeded"
-          echo "::endgroup::"
-          unlink result
-
-      - name: Commit changes
-        id: commit
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        if: success()
-        shell: bash
-        run: |
-          set -eo pipefail
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git config --global pull.rebase true
-          git config --global rebase.autoStash true
-
-          if [[ -n "$(git status --porcelain pkgs/equicord.nix)" ]]; then
-            git add pkgs/equicord.nix
-            git commit -m "equicord: update Darwin \`pnpmDeps\` hash"
-            echo "changes=true" >> $GITHUB_OUTPUT
-          else
-            echo "changes=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Push changes
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        if: success() && steps.commit.outputs.changes == 'true'
-        shell: bash
-        run: |
-          echo "::group::Pushing changes"
-          for i in {1..5}; do
-            # Abort any in-progress rebase from a previous failed attempt
-            git rebase --abort 2>/dev/null || true
-
-            echo "Attempt $i: Fetching latest changes..."
-            git fetch origin
-
-            echo "Rebasing local changes..."
-            if ! git pull --rebase origin ${{ github.ref_name }}; then
-              echo "::warning::Rebase failed on attempt $i, retrying..."
-              sleep $((i * 2))
-              continue
-            fi
-
-            echo "Pushing changes..."
-            if git push origin HEAD:${{ github.ref_name }}; then
-              echo "::notice::Successfully pushed changes on attempt $i"
-              echo "::endgroup::"
-              break
-            fi
-
-            echo "::warning::Push failed on attempt $i, retrying in $((i * 2)) seconds..."
-            sleep $((i * 2))
-
-            if [ $i -eq 5 ]; then
-              echo "::error::Failed to push after 5 attempts"
-              git log --oneline -5
-              git status
-              echo "::endgroup::"
-              exit 1
-            fi
+          set -euo pipefail
+          for spec in "equicord.nix:equicord-update" "vencord.nix:vencord-update"; do
+            package_file=${spec%%:*}
+            update_bin=${spec#*:}
+            update_script=$(nix build --no-link --print-out-paths --impure --expr \
+              "$NIXPKGS_EXPR (pkgs.callPackage ./pkgs/$package_file {}).passthru.updateScript")
+            "$update_script/bin/$update_bin"
           done
 
-  generate-and-commit-plugin-options:
-    name: Generate and commit plugin options
-    runs-on: ubuntu-latest
-    needs: [update-plugin, update-equicord-darwin]
-    timeout-minutes: 10
-    permissions:
-      contents: write
-      actions: write
-    if: always() && needs.update-plugin.result == 'success' && needs.update-plugin.outputs.changes == 'true'
-    steps:
-      - uses: actions/checkout@v6.0.1
-
-      - uses: DeterminateSystems/nix-installer-action@v21
-        with:
-          extra-conf: |
-            extra-nix-path = nixpkgs=flake:github:NixOS/nixpkgs/nixos-25.11
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Pull latest changes
-        run: git pull --rebase origin ${{ github.ref_name }}
-
-      - name: Generate plugin options
+      - name: Refresh Linux dependencies and generate plugin options
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NIXCORD_GENERATE_WITH_GIT: "1"
-        shell: bash
         run: |
-          set -eo pipefail
-          NIX_FILE="./pkgs/generate-options.nix"
-
-          echo "::group::Generating plugin options"
+          set -euo pipefail
+          nix_file=pkgs/generate-options.nix
           for attempt in {1..3}; do
             if output=$(nix run .#generate 2>&1); then
               break
             fi
-
-            new_hash=$(echo "$output" | grep -oE "got:\s+sha256-[A-Za-z0-9+/=]+" | tail -1 | sed 's/got:\s*//' || true)
-            if [[ -n "$new_hash" ]]; then
-              echo "::notice::Updating nodeModulesHashLinux to $new_hash (attempt $attempt)"
-              perl -pi -e "s|nodeModulesHashLinux = \".*\";|nodeModulesHashLinux = \"$new_hash\";|" "$NIX_FILE"
-            else
-              echo "$output"
+            new_hash=$(grep -oE 'got:[[:space:]]+sha256-[A-Za-z0-9+/=]+' <<< "$output" \
+              | tail -1 | sed -E 's/got:[[:space:]]*//' || true)
+            if [[ -z "$new_hash" || "$attempt" -eq 3 ]]; then
+              printf '%s\n' "$output"
               exit 1
             fi
-
-            if [[ $attempt == 3 ]]; then
-              echo "$output"
-              exit 1
-            fi
+            sed -i -E \
+              "s|nodeModulesHashLinux = \"[^\"]+\";|nodeModulesHashLinux = \"$new_hash\";|" \
+              "$nix_file"
           done
-          echo "::endgroup::"
+
+          docs_file=docs/site.nix
+          system=$(nix eval --impure --raw --expr builtins.currentSystem)
+          for attempt in {1..3}; do
+            if output=$(nix build --no-link .#docs 2>&1); then
+              break
+            fi
+            new_hash=$(grep -oE 'got:[[:space:]]+sha256-[A-Za-z0-9+/=]+' <<< "$output" \
+              | tail -1 | sed -E 's/got:[[:space:]]*//' || true)
+            if [[ -z "$new_hash" || "$attempt" -eq 3 ]]; then
+              printf '%s\n' "$output"
+              exit 1
+            fi
+            SYSTEM="$system" NEW_HASH="$new_hash" perl -pi -e \
+              's|^(\s*)\Q$ENV{SYSTEM}\E = "[^"]+";|$1$ENV{SYSTEM} = "$ENV{NEW_HASH}";|' \
+              "$docs_file"
+          done
+
+      - name: Build packages and run checks
+        run: |
+          set -euo pipefail
+          nix build --no-link --print-build-logs .#equicord .#vencord
+          nix flake check --print-build-logs
 
       - name: Commit and push changes
-        id: commit
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        if: success()
-        shell: bash
         run: |
-          set -eo pipefail
-
-          echo "::group::Preparing commit"
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git config --global pull.rebase true
-          git config --global rebase.autoStash true
-
-          if [[ -z "$(git status --porcelain)" ]]; then
-            echo "::notice::No changes to commit"
-            echo "::endgroup::"
+          set -euo pipefail
+          paths=(
+            pkgs/equicord.nix
+            pkgs/vencord.nix
+            pkgs/generate-options.nix
+            docs/site.nix
+            package.json
+            bun.lock
+            modules/plugins
+          )
+          if [[ -z "$(git status --porcelain -- "${paths[@]}")" ]]; then
+            echo "::notice::Plugin sources and generated options are already current"
             exit 0
           fi
 
-          echo "::notice::Changes detected, committing..."
-          git add -A
-          git commit -m "plugins: regenerate plugin options"
-          echo "::endgroup::"
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git config pull.rebase true
+          git config rebase.autoStash true
 
-          echo "::group::Pushing changes"
+          equicord_version=$(nix eval --raw .#equicord.version)
+          vencord_version=$(nix eval --raw .#vencord.version)
+          git add -- "${paths[@]}"
+          git commit -m "plugins: update upstream snapshots" -m \
+            "Equicord: $equicord_version
+          Vencord: $vencord_version"
+
           for attempt in {1..5}; do
             git rebase --abort 2>/dev/null || true
-
-            if git fetch origin 2>&1 && \
-               git pull --rebase origin ${{ github.ref_name }} 2>&1 && \
-               git push origin HEAD:${{ github.ref_name }} 2>&1; then
-              echo "::notice::Successfully pushed changes on attempt $attempt"
-              echo "::endgroup::"
-              break
+            if git fetch origin \
+              && git pull --rebase origin "${{ github.ref_name }}" \
+              && git push origin "HEAD:${{ github.ref_name }}"; then
+              exit 0
             fi
-
-            if [[ $attempt == 5 ]]; then
+            if [[ "$attempt" -eq 5 ]]; then
               echo "::error::Failed to push after 5 attempts"
-              echo "::endgroup::"
               exit 1
             fi
+            sleep $((attempt * 2))
+          done
 
-            echo "::warning::Push attempt $attempt failed, retrying in $((attempt * 2)) seconds..."
+  verify-darwin:
+    name: Verify plugins on Darwin
+    needs: update-plugins
+    runs-on: macos-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v6.0.1
+        with:
+          ref: ${{ github.ref_name }}
+
+      - uses: DeterminateSystems/nix-installer-action@v21
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Refresh Darwin dependencies
+        env:
+          NIXCORD_GENERATE_WITH_GIT: "1"
+        run: |
+          set -euo pipefail
+          git pull --rebase origin "${{ github.ref_name }}"
+          nix_file=pkgs/generate-options.nix
+          for attempt in {1..3}; do
+            if output=$(nix run .#generate 2>&1); then
+              break
+            fi
+            new_hash=$(grep -oE 'got:[[:space:]]+sha256-[A-Za-z0-9+/=]+' <<< "$output" \
+              | tail -1 | sed -E 's/got:[[:space:]]*//' || true)
+            if [[ -z "$new_hash" || "$attempt" -eq 3 ]]; then
+              printf '%s\n' "$output"
+              exit 1
+            fi
+            NEW_HASH="$new_hash" perl -pi -e \
+              's|nodeModulesHashDarwin = "[^"]+";|nodeModulesHashDarwin = "$ENV{NEW_HASH}";|' \
+              "$nix_file"
+          done
+          if ! git diff --quiet -- modules/plugins; then
+            echo "::error::Darwin generated different plugin metadata than Linux"
+            git diff --stat -- modules/plugins
+            exit 1
+          fi
+
+          system=$(nix eval --impure --raw --expr builtins.currentSystem)
+          if nix eval --raw ".#packages.$system.docs.drvPath" >/dev/null 2>&1; then
+            docs_file=docs/site.nix
+            for attempt in {1..3}; do
+              if output=$(nix build --no-link .#docs 2>&1); then
+                break
+              fi
+              new_hash=$(grep -oE 'got:[[:space:]]+sha256-[A-Za-z0-9+/=]+' <<< "$output" \
+                | tail -1 | sed -E 's/got:[[:space:]]*//' || true)
+              if [[ -z "$new_hash" || "$attempt" -eq 3 ]]; then
+                printf '%s\n' "$output"
+                exit 1
+              fi
+              SYSTEM="$system" NEW_HASH="$new_hash" perl -pi -e \
+                's|^(\s*)\Q$ENV{SYSTEM}\E = "[^"]+";|$1$ENV{SYSTEM} = "$ENV{NEW_HASH}";|' \
+                "$docs_file"
+            done
+          fi
+
+      - name: Build packages and run checks
+        run: |
+          set -euo pipefail
+          system=$(nix eval --impure --raw --expr builtins.currentSystem)
+          packages=(.#equicord .#vencord)
+          if nix eval --raw ".#packages.$system.docs.drvPath" >/dev/null 2>&1; then
+            packages+=(.#docs)
+          fi
+          nix build --no-link --print-build-logs "${packages[@]}"
+          nix flake check --print-build-logs
+
+      - name: Commit Darwin dependency hash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          paths=(pkgs/generate-options.nix docs/site.nix)
+          if git diff --quiet -- "${paths[@]}"; then
+            echo "::notice::Darwin dependency hashes are already current"
+            exit 0
+          fi
+
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git config pull.rebase true
+          git config rebase.autoStash true
+          git add -- "${paths[@]}"
+          git commit -m "plugins: update Darwin dependencies"
+
+          for attempt in {1..5}; do
+            git rebase --abort 2>/dev/null || true
+            if git fetch origin \
+              && git pull --rebase origin "${{ github.ref_name }}" \
+              && git push origin "HEAD:${{ github.ref_name }}"; then
+              exit 0
+            fi
+            if [[ "$attempt" -eq 5 ]]; then
+              echo "::error::Failed to push after 5 attempts"
+              exit 1
+            fi
             sleep $((attempt * 2))
           done

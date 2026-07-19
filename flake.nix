@@ -17,7 +17,7 @@
         "x86_64-darwin"
       ];
       perSystem =
-        { system, inputs', ... }:
+        { system, ... }:
         let
           pkgs = import inputs.nixpkgs-nixcord {
             inherit system;
@@ -39,6 +39,18 @@
             discord-canary = pkgs.callPackage ./pkgs/discord { branch = "canary"; };
             discord-development = pkgs.callPackage ./pkgs/discord { branch = "development"; };
           };
+          vencordPackage = pkgs.callPackage ./pkgs/vencord.nix { };
+          equicordPackage = pkgs.callPackage ./pkgs/equicord.nix { };
+          discordIntegrationChecks = pkgs.lib.optionalAttrs discordAvailable {
+            discord-with-vencord = pkgs.callPackage ./pkgs/discord {
+              withVencord = true;
+              vencord = vencordPackage;
+            };
+            discord-with-equicord = pkgs.callPackage ./pkgs/discord {
+              withEquicord = true;
+              equicord = equicordPackage;
+            };
+          };
           docsArtifacts = import ./docs {
             pkgs = pkgs;
             lib = pkgs.lib;
@@ -54,15 +66,14 @@
         in
         {
           _module.args.pkgs = pkgs;
-          checks = import ./modules/tests { inherit pkgs; };
+          checks = import ./modules/tests { inherit pkgs; } // discordIntegrationChecks;
 
           packages =
             discordPackages
             // docsPackages
             // {
-              vencord = pkgs.callPackage ./pkgs/vencord.nix { };
-              vencord-unstable = pkgs.callPackage ./pkgs/vencord.nix { unstable = true; };
-              equicord = pkgs.callPackage ./pkgs/equicord.nix { };
+              vencord = vencordPackage;
+              equicord = equicordPackage;
               generate = pkgs.callPackage ./pkgs/generate-options.nix { };
 
               docs-json = docsArtifacts.json;
@@ -73,14 +84,14 @@
             program = pkgs.lib.getExe (
               pkgs.writeShellApplication {
                 name = "generate-plugin-options";
-                runtimeInputs = [
-                  pkgs.nixfmt
+                runtimeInputs = with pkgs; [
+                  nix
+                  nixfmt
                 ];
                 text = ''
-                  nix build .#generate --out-link ./result
+                  generated=$(nix build .#generate --no-link --print-out-paths)
                   mkdir -p ./modules/plugins
-                  cp -R ./result/plugins/. ./modules/plugins/
-                  cp ./result/deprecated.nix ./modules/plugins/ 2>/dev/null || true
+                  cp -R "$generated/plugins/." ./modules/plugins/
                   chmod -R u+w ./modules/plugins
                   nixfmt ./modules/plugins/*.nix
                 '';

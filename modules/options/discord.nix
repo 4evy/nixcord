@@ -61,11 +61,6 @@ in
         defaultText = lib.literalExpression "pkgs.callPackage ../../pkgs/vencord.nix { }";
         description = "The Vencord package to use.";
       };
-      unstable = mkOption {
-        type = types.bool;
-        default = false;
-        description = "Deprecated. Vencord now tracks the latest upstream branch build by default.";
-      };
     };
     equicord = {
       enable = mkEnableOption "Equicord (alternative to Vencord)";

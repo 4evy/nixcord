@@ -134,17 +134,4 @@ in
     assert builtins.any (message: lib.hasInfix "cursorBuddy" message) warnings;
     true;
 
-  "deprecated vencord unstable option warns" =
-    let
-      warnings = hmWarnings {
-        enable = true;
-        discord.vencord.enable = true;
-        discord.vencord.unstable = true;
-      };
-    in
-    assert builtins.any (
-      message: lib.hasInfix "discord.vencord.unstable is deprecated" message
-    ) warnings;
-    assert builtins.any (message: lib.hasInfix "please remove this option" message) warnings;
-    true;
 }

@@ -39,7 +39,7 @@ let
   system = stdenvNoCC.hostPlatform.system;
 
   outputHashes = {
-    x86_64-linux = "sha256-d0jLAPJzE/zv5CLhNFb4zrcmJvo+VJHmPSBh5Z11bts=";
+    x86_64-linux = "sha256-YDEZQFyTFdh+vUBWuNPuqQ5IgwE3PcJ/VHDEVJUGRlw=";
     aarch64-darwin = "sha256-iVswuO/5wuraRUrVyYymjkJ0WXV5/ielX5+W5DFdjSA=";
   };
 
@@ -89,6 +89,7 @@ stdenvNoCC.mkDerivation {
 
   configurePhase = ''
     runHook preConfigure
+    rm -rf node_modules docs/site/node_modules
     cp -R ${deps}/node_modules ./node_modules
     cp -R ${deps}/docs/site/node_modules ./docs/site/node_modules
     chmod -R u+w ./node_modules ./docs/site/node_modules

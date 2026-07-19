@@ -2,9 +2,9 @@
   equicord,
   fetchFromGitHub,
   fetchPnpmDeps,
-  stdenvNoCC,
   buildWebExtension ? false,
   bun,
+  pnpm_11,
   writeShellApplication,
   cacert,
   curl,
@@ -14,12 +14,10 @@
   replaceVars,
 }:
 let
-  version = "1.14.15.2-unstable-2026-07-10";
-  rev = "f06917ad86e9285cfe4523af2b05ab3a12276bda";
-  hash = "sha256-noA8iw7cixzNH3ZherQiEr2CXMpU+XR3vSxk3gldx1E=";
-  pnpmDepsHashDarwin = "sha256-dcBFN5NxFzZVWW8L3Cnvcp3LFR0WF4Ff5+I1H5XgZ3Q=";
-  pnpmDepsHashLinux = "sha256-dcBFN5NxFzZVWW8L3Cnvcp3LFR0WF4Ff5+I1H5XgZ3Q=";
-  pnpmDepsHash = if stdenvNoCC.isDarwin then pnpmDepsHashDarwin else pnpmDepsHashLinux;
+  version = "1.14.16.0-2026-07-16";
+  rev = "29921a58a841680a3ee02d90eefee866a061497a";
+  hash = "sha256-+fx5GZ1aAIs8Sy4qPvyURKIKR4otrcA/3ZimbGg6zlU=";
+  pnpmDepsHash = "sha256-uGGHln3IRSZIBotzpC6muCpZdCD9M7DaOqN1Y60OtFo=";
   owner = equicord.src.owner;
   repo = equicord.src.repo;
   src = fetchFromGitHub {
@@ -44,16 +42,12 @@ let
           nixFile = "./pkgs/equicord.nix";
           owner = equicord.src.owner;
           repo = equicord.src.repo;
-          updateKind = "unstable-branch";
           versionVar = "version";
           hashVar = "hash";
           revVar = "rev";
-          pnpmHashVar = "";
+          pnpmHashVar = "pnpmDepsHash";
           callPackageArgs = "{ }";
-          stableTagRegex = "^v[0-9]+\\.[0-9]+\\.[0-9]+(\\.[0-9]+)?$";
           branch = "main";
-          versionPrefixMode = "keep-v";
-          skipIfCurrent = "true";
           dependencyName = "equicord";
         }
       } "$@"
@@ -63,8 +57,8 @@ in
 (equicord.override { inherit buildWebExtension; }).overrideAttrs (
   oldAttrs:
   let
+    pnpm = pnpm_11;
     patches = (oldAttrs.patches or [ ]) ++ [
-      ./patches/equicord-pnpm-lock-pnpm10.patch
       ./patches/equicord-content-warning-settings.patch
     ];
   in
@@ -76,13 +70,17 @@ in
       inherit version;
       inherit patches;
       inherit (oldAttrs) pname;
-      inherit (oldAttrs.pnpmDeps) pnpm fetcherVersion;
+      inherit pnpm;
+      fetcherVersion = 4;
       hash = pnpmDepsHash;
     };
+    nativeBuildInputs =
+      builtins.filter (input: (input.pname or "") != "pnpm") (oldAttrs.nativeBuildInputs or [ ])
+      ++ [ pnpm ];
     passthru = (oldAttrs.passthru or { }) // {
       inherit updateScript;
     };
-    env = {
+    env = (oldAttrs.env or { }) // {
       EQUICORD_REMOTE = "${owner}/${repo}";
       EQUICORD_HASH = "${rev}";
     };

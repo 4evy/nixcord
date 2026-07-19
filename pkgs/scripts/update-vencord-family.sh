@@ -5,16 +5,12 @@ client_name="@clientName@"
 nix_file="@nixFile@"
 owner="@owner@"
 repo="@repo@"
-update_kind="@updateKind@"
 version_var="@versionVar@"
 hash_var="@hashVar@"
 rev_var="@revVar@"
 pnpm_hash_var="@pnpmHashVar@"
 call_package_args="@callPackageArgs@"
-stable_tag_regex="@stableTagRegex@"
 branch="@branch@"
-version_prefix_mode="@versionPrefixMode@"
-skip_if_current="@skipIfCurrent@"
 dependency_name="@dependencyName@"
 
 wrong_hash="sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
@@ -137,60 +133,6 @@ gh_curl() {
   curl "${curl_args[@]}" "$@"
 }
 
-version_gt() {
-  local lhs="${1#v}"
-  local rhs="${2#v}"
-  local -a lhs_parts=()
-  local -a rhs_parts=()
-  local lhs_part
-  local rhs_part
-  local part_count
-  local index
-
-  IFS=. read -r -a lhs_parts <<< "$lhs"
-  IFS=. read -r -a rhs_parts <<< "$rhs"
-
-  part_count=${#lhs_parts[@]}
-  if (( ${#rhs_parts[@]} > part_count )); then
-    part_count=${#rhs_parts[@]}
-  fi
-
-  for ((index = 0; index < part_count; index++)); do
-    lhs_part=${lhs_parts[index]:-0}
-    rhs_part=${rhs_parts[index]:-0}
-
-    if (( 10#$lhs_part > 10#$rhs_part )); then
-      return 0
-    elif (( 10#$lhs_part < 10#$rhs_part )); then
-      return 1
-    fi
-  done
-
-  return 1
-}
-
-fetch_latest_tag() {
-  local tags_json
-  local tag_names
-  local tag
-  local latest_tag=""
-
-  tags_json=$(gh_curl "https://api.github.com/repos/$owner/$repo/tags?per_page=100")
-  tag_names=$(jq -r '.[].name // empty' <<< "$tags_json") ||
-    die "Failed to parse tags for $owner/$repo"
-
-  while IFS= read -r tag; do
-    [[ -n "$tag" ]] || continue
-    [[ "$tag" =~ $stable_tag_regex ]] || continue
-
-    if [[ -z "$latest_tag" ]] || version_gt "$tag" "$latest_tag"; then
-      latest_tag="$tag"
-    fi
-  done <<< "$tag_names"
-
-  printf '%s\n' "$latest_tag"
-}
-
 prefetch_github_hash() {
   local revision="$1"
   local output
@@ -205,16 +147,6 @@ prefetch_github_hash() {
   printf '%s\n' "$hash"
 }
 
-platform_pnpm_hash_var() {
-  if [[ -n "$pnpm_hash_var" ]]; then
-    printf '%s\n' "$pnpm_hash_var"
-  elif [[ "$OSTYPE" == darwin* ]]; then
-    printf '%s\n' "pnpmDepsHashDarwin"
-  else
-    printf '%s\n' "pnpmDepsHashLinux"
-  fi
-}
-
 build_and_extract_hash() {
   local build_output
   local nixpkgs_path
@@ -222,46 +154,44 @@ build_and_extract_hash() {
   local -a nix_build_args=()
 
   expr="with import <nixpkgs> {}; (callPackage $nix_file $call_package_args).pnpmDeps"
-  nixpkgs_path=$(nix eval --impure --raw --expr "(builtins.getFlake (toString ./.)).inputs.nixpkgs.outPath" 2>/dev/null) ||
+  nixpkgs_path=$(nix eval --impure --raw --expr "(builtins.getFlake (toString ./.)).inputs.nixpkgs-nixcord.outPath" 2>/dev/null) ||
     nixpkgs_path=""
 
   nix_build_args=(-E "$expr" --no-link)
   if [[ -n "$nixpkgs_path" ]]; then
     nix_build_args=(-I "nixpkgs=$nixpkgs_path" "${nix_build_args[@]}")
     if build_output=$(nix-build "${nix_build_args[@]}" 2>&1); then
-      return 0
+      die "Dependency build unexpectedly accepted the placeholder hash"
     fi
   else
     nix_build_args+=("--pure")
     if build_output=$(nix-build "${nix_build_args[@]}" 2>&1); then
-      return 0
+      die "Dependency build unexpectedly accepted the placeholder hash"
     fi
   fi
 
   if [[ "$build_output" =~ got:[[:space:]]+(sha256-[A-Za-z0-9+/=]+) ]]; then
     printf '%s\n' "${BASH_REMATCH[1]}"
+    return 0
   fi
+
+  printf '%s\n' "$build_output" >&2
+  die "Could not determine the pnpm dependency hash"
 }
 
 update_pnpm_deps_hash() {
   local hash_var
-  local old_hash
   local new_hash
 
-  hash_var=$(platform_pnpm_hash_var)
-  old_hash=$(get_nix_value "$hash_var")
+  hash_var="$pnpm_hash_var"
+  [[ -n "$hash_var" ]] || die "pnpmHashVar must be set"
 
   log "Updating pnpm dependencies hash ($hash_var)..."
   update_value "$hash_var" "$wrong_hash"
   new_hash=$(build_and_extract_hash)
-
-  if [[ -n "$new_hash" ]]; then
-    update_value "$hash_var" "$new_hash"
-    log "Updated $hash_var to $new_hash"
-  else
-    update_value "$hash_var" "$old_hash"
-    log "$hash_var is already correct or could not be determined"
-  fi
+  [[ -n "$new_hash" ]] || die "Could not determine the pnpm dependency hash"
+  update_value "$hash_var" "$new_hash"
+  log "Updated $hash_var to $new_hash"
 }
 
 update_bun_dependency() {
@@ -272,53 +202,47 @@ update_bun_dependency() {
 
   dependency_value="github:${owner}/${repo}#${revision}"
   log "Updating Bun dependency $dependency_name to $revision..."
-  bun add --dev --no-progress "${dependency_name}@${dependency_value}"
+  bun add --dev --lockfile-only --no-progress "${dependency_name}@${dependency_value}"
 }
 
 determine_update() {
+  local commit_date
+  local commit_json
+  local package_json
+  local upstream_version
+
   update_version=""
   update_revision=""
 
-  if [[ "$update_kind" == "unstable-branch" ]]; then
-    local base_tag
-    local commit_date
-    local commit_json
+  commit_json=$(gh_curl "https://api.github.com/repos/$owner/$repo/commits/$branch")
+  update_revision=$(jq -r '.sha // empty' <<< "$commit_json") ||
+    die "Failed to parse commit SHA for $branch"
+  [[ -n "$update_revision" ]] || die "Could not resolve $owner/$repo branch $branch"
 
-    base_tag=$(fetch_latest_tag)
-    [[ -n "$base_tag" ]] || die "Could not find latest stable tag for $client_name"
+  commit_date=$(jq -r '.commit.committer.date // empty' <<< "$commit_json") ||
+    die "Failed to parse commit date for $update_revision"
+  commit_date=${commit_date%%T*}
+  [[ -n "$commit_date" ]] || die "Could not determine commit date for $update_revision"
 
-    commit_json=$(gh_curl "https://api.github.com/repos/$owner/$repo/commits/$branch")
-    update_revision=$(jq -r '.sha // empty' <<< "$commit_json") ||
-      die "Failed to parse commit SHA for $branch"
-    [[ -n "$update_revision" ]] || die "Could not resolve $owner/$repo branch $branch"
+  package_json=$(gh_curl "https://raw.githubusercontent.com/$owner/$repo/$update_revision/package.json")
+  upstream_version=$(jq -r '.version // empty' <<< "$package_json") ||
+    die "Failed to parse package.json for $update_revision"
+  [[ -n "$upstream_version" ]] || die "Could not determine package version for $update_revision"
 
-    commit_date=$(jq -r '.commit.committer.date // empty' <<< "$commit_json") ||
-      die "Failed to parse commit date for $update_revision"
-    commit_date=${commit_date%%T*}
-    [[ -n "$commit_date" ]] || die "Could not determine commit date for $update_revision"
-
-    update_version="${base_tag#v}-unstable-$commit_date"
-  else
-    local tag
-
-    tag=$(fetch_latest_tag)
-    [[ -n "$tag" ]] || die "Could not find latest tag for $client_name"
-
-    update_revision="$tag"
-    if [[ "$version_prefix_mode" == "strip-v" ]]; then
-      update_version="${tag#v}"
-    else
-      update_version="$tag"
-    fi
-  fi
+  update_version="$upstream_version-$commit_date"
 }
 
 run_update() {
+  local force_update=false
+
   case "${1:-}" in
     --pnpm-only)
       update_pnpm_deps_hash
       log "pnpmDeps update complete"
       return
+      ;;
+    --force)
+      force_update=true
       ;;
     "")
       ;;
@@ -330,10 +254,8 @@ run_update() {
   log "Fetching latest $client_name version..."
   determine_update
 
-  if [[ "$skip_if_current" == "true" && "$(get_nix_value "$version_var")" == "$update_version" ]]; then
-    log "Already at latest version $update_version, updating dependencies only"
-    update_bun_dependency "$update_revision"
-    update_pnpm_deps_hash
+  if [[ "$force_update" == false && -n "$rev_var" && "$(get_nix_value "$rev_var")" == "$update_revision" ]]; then
+    log "Already at latest revision $update_revision"
     return
   fi
 

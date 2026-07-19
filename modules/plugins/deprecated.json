@@ -40,6 +40,10 @@
       "to": "RichPresence",
       "date": "2026-06-24"
     },
+    "LastFMRichPresence": {
+      "to": "MusicRichPresence",
+      "date": "2026-07-16"
+    },
     "ListenBrainzRPC": {
       "to": "RichPresence",
       "date": "2026-06-24"
@@ -137,6 +141,9 @@
       "open": "Open",
       "Open": "open"
     },
+    "musicRichPresence": {
+      "showLastFmLogo": "showLogo"
+    },
     "noBlockedMessages": {
       "alsoHideIgnoredUsers": "applyToIgnoredUsers",
       "applyToIgnoredUsers": "alsoHideIgnoredUsers",
@@ -147,6 +154,10 @@
     "platformIndicators": {
       "badges": "profiles",
       "profiles": "badges"
+    },
+    "timezones": {
+      "showOwnTimezone": "Show Own Timezone",
+      "twentyFourHourFormat": "24h Time"
     }
   }
 }

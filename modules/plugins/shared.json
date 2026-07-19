@@ -758,93 +758,6 @@
     "description": "Attempt to navigate to the channel you were in before switching accounts or loading Discord. (Shared between Vencord and Equicord)",
     "settings": {}
   },
-  "lastFmRichPresence": {
-    "description": "Little plugin for Last.fm rich presence (Shared between Vencord and Equicord)",
-    "settings": {
-      "apiKey": {
-        "type": "types.nullOr types.str",
-        "default": null,
-        "description": "Custom Last.fm API key. Not required but highly recommended to avoid rate limiting with our shared key"
-      },
-      "username": {
-        "type": "types.nullOr types.str",
-        "default": null,
-        "description": "Last.fm username"
-      },
-      "shareUsername": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Show link to Last.fm profile"
-      },
-      "clickableLinks": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Make track, artist and album names clickable links"
-      },
-      "hideWithSpotify": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Hide Last.fm presence if spotify is running"
-      },
-      "hideWithActivity": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Hide Last.fm presence if you have any other presence"
-      },
-      "statusName": {
-        "type": "types.str",
-        "default": "some music",
-        "description": "Custom status text. You can use the following variables: {artist} | {album} | {title}"
-      },
-      "statusDisplayType": {
-        "type": "types.enum",
-        "enumValues": [
-          "off",
-          "artist",
-          "track"
-        ],
-        "default": "artist",
-        "description": "Show the track / artist name in the member list"
-      },
-      "nameFormat": {
-        "type": "types.enum",
-        "enumValues": [
-          "status-name",
-          "artist-first",
-          "song-first",
-          "artist",
-          "song",
-          "album"
-        ],
-        "default": "status-name",
-        "description": "Show name of song and artist in status name"
-      },
-      "useListeningStatus": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Show \"Listening to\" status instead of \"Playing\""
-      },
-      "missingArt": {
-        "type": "types.enum",
-        "enumValues": [
-          "lastfmLogo",
-          "placeholder"
-        ],
-        "default": "lastfmLogo",
-        "description": "When album or album art is missing"
-      },
-      "showLastFmLogo": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Show the Last.fm logo by the album cover"
-      },
-      "showAlbumCover": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Show album cover. Disabling this will display a placeholder. Useful if your Music has inappropriate art"
-      }
-    }
-  },
   "loadingQuotes": {
     "description": "Replace Discords loading quotes (Shared between Vencord and Equicord)",
     "settings": {
@@ -1604,6 +1517,10 @@
         "description": "Max Super Reactions to play at once. 0 to disable playing Super Reactions"
       }
     }
+  },
+  "tenorGifSearch": {
+    "description": "Restore Tenor GIF search (Shared between Vencord and Equicord)",
+    "settings": {}
   },
   "themeAttributes": {
     "description": "Adds data attributes to various elements for theming purposes (Shared between Vencord and Equicord)",
