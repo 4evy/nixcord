@@ -55,7 +55,11 @@ let
     development = discord-development;
   };
 
-  basePackage = variantPackages.${branch};
+  basePackage = variantPackages.${branch} or null;
+  enabledDiscordModsCount = lib.count lib.id [
+    withVencord
+    withEquicord
+  ];
 
   binaryName =
     if stdenvNoCC.isLinux then
@@ -213,6 +217,12 @@ let
     }
   );
 in
+assert lib.assertMsg (
+  basePackage != null
+) "nixcord Discord: branch '${branch}' is unavailable on this platform";
+assert lib.assertMsg (
+  enabledDiscordModsCount <= 1
+) "nixcord Discord: Vencord and Equicord cannot both be enabled";
 package.overrideAttrs (
   oldAttrs:
   let
@@ -278,6 +288,6 @@ package.overrideAttrs (
       '';
   }
   // lib.optionalAttrs stdenvNoCC.isLinux {
-    inherit stageModules;
+    nixcordStageModules = stageModules;
   }
 )
