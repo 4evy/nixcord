@@ -81,6 +81,8 @@ stdenvNoCC.mkDerivation {
   pname = "nixcord-docs";
   version = revision;
 
+  passthru = { inherit deps; };
+
   inherit src;
   nativeBuildInputs = [
     bun

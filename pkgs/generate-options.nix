@@ -11,14 +11,16 @@
 }:
 let
   nodeModulesHashes = {
-    x86_64-linux = "sha256-UhbM9uzpgHus2E1fE4P1Xt+QFv33TcMj8dKypC5iPkk=";
-    aarch64-linux = "sha256-1tFFJUekq3bNVTv1Sf5Dn6PWPH45/hVUZoWs9TSNqGA=";
-    aarch64-darwin = "sha256-yAVJmZE0eIxDlA51VZMA9ehAfKpZ2j9795supydcI/M=";
-    x86_64-darwin = "sha256-imH40YL8SoHFMw0LYpNY0oPmyf/22xIFJCUeBB2SW38=";
+    x86_64-linux = "sha256-WOYL30I6Si3CUqAoWr9C5eyr688LH1vL4WmIQjjkbXM=";
+    aarch64-linux = "sha256-4fl5jpW1WR+nB4Q1qI4B2GC+UKQJeXfpLOM9sB2NX7w=";
+    aarch64-darwin = "sha256-/TOYcKJTk257W5SqbbLiAV49ClbDQi5kteOD0OyNAVU=";
+    x86_64-darwin = "sha256-Myt/U3TduRtxpBFeKGdobiWlOfjTzlgylb/8gbmHh78=";
   };
   nodeModulesHash =
     nodeModulesHashes.${stdenvNoCC.hostPlatform.system}
       or (throw "Unsupported system: ${stdenvNoCC.hostPlatform.system}");
+  bunCPU = if stdenvNoCC.hostPlatform.isAarch64 then "arm64" else "x64";
+  bunOS = if stdenvNoCC.hostPlatform.isDarwin then "darwin" else "linux";
 in
 stdenvNoCC.mkDerivation (finalAttrs: {
   name = "nixcord-plugin-options";
@@ -63,8 +65,10 @@ stdenvNoCC.mkDerivation (finalAttrs: {
       bun install \
         --frozen-lockfile \
         --ignore-scripts \
-        --os=* \
-        --cpu=* \
+        --backend=copyfile \
+        --linker=isolated \
+        --os=${bunOS} \
+        --cpu=${bunCPU} \
         --no-progress
 
       runHook postBuild
@@ -74,7 +78,7 @@ stdenvNoCC.mkDerivation (finalAttrs: {
       runHook preInstall
 
       mkdir -p $out
-      find . -type d -name node_modules -exec cp -R --parents {} $out \;
+      cp -R --parents node_modules packages/*/node_modules docs/site/node_modules $out
 
       runHook postInstall
     '';

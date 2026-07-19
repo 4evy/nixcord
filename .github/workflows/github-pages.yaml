@@ -22,19 +22,14 @@ concurrency:
 permissions: {}
 
 jobs:
-  publish:
-    name: Build and publish documentation
+  build:
+    name: Build documentation
     strategy:
       matrix:
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
     permissions:
       contents: read
-      pages: write # Deploy the built site to GitHub Pages.
-      id-token: write # Authenticate the Pages deployment.
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
@@ -57,6 +52,18 @@ jobs:
         with:
           path: ./public
 
+  deploy:
+    name: Publish documentation
+    if: github.ref_name == github.event.repository.default_branch
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write # Deploy the built site to GitHub Pages.
+      id-token: write # Authenticate the Pages deployment.
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5.0.0

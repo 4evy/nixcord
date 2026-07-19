@@ -19,7 +19,7 @@
         "fallow": "^3.6.0",
         "renovate": "43.265.5",
         "typescript": "npm:@typescript/typescript6@^6.0.2",
-        "vencord": "github:Vendicated/Vencord#c4d8e8624b36866134b09b2092ecc9a62127c261",
+        "vencord": "github:Vendicated/Vencord#0a5dfaa1caa0799899b4d14e3862b70c665d8223",
         "vite": "~8.1.5",
         "vitest": "~4.1.10",
       },
@@ -1558,7 +1558,7 @@
 
     "validate-npm-package-name": ["validate-npm-package-name@7.0.2", "", {}, "sha512-hVDIBwsRruT73PbK7uP5ebUt+ezEtCmzZz3F59BSr2F6OVFnJ/6h8liuvdLrQ88Xmnk6/+xGGuq+pG9WwTuy3A=="],
 
-    "vencord": ["vencord@github:Vendicated/Vencord#c4d8e86", { "dependencies": { "@intrnl/xxhash64": "^0.1.2", "@vap/core": "0.0.12", "@vap/shiki": "0.10.5", "fflate": "^0.8.3", "gifenc": "github:mattdesl/gifenc#64842fca317b112a8590f8fef2bf3825da8f6fe3", "monaco-editor": "^0.55.1", "nanoid": "^5.1.16", "virtual-merge": "^1.0.1" } }, "Vendicated-Vencord-c4d8e86", "sha512-jJNjRy8OEMt0fwgCIht8TSpjXEHKv0nU+bkBtEvk8iplvdA7sPb5lmkds/wt4xR6sep1yj+6WvzH+KnOtmJ92w=="],
+    "vencord": ["vencord@github:Vendicated/Vencord#0a5dfaa", { "dependencies": { "@intrnl/xxhash64": "^0.1.2", "@vap/core": "0.0.12", "@vap/shiki": "0.10.5", "fflate": "^0.8.3", "gifenc": "github:mattdesl/gifenc#64842fca317b112a8590f8fef2bf3825da8f6fe3", "monaco-editor": "^0.55.1", "nanoid": "^5.1.16", "virtual-merge": "^1.0.1" } }, "Vendicated-Vencord-0a5dfaa", "sha512-/rJ+pxUTF13fQF76e4+vMaRoE6rGCcZGiFS2oxK4qq+XxsLdyvyrJCAB+NAzhkI+OSkKubkTk9/OoP/LLlYUuA=="],
 
     "vfile": ["vfile@6.0.3", "", { "dependencies": { "@types/unist": "^3.0.0", "vfile-message": "^4.0.0" } }, "sha512-KzIbH/9tXat2u30jf+smMwFCsno4wHVdNmzFyL+T/L3UGqqk6JKfVqOFOZEpZSHADH1k40ab6NUIXZq422ov3Q=="],
 
@@ -1703,6 +1703,8 @@
     "svelte-toolbelt/runed": ["runed@0.23.4", "", { "dependencies": { "esm-env": "^1.0.0" }, "peerDependencies": { "svelte": "^5.7.0" } }, "sha512-9q8oUiBYeXIDLWNK5DfCWlkL0EW3oGbk845VdKlPeia28l751VpfesaB/+7pI6rnbx1I6rqoZ2fZxptOJLxILA=="],
 
     "tinyglobby/picomatch": ["picomatch@4.0.4", "", {}, "sha512-QP88BAKvMam/3NxH6vj2o21R6MjxZUAd6nlwAS/pnGvN9IVLocLHxGYIzFhg6fUQ+5th6P4dv4eW9jX3DSIj7A=="],
+
+    "vencord/gifenc": ["gifenc@github:mattdesl/gifenc#64842fc", {}, "mattdesl-gifenc-64842fc", "sha512-gtl76gG6LhrCAhMjKuTkJW2LyCr/7V3BySJhA4CfBgmSAPspSrxmfFrRAvlW7fszHIThRTgv/3HYeJHkReK5oA=="],
 
     "write-yaml-file/js-yaml": ["js-yaml@4.3.0", "", { "dependencies": { "argparse": "^2.0.1" }, "bin": { "js-yaml": "bin/js-yaml.js" } }, "sha512-1td788aAnnZ5qs7V2QIRl1owjtYpbKt749Y3xauqQgwIIGF/xXWz1wMTEBx5O3LK3lXLVuqXPdPxj2BoFHaW9Q=="],
 

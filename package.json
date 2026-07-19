@@ -40,7 +40,7 @@
     "fallow": "^3.6.0",
     "renovate": "43.265.5",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
-    "vencord": "github:Vendicated/Vencord#c4d8e8624b36866134b09b2092ecc9a62127c261",
+    "vencord": "github:Vendicated/Vencord#0a5dfaa1caa0799899b4d14e3862b70c665d8223",
     "vite": "~8.1.5",
     "vitest": "~4.1.10"
   }

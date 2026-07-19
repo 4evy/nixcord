@@ -68,10 +68,16 @@ jobs:
           fi
           nix_file=pkgs/generate-options.nix
           hash_updater=pkgs/scripts/update-fixed-output-hash.sh
-          "$hash_updater" refresh "$nix_file" "$system" -- nix run .#generate
+          "$hash_updater" refresh "$nix_file" "$system" -- bash -euo pipefail -c '
+            nix build --no-link .#generate.node_modules
+            nix build --rebuild --no-link .#generate.node_modules
+          '
 
           docs_file=docs/site.nix
-          "$hash_updater" refresh "$docs_file" "$system" -- nix build --no-link .#docs
+          "$hash_updater" refresh "$docs_file" "$system" -- bash -euo pipefail -c '
+            nix build --no-link .#docs.deps
+            nix build --rebuild --no-link .#docs.deps
+          '
 
       - name: Build packages and run checks
         run: |
@@ -205,8 +211,12 @@ jobs:
 
           nix_file=pkgs/generate-options.nix
           hash_updater=pkgs/scripts/update-fixed-output-hash.sh
-          "$hash_updater" refresh "$nix_file" "$EXPECTED_SYSTEM" -- \
-            nix --option system "$EXPECTED_SYSTEM" run .#generate
+          "$hash_updater" refresh "$nix_file" "$EXPECTED_SYSTEM" -- bash -euo pipefail -c "
+            nix --option system '$EXPECTED_SYSTEM' build \
+              --no-link .#generate.node_modules
+            nix --option system '$EXPECTED_SYSTEM' build \
+              --rebuild --no-link .#generate.node_modules
+          "
           if ! git diff --quiet -- modules/plugins; then
             echo "::error::Generated plugin metadata differs on $EXPECTED_SYSTEM"
             git diff --stat -- modules/plugins
@@ -216,8 +226,12 @@ jobs:
           if nix --option system "$EXPECTED_SYSTEM" eval \
             --raw ".#packages.$EXPECTED_SYSTEM.docs.drvPath" >/dev/null 2>&1; then
             docs_file=docs/site.nix
-            "$hash_updater" refresh "$docs_file" "$EXPECTED_SYSTEM" -- \
-              nix --option system "$EXPECTED_SYSTEM" build --no-link .#docs
+            "$hash_updater" refresh "$docs_file" "$EXPECTED_SYSTEM" -- bash -euo pipefail -c "
+              nix --option system '$EXPECTED_SYSTEM' build \
+                --no-link .#docs.deps
+              nix --option system '$EXPECTED_SYSTEM' build \
+                --rebuild --no-link .#docs.deps
+            "
           fi
 
       - name: Build packages and run checks
