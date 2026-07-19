@@ -1,0 +1,48 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:best-practices"],
+  "gitAuthor": "4evy <git@evy.pink>",
+  "gitIgnoredAuthors": [
+    "41898282+github-actions[bot]@users.noreply.github.com"
+  ],
+  "dependencyDashboard": false,
+  "configMigration": false,
+  "automerge": true,
+  "automergeType": "branch",
+  "ignoreTests": true,
+  "platformAutomerge": false,
+  "prCreation": "status-success",
+  "rebaseWhen": "auto",
+  "branchConcurrentLimit": 1,
+  "prHourlyLimit": 0,
+  "vulnerabilityAlerts": {
+    "enabled": false
+  },
+  "nix": {
+    "enabled": true
+  },
+  "lockFileMaintenance": {
+    "enabled": true,
+    "automerge": true,
+    "automergeType": "branch"
+  },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Track pinned tool versions in workflow inputs",
+      "managerFilePatterns": ["/^\\.github/workflows/.+\\.ya?ml$/"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>[^\\s]+) depName=(?<depName>[^\\s]+)\\n\\s+[\\w-]+: \"(?<currentValue>[^\"]+)\""
+      ]
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Keep GitHub Actions immutable and merge pin updates directly",
+      "matchManagers": ["github-actions"],
+      "pinDigests": true,
+      "automerge": true,
+      "automergeType": "branch"
+    }
+  ]
+}
