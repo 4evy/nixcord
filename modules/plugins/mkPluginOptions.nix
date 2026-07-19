@@ -54,9 +54,9 @@ let
     else
       let
         commonAttrs = {
-          default = resolveDefault setting.default;
           description = setting.description;
         }
+        // lib.optionalAttrs (setting ? default) { default = resolveDefault setting.default; }
         // lib.optionalAttrs (setting.example != null) { example = setting.example; };
         typeAttr =
           if setting.type == "types.enum" then
