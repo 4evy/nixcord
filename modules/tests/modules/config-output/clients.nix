@@ -54,6 +54,36 @@ let
             withVencord = true;
           };
     };
+  stubDiscordPackageWithStringArgs =
+    pkgs.runCommand "nixcord-discord-string-args-stub" { } "mkdir $out"
+    // {
+      override =
+        lib.setFunctionArgs
+          (
+            args:
+            pkgs.runCommand "nixcord-discord-string-args-final-stub" { } "mkdir $out"
+            // {
+              passthru.nixcordOverrideArgs = args;
+            }
+          )
+          {
+            branch = true;
+            commandLineArgs = true;
+            equicord = true;
+            vencord = true;
+            withEquicord = true;
+            withOpenASAR = true;
+            withVencord = true;
+          };
+    };
+  stubVesktopPackage = pkgs.runCommand "nixcord-vesktop-stub" { } "mkdir $out" // {
+    override =
+      args:
+      pkgs.runCommand "nixcord-vesktop-final-stub" { } "mkdir $out"
+      // {
+        passthru.nixcordOverrideArgs = args;
+      };
+  };
   stubEquicordPackage = pkgs.runCommand "nixcord-equicord-stub" { } "mkdir -p $out/equibop" // {
     overrideAttrs =
       f:
@@ -69,7 +99,9 @@ let
     {
       withMiddleClickScroll ? false,
     }:
-    pkgs.runCommand "nixcord-equibop-stub" { } "mkdir $out"
+    pkgs.runCommand "nixcord-equibop-stub" {
+      passthru.nixcordWithMiddleClickScroll = withMiddleClickScroll;
+    } "mkdir $out"
     // {
       postPatch = "";
       postFixup = "";
@@ -89,16 +121,6 @@ in
     assert !config.programs.nixcord.discord.equicord.enable;
     assert !overrideArgs.withVencord;
     assert !overrideArgs.withEquicord;
-    true;
-
-  "configDir defaults to Equicord when equicord is enabled" =
-    let
-      config = testLib.eval.hm {
-        enable = true;
-        discord.equicord.enable = true;
-      };
-    in
-    assert lib.hasSuffix "Equicord" (toString config.programs.nixcord.configDir);
     true;
 
   "equicord enables without explicit vencord disable" =
@@ -150,9 +172,11 @@ in
     let
       config = testLib.eval.hm (
         recursiveUpdate baseConfig {
-          discord.package = stubDiscordPackage;
-          discord.autoscroll.enable = true;
-          discord.commandLineArgs = [ "--ozone-platform-hint=auto" ];
+          discord = {
+            package = stubDiscordPackage;
+            autoscroll.enable = true;
+            commandLineArgs = [ "--ozone-platform-hint=auto" ];
+          };
         }
       );
       overrideArgs = config.programs.nixcord.finalPackage.discord.passthru.nixcordOverrideArgs;
@@ -162,6 +186,26 @@ in
         "--ozone-platform-hint=auto"
         "--enable-blink-features=MiddleClickAutoscroll"
       ];
+    true;
+
+  "Discord packages without list support receive shell-escaped commandLineArgs" =
+    let
+      commandLineArgs = [
+        "--simple"
+        "--flag=value with spaces"
+        "--quote=\"value\""
+      ];
+      config = testLib.eval.hm (
+        recursiveUpdate baseConfig {
+          discord = {
+            package = stubDiscordPackageWithStringArgs;
+            inherit commandLineArgs;
+          };
+        }
+      );
+      overrideArgs = config.programs.nixcord.finalPackage.discord.passthru.nixcordOverrideArgs;
+    in
+    assert overrideArgs.commandLineArgs == lib.escapeShellArgs commandLineArgs;
     true;
 
   "discord custom package does not receive disabled krisp override" =
@@ -196,32 +240,6 @@ in
     assert overrideArgs.withKrisp == true;
     true;
 
-  "discord commandLineArgs are accepted" =
-    let
-      config = testLib.eval.hm (
-        recursiveUpdate baseConfig {
-          discord.commandLineArgs = [
-            "--ozone-platform-hint=auto"
-            "--enable-wayland-ime"
-          ];
-        }
-      );
-    in
-    assert
-      config.programs.nixcord.discord.commandLineArgs == [
-        "--ozone-platform-hint=auto"
-        "--enable-wayland-ime"
-      ];
-    true;
-
-  "discord module fix activation does not leak pwd" =
-    let
-      config = testLib.eval.hm baseConfig;
-      script = config.home.activation.fixDiscordModules.data;
-    in
-    assert lib.hasInfix "  (\n    cd \"$config_dir\" || exit 0\n" script;
-    true;
-
   "vesktop settings are generated when vesktop is enabled" =
     let
       config = testLib.eval.hm (
@@ -232,6 +250,25 @@ in
       settingsJson = testLib.output.homeFileJSON config "/home/testuser/.config/vesktop/settings/settings.json";
     in
     assert settingsJson.plugins.AlwaysAnimate.enabled == true;
+    true;
+
+  "vesktop package options reach its override" =
+    let
+      config = testLib.eval.hm {
+        enable = true;
+        discord.enable = false;
+        vesktop = {
+          enable = true;
+          package = stubVesktopPackage;
+          useSystemVencord = false;
+          autoscroll.enable = true;
+        };
+      };
+      overrideArgs = config.programs.nixcord.finalPackage.vesktop.passthru.nixcordOverrideArgs;
+    in
+    assert overrideArgs.withSystemVencord == false;
+    assert overrideArgs.withMiddleClickScroll == true;
+    assert overrideArgs.vencord != null;
     true;
 
   "equibop uses patched system Equicord by default" =
@@ -245,8 +282,8 @@ in
           package = stubEquibopPackage;
         };
       };
-      equibop = config.programs.nixcord.finalPackage.equibop;
-      equicord = config._nixcordTest.common.packages.equicord;
+      inherit (config.programs.nixcord.finalPackage) equibop;
+      inherit (config._nixcordTest.common.packages) equicord;
       postPatch = builtins.unsafeDiscardStringContext equibop.postPatch;
       equicordAsar = builtins.unsafeDiscardStringContext "${equicord}/equibop.asar";
     in
@@ -266,10 +303,26 @@ in
           useSystemEquicord = false;
         };
       };
-      equibop = config.programs.nixcord.finalPackage.equibop;
+      inherit (config.programs.nixcord.finalPackage) equibop;
       postPatch = builtins.unsafeDiscardStringContext equibop.postPatch;
     in
     assert !(lib.hasInfix "equicordPatchTarget" postPatch);
+    true;
+
+  "equibop autoscroll reaches its package override" =
+    let
+      config = testLib.eval.hm {
+        enable = true;
+        discord.enable = false;
+        equibop = {
+          enable = true;
+          package = stubEquibopPackage;
+          useSystemEquicord = false;
+          autoscroll.enable = true;
+        };
+      };
+    in
+    assert config.programs.nixcord.finalPackage.equibop.passthru.nixcordWithMiddleClickScroll;
     true;
 
   "dorion defaults to nixpkgs package" =

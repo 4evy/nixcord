@@ -11,13 +11,6 @@ let
 in
 {
   plugins = {
-    inherit
-      sharedNames
-      vencordNames
-      equicordNames
-      ;
-
-    firstShared = builtins.head sharedNames;
     firstVencordOnly = lib.findFirst (
       name: !(builtins.hasAttr name sharedSet) && !(builtins.hasAttr name equicordSet)
     ) (throw "no vencord-only plugin found") vencordNames;

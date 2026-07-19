@@ -10,7 +10,7 @@ let
   );
 
   fixtures = import ./fixtures.nix { inherit lib; };
-  stubs = import ./stubs.nix { inherit lib; };
+  stubs = import ./stubs.nix;
   eval = import ./eval.nix { inherit pkgs lib stubs; };
   output = import ./output.nix { inherit lib; };
   assertions = import ./assertions.nix { inherit eval; };

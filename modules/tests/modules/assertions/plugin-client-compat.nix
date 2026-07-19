@@ -3,7 +3,6 @@
 let
   inherit (testLib.assertions) hmFails hmMessages;
   inherit (testLib.fixtures.plugins)
-    firstShared
     firstVencordOnly
     firstEquicordOnly
     ;
@@ -51,14 +50,17 @@ in
     assert fails;
     true;
 
-  "shared plugin works with vencord" =
+  "client-specific settings do not hide an incompatible global enable" =
     let
       fails = hmFails {
         enable = true;
-        discord.vencord.enable = true;
-        config.plugins.${firstShared}.enable = true;
+        discord.enable = false;
+        vesktop.enable = true;
+        extraConfig.plugins.${firstEquicordOnly}.enable = true;
+        vesktopConfig.plugins.${firstEquicordOnly}.regressionSetting = true;
       };
     in
-    assert !fails;
+    assert fails;
     true;
+
 }

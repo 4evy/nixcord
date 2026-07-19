@@ -134,4 +134,16 @@ in
     assert builtins.any (message: lib.hasInfix "cursorBuddy" message) warnings;
     true;
 
+  "client-specific settings do not hide a deprecated global enable" =
+    let
+      warnings = hmWarnings {
+        enable = true;
+        discord.vencord.enable = true;
+        extraConfig.plugins.PronounDB.enable = true;
+        vencordConfig.plugins.PronounDB.regressionSetting = true;
+      };
+    in
+    assert builtins.any (message: lib.hasInfix "PronounDB" message) warnings;
+    true;
+
 }

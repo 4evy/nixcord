@@ -38,4 +38,35 @@ in
     in
     assert !(builtins.hasAttr "/home/testuser/.config/Vencord/settings/quickCss.css" config.home.file);
     true;
+
+  "client-specific quickCss only creates files for opted-in desktop clients" =
+    let
+      config = testLib.eval.hm {
+        enable = true;
+        discord.enable = false;
+        vesktop.enable = true;
+        equibop.enable = true;
+        quickCss = "body { color: purple; }";
+        vesktopConfig.useQuickCss = true;
+      };
+      cfg = config.programs.nixcord;
+      vesktopPath = "${cfg.vesktop.configDir}/settings/quickCss.css";
+      equibopPath = "${cfg.equibop.configDir}/settings/quickCss.css";
+    in
+    assert testLib.output.homeFileText config vesktopPath == "body { color: purple; }";
+    assert !(builtins.hasAttr equibopPath config.home.file);
+    true;
+
+  "Vencord-specific useQuickCss enables Discord quick CSS" =
+    let
+      config = testLib.eval.hm {
+        enable = true;
+        discord.vencord.enable = true;
+        quickCss = "body { color: green; }";
+        vencordConfig.useQuickCss = true;
+      };
+      path = "${config.programs.nixcord.configDir}/settings/quickCss.css";
+    in
+    assert testLib.output.homeFileText config path == "body { color: green; }";
+    true;
 }

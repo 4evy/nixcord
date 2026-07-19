@@ -14,7 +14,7 @@ let
   generatedFileText =
     config: spec:
     let
-      common = config._nixcordTest.common;
+      inherit (config._nixcordTest) common;
       inherit (common)
         cfg
         configs
@@ -51,7 +51,9 @@ let
     else if spec.name == "equibop-state" then
       toVencordJSON cfg.equibop.state
     else if spec.name == "dorion-config" then
-      builtins.toJSON configs.dorionAttrs
+      builtins.unsafeDiscardStringContext (builtins.toJSON configs.dorionAttrs)
+    else if spec.name == "legcord-settings" then
+      builtins.toJSON configs.legcordAttrs
     else if lib.hasSuffix "quick-css" spec.name then
       cfg.quickCss
     else if lib.hasPrefix "vesktop-theme-" spec.name || lib.hasPrefix "equibop-theme-" spec.name then
@@ -77,20 +79,4 @@ in
       )
     );
 
-  serializeEvalConfig =
-    { evaluatedConfig, pluginName }:
-    let
-      nixcordCfg = evaluatedConfig.programs.nixcord;
-    in
-    builtins.toJSON {
-      inherit (nixcordCfg)
-        enable
-        user
-        configDir
-        quickCss
-        ;
-      pluginEnabled = nixcordCfg.config.plugins.${pluginName}.enable;
-      assertions = evaluatedConfig.assertions;
-      warnings = evaluatedConfig.warnings;
-    };
 }

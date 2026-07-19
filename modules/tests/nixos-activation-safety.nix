@@ -10,6 +10,14 @@ let
   };
 
   generatedScript = config.system.activationScripts.nixcord-writeFiles.text;
+  nixcordActivationNames = [
+    "nixcord-disableDiscordUpdates"
+    "nixcord-fixDiscordModules"
+    "nixcord-writeFiles"
+  ];
+  activationsRunAfterUsers = lib.all (
+    name: builtins.elem "users" config.system.activationScripts.${name}.deps
+  ) nixcordActivationNames;
   harmlessScript =
     builtins.replaceStrings
       [
@@ -22,6 +30,7 @@ let
       ]
       generatedScript;
 in
+assert activationsRunAfterUsers;
 pkgs.runCommand "nixos-activation-safety-test" { } ''
   # NixOS activation deliberately runs without these options so that its ERR
   # trap can record a failed snippet and continue finalizing the generation.

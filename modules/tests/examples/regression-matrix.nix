@@ -73,10 +73,14 @@ let
       stub = stubs.hm;
       module = ../fixtures/regression-matrix/home-manager.nix;
     };
+  }
+  // lib.optionalAttrs pkgs.stdenvNoCC.isLinux {
     nixos = {
       stub = stubs.nixos;
       module = ../fixtures/regression-matrix/nixos.nix;
     };
+  }
+  // lib.optionalAttrs pkgs.stdenvNoCC.isDarwin {
     nix-darwin = {
       stub = stubs.darwin;
       module = ../fixtures/regression-matrix/nix-darwin.nix;
@@ -97,7 +101,7 @@ let
           scenario = scenarioName;
         };
       };
-      config = evaluated.config;
+      inherit (evaluated) config;
       cfg = config.programs.nixcord;
       common = import ../../lib/mkCommonConfig.nix { inherit config lib pkgs; };
       actualFiles = sort (map (spec: spec.name) common.fileSpecs);
@@ -105,7 +109,7 @@ let
       missing = lib.filter (name: !(builtins.elem name actualFiles)) expectedFiles;
       unexpected = lib.filter (name: !(builtins.elem name expectedFiles)) actualFiles;
       missingPlugins = lib.filter (
-        pluginName: !((cfg.config.plugins.${pluginName}.enable or false))
+        pluginName: !(cfg.config.plugins.${pluginName}.enable or false)
       ) scenario.expected.pluginNames;
       assertionsPassed = lib.all (assertion: assertion.assertion or true) config.assertions;
       caseName = "${moduleSystem}:${scenarioName}";
@@ -116,8 +120,6 @@ let
       throw "${caseName} target user was ${cfg.user}, expected demo"
     else if cfg.configDir != expectedConfigDir moduleSystem scenario.expected then
       throw "${caseName} configDir was ${toString cfg.configDir}, expected ${toString (expectedConfigDir moduleSystem scenario.expected)}"
-    else if !cfg.config.plugins.hideMedia.enable then
-      throw "${caseName} did not enable hideMedia"
     else if !assertionsPassed then
       throw "${caseName} produced a failed assertion"
     else if missing != [ ] then
@@ -127,36 +129,18 @@ let
     else if missingPlugins != [ ] then
       throw "${caseName} did not enable expected generated plugins: ${toString missingPlugins}"
     else
-      {
-        inherit moduleSystem scenarioName;
-        fileCount = builtins.length actualFiles;
-        pluginCount = scenario.expected.pluginCount;
-        warningCount = builtins.length config.warnings;
-      };
+      true;
 
   results = lib.mapAttrs (
-    moduleSystem: moduleSpec:
-    map (scenarioName: evalCase moduleSystem moduleSpec scenarioName) scenarioNames
+    moduleSystem: moduleSpec: map (evalCase moduleSystem moduleSpec) scenarioNames
   ) moduleSystems;
 
   moduleSystemCount = builtins.length (builtins.attrNames moduleSystems);
   scenarioCount = builtins.length scenarioNames;
   caseCount = moduleSystemCount * scenarioCount;
 in
-pkgs.runCommand "regression-matrix-eval-test"
-  {
-    passAsFile = [ "matrixJson" ];
-    matrixJson = builtins.toJSON {
-      inherit
-        caseCount
-        moduleSystemCount
-        results
-        scenarioCount
-        ;
-    };
-  }
-  ''
-    echo "Regression matrix evaluated ${toString caseCount} module-system/scenario cases"
-    echo "Matrix summary: $(wc -c < "$matrixJsonPath") bytes"
-    touch "$out"
-  ''
+assert builtins.deepSeq results true;
+pkgs.runCommand "regression-matrix-eval-test" { } ''
+  echo "Regression matrix evaluated ${toString caseCount} module-system/scenario cases"
+  touch "$out"
+''

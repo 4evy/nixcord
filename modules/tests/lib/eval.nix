@@ -14,11 +14,7 @@
           (import ../../hm/default.nix)
           {
             _module.args.nixcordPkgs = { };
-            programs.nixcord = {
-              homeDirectory = "/home/testuser";
-              xdgConfigHome = "/home/testuser/.config";
-            }
-            // nixcordConfig;
+            programs.nixcord = nixcordConfig;
           }
         ];
         specialArgs = { inherit pkgs; };
@@ -27,7 +23,7 @@
     evaluated.config
     // {
       _nixcordTest.common = import ../../lib/mkCommonConfig.nix {
-        config = evaluated.config;
+        inherit (evaluated) config;
         inherit lib pkgs;
       };
     };

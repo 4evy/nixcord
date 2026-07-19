@@ -328,13 +328,11 @@ let
       ];
     in
     nameValuePair name {
-      inherit name;
       module = {
         programs.nixcord = config;
       };
       expected = expected // {
         inherit pluginNames;
-        pluginCount = builtins.length pluginNames;
       };
     };
 
@@ -347,6 +345,4 @@ let
 in
 {
   inherit scenarios;
-
-  defaultScenario = "discord-vencord__clients-vesktop-equibop-dorion__legcord-vencord";
 }

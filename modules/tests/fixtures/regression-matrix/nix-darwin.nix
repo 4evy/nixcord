@@ -2,12 +2,12 @@
 {
   inputs,
   lib,
+  scenario,
   ...
 }@args:
 let
   pluginRoot = args.pluginRoot or ../../../plugins;
   matrix = import ./scenarios.nix { inherit lib pluginRoot; };
-  scenario = args.scenario or matrix.defaultScenario;
 in
 {
   imports = [

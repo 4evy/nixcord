@@ -6,7 +6,7 @@
     let
       results = builtins.attrValues tests;
       count = builtins.length results;
-      passed = lib.all (result: result) results;
+      passed = lib.all lib.id results;
     in
     pkgs.runCommand name { } ''
       ${if passed then "echo '${toString count} ${name} tests passed'" else "exit 1"}

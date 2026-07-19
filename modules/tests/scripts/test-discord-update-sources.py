@@ -61,6 +61,45 @@ def main() -> None:
 
     with tempfile.TemporaryDirectory() as temp_dir:
         sources_path = pathlib.Path(temp_dir, "sources.json")
+        original = {
+            "linux-stable": {"version": "keep-linux-stable"},
+            "linux-canary-krisp": {"version": "obsolete"},
+            "osx-canary-krisp": {"version": "obsolete"},
+        }
+        sources_path.write_text(json.dumps(original), encoding="utf-8")
+        os.environ["SOURCES_JSON"] = str(sources_path)
+        os.environ["DISCORD_BRANCHES"] = "canary"
+
+        def successful_source(variant):
+            return updater.DistroSource(
+                version=f"1.2.{3 if variant.platform == updater.Platform.LINUX else 4}",
+                distro=updater.DistroRef(
+                    url=f"https://example.invalid/{variant.platform}.distro",
+                    hash="sha256-test",
+                ),
+                modules={
+                    "discord_voice": updater.DistroModule(
+                        version=8,
+                        url=f"https://example.invalid/{variant.platform}-voice.distro",
+                        hash="sha256-module-test",
+                    )
+                },
+            )
+
+        updater.fetch_distro_source = successful_source
+        updater.main()
+        updated = json.loads(sources_path.read_text(encoding="utf-8"))
+
+        assert updated["linux-stable"] == original["linux-stable"]
+        assert updated["linux-canary"]["version"] == "1.2.3"
+        assert updated["osx-canary"]["version"] == "1.2.4"
+        assert updated["linux-canary"]["modules"]["discord_voice"]["version"] == 8
+        assert "linux-canary-krisp" not in updated
+        assert "osx-canary-krisp" not in updated
+        assert not pathlib.Path(f"{sources_path}.tmp").exists()
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        sources_path = pathlib.Path(temp_dir, "sources.json")
         original = {"sentinel": {"version": "unchanged"}}
         sources_path.write_text(json.dumps(original), encoding="utf-8")
         os.environ["SOURCES_JSON"] = str(sources_path)

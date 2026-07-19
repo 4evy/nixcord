@@ -1,37 +1,37 @@
-{ lib }:
-
 {
   hm =
     { lib, ... }:
     {
       options = {
-        home.homeDirectory = lib.mkOption {
-          type = lib.types.path;
-          default = "/home/testuser";
-        };
-        home.stateVersion = lib.mkOption {
-          type = lib.types.str;
-          default = "26.05";
-        };
-        home.username = lib.mkOption {
-          type = lib.types.str;
-          default = "testuser";
+        home = {
+          homeDirectory = lib.mkOption {
+            type = lib.types.path;
+            default = "/home/testuser";
+          };
+          stateVersion = lib.mkOption {
+            type = lib.types.str;
+            default = "26.05";
+          };
+          username = lib.mkOption {
+            type = lib.types.str;
+            default = "testuser";
+          };
+          packages = lib.mkOption {
+            type = lib.types.listOf lib.types.package;
+            default = [ ];
+          };
+          file = lib.mkOption {
+            type = lib.types.attrsOf lib.types.anything;
+            default = { };
+          };
+          activation = lib.mkOption {
+            type = lib.types.attrsOf lib.types.anything;
+            default = { };
+          };
         };
         xdg.configHome = lib.mkOption {
           type = lib.types.path;
           default = "/home/testuser/.config";
-        };
-        home.packages = lib.mkOption {
-          type = lib.types.listOf lib.types.package;
-          default = [ ];
-        };
-        home.file = lib.mkOption {
-          type = lib.types.attrsOf lib.types.anything;
-          default = { };
-        };
-        home.activation = lib.mkOption {
-          type = lib.types.attrsOf lib.types.anything;
-          default = { };
         };
         warnings = lib.mkOption {
           type = lib.types.listOf lib.types.str;
@@ -140,7 +140,14 @@
           default = 6;
         };
         system.activationScripts = lib.mkOption {
-          type = lib.types.attrsOf lib.types.anything;
+          type = lib.types.attrsOf (
+            lib.types.submodule {
+              options.text = lib.mkOption {
+                type = lib.types.lines;
+                default = "";
+              };
+            }
+          );
           default = { };
         };
         warnings = lib.mkOption {

@@ -1,10 +1,6 @@
 { testLib }:
-
-let
-  inherit (testLib) lib;
-in
 {
-  inherit (lib) recursiveUpdate;
+  inherit (testLib.lib) recursiveUpdate;
 
   baseConfig = {
     enable = true;

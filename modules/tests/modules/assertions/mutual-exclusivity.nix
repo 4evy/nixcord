@@ -26,15 +26,21 @@ in
     assert builtins.any (message: lib.hasInfix "mutually exclusive" message) messages;
     true;
 
-  "discord accepts vencord without equicord" =
+  "legcord cannot bundle vencord and equicord together" =
     let
-      fails = hmFails {
+      messages = hmMessages {
         enable = true;
-        discord.vencord.enable = true;
-        discord.equicord.enable = false;
+        discord.enable = false;
+        legcord = {
+          enable = true;
+          vencord.enable = true;
+          equicord.enable = true;
+        };
       };
     in
-    assert !fails;
+    assert builtins.any (
+      message: lib.hasInfix "legcord.vencord.enable" message && lib.hasInfix "mutually exclusive" message
+    ) messages;
     true;
 
   "discord warns when vencord and equicord are both disabled" =

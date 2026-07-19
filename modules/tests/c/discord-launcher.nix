@@ -36,17 +36,20 @@ let
     "-fno-omit-frame-pointer"
   ];
 
-  trueBin = "${lib.meta.getExe' pkgs.coreutils "true"}";
+  trueBin = lib.meta.getExe' pkgs.coreutils "true";
   specialCommandLineArg = "--flag=quote\"backslash\\space y";
 
   compileAndSmoke =
     {
       name,
       enableKrisp,
+      disableBreakingUpdates ? trueBin,
+      stageModules ? trueBin,
       commandLineArgDeclarations ? "",
       commandLineArgs ? "",
       commandLineArgsCount ? 0,
-      expectedArgs,
+      expectedArgs ? [ ],
+      expectedStatus ? 0,
     }:
     ''
       printf "" | cc -std=c23 -dM -E - | grep -F '#define __STDC_VERSION__ ${requiredCVersion}'
@@ -59,8 +62,8 @@ let
 
       cp ${../../../pkgs/discord/src/discord-launcher.c} ${name}.c
       substituteInPlace ${name}.c \
-        --replace-fail "@disable_breaking_updates@" "${trueBin}" \
-        --replace-fail "@stage_modules@" "${trueBin}" \
+        --replace-fail "@disable_breaking_updates@" "${disableBreakingUpdates}" \
+        --replace-fail "@stage_modules@" "${stageModules}" \
         --replace-fail "@modules_dir@" "$TMPDIR/modules" \
         --replace-fail "@deploy_krisp@" "${if enableKrisp then trueBin else ""}" \
         --replace-fail "@target@" "$PWD/${name}-target" \
@@ -78,8 +81,22 @@ let
           --suppress=missingIncludeSystem \
           --suppress=normalCheckLevelMaxBranches \
           ${name}.c
-        ./${name} --nixcord-c-launcher-smoke
-        diff -u <(printf '%s\n' ${lib.strings.escapeShellArgs expectedArgs}) ${name}.args
+        ${
+          if expectedStatus == 0 then
+            ''
+              ./${name} --nixcord-c-launcher-smoke
+              diff -u <(printf '%s\n' ${lib.strings.escapeShellArgs expectedArgs}) ${name}.args
+            ''
+          else
+            ''
+              set +e
+              ./${name} --nixcord-c-launcher-smoke
+              status=$?
+              set -e
+              test "$status" -eq ${toString expectedStatus}
+              test ! -e ${name}.args
+            ''
+        }
     '';
 in
 pkgs.runCommand "discord-launcher-c-check"
@@ -90,6 +107,12 @@ pkgs.runCommand "discord-launcher-c-check"
     ];
   }
   ''
+    cat > failing-disable-updates <<'EOF'
+    #!${pkgs.runtimeShell}
+    exit 23
+    EOF
+    chmod +x failing-disable-updates
+
     ${compileAndSmoke {
       name = "discord-launcher-full";
       enableKrisp = true;
@@ -113,6 +136,12 @@ pkgs.runCommand "discord-launcher-c-check"
       name = "discord-launcher-minimal";
       enableKrisp = false;
       expectedArgs = [ "--nixcord-c-launcher-smoke" ];
+    }}
+    ${compileAndSmoke {
+      name = "discord-launcher-helper-failure";
+      enableKrisp = false;
+      disableBreakingUpdates = "$PWD/failing-disable-updates";
+      expectedStatus = 23;
     }}
 
     touch "$out"
