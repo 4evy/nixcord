@@ -1,13 +1,15 @@
 import { describe, expect, test } from 'vitest';
 import { evaluateThemesValues } from '../../../../../src/foundation/index.js';
-import { createProject } from '../../../../helpers/test-utils.js';
+import { createProject, loadFixture } from '../../../../helpers/test-utils.js';
 
 describe('evaluateThemesValues()', () => {
   test('evaluates simple theme object with string literals', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const themes = { DarkPlus: "dark-plus", LightPlus: "light-plus" };`
+      loadFixture(
+        'core/ast/extractor/node-utils/themes/01-evaluates-simple-theme-object-with-string-literals.ts'
+      )
     );
     const varDecl = sourceFile.getVariableDeclarationOrThrow('themes');
     const identifier = varDecl.getNameNode();
@@ -20,14 +22,9 @@ describe('evaluateThemesValues()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `
-      const SHIKI_REPO = "shikijs/shiki";
-      const SHIKI_REPO_COMMIT = "abc123";
-      const themes = {
-        DarkPlus: shikiRepoTheme("dark-plus"),
-        LightPlus: shikiRepoTheme("light-plus")
-      };
-      `
+      loadFixture(
+        'core/ast/extractor/node-utils/themes/02-evaluates-theme-object-with-shiki-repo-theme-calls.ts'
+      )
     );
     const varDecl = sourceFile.getVariableDeclarationOrThrow('themes');
     const identifier = varDecl.getNameNode();
@@ -40,7 +37,12 @@ describe('evaluateThemesValues()', () => {
 
   test('returns empty array for non-identifier', () => {
     const project = createProject();
-    const sourceFile = project.createSourceFile('test.ts', `const x = "test";`);
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      loadFixture(
+        'core/ast/extractor/node-utils/themes/03-returns-empty-array-for-non-identifier.ts'
+      )
+    );
     const varDecl = sourceFile.getVariableDeclarationOrThrow('x');
     const initializer = varDecl.getInitializer();
     if (initializer) {
@@ -52,7 +54,12 @@ describe('evaluateThemesValues()', () => {
 
   test('returns empty array for non-object literal', () => {
     const project = createProject();
-    const sourceFile = project.createSourceFile('test.ts', `const themes = "not-an-object";`);
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      loadFixture(
+        'core/ast/extractor/node-utils/themes/04-returns-empty-array-for-non-object-literal.ts'
+      )
+    );
     const varDecl = sourceFile.getVariableDeclarationOrThrow('themes');
     const identifier = varDecl.getNameNode();
     const checker = project.getTypeChecker();
@@ -64,11 +71,7 @@ describe('evaluateThemesValues()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const themes = { 
-        Valid: "valid",
-        Invalid: someFunction(),
-        AlsoValid: "also-valid"
-      };`
+      loadFixture('core/ast/extractor/node-utils/themes/05-filters-out-null-values.ts')
     );
     const varDecl = sourceFile.getVariableDeclarationOrThrow('themes');
     const identifier = varDecl.getNameNode();

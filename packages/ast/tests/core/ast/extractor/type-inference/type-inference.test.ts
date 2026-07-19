@@ -1,14 +1,20 @@
 import { SyntaxKind } from 'ts-morph';
 import { describe, expect, test } from 'vitest';
 import { inferNixTypeAndEnumValues } from '../../../../../src/extractor/type-inference/index.js';
-import { createProject, createSettingProperties } from '../../../../helpers/test-utils.js';
+import {
+  createProject,
+  createSettingProperties,
+  loadFixture,
+} from '../../../../helpers/test-utils.js';
 
 describe('inferNixTypeAndEnumValues', () => {
   test('infers string type from TypeScript string type', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const setting = { type: OptionType.STRING, default: "hello" };`
+      loadFixture(
+        'core/ast/extractor/type-inference/type-inference/01-infers-string-type-from-type-script-string-type.ts'
+      )
     );
     const obj = sourceFile.getFirstDescendantByKind(SyntaxKind.ObjectLiteralExpression);
     if (!obj) throw new Error('Expected object literal');
@@ -28,17 +34,17 @@ describe('inferNixTypeAndEnumValues', () => {
       project.getProgram()
     );
 
-    // Type inference may return str or nullOr str depending on default
-    expect(['types.str', 'types.nullOr types.str']).toContain(result.finalNixType);
-    // Default value may be preserved or set to null for nullable types
-    expect(result.defaultValue === 'hello' || result.defaultValue === null).toBe(true);
+    expect(result.finalNixType).toBe('types.str');
+    expect(result.defaultValue).toBe('hello');
   });
 
   test('infers boolean type from TypeScript boolean type', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const setting = { type: OptionType.BOOLEAN, default: true };`
+      loadFixture(
+        'core/ast/extractor/type-inference/type-inference/02-infers-boolean-type-from-type-script-boolean-type.ts'
+      )
     );
     const obj = sourceFile.getFirstDescendantByKind(SyntaxKind.ObjectLiteralExpression);
     if (!obj) throw new Error('Expected object literal');
@@ -59,21 +65,16 @@ describe('inferNixTypeAndEnumValues', () => {
     );
 
     expect(result.finalNixType).toBe('types.bool');
-    // Default value may be preserved or set to false
-    expect(result.defaultValue === true || result.defaultValue === false).toBe(true);
+    expect(result.defaultValue).toBe(true);
   });
 
   test('infers enum type from options array', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const setting = {
-        type: OptionType.SELECT,
-        options: [
-          { value: "option1", label: "Option 1" },
-          { value: "option2", label: "Option 2" }
-        ]
-      };`
+      loadFixture(
+        'core/ast/extractor/type-inference/type-inference/03-infers-enum-type-from-options-array.ts'
+      )
     );
     const obj = sourceFile.getFirstDescendantByKind(SyntaxKind.ObjectLiteralExpression);
     if (!obj) throw new Error('Expected object literal');
@@ -102,7 +103,9 @@ describe('inferNixTypeAndEnumValues', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const setting = { default: ["item1", "item2"] };`
+      loadFixture(
+        'core/ast/extractor/type-inference/type-inference/04-infers-list-of-str-from-string-array-default.ts'
+      )
     );
     const obj = sourceFile.getFirstDescendantByKind(SyntaxKind.ObjectLiteralExpression);
     if (!obj) throw new Error('Expected object literal');
@@ -122,15 +125,16 @@ describe('inferNixTypeAndEnumValues', () => {
       project.getProgram()
     );
 
-    // Type inference may return str, attrs, or listOf str depending on AST structure
-    expect(['types.str', 'types.attrs', 'types.listOf types.str']).toContain(result.finalNixType);
+    expect(result.finalNixType).toBe('types.listOf types.str');
   });
 
   test('promotes OptionType.STRING with string array default to listOf str', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const setting = { type: OptionType.STRING, default: [] as string[] };`
+      loadFixture(
+        'core/ast/extractor/type-inference/type-inference/05-promotes-option-type-string-with-string-array-default-to-list-of-str.ts'
+      )
     );
     const obj = sourceFile.getFirstDescendantByKind(SyntaxKind.ObjectLiteralExpression);
     if (!obj) throw new Error('Expected object literal');
@@ -164,7 +168,9 @@ describe('inferNixTypeAndEnumValues', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const setting = { type: OptionType.STRING, default: [] };`
+      loadFixture(
+        'core/ast/extractor/type-inference/type-inference/06-promotes-option-type-string-with-empty-array-default-to-list-of-str.ts'
+      )
     );
     const obj = sourceFile.getFirstDescendantByKind(SyntaxKind.ObjectLiteralExpression);
     if (!obj) throw new Error('Expected object literal');
@@ -198,8 +204,9 @@ describe('inferNixTypeAndEnumValues', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `type PatternEntry = { pattern: string; color: string };
-       const setting = { type: OptionType.COMPONENT, default: [] as PatternEntry[] };`
+      loadFixture(
+        'core/ast/extractor/type-inference/type-inference/07-treats-component-empty-object-array-default-as-list-of-str.ts'
+      )
     );
     const obj = sourceFile.getFirstDescendantByKind(SyntaxKind.ObjectLiteralExpression);
     if (!obj) throw new Error('Expected object literal');
@@ -233,7 +240,9 @@ describe('inferNixTypeAndEnumValues', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const setting = { default: [{ key: "value1" }, { key: "value2" }] };`
+      loadFixture(
+        'core/ast/extractor/type-inference/type-inference/08-infers-list-of-attrs-from-object-array-default.ts'
+      )
     );
     const obj = sourceFile.getFirstDescendantByKind(SyntaxKind.ObjectLiteralExpression);
     if (!obj) throw new Error('Expected object literal');
@@ -262,7 +271,9 @@ describe('inferNixTypeAndEnumValues', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const setting = { type: OptionType.COMPONENT };`
+      loadFixture(
+        'core/ast/extractor/type-inference/type-inference/09-coerces-component-type-with-undefined-default-to-attrs.ts'
+      )
     );
     const obj = sourceFile.getFirstDescendantByKind(SyntaxKind.ObjectLiteralExpression);
     if (!obj) throw new Error('Expected object literal');
@@ -295,7 +306,9 @@ describe('inferNixTypeAndEnumValues', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const setting = { type: OptionType.COMPONENT, default: "theme-name" };`
+      loadFixture(
+        'core/ast/extractor/type-inference/type-inference/10-preserves-string-default-for-component-type.ts'
+      )
     );
     const obj = sourceFile.getFirstDescendantByKind(SyntaxKind.ObjectLiteralExpression);
     if (!obj) throw new Error('Expected object literal');

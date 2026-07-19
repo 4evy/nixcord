@@ -1,151 +1,99 @@
 import { existsSync } from 'node:fs';
-import { CLI_CONFIG, type ParsedPluginsResult, type PluginSetting } from '@nixcord/shared';
+import {
+  CLI_CONFIG,
+  type ParsedPluginsResult,
+  ParsedPluginsResultSchema,
+  type PluginSetting,
+} from '@nixcord/shared';
 import { beforeAll, describe, expect, test } from 'vitest';
 import { categorizePlugins, parsePlugins } from '../../src/index.js';
 
 const VENCORD_PATH = CLI_CONFIG.sources.vencord;
 const EQUICORD_PATH = CLI_CONFIG.sources.equicord;
-const hasVencord = existsSync(VENCORD_PATH);
-const hasEquicord = existsSync(EQUICORD_PATH);
 
-let vencordResultPromise: Promise<ParsedPluginsResult> | undefined;
-let equicordResultPromise: Promise<ParsedPluginsResult> | undefined;
+let vencordPromise: Promise<ParsedPluginsResult> | undefined;
+let equicordPromise: Promise<ParsedPluginsResult> | undefined;
+const parseVencord = () => (vencordPromise ??= parsePlugins(VENCORD_PATH));
+const parseEquicord = () => (equicordPromise ??= parsePlugins(EQUICORD_PATH));
 
-const parseVencord = () => (vencordResultPromise ??= parsePlugins(VENCORD_PATH));
-const parseEquicord = () => (equicordResultPromise ??= parsePlugins(EQUICORD_PATH));
-
-describe.skipIf(!hasVencord)('Real-world: Vencord', () => {
+describe.skipIf(!existsSync(VENCORD_PATH))('pinned Vencord source', () => {
   let result: ParsedPluginsResult;
 
   beforeAll(async () => {
     result = await parseVencord();
   }, 60_000);
 
-  test('parses Vencord plugins without throwing', () => {
-    const pluginCount = Object.keys(result.vencordPlugins).length;
-    expect(pluginCount).toBeGreaterThan(50);
-    console.log(`Vencord: parsed ${pluginCount} plugins`);
-
-    let withSettings = 0;
-    let totalSettings = 0;
-    for (const plugin of Object.values(result.vencordPlugins)) {
-      const settingCount = Object.keys(plugin.settings).length;
-      if (settingCount > 0) withSettings++;
-      totalSettings += settingCount;
-    }
-
-    console.log(
-      `Vencord: ${withSettings}/${pluginCount} plugins have settings (${totalSettings} total settings)`
-    );
-    expect(withSettings).toBeGreaterThan(10);
+  test('parses the complete plugin tree into the public result schema', () => {
+    expect(ParsedPluginsResultSchema.safeParse(result).success).toBe(true);
+    expect(Object.keys(result.vencordPlugins).length).toBeGreaterThan(150);
   });
 
-  test('known plugins have expected structure', () => {
+  test('preserves representative upstream settings shapes', () => {
     const plugins = result.vencordPlugins;
 
-    // SpotifyControls is a well-known Vencord plugin with settings
-    if (plugins['SpotifyControls']) {
-      expect(plugins['SpotifyControls'].settings).toBeDefined();
-    }
-
-    // Verify no plugin has undefined name
-    for (const [name, plugin] of Object.entries(plugins)) {
-      expect(name).toBeTruthy();
-      expect(plugin.settings).toBeDefined();
-    }
+    expect((plugins.RelationshipNotifier?.settings.notices as PluginSetting).default).toBe(false);
+    expect((plugins.ConsoleJanitor?.settings.allowLevel as PluginSetting).default).toEqual({
+      error: true,
+      warn: false,
+      trace: false,
+      log: false,
+      info: false,
+      debug: false,
+    });
+    expect((plugins.VcNarrator?.settings.joinMessage as PluginSetting).default).toBe(
+      '{{USER}} joined'
+    );
+    expect(plugins.GreetStickerPicker?.settings.greetMode).toMatchObject({
+      type: 'types.enum',
+      default: 'Greet',
+      enumValues: ['Greet', 'Message'],
+    });
   });
 });
 
-describe.skipIf(!hasEquicord)('Real-world: Equicord', () => {
+describe.skipIf(!existsSync(EQUICORD_PATH))('pinned Equicord source', () => {
   let result: ParsedPluginsResult;
 
   beforeAll(async () => {
     result = await parseEquicord();
   }, 60_000);
 
-  test('parses Equicord plugins without throwing', () => {
-    const vencordCount = Object.keys(result.vencordPlugins).length;
-    const equicordCount = Object.keys(result.equicordPlugins).length;
-    const totalCount = vencordCount + equicordCount;
-
-    expect(totalCount).toBeGreaterThan(100);
-    console.log(
-      `Equicord: parsed ${totalCount} plugins (${vencordCount} vencord + ${equicordCount} equicord)`
-    );
-
-    let withSettings = 0;
-    let totalSettings = 0;
-    for (const plugin of [
-      ...Object.values(result.vencordPlugins),
-      ...Object.values(result.equicordPlugins),
-    ]) {
-      const settingCount = Object.keys(plugin.settings).length;
-      if (settingCount > 0) withSettings++;
-      totalSettings += settingCount;
-    }
-
-    console.log(
-      `Equicord: ${withSettings}/${totalCount} plugins have settings (${totalSettings} total settings)`
-    );
-    expect(withSettings).toBeGreaterThan(20);
-  });
-});
-
-describe.skipIf(!hasVencord || !hasEquicord)('Real-world: categorize', () => {
-  let vencordResult: ParsedPluginsResult;
-  let equicordResult: ParsedPluginsResult;
-
-  beforeAll(async () => {
-    [vencordResult, equicordResult] = await Promise.all([parseVencord(), parseEquicord()]);
-  }, 120_000);
-
-  test('categorizes plugins from both repos', () => {
-    const categorized = categorizePlugins(vencordResult, equicordResult);
-
-    const genericCount = Object.keys(categorized.generic).length;
-    const vencordOnlyCount = Object.keys(categorized.vencordOnly).length;
-    const equicordOnlyCount = Object.keys(categorized.equicordOnly).length;
-
-    console.log(
-      `Categorized: ${genericCount} generic, ${vencordOnlyCount} vencord-only, ${equicordOnlyCount} equicord-only`
-    );
-
-    expect(genericCount).toBeGreaterThan(0);
-    expect(vencordOnlyCount + equicordOnlyCount).toBeGreaterThan(0);
+  test('parses both inherited and Equicord-only plugin trees', () => {
+    expect(ParsedPluginsResultSchema.safeParse(result).success).toBe(true);
+    expect(Object.keys(result.vencordPlugins).length).toBeGreaterThan(150);
+    expect(Object.keys(result.equicordPlugins).length).toBeGreaterThan(190);
   });
 
-  test('settings have valid types', () => {
-    const validTypes = new Set([
-      'types.str',
-      'types.bool',
-      'types.int',
-      'types.float',
-      'types.attrs',
-      'types.nullOr types.str',
-      'types.listOf types.str',
+  test('handles Equicord generated, imported, and nested defaults', () => {
+    const questify = result.equicordPlugins.Questify;
+
+    expect(questify?.settings.questButtonDisplay).toMatchObject({
+      type: 'types.enum',
+      default: 'always',
+      enumValues: ['always', 'unclaimed', 'never'],
+    });
+    expect((questify?.settings.questButtonBadgeColor as PluginSetting).default).toBe(2842239);
+    expect((questify?.settings.questOrder as PluginSetting).default).toEqual([
+      'UNCLAIMED',
+      'CLAIMED',
+      'IGNORED',
+      'EXPIRED',
     ]);
-
-    let validCount = 0;
-    let enumCount = 0;
-    let totalCount = 0;
-
-    for (const plugin of Object.values(vencordResult.vencordPlugins)) {
-      for (const setting of Object.values(plugin.settings)) {
-        if ('type' in setting) {
-          totalCount++;
-          const s = setting as PluginSetting;
-          if (validTypes.has(s.type)) {
-            validCount++;
-          } else if (s.type.startsWith('types.enum')) {
-            enumCount++;
-          }
-        }
-      }
-    }
-
-    console.log(
-      `Setting types: ${validCount} standard, ${enumCount} enum, ${totalCount - validCount - enumCount} other (total: ${totalCount})`
-    );
-    expect(validCount + enumCount).toBeGreaterThan(totalCount * 0.8);
   });
 });
+
+describe.skipIf(!existsSync(VENCORD_PATH) || !existsSync(EQUICORD_PATH))(
+  'pinned upstream categorization',
+  () => {
+    test('produces shared and client-specific plugin sets from real sources', async () => {
+      const [vencord, equicord] = await Promise.all([parseVencord(), parseEquicord()]);
+      const categorized = categorizePlugins(vencord, equicord);
+
+      expect(Object.keys(categorized.generic).length).toBeGreaterThan(100);
+      expect(Object.keys(categorized.vencordOnly).length).toBeGreaterThan(20);
+      expect(Object.keys(categorized.equicordOnly).length).toBeGreaterThan(190);
+      expect(categorized.generic.RelationshipNotifier).toBeDefined();
+      expect(categorized.equicordOnly.Questify).toBeDefined();
+    }, 120_000);
+  }
+);

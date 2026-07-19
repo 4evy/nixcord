@@ -20,6 +20,9 @@
     "fs-extra": "^11.3.5",
     "pathe": "^2.0.3"
   },
+  "devDependencies": {
+    "fs-fixture": "^2.14.0"
+  },
   "files": [
     "dist"
   ]

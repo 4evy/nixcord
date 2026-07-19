@@ -2,14 +2,14 @@ import { SyntaxKind } from 'ts-morph';
 import { describe, expect, test } from 'vitest';
 import { extractPluginInfo } from '../../../../src/extractor/plugin.js';
 import { findDefinePluginSettings } from '../../../../src/navigator/plugin-navigator.js';
-import { createProject } from '../../../helpers/test-utils.js';
+import { createProject, loadFixture } from '../../../helpers/test-utils.js';
 
 describe('extractPluginInfo()', () => {
   test('extracts plugin name', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `definePlugin({ name: "TestPlugin", description: "Test" });`
+      loadFixture('core/ast/extractor/plugin/01-extracts-plugin-name.ts')
     );
     const checker = project.getTypeChecker();
     const result = extractPluginInfo(sourceFile, checker);
@@ -20,7 +20,7 @@ describe('extractPluginInfo()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `definePlugin({ name: "TestPlugin", description: "Test description" });`
+      loadFixture('core/ast/extractor/plugin/02-extracts-plugin-description.ts')
     );
     const checker = project.getTypeChecker();
     const result = extractPluginInfo(sourceFile, checker);
@@ -29,7 +29,10 @@ describe('extractPluginInfo()', () => {
 
   test('handles missing definePlugin call', () => {
     const project = createProject();
-    const sourceFile = project.createSourceFile('test.ts', `const x = 42;`);
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      loadFixture('core/ast/extractor/plugin/03-handles-missing-define-plugin-call.ts')
+    );
     const checker = project.getTypeChecker();
     const result = extractPluginInfo(sourceFile, checker);
     expect(result).toEqual({});
@@ -37,7 +40,10 @@ describe('extractPluginInfo()', () => {
 
   test('handles missing name/description', () => {
     const project = createProject();
-    const sourceFile = project.createSourceFile('test.ts', `definePlugin({ type: "test" });`);
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      loadFixture('core/ast/extractor/plugin/04-handles-missing-name-description.ts')
+    );
     const checker = project.getTypeChecker();
     const result = extractPluginInfo(sourceFile, checker);
     expect(result).toEqual({});
@@ -47,7 +53,7 @@ describe('extractPluginInfo()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `definePlugin({ name: "MyPlugin", description: "My description" });`
+      loadFixture('core/ast/extractor/plugin/05-extracts-both-name-and-description.ts')
     );
     const checker = project.getTypeChecker();
     const result = extractPluginInfo(sourceFile, checker);
@@ -57,22 +63,11 @@ describe('extractPluginInfo()', () => {
 });
 
 describe('findDefinePluginSettings()', () => {
-  test('returns Maybe<CallExpression>', () => {
-    const project = createProject();
-    const sourceFile = project.createSourceFile(
-      'test.ts',
-      `definePluginSettings({ setting: { type: "STRING" } });`
-    );
-    const result = findDefinePluginSettings(sourceFile);
-    expect(result).toBeDefined();
-    expect(result).toBeDefined();
-  });
-
   test('finds correct call expression', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `definePluginSettings({ test: { type: "STRING" } });`
+      loadFixture('core/ast/extractor/plugin/07-finds-correct-call-expression.ts')
     );
     const result = findDefinePluginSettings(sourceFile);
     expect(result).toBeDefined();
@@ -82,7 +77,10 @@ describe('findDefinePluginSettings()', () => {
 
   test('returns nothing when not found', () => {
     const project = createProject();
-    const sourceFile = project.createSourceFile('test.ts', `const x = 42;`);
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      loadFixture('core/ast/extractor/plugin/08-returns-nothing-when-not-found.ts')
+    );
     const result = findDefinePluginSettings(sourceFile);
     expect(result).toBeUndefined();
   });
@@ -91,102 +89,43 @@ describe('findDefinePluginSettings()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `function setup() {
-        definePluginSettings({ test: { type: "STRING" } });
-      }`
+      loadFixture('core/ast/extractor/plugin/09-finds-nested-call-expression.ts')
     );
     const result = findDefinePluginSettings(sourceFile);
-    expect(result).toBeDefined();
+    expect(result?.getExpression().getText()).toBe('definePluginSettings');
   });
 
   test('finds definePluginSettings with withPrivateSettings chained call', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'settings.ts',
-      `export function definePluginSettings(settings: Record<string, unknown>) {
-  return {
-    ...settings,
-    withPrivateSettings: () => settings
-  };
-}
-
-export const settings = definePluginSettings({
-  enable: {
-    type: "BOOLEAN",
-    description: "Enable",
-    default: true,
-  },
-}).withPrivateSettings<{
-  private: boolean;
-}>();`
+      loadFixture(
+        'core/ast/extractor/plugin/10-finds-define-plugin-settings-with-with-private-settings-chained-call.ts'
+      )
     );
     const result = findDefinePluginSettings(sourceFile);
-    expect(result).toBeDefined();
-    if (result !== undefined) {
-      expect(result.getKind()).toBe(SyntaxKind.CallExpression);
-      // Should find the original definePluginSettings call, not the withPrivateSettings call
-      let expr = result.getExpression();
-      // Unwrap if it's a property access
-      if (expr.getKind() === SyntaxKind.PropertyAccessExpression) {
-        expr = expr.asKindOrThrow(SyntaxKind.PropertyAccessExpression).getExpression();
-        if (expr.getKind() === SyntaxKind.CallExpression) {
-          expr = expr.asKindOrThrow(SyntaxKind.CallExpression).getExpression();
-        }
-      }
-      if (expr.getKind() === SyntaxKind.Identifier) {
-        expect(expr.getText()).toBe('definePluginSettings');
-      }
-    }
+    expect(result?.getExpression().getText()).toBe('definePluginSettings');
   });
 
   test('finds definePluginSettings with multiple chained calls', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'settings.ts',
-      `export function definePluginSettings(settings: Record<string, unknown>) {
-  return {
-    ...settings,
-    withPrivateSettings: () => settings
-  };
-}
-
-export const settings = definePluginSettings({
-  enable: {
-    type: "BOOLEAN",
-    description: "Enable",
-    default: true,
-  },
-}).withPrivateSettings<{ private: boolean }>().withPrivateSettings<{ more: string }>();`
+      loadFixture(
+        'core/ast/extractor/plugin/11-finds-define-plugin-settings-with-multiple-chained-calls.ts'
+      )
     );
     const result = findDefinePluginSettings(sourceFile);
-    expect(result).toBeDefined();
-    if (result !== undefined) {
-      let expr = result.getExpression();
-      // Should handle multiple chained calls
-      while (expr.getKind() === SyntaxKind.PropertyAccessExpression) {
-        const propAccess = expr.asKindOrThrow(SyntaxKind.PropertyAccessExpression);
-        if (propAccess.getName() === 'withPrivateSettings') {
-          expr = propAccess.getExpression();
-          if (expr.getKind() === SyntaxKind.CallExpression) {
-            expr = expr.asKindOrThrow(SyntaxKind.CallExpression).getExpression();
-          }
-        } else {
-          break;
-        }
-      }
-      if (expr.getKind() === SyntaxKind.Identifier) {
-        expect(expr.getText()).toBe('definePluginSettings');
-      }
-    }
+    expect(result?.getExpression().getText()).toBe('definePluginSettings');
   });
 
   test('handles definePlugin with computed name/description', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const pluginName = "TestPlugin";
-      const pluginDesc = "Test Description";
-      definePlugin({ name: pluginName, description: pluginDesc });`
+      loadFixture(
+        'core/ast/extractor/plugin/12-handles-define-plugin-with-computed-name-description.ts'
+      )
     );
     const checker = project.getTypeChecker();
     const result = extractPluginInfo(sourceFile, checker);
@@ -196,7 +135,10 @@ export const settings = definePluginSettings({
 
   test('handles definePlugin with missing properties', () => {
     const project = createProject();
-    const sourceFile = project.createSourceFile('test.ts', `definePlugin({ name: "TestPlugin" });`);
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      loadFixture('core/ast/extractor/plugin/13-handles-define-plugin-with-missing-properties.ts')
+    );
     const checker = project.getTypeChecker();
     const result = extractPluginInfo(sourceFile, checker);
     expect(result.name).toBe('TestPlugin');

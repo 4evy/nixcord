@@ -22,6 +22,7 @@
   },
   "devDependencies": {
     "@typescript/native-preview": "^7.0.0-dev.20260621.1",
+    "fs-fixture": "^2.14.0",
     "typescript": "npm:@typescript/typescript6@^6.0.1"
   }
 }

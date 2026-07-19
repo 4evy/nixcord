@@ -3,20 +3,21 @@ import { describe, expect, test, vi } from 'vitest';
 import { extractSelectOptions } from '../../../../../src/extractor/select/index.js';
 import { evaluateThemesValues } from '../../../../../src/foundation/index.js';
 import * as resolve from '../../../../../src/foundation/resolve.js';
-import { createProject, expectResultError, unwrapResult } from '../../../../helpers/test-utils.js';
+import {
+  createProject,
+  expectResultError,
+  loadFixture,
+  unwrapResult,
+} from '../../../../helpers/test-utils.js';
 
 describe('extractSelectOptions()', () => {
   test('handles spread arrays in options', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `
-      const valueOperation = [
-        { label: "A", value: 0 },
-        { label: "B", value: 1 },
-      ];
-      const obj = { options: [ ...valueOperation, { label: "C", value: 2 } ] };
-      `
+      loadFixture(
+        'core/ast/extractor/select/extract-options/01-handles-spread-arrays-in-options.ts'
+      )
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
@@ -32,10 +33,9 @@ describe('extractSelectOptions()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `
-      const Methods = { Random: 0, Constant: 1 } as const;
-      const obj = { options: Object.keys(Methods).map((k: any) => ({ label: k, value: (Methods as any)[k] })) };
-      `
+      loadFixture(
+        'core/ast/extractor/select/extract-options/02-handles-object-keys-obj-map-pattern-with-as-const.ts'
+      )
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
@@ -51,14 +51,9 @@ describe('extractSelectOptions()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `
-      const themes = {
-        DarkPlus: "https://example.com/dark-plus.json",
-        LightPlus: "https://example.com/light-plus.json",
-      };
-      const themeNames = Object.keys(themes) as (keyof typeof themes)[];
-      const obj = { options: themeNames.map(name => ({ value: themes[name] })) };
-      `
+      loadFixture(
+        'core/ast/extractor/select/extract-options/03-handles-theme-names-map-pattern-object-keys-themes-as-const.ts'
+      )
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
@@ -76,10 +71,9 @@ describe('extractSelectOptions()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `
-      const Values = { First: "value1", Second: "value2" } as const;
-      const obj = { options: Object.values(Values).map(v => ({ value: v })) };
-      `
+      loadFixture(
+        'core/ast/extractor/select/extract-options/04-handles-object-values-map-pattern.ts'
+      )
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
@@ -95,9 +89,9 @@ describe('extractSelectOptions()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `
-      const obj = { options: Array.from([1, 2, 3]) };
-      `
+      loadFixture(
+        'core/ast/extractor/select/extract-options/05-handles-array-from-pattern-with-array-literal.ts'
+      )
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
@@ -112,10 +106,9 @@ describe('extractSelectOptions()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `
-      const languages = ["en", "ja", "es"];
-      const obj = { options: Array.from(languages) };
-      `
+      loadFixture(
+        'core/ast/extractor/select/extract-options/06-handles-array-from-pattern-with-identifier.ts'
+      )
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
@@ -130,12 +123,9 @@ describe('extractSelectOptions()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const obj = {
-        options: [
-          { value: true },
-          { value: false }
-        ]
-      };`
+      loadFixture(
+        'core/ast/extractor/select/extract-options/07-handles-boolean-enum-detection-converts-to-bool-type.ts'
+      )
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
@@ -150,12 +140,9 @@ describe('extractSelectOptions()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const obj = {
-        options: [
-          { value: "option1" },
-          { value: "option2" }
-        ]
-      };`
+      loadFixture(
+        'core/ast/extractor/select/extract-options/08-extracts-string-values-from-array.ts'
+      )
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
@@ -170,12 +157,9 @@ describe('extractSelectOptions()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const obj = {
-        options: [
-          { value: 1 },
-          { value: 2 }
-        ]
-      };`
+      loadFixture(
+        'core/ast/extractor/select/extract-options/09-extracts-numeric-values-as-literals.ts'
+      )
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
@@ -190,12 +174,9 @@ describe('extractSelectOptions()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const obj = {
-        options: [
-          { value: true },
-          { value: false }
-        ]
-      };`
+      loadFixture(
+        'core/ast/extractor/select/extract-options/10-extracts-boolean-values-as-literals.ts'
+      )
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
@@ -208,7 +189,10 @@ describe('extractSelectOptions()', () => {
 
   test('handles empty arrays', () => {
     const project = createProject();
-    const sourceFile = project.createSourceFile('test.ts', `const obj = { options: [] };`);
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      loadFixture('core/ast/extractor/select/extract-options/11-handles-empty-arrays.ts')
+    );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
       .getInitializerIfKindOrThrow(SyntaxKind.ObjectLiteralExpression);
@@ -221,7 +205,12 @@ describe('extractSelectOptions()', () => {
 
   test('handles missing options property', () => {
     const project = createProject();
-    const sourceFile = project.createSourceFile('test.ts', `const obj = { type: "STRING" };`);
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      loadFixture(
+        'core/ast/extractor/select/extract-options/12-handles-missing-options-property.ts'
+      )
+    );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
       .getInitializerIfKindOrThrow(SyntaxKind.ObjectLiteralExpression);
@@ -236,13 +225,7 @@ describe('extractSelectOptions()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const obj = {
-        options: [
-          "invalid",
-          { notValue: "test" },
-          { value: "valid" }
-        ]
-      };`
+      loadFixture('core/ast/extractor/select/extract-options/13-handles-invalid-array-elements.ts')
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
@@ -257,11 +240,9 @@ describe('extractSelectOptions()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'array-error.ts',
-      `const obj = {
-        options: [
-          { label: "Broken entry" }
-        ]
-      };`
+      loadFixture(
+        'core/ast/extractor/select/extract-options/14-errors-when-every-array-element-fails-to-resolve.ts'
+      )
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
@@ -275,28 +256,11 @@ describe('extractSelectOptions()', () => {
     const project = createProject();
     project.createSourceFile(
       'theme-data.ts',
-      `
-      export const SHIKI_REPO = "Vendicated/Vencord";
-      export const SHIKI_REPO_COMMIT = "abcdef1234";
-      export const shikiRepoTheme = (name: string) => name;
-      export const themes = {
-        DarkPlus: shikiRepoTheme("DarkPlus"),
-        MaterialCandy: "https://themes.example/material.json"
-      } as const;
-      `
+      loadFixture('core/ast/extractor/select/extract-options/theme-data.ts')
     );
     const settingsFile = project.createSourceFile(
       'theme-settings.ts',
-      `
-      import { themes } from "./theme-data";
-      const themeNames = Object.keys(themes) as (keyof typeof themes)[];
-      const obj = {
-        options: themeNames.map(name => ({
-          value: themes[name],
-          label: name
-        }))
-      };
-      `
+      loadFixture('core/ast/extractor/select/extract-options/theme-settings.ts')
     );
     project.resolveSourceFileDependencies();
     const evaluateSpy = vi
@@ -323,18 +287,9 @@ describe('extractSelectOptions()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'theme-fallback.ts',
-      `
-      const themes = {
-        DarkPlus: "https://dark",
-        LightPlus: "https://light"
-      };
-      const themeNames = Object.keys(themes) as (keyof typeof themes)[];
-      const obj = {
-        options: themeNames.map(name => ({
-          value: name
-        }))
-      };
-      `
+      loadFixture(
+        'core/ast/extractor/select/extract-options/17-falls-back-to-theme-keys-when-evaluate-themes-values-returns-empty.ts'
+      )
     );
     const evaluateSpy = vi.spyOn(resolve, 'evaluateThemesValues').mockImplementation(() => []);
     const objLiteral = sourceFile
@@ -352,22 +307,9 @@ describe('extractSelectOptions()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'theme-fallback.ts',
-      `
-      const themes = {
-        DarkPlus: "dark",
-        LightPlus: "light",
-      } as const;
-
-      function makeThemeNames() {
-        return Object.keys(themes) as string[];
-      }
-
-      const obj = {
-        options: makeThemeNames().map(name => ({
-          value: themes[name as keyof typeof themes],
-        })),
-      };
-      `
+      loadFixture(
+        'core/ast/extractor/select/extract-options/18-falls-back-gracefully-when-theme-names-are-produced-by-a-factory-call.ts'
+      )
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
@@ -382,14 +324,9 @@ describe('extractSelectOptions()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'object-values.ts',
-      `
-      const obj = {
-        options: Object.values(buildEnum()).map(entry => ({ value: entry })),
-      };
-      function buildEnum() {
-        return { Primary: "primary", Secondary: "secondary" } as const;
-      }
-      `
+      loadFixture(
+        'core/ast/extractor/select/extract-options/19-returns-empty-when-object-values-argument-is-not-an-identifier.ts'
+      )
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
@@ -404,11 +341,9 @@ describe('extractSelectOptions()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'array-from-set.ts',
-      `
-      const obj = {
-        options: Array.from(new Set(["alpha", "beta"]), value => ({ value })),
-      };
-      `
+      loadFixture(
+        'core/ast/extractor/select/extract-options/20-returns-empty-when-array-from-argument-cannot-be-statically-resolved.ts'
+      )
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
@@ -423,13 +358,9 @@ describe('extractSelectOptions()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'missing-value.ts',
-      `
-      const obj = {
-        options: [
-          { label: "Broken entry" }
-        ]
-      };
-      `
+      loadFixture(
+        'core/ast/extractor/select/extract-options/21-errors-when-option-objects-omit-the-value-property.ts'
+      )
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
@@ -443,13 +374,9 @@ describe('extractSelectOptions()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'identifier-options.ts',
-      `
-      const selectOptions = [
-        { value: "a", label: "A" },
-        { value: "b", label: "B" },
-      ];
-      const obj = { options: selectOptions };
-      `
+      loadFixture(
+        'core/ast/extractor/select/extract-options/22-resolves-identifier-referencing-an-external-array.ts'
+      )
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
@@ -465,10 +392,9 @@ describe('extractSelectOptions()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'identifier-call.ts',
-      `
-      const selectOptions = ["x", "y", "z"].map(v => ({ value: v }));
-      const obj = { options: selectOptions };
-      `
+      loadFixture(
+        'core/ast/extractor/select/extract-options/23-resolves-identifier-referencing-an-external-call-expression.ts'
+      )
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
@@ -483,10 +409,9 @@ describe('extractSelectOptions()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'unresolvable.ts',
-      `
-      declare const externalOptions: any;
-      const obj = { options: externalOptions };
-      `
+      loadFixture(
+        'core/ast/extractor/select/extract-options/24-returns-empty-for-unresolvable-identifier.ts'
+      )
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
@@ -501,14 +426,9 @@ describe('extractSelectOptions()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'boolean-labels.ts',
-      `
-      const obj = {
-        options: [
-          { label: "Enabled", value: true },
-          { label: "Disabled", value: false }
-        ]
-      };
-      `
+      loadFixture(
+        'core/ast/extractor/select/extract-options/25-records-labels-for-boolean-valued-options.ts'
+      )
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')

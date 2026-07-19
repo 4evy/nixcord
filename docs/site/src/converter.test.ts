@@ -1,29 +1,28 @@
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { createFixture } from 'fs-fixture';
 import { describe, expect, test } from 'vitest';
 import { convertSettingsJsonToNix } from './converter';
 
-const realEquicordSettingsPath = '/var/home/e0vi/.config/Equicord/settings/settings.json';
-const nixInstantiate = '/var/home/e0vi/.local/bin/nix-instantiate';
-
-function expectNixParses(source: string) {
-  if (!existsSync(nixInstantiate)) return;
-
-  const dir = mkdtempSync(join(tmpdir(), 'nixcord-converter-'));
-  const file = join(dir, 'converted.nix');
-
+const hasNixInstantiate = (() => {
   try {
-    writeFileSync(file, source);
-    execFileSync(nixInstantiate, ['--parse', file], { stdio: 'pipe' });
-  } finally {
-    rmSync(dir, { force: true, recursive: true });
+    execFileSync('nix-instantiate', ['--version'], { stdio: 'ignore' });
+    return true;
+  } catch {
+    return false;
   }
+})();
+
+async function expectNixParses(source: string) {
+  if (!hasNixInstantiate) return;
+
+  await using fixture = await createFixture({ 'converted.nix': source });
+  execFileSync('nix-instantiate', ['--parse', fixture.getPath('converted.nix')], {
+    stdio: 'pipe',
+  });
 }
 
 describe('convertSettingsJsonToNix', () => {
-  test('converts Vencord backup JSON into Nixcord attrs', () => {
+  test('converts Vencord backup JSON into Nixcord attrs', async () => {
     const result = convertSettingsJsonToNix(
       JSON.stringify({
         settings: {
@@ -51,10 +50,10 @@ describe('convertSettingsJsonToNix', () => {
       knownSettingCount: 1,
       pluginCount: 1,
     });
-    expectNixParses(result.output);
+    await expectNixParses(result.output);
   });
 
-  test('accepts a direct plugins object and omits disabled plugin enables', () => {
+  test('accepts a direct plugins object and omits disabled plugin enables', async () => {
     const result = convertSettingsJsonToNix(
       JSON.stringify({
         AlwaysTrust: {
@@ -68,10 +67,10 @@ describe('convertSettingsJsonToNix', () => {
     expect(result.output).not.toContain('enable = false;');
     expect(result.output).toContain('domain = false;');
     expect(result.stats.pluginCount).toBe(1);
-    expectNixParses(result.output);
+    await expectNixParses(result.output);
   });
 
-  test('omits known settings when they match schema defaults', () => {
+  test('omits known settings when they match schema defaults', async () => {
     const result = convertSettingsJsonToNix(
       JSON.stringify({
         settings: {
@@ -88,10 +87,10 @@ describe('convertSettingsJsonToNix', () => {
     expect(result.output).toContain('alwaysExpandRoles.enable = true;');
     expect(result.output).not.toContain('alwaysExpandRoles = {');
     expect(result.output).not.toContain('hideArrow = false;');
-    expectNixParses(result.output);
+    await expectNixParses(result.output);
   });
 
-  test('omits known object, string, number, array, and empty-object defaults', () => {
+  test('omits known object, string, number, array, and empty-object defaults', async () => {
     const result = convertSettingsJsonToNix(
       JSON.stringify({
         settings: {
@@ -133,10 +132,10 @@ describe('convertSettingsJsonToNix', () => {
     expect(result.output).not.toContain('questTileGradient');
     expect(result.output).not.toContain('questTileIgnoredColor');
     expect(result.output).not.toContain('questTileUnclaimedColor');
-    expectNixParses(result.output);
+    await expectNixParses(result.output);
   });
 
-  test('maps upstream plugin and setting renames to Nix option names', () => {
+  test('maps upstream plugin and setting renames to Nix option names', async () => {
     const result = convertSettingsJsonToNix(
       JSON.stringify({
         settings: {
@@ -156,10 +155,10 @@ describe('convertSettingsJsonToNix', () => {
     expect(result.output).toContain('buttonOneUrl = "https://example.com";');
     expect(result.output).not.toContain('appID');
     expect(result.output).not.toContain('buttonOneURL');
-    expectNixParses(result.output);
+    await expectNixParses(result.output);
   });
 
-  test('preserves unsupported settings and unknown plugins in extraConfig', () => {
+  test('preserves unsupported settings and unknown plugins in extraConfig', async () => {
     const result = convertSettingsJsonToNix(
       JSON.stringify({
         settings: {
@@ -191,10 +190,10 @@ describe('convertSettingsJsonToNix', () => {
       pluginCount: 2,
       preservedSettingCount: 3,
     });
-    expectNixParses(result.output);
+    await expectNixParses(result.output);
   });
 
-  test('ignores upstream internal API and core plugins', () => {
+  test('ignores upstream internal API and core plugins', async () => {
     const result = convertSettingsJsonToNix(
       JSON.stringify({
         settings: {
@@ -232,10 +231,10 @@ describe('convertSettingsJsonToNix', () => {
     expect(result.output).not.toMatch(/(^|\s)Settings\.enable/);
     expect(result.output).not.toContain('SupportHelper');
     expect(result.stats.extraPluginCount).toBe(1);
-    expectNixParses(result.output);
+    await expectNixParses(result.output);
   });
 
-  test('includes quickCss when present', () => {
+  test('includes quickCss when present', async () => {
     const result = convertSettingsJsonToNix(
       JSON.stringify({
         quickCss: '.foo { content: "${bar}"; }',
@@ -252,20 +251,20 @@ describe('convertSettingsJsonToNix', () => {
     expect(result.output).toContain('programs.nixcord.config.useQuickCss = true;');
     expect(result.output).toContain('programs.nixcord.quickCss = ');
     expect(result.output).toContain('quickCss = ".foo { content: \\"\\${bar}\\"; }";');
-    expectNixParses(result.output);
+    await expectNixParses(result.output);
   });
 
-  test('throws a useful error for malformed JSON', () => {
+  test('throws a useful error for malformed JSON', async () => {
     expect(() => convertSettingsJsonToNix('{ "settings": ')).toThrow(/Invalid JSON:/);
   });
 
-  test('throws a useful error when no plugin map exists', () => {
+  test('throws a useful error when no plugin map exists', async () => {
     expect(() => convertSettingsJsonToNix(JSON.stringify({ settings: { useQuickCss: true } }))).toThrow(
       'Expected Vencord/Equicord settings with a plugins object.'
     );
   });
 
-  test('throws when the input only contains default or disabled settings', () => {
+  test('throws when the input only contains default or disabled settings', async () => {
     expect(() =>
       convertSettingsJsonToNix(
         JSON.stringify({
@@ -282,7 +281,7 @@ describe('convertSettingsJsonToNix', () => {
     ).toThrow('No non-default plugin settings were found in this JSON.');
   });
 
-  test('ignores non-object plugin entries without crashing', () => {
+  test('ignores non-object plugin entries without crashing', async () => {
     const result = convertSettingsJsonToNix(
       JSON.stringify({
         settings: {
@@ -298,10 +297,10 @@ describe('convertSettingsJsonToNix', () => {
 
     expect(result.output).toContain('alwaysTrust.enable = true;');
     expect(result.output).not.toContain('BrokenPlugin');
-    expectNixParses(result.output);
+    await expectNixParses(result.output);
   });
 
-  test('quotes odd unknown plugin and setting names into valid Nix', () => {
+  test('quotes odd unknown plugin and setting names into valid Nix', async () => {
     const result = convertSettingsJsonToNix(
       JSON.stringify({
         settings: {
@@ -317,10 +316,10 @@ describe('convertSettingsJsonToNix', () => {
 
     expect(result.output).toContain('"User Plugin.With-Dot" = {');
     expect(result.output).toContain('"setting.with.dot" = true;');
-    expectNixParses(result.output);
+    await expectNixParses(result.output);
   });
 
-  test('ignores unknown enable-only plugins as stale upstream noise', () => {
+  test('ignores unknown enable-only plugins as stale upstream noise', async () => {
     expect(() =>
       convertSettingsJsonToNix(
         JSON.stringify({
@@ -336,7 +335,7 @@ describe('convertSettingsJsonToNix', () => {
     ).toThrow('No non-default plugin settings were found in this JSON.');
   });
 
-  test('preserves arrays, nested objects, nulls, and escaped strings', () => {
+  test('preserves arrays, nested objects, nulls, and escaped strings', async () => {
     const result = convertSettingsJsonToNix(
       JSON.stringify({
         settings: {
@@ -358,10 +357,10 @@ describe('convertSettingsJsonToNix', () => {
     expect(result.output).toContain('nothing = null;');
     expect(result.output).toContain('values = [ 1 true "x" ];');
     expect(result.output).toContain('anti \\${value}\\nnext');
-    expectNixParses(result.output);
+    await expectNixParses(result.output);
   });
 
-  test('stress converts a large mixed plugin map into parseable Nix', () => {
+  test('stress converts a large mixed plugin map into parseable Nix', async () => {
     const plugins: Record<string, unknown> = {
       AlwaysTrust: {
         domain: false,
@@ -391,38 +390,7 @@ describe('convertSettingsJsonToNix', () => {
     expect(result.output).toContain('"User Plugin 0.With Dot" = {');
     expect(result.output).not.toContain('enable = false;');
     expect(result.stats.pluginCount).toBe(82);
-    expectNixParses(result.output);
+    await expectNixParses(result.output);
   });
 
-  test.skipIf(!existsSync(realEquicordSettingsPath))(
-    'converts the local Equicord settings file without default-false noise',
-    () => {
-      const input = readFileSync(realEquicordSettingsPath, 'utf8');
-      const result = convertSettingsJsonToNix(input);
-
-      expect(result.output).toContain('programs.nixcord.config.plugins = {');
-      expect(result.output).not.toContain('programs = {');
-      expect(result.output).not.toContain('nixcord = {');
-      expect(result.output).not.toContain('enable = false;');
-      expect(result.output).not.toContain('hideArrow = false;');
-      expect(result.output).not.toContain('keepOpen = false;');
-      expect(result.output).not.toContain('questTileClaimedColor');
-      expect(result.output).not.toContain('questTileExpiredColor');
-      expect(result.output).not.toContain('questTileIgnoredColor');
-      expect(result.output).not.toContain('questTileUnclaimedColor');
-      expect(result.output).not.toContain('AudioPlayerAPI');
-      expect(result.output).not.toContain('ChatInputButtonAPI');
-      expect(result.output).not.toContain('CommandsAPI');
-      expect(result.output).not.toContain('NoTrack');
-      expect(result.output).not.toContain('programs.nixcord.extraConfig.plugins');
-      expect(result.output).not.toContain('Settings = {');
-      expect(result.output).not.toMatch(/(^|\s)Settings\.enable/);
-      expect(result.output).not.toContain('SupportHelper');
-      expect(result.output).not.toContain('FriendsSince');
-      expect(result.output).toContain('mutualGroupDms.enable = true;');
-      expect(result.stats.pluginCount).toBeGreaterThan(0);
-      expect(result.stats.configPluginCount).toBeGreaterThan(0);
-      expectNixParses(result.output);
-    }
-  );
 });

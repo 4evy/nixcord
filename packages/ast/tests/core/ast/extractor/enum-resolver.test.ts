@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { resolveEnumLikeValue } from '../../../../src/extractor/enum-resolver.js';
-import { createProject } from '../../../helpers/test-utils.js';
+import { createProject, loadFixture } from '../../../helpers/test-utils.js';
 
 function unwrapResult<T>(result: {
   ok: boolean;
@@ -14,315 +14,286 @@ function unwrapResult<T>(result: {
 describe('resolveEnumLikeValue()', () => {
   test('resolves string literal', () => {
     const project = createProject();
-    const sourceFile = project.createSourceFile('test.ts', `const x = "test";`);
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      loadFixture('core/ast/extractor/enum-resolver/01-resolves-string-literal.ts')
+    );
     const varDecl = sourceFile.getVariableDeclarationOrThrow('x');
-    const initializer = varDecl.getInitializer();
-    if (initializer) {
-      const checker = project.getTypeChecker();
-      const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
-      expect(resolved).toBe('test');
-    }
+    const initializer = varDecl.getInitializerOrThrow();
+    const checker = project.getTypeChecker();
+    const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
+    expect(resolved).toBe('test');
   });
 
   test('resolves numeric literal', () => {
     const project = createProject();
-    const sourceFile = project.createSourceFile('test.ts', `const x = 42;`);
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      loadFixture('core/ast/extractor/enum-resolver/02-resolves-numeric-literal.ts')
+    );
     const varDecl = sourceFile.getVariableDeclarationOrThrow('x');
-    const initializer = varDecl.getInitializer();
-    if (initializer) {
-      const checker = project.getTypeChecker();
-      const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
-      expect(resolved).toBe(42);
-    }
+    const initializer = varDecl.getInitializerOrThrow();
+    const checker = project.getTypeChecker();
+    const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
+    expect(resolved).toBe(42);
   });
 
   test('resolves true keyword', () => {
     const project = createProject();
-    const sourceFile = project.createSourceFile('test.ts', `const x = true;`);
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      loadFixture('core/ast/extractor/enum-resolver/03-resolves-true-keyword.ts')
+    );
     const varDecl = sourceFile.getVariableDeclarationOrThrow('x');
-    const initializer = varDecl.getInitializer();
-    if (initializer) {
-      const checker = project.getTypeChecker();
-      const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
-      expect(resolved).toBe(true);
-    }
+    const initializer = varDecl.getInitializerOrThrow();
+    const checker = project.getTypeChecker();
+    const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
+    expect(resolved).toBe(true);
   });
 
   test('resolves false keyword', () => {
     const project = createProject();
-    const sourceFile = project.createSourceFile('test.ts', `const x = false;`);
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      loadFixture('core/ast/extractor/enum-resolver/04-resolves-false-keyword.ts')
+    );
     const varDecl = sourceFile.getVariableDeclarationOrThrow('x');
-    const initializer = varDecl.getInitializer();
-    if (initializer) {
-      const checker = project.getTypeChecker();
-      const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
-      expect(resolved).toBe(false);
-    }
+    const initializer = varDecl.getInitializerOrThrow();
+    const checker = project.getTypeChecker();
+    const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
+    expect(resolved).toBe(false);
   });
 
   test('unwraps AsExpression', () => {
     const project = createProject();
-    const sourceFile = project.createSourceFile('test.ts', `const x = "test" as string;`);
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      loadFixture('core/ast/extractor/enum-resolver/05-unwraps-as-expression.ts')
+    );
     const varDecl = sourceFile.getVariableDeclarationOrThrow('x');
-    const initializer = varDecl.getInitializer();
-    if (initializer) {
-      const checker = project.getTypeChecker();
-      const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
-      expect(resolved).toBe('test');
-    }
+    const initializer = varDecl.getInitializerOrThrow();
+    const checker = project.getTypeChecker();
+    const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
+    expect(resolved).toBe('test');
   });
 
   test('unwraps TypeAssertionExpression', () => {
     const project = createProject();
-    const sourceFile = project.createSourceFile('test.ts', `const x = <string>"test";`);
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      loadFixture('core/ast/extractor/enum-resolver/06-unwraps-type-assertion-expression.ts')
+    );
     const varDecl = sourceFile.getVariableDeclarationOrThrow('x');
-    const initializer = varDecl.getInitializer();
-    if (initializer) {
-      const checker = project.getTypeChecker();
-      const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
-      expect(resolved).toBe('test');
-    }
+    const initializer = varDecl.getInitializerOrThrow();
+    const checker = project.getTypeChecker();
+    const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
+    expect(resolved).toBe('test');
   });
 
   test('unwraps ParenthesizedExpression', () => {
     const project = createProject();
-    const sourceFile = project.createSourceFile('test.ts', `const x = (42);`);
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      loadFixture('core/ast/extractor/enum-resolver/07-unwraps-parenthesized-expression.ts')
+    );
     const varDecl = sourceFile.getVariableDeclarationOrThrow('x');
-    const initializer = varDecl.getInitializer();
-    if (initializer) {
-      const checker = project.getTypeChecker();
-      const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
-      expect(resolved).toBe(42);
-    }
+    const initializer = varDecl.getInitializerOrThrow();
+    const checker = project.getTypeChecker();
+    const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
+    expect(resolved).toBe(42);
   });
 
   test('resolves enum member', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `enum TestEnum { VALUE = "test" }; const x = TestEnum.VALUE;`
+      loadFixture('core/ast/extractor/enum-resolver/08-resolves-enum-member.ts')
     );
     const varDecl = sourceFile.getVariableDeclarationOrThrow('x');
-    const initializer = varDecl.getInitializer();
-    if (initializer) {
-      const checker = project.getTypeChecker();
-      const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
-      expect(resolved).toBe('test');
-    }
+    const initializer = varDecl.getInitializerOrThrow();
+    const checker = project.getTypeChecker();
+    const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
+    expect(resolved).toBe('test');
   });
 
   test('resolves numeric enum member', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `enum TestEnum { VALUE = 42 }; const x = TestEnum.VALUE;`
+      loadFixture('core/ast/extractor/enum-resolver/09-resolves-numeric-enum-member.ts')
     );
     const varDecl = sourceFile.getVariableDeclarationOrThrow('x');
-    const initializer = varDecl.getInitializer();
-    if (initializer) {
-      const checker = project.getTypeChecker();
-      const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
-      expect(resolved).toBe(42);
-    }
+    const initializer = varDecl.getInitializerOrThrow();
+    const checker = project.getTypeChecker();
+    const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
+    expect(resolved).toBe(42);
   });
 
   test('resolves object literal property access', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const themes = { DarkPlus: "dark-plus" }; const x = themes.DarkPlus;`
+      loadFixture('core/ast/extractor/enum-resolver/10-resolves-object-literal-property-access.ts')
     );
     const varDecl = sourceFile.getVariableDeclarationOrThrow('x');
-    const initializer = varDecl.getInitializer();
-    if (initializer) {
-      const checker = project.getTypeChecker();
-      const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
-      expect(resolved).toBe('dark-plus');
-    }
-  });
-
-  test('resolves nested object literal property access', () => {
-    const project = createProject();
-    const sourceFile = project.createSourceFile(
-      'test.ts',
-      `const config = { themes: { DarkPlus: "dark-plus" } }; const x = config.themes.DarkPlus;`
-    );
-    const varDecl = sourceFile.getVariableDeclarationOrThrow('x');
-    const initializer = varDecl.getInitializer();
-    if (initializer) {
-      const checker = project.getTypeChecker();
-      const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
-      // This might not resolve due to nested access, but should not throw
-      expect(resolved).toBeDefined();
-    }
+    const initializer = varDecl.getInitializerOrThrow();
+    const checker = project.getTypeChecker();
+    const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
+    expect(resolved).toBe('dark-plus');
   });
 
   test('resolves object literal property access with as const', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const themes = { DarkPlus: "dark-plus", LightPlus: "light-plus" } as const; const x = themes.DarkPlus;`
+      loadFixture(
+        'core/ast/extractor/enum-resolver/11-resolves-object-literal-property-access-with-as-const.ts'
+      )
     );
     const varDecl = sourceFile.getVariableDeclarationOrThrow('x');
-    const initializer = varDecl.getInitializer();
-    if (initializer) {
-      const checker = project.getTypeChecker();
-      const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
-      expect(resolved).toBe('dark-plus');
-    }
+    const initializer = varDecl.getInitializerOrThrow();
+    const checker = project.getTypeChecker();
+    const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
+    expect(resolved).toBe('dark-plus');
   });
 
   test('resolves ActivityType enum fallback', () => {
     const project = createProject();
-    const sourceFile = project.createSourceFile('test.ts', `const x = ActivityType.PLAYING;`);
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      loadFixture('core/ast/extractor/enum-resolver/12-resolves-activity-type-enum-fallback.ts')
+    );
     const varDecl = sourceFile.getVariableDeclarationOrThrow('x');
-    const initializer = varDecl.getInitializer();
-    if (initializer) {
-      const checker = project.getTypeChecker();
-      const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
-      expect(resolved).toBe(0);
-    }
+    const initializer = varDecl.getInitializerOrThrow();
+    const checker = project.getTypeChecker();
+    const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
+    expect(resolved).toBe(0);
   });
 
   test('resolves ActivityType.STREAMING', () => {
     const project = createProject();
-    const sourceFile = project.createSourceFile('test.ts', `const x = ActivityType.STREAMING;`);
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      loadFixture('core/ast/extractor/enum-resolver/13-resolves-activity-type-streaming.ts')
+    );
     const varDecl = sourceFile.getVariableDeclarationOrThrow('x');
-    const initializer = varDecl.getInitializer();
-    if (initializer) {
-      const checker = project.getTypeChecker();
-      const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
-      expect(resolved).toBe(1);
-    }
+    const initializer = varDecl.getInitializerOrThrow();
+    const checker = project.getTypeChecker();
+    const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
+    expect(resolved).toBe(1);
   });
 
   test('resolves ActivityType.HANG_STATUS fallback', () => {
     const project = createProject();
-    const sourceFile = project.createSourceFile('test.ts', `const x = ActivityType.HANG_STATUS;`);
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      loadFixture(
+        'core/ast/extractor/enum-resolver/14-resolves-activity-type-hang-status-fallback.ts'
+      )
+    );
     const varDecl = sourceFile.getVariableDeclarationOrThrow('x');
-    const initializer = varDecl.getInitializer();
-    if (initializer) {
-      const checker = project.getTypeChecker();
-      const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
-      expect(resolved).toBe(6);
-    }
+    const initializer = varDecl.getInitializerOrThrow();
+    const checker = project.getTypeChecker();
+    const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
+    expect(resolved).toBe(6);
   });
 
   test('returns null for unresolved property access', () => {
     const project = createProject();
-    const sourceFile = project.createSourceFile('test.ts', `const x = Unknown.UnknownMember;`);
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      loadFixture(
+        'core/ast/extractor/enum-resolver/15-returns-null-for-unresolved-property-access.ts'
+      )
+    );
     const varDecl = sourceFile.getVariableDeclarationOrThrow('x');
-    const initializer = varDecl.getInitializer();
-    if (initializer) {
-      const checker = project.getTypeChecker();
-      const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
-      expect(resolved).toBeNull();
-    }
+    const initializer = varDecl.getInitializerOrThrow();
+    const checker = project.getTypeChecker();
+    const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
+    expect(resolved).toBeNull();
   });
 
   test('returns null for unsupported node kind', () => {
     const project = createProject();
-    const sourceFile = project.createSourceFile('test.ts', `const x = [1, 2, 3];`);
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      loadFixture('core/ast/extractor/enum-resolver/16-returns-null-for-unsupported-node-kind.ts')
+    );
     const varDecl = sourceFile.getVariableDeclarationOrThrow('x');
-    const initializer = varDecl.getInitializer();
-    if (initializer) {
-      const checker = project.getTypeChecker();
-      const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
-      expect(resolved).toBeNull();
-    }
+    const initializer = varDecl.getInitializerOrThrow();
+    const checker = project.getTypeChecker();
+    const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
+    expect(resolved).toBeNull();
   });
 
   test('resolves numeric enum with as const', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const Methods = { Random: 0, Constant: 1 } as const; const x = Methods.Random;`
+      loadFixture('core/ast/extractor/enum-resolver/17-resolves-numeric-enum-with-as-const.ts')
     );
     const varDecl = sourceFile.getVariableDeclarationOrThrow('x');
-    const initializer = varDecl.getInitializer();
-    if (initializer) {
-      const checker = project.getTypeChecker();
-      const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
-      expect(resolved).toBe(0);
-    }
+    const initializer = varDecl.getInitializerOrThrow();
+    const checker = project.getTypeChecker();
+    const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
+    expect(resolved).toBe(0);
   });
 
   test('resolves boolean enum member', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const Flags = { Enabled: true, Disabled: false } as const; const x = Flags.Enabled;`
+      loadFixture('core/ast/extractor/enum-resolver/18-resolves-boolean-enum-member.ts')
     );
     const varDecl = sourceFile.getVariableDeclarationOrThrow('x');
-    const initializer = varDecl.getInitializer();
-    if (initializer) {
-      const checker = project.getTypeChecker();
-      const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
-      expect(resolved).toBe(true);
-    }
+    const initializer = varDecl.getInitializerOrThrow();
+    const checker = project.getTypeChecker();
+    const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
+    expect(resolved).toBe(true);
   });
 
   test('handles multiple type assertions', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const x = (("test" as string) as any) as string;`
+      loadFixture('core/ast/extractor/enum-resolver/19-handles-multiple-type-assertions.ts')
     );
     const varDecl = sourceFile.getVariableDeclarationOrThrow('x');
-    const initializer = varDecl.getInitializer();
-    if (initializer) {
-      const checker = project.getTypeChecker();
-      const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
-      expect(resolved).toBe('test');
-    }
-  });
-
-  test('handles property access through nested wrappers', () => {
-    const project = createProject();
-    const sourceFile = project.createSourceFile(
-      'test.ts',
-      `const themes = { DarkPlus: "dark-plus" }; const x = (themes as any).DarkPlus;`
-    );
-    const varDecl = sourceFile.getVariableDeclarationOrThrow('x');
-    const initializer = varDecl.getInitializer();
-    if (initializer) {
-      const checker = project.getTypeChecker();
-      const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
-      // Property access through type assertions may not fully resolve due to AsExpression wrapper
-      // This is a limitation - we unwrap the AsExpression but property access resolution
-      // may still fail. Both null and the resolved value are acceptable outcomes
-      expect(resolved === null || resolved === 'dark-plus').toBe(true);
-    }
+    const initializer = varDecl.getInitializerOrThrow();
+    const checker = project.getTypeChecker();
+    const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
+    expect(resolved).toBe('test');
   });
 
   test('resolves simple template literal', () => {
     const project = createProject();
-    const sourceFile = project.createSourceFile('test.ts', 'const x = `template-value`;');
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      loadFixture('core/ast/extractor/enum-resolver/20-resolves-simple-template-literal.ts')
+    );
     const varDecl = sourceFile.getVariableDeclarationOrThrow('x');
-    const initializer = varDecl.getInitializer();
-    if (initializer) {
-      const checker = project.getTypeChecker();
-      const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
-      expect(resolved).toBe('template-value');
-    }
+    const initializer = varDecl.getInitializerOrThrow();
+    const checker = project.getTypeChecker();
+    const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
+    expect(resolved).toBe('template-value');
   });
 
   test('returns error for template expression with substitutions', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      'const value = "test"; const x = `value-${value}`;'
+      loadFixture(
+        'core/ast/extractor/enum-resolver/21-returns-error-for-template-expression-with-substitutions.ts'
+      )
     );
     const varDecl = sourceFile.getVariableDeclarationOrThrow('x');
-    const initializer = varDecl.getInitializer();
-    if (initializer) {
-      const checker = project.getTypeChecker();
-      const result = resolveEnumLikeValue(initializer, checker);
-      // Template expressions with substitutions should return an error
-      expect(result.ok).toBe(false);
-      if (!result.ok) {
-        expect(result.error.kind).toBe('CannotEvaluate');
-      }
+    const initializer = varDecl.getInitializerOrThrow();
+    const checker = project.getTypeChecker();
+    const result = resolveEnumLikeValue(initializer, checker);
+    // Template expressions with substitutions should return an error
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error.kind).toBe('CannotEvaluate');
     }
   });
 
@@ -330,147 +301,101 @@ describe('resolveEnumLikeValue()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const themes = { DarkPlus: "dark-plus" } as const;
-      const x = themes.DarkPlus;`
+      loadFixture(
+        'core/ast/extractor/enum-resolver/22-handles-property-access-with-same-file-lookup-fallback.ts'
+      )
     );
     const varDecl = sourceFile.getVariableDeclarationOrThrow('x');
-    const initializer = varDecl.getInitializer();
-    if (initializer) {
-      const checker = project.getTypeChecker();
-      const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
-      // Should resolve via same-file lookup fallback
-      expect(resolved).toBe('dark-plus');
-    }
+    const initializer = varDecl.getInitializerOrThrow();
+    const checker = project.getTypeChecker();
+    const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
+    // Should resolve via same-file lookup fallback
+    expect(resolved).toBe('dark-plus');
   });
 
   test('handles enum member with getValue() fallback', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `enum TestEnum { VALUE = "test-value" };
-      const x = TestEnum.VALUE;`
+      loadFixture(
+        'core/ast/extractor/enum-resolver/23-handles-enum-member-with-get-value-fallback.ts'
+      )
     );
     const varDecl = sourceFile.getVariableDeclarationOrThrow('x');
-    const initializer = varDecl.getInitializer();
-    if (initializer) {
-      const checker = project.getTypeChecker();
-      const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
-      // Should resolve via getValue() or initializer
-      expect(resolved).toBe('test-value');
-    }
+    const initializer = varDecl.getInitializerOrThrow();
+    const checker = project.getTypeChecker();
+    const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
+    // Should resolve via getValue() or initializer
+    expect(resolved).toBe('test-value');
   });
 
   test('handles enum member with numeric initializer', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `enum TestEnum { VALUE = 123 };
-      const x = TestEnum.VALUE;`
+      loadFixture(
+        'core/ast/extractor/enum-resolver/24-handles-enum-member-with-numeric-initializer.ts'
+      )
     );
     const varDecl = sourceFile.getVariableDeclarationOrThrow('x');
-    const initializer = varDecl.getInitializer();
-    if (initializer) {
-      const checker = project.getTypeChecker();
-      const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
-      // Should resolve via initializer when getValue() fails
-      expect(resolved).toBe(123);
-    }
-  });
-
-  test('handles property access with nested as const and same-file lookup', () => {
-    const project = createProject();
-    const sourceFile = project.createSourceFile(
-      'test.ts',
-      `const config = { themes: { DarkPlus: "dark-plus" } } as const;
-      const x = config.themes.DarkPlus;`
-    );
-    const varDecl = sourceFile.getVariableDeclarationOrThrow('x');
-    const initializer = varDecl.getInitializer();
-    if (initializer) {
-      const checker = project.getTypeChecker();
-      const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
-      // May use same-file lookup fallback for nested access
-      expect(resolved === null || resolved === 'dark-plus').toBe(true);
-    }
-  });
-
-  test('handles property access with aliased symbol fallback', () => {
-    const project = createProject();
-    const sourceFile = project.createSourceFile(
-      'test.ts',
-      `import { themes as importedThemes } from "./themes";
-      const themes = importedThemes;
-      const x = themes.DarkPlus;`
-    );
-    const varDecl = sourceFile.getVariableDeclarationOrThrow('x');
-    const initializer = varDecl.getInitializer();
-    if (initializer) {
-      const checker = project.getTypeChecker();
-      const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
-      // Should handle aliased symbols via getAliasedSymbol() fallback
-      expect(resolved === null || typeof resolved === 'string').toBe(true);
-    }
+    const initializer = varDecl.getInitializerOrThrow();
+    const checker = project.getTypeChecker();
+    const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
+    // Should resolve via initializer when getValue() fails
+    expect(resolved).toBe(123);
   });
 
   test('resolves bitwise OR operation', () => {
     const project = createProject();
-    const sourceFile = project.createSourceFile('test.ts', `const x = 1 | 2;`);
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      loadFixture('core/ast/extractor/enum-resolver/26-resolves-bitwise-or-operation.ts')
+    );
     const varDecl = sourceFile.getVariableDeclarationOrThrow('x');
-    const initializer = varDecl.getInitializer();
-    if (initializer) {
-      const checker = project.getTypeChecker();
-      const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
-      expect(resolved).toBe(3);
-    }
+    const initializer = varDecl.getInitializerOrThrow();
+    const checker = project.getTypeChecker();
+    const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
+    expect(resolved).toBe(3);
   });
 
   test('resolves bitwise shift operation', () => {
     const project = createProject();
-    const sourceFile = project.createSourceFile('test.ts', `const x = 1 << 1;`);
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      loadFixture('core/ast/extractor/enum-resolver/27-resolves-bitwise-shift-operation.ts')
+    );
     const varDecl = sourceFile.getVariableDeclarationOrThrow('x');
-    const initializer = varDecl.getInitializer();
-    if (initializer) {
-      const checker = project.getTypeChecker();
-      const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
-      expect(resolved).toBe(2);
-    }
+    const initializer = varDecl.getInitializerOrThrow();
+    const checker = project.getTypeChecker();
+    const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
+    expect(resolved).toBe(2);
   });
 
   test('resolves enum member with bitwise shift initializer', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const enum IndicatorMode {
-        Dots = 1 << 0,
-        Avatars = 1 << 1
-      }
-      const x = IndicatorMode.Dots;`
+      loadFixture(
+        'core/ast/extractor/enum-resolver/28-resolves-enum-member-with-bitwise-shift-initializer.ts'
+      )
     );
     const varDecl = sourceFile.getVariableDeclarationOrThrow('x');
-    const initializer = varDecl.getInitializer();
-    if (initializer) {
-      const checker = project.getTypeChecker();
-      const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
-      expect(resolved).toBe(1);
-    }
+    const initializer = varDecl.getInitializerOrThrow();
+    const checker = project.getTypeChecker();
+    const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
+    expect(resolved).toBe(1);
   });
 
   test('resolves bitwise OR of enum members', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const enum IndicatorMode {
-        Dots = 1 << 0,
-        Avatars = 1 << 1
-      }
-      const x = IndicatorMode.Dots | IndicatorMode.Avatars;`
+      loadFixture('core/ast/extractor/enum-resolver/29-resolves-bitwise-or-of-enum-members.ts')
     );
     const varDecl = sourceFile.getVariableDeclarationOrThrow('x');
-    const initializer = varDecl.getInitializer();
-    if (initializer) {
-      const checker = project.getTypeChecker();
-      const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
-      expect(resolved).toBe(3);
-    }
+    const initializer = varDecl.getInitializerOrThrow();
+    const checker = project.getTypeChecker();
+    const resolved = unwrapResult(resolveEnumLikeValue(initializer, checker));
+    expect(resolved).toBe(3);
   });
 });

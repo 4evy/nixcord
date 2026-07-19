@@ -1,9 +1,17 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { ModuleKind, Project } from 'ts-morph';
 import { expect } from 'vitest';
 import type { SettingProperties } from '../../src/extractor/type-inference/types.js';
 import { createMinimalProps } from '../../src/extractor/type-inference/types.js';
 
 let cachedProject: Project | undefined;
+const fixturesRoot = fileURLToPath(new URL('../fixtures/', import.meta.url));
+
+export function loadFixture(relativePath: string): string {
+  return readFileSync(resolve(fixturesRoot, relativePath), 'utf8');
+}
 
 export function createProject(): Project {
   if (!cachedProject) {

@@ -1,14 +1,10 @@
 import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import type { ParsedPluginsResult, PluginConfig, Result } from '@nixcord/shared';
 import { CLI_CONFIG } from '@nixcord/shared';
-import fse from 'fs-extra';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { createFixture } from 'fs-fixture';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { GeneratePluginOptionsSummary } from '../../src/runner/index.js';
 import { runGeneratePluginOptions, validateParsedResults } from '../../src/runner/index.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 const mocks = vi.hoisted(() => ({
   parsePlugins: vi.fn(),
@@ -56,16 +52,17 @@ function createLogger() {
   };
 }
 
-async function createRepo(root: string, variant: 'vencord' | 'equicord') {
-  const repoRoot = join(root, variant);
-  const pluginsDir =
-    variant === 'vencord'
-      ? CLI_CONFIG.directories.vencordPlugins
-      : CLI_CONFIG.directories.equicordPlugins;
-  await fse.ensureDir(join(repoRoot, pluginsDir));
-  await fse.writeFile(join(repoRoot, 'package.json'), '{}', 'utf8');
-  return repoRoot;
-}
+const createRepos = () =>
+  createFixture({
+    vencord: {
+      'package.json': '{}',
+      [CLI_CONFIG.directories.vencordPlugins]: {},
+    },
+    equicord: {
+      'package.json': '{}',
+      [CLI_CONFIG.directories.equicordPlugins]: {},
+    },
+  });
 
 function unwrapOk<T, E>(result: Result<T, E>): T {
   if (result.ok) return result.value;
@@ -78,21 +75,15 @@ function unwrapErr<T, E>(result: Result<T, E>): E {
 }
 
 describe('runGeneratePluginOptions', () => {
-  let tempDir: string;
-
-  beforeEach(async () => {
-    tempDir = await fse.mkdtemp(join(__dirname, 'runner-'));
+  beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  afterEach(async () => {
-    await fse.remove(tempDir);
-  });
-
   test('writes all output files and returns summary when both sources are provided', async () => {
+    await using fixture = await createRepos();
     const logger = createLogger();
-    const vencordRepo = await createRepo(tempDir, 'vencord');
-    const equicordRepo = await createRepo(tempDir, 'equicord');
+    const vencordRepo = fixture.getPath('vencord');
+    const equicordRepo = fixture.getPath('equicord');
     const vencordResult = {
       vencordPlugins: { Shared: basePlugin, SoloV: basePlugin },
       equicordPlugins: {},
@@ -109,7 +100,7 @@ describe('runGeneratePluginOptions', () => {
       equicordOnly: { SoloE: basePlugin },
     });
 
-    const outputPath = join(tempDir, 'result', 'modules.nix');
+    const outputPath = fixture.getPath('result', 'modules.nix');
     const result = await runGeneratePluginOptions({
       vencordPath: vencordRepo,
       equicordPath: equicordRepo,
@@ -129,20 +120,22 @@ describe('runGeneratePluginOptions', () => {
       equicordOnlyCount: 1,
     });
 
-    const pluginsDir = summary.pluginsDir;
-    const sharedPath = join(pluginsDir, CLI_CONFIG.filenames.shared);
-    const vencordPath = join(pluginsDir, CLI_CONFIG.filenames.vencord);
-    const equicordPath = join(pluginsDir, CLI_CONFIG.filenames.equicord);
-    const parseRulesPath = join(pluginsDir, CLI_CONFIG.filenames.parseRules);
-    const migrationsPath = join(pluginsDir, CLI_CONFIG.filenames.migrations);
-
-    await expect(fse.readFile(sharedPath, 'utf8')).resolves.toBe('shared:Shared');
-    await expect(fse.readFile(vencordPath, 'utf8')).resolves.toBe('vencord:SoloV');
-    await expect(fse.readFile(equicordPath, 'utf8')).resolves.toBe('equicord:SoloE');
-    await expect(fse.readFile(parseRulesPath, 'utf8')).resolves.toBe('rules');
-    await expect(fse.readFile(migrationsPath, 'utf8')).resolves.toBe(
-      '{"renames":[],"removals":[]}'
-    );
+    const outputDir = join('result', CLI_CONFIG.directories.output);
+    await expect(
+      fixture.readFile(join(outputDir, CLI_CONFIG.filenames.shared), 'utf8')
+    ).resolves.toBe('shared:Shared');
+    await expect(
+      fixture.readFile(join(outputDir, CLI_CONFIG.filenames.vencord), 'utf8')
+    ).resolves.toBe('vencord:SoloV');
+    await expect(
+      fixture.readFile(join(outputDir, CLI_CONFIG.filenames.equicord), 'utf8')
+    ).resolves.toBe('equicord:SoloE');
+    await expect(
+      fixture.readFile(join(outputDir, CLI_CONFIG.filenames.parseRules), 'utf8')
+    ).resolves.toBe('rules');
+    await expect(
+      fixture.readFile(join(outputDir, CLI_CONFIG.filenames.migrations), 'utf8')
+    ).resolves.toBe('{"renames":[],"removals":[]}');
 
     expect(mocks.parsePlugins).toHaveBeenNthCalledWith(1, vencordRepo, {
       vencordPluginsDir: CLI_CONFIG.directories.vencordPlugins,
@@ -156,8 +149,9 @@ describe('runGeneratePluginOptions', () => {
   });
 
   test('skips ora spinner when verbose logging is enabled', async () => {
+    await using fixture = await createRepos();
     const logger = createLogger();
-    const vencordRepo = await createRepo(tempDir, 'vencord');
+    const vencordRepo = fixture.getPath('vencord');
     mocks.parsePlugins.mockResolvedValue({
       vencordPlugins: { Only: basePlugin },
       equicordPlugins: {},
@@ -172,7 +166,7 @@ describe('runGeneratePluginOptions', () => {
       vencordPath: vencordRepo,
       vencordPluginsDir: CLI_CONFIG.directories.vencordPlugins,
       equicordPluginsDir: CLI_CONFIG.directories.equicordPlugins,
-      outputPath: join(tempDir, 'out.nix'),
+      outputPath: fixture.getPath('out.nix'),
       verbose: true,
       logger,
     });
@@ -185,8 +179,9 @@ describe('runGeneratePluginOptions', () => {
   });
 
   test('returns parser diagnostic summary when parsed sources report diagnostics', async () => {
+    await using fixture = await createRepos();
     const logger = createLogger();
-    const vencordRepo = await createRepo(tempDir, 'vencord');
+    const vencordRepo = fixture.getPath('vencord');
     mocks.parsePlugins.mockResolvedValue({
       vencordPlugins: { Only: basePlugin },
       equicordPlugins: {},
@@ -221,7 +216,7 @@ describe('runGeneratePluginOptions', () => {
       vencordPath: vencordRepo,
       vencordPluginsDir: CLI_CONFIG.directories.vencordPlugins,
       equicordPluginsDir: CLI_CONFIG.directories.equicordPlugins,
-      outputPath: join(tempDir, 'out.nix'),
+      outputPath: fixture.getPath('out.nix'),
       logger,
     });
 
@@ -245,8 +240,9 @@ describe('runGeneratePluginOptions', () => {
   });
 
   test('returns error result when validation fails', async () => {
+    await using fixture = await createRepos();
     const logger = createLogger();
-    const vencordRepo = await createRepo(tempDir, 'vencord');
+    const vencordRepo = fixture.getPath('vencord');
     mocks.parsePlugins.mockResolvedValue({
       vencordPlugins: { Broken: { name: 'Broken' } as unknown as PluginConfig },
       equicordPlugins: {},
@@ -256,7 +252,7 @@ describe('runGeneratePluginOptions', () => {
       vencordPath: vencordRepo,
       vencordPluginsDir: CLI_CONFIG.directories.vencordPlugins,
       equicordPluginsDir: CLI_CONFIG.directories.equicordPlugins,
-      outputPath: join(tempDir, 'out.nix'),
+      outputPath: fixture.getPath('out.nix'),
       logger,
     });
 
@@ -265,12 +261,13 @@ describe('runGeneratePluginOptions', () => {
   });
 
   test('fails fast when vencord path is invalid', async () => {
+    await using fixture = await createRepos();
     const logger = createLogger();
     const result = await runGeneratePluginOptions({
-      vencordPath: join(tempDir, 'missing'),
+      vencordPath: fixture.getPath('missing'),
       vencordPluginsDir: CLI_CONFIG.directories.vencordPlugins,
       equicordPluginsDir: CLI_CONFIG.directories.equicordPlugins,
-      outputPath: join(tempDir, 'out.nix'),
+      outputPath: fixture.getPath('out.nix'),
       logger,
     });
 

@@ -8,3 +8,11 @@ export function definePluginSettings<T extends PluginSettings>(settings: T) {
     },
   };
 }
+
+export function migratePluginSettings(_newName: string, ..._oldNames: string[]) {}
+
+export function migratePluginSetting(
+  _pluginName: string,
+  _oldSetting: string,
+  _newSetting: string
+) {}

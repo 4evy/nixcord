@@ -14,7 +14,7 @@ import {
   findDefinePluginCall,
   findDefinePluginSettings,
 } from '../../../../src/navigator/plugin-navigator.js';
-import { createProject } from '../../../helpers/test-utils.js';
+import { createProject, loadFixture } from '../../../helpers/test-utils.js';
 
 describe('node-traversal', () => {
   describe('findAllPropertyAssignments', () => {
@@ -22,7 +22,9 @@ describe('node-traversal', () => {
       const project = createProject();
       const sourceFile = project.createSourceFile(
         'test.ts',
-        `const obj = { prop1: "value1", prop2: "value2", prop3: "value3" };`
+        loadFixture(
+          'core/ast/navigator/navigator/01-finds-all-property-assignments-in-object-literal.ts'
+        )
       );
       const obj = sourceFile.getFirstDescendantByKind(SyntaxKind.ObjectLiteralExpression);
       if (!obj) throw new Error('Expected object literal');
@@ -36,7 +38,10 @@ describe('node-traversal', () => {
 
     test('returns empty array for empty object', () => {
       const project = createProject();
-      const sourceFile = project.createSourceFile('test.ts', `const obj = {};`);
+      const sourceFile = project.createSourceFile(
+        'test.ts',
+        loadFixture('core/ast/navigator/navigator/02-returns-empty-array-for-empty-object.ts')
+      );
       const obj = sourceFile.getFirstDescendantByKind(SyntaxKind.ObjectLiteralExpression);
       if (!obj) throw new Error('Expected object literal');
 
@@ -50,7 +55,7 @@ describe('node-traversal', () => {
       const project = createProject();
       const sourceFile = project.createSourceFile(
         'test.ts',
-        `const obj = { name: "test", value: 42 };`
+        loadFixture('core/ast/navigator/navigator/03-finds-property-assignment-by-name.ts')
       );
       const obj = sourceFile.getFirstDescendantByKind(SyntaxKind.ObjectLiteralExpression);
       if (!obj) throw new Error('Expected object literal');
@@ -62,7 +67,12 @@ describe('node-traversal', () => {
 
     test('returns undefined for non-existent property', () => {
       const project = createProject();
-      const sourceFile = project.createSourceFile('test.ts', `const obj = { name: "test" };`);
+      const sourceFile = project.createSourceFile(
+        'test.ts',
+        loadFixture(
+          'core/ast/navigator/navigator/04-returns-undefined-for-non-existent-property.ts'
+        )
+      );
       const obj = sourceFile.getFirstDescendantByKind(SyntaxKind.ObjectLiteralExpression);
       if (!obj) throw new Error('Expected object literal');
 
@@ -76,7 +86,7 @@ describe('node-traversal', () => {
       const project = createProject();
       const sourceFile = project.createSourceFile(
         'test.ts',
-        `const obj = { outer: { inner: { deep: "value" } } };`
+        loadFixture('core/ast/navigator/navigator/05-finds-nested-object-literals.ts')
       );
       const obj = sourceFile.getFirstDescendantByKind(SyntaxKind.ObjectLiteralExpression);
       if (!obj) throw new Error('Expected object literal');
@@ -87,7 +97,10 @@ describe('node-traversal', () => {
 
     test('includes the root object literal', () => {
       const project = createProject();
-      const sourceFile = project.createSourceFile('test.ts', `const obj = { prop: "value" };`);
+      const sourceFile = project.createSourceFile(
+        'test.ts',
+        loadFixture('core/ast/navigator/navigator/06-includes-the-root-object-literal.ts')
+      );
       const obj = sourceFile.getFirstDescendantByKind(SyntaxKind.ObjectLiteralExpression);
       if (!obj) throw new Error('Expected object literal');
 
@@ -102,7 +115,10 @@ describe('pattern-matcher', () => {
   describe('findCallExpressionByName', () => {
     test('finds call expression by function name', () => {
       const project = createProject();
-      const sourceFile = project.createSourceFile('test.ts', `myFunction(); otherFunction();`);
+      const sourceFile = project.createSourceFile(
+        'test.ts',
+        loadFixture('core/ast/navigator/navigator/07-finds-call-expression-by-function-name.ts')
+      );
 
       const result = findCallExpressionByName(sourceFile, 'myFunction');
       expect(result).toBeDefined();
@@ -115,7 +131,10 @@ describe('pattern-matcher', () => {
 
     test('returns nothing for non-existent function', () => {
       const project = createProject();
-      const sourceFile = project.createSourceFile('test.ts', `myFunction();`);
+      const sourceFile = project.createSourceFile(
+        'test.ts',
+        loadFixture('core/ast/navigator/navigator/08-returns-nothing-for-non-existent-function.ts')
+      );
 
       const result = findCallExpressionByName(sourceFile, 'nonexistent');
       expect(result).toBeUndefined();
@@ -127,7 +146,7 @@ describe('pattern-matcher', () => {
       const project = createProject();
       const sourceFile = project.createSourceFile(
         'test.ts',
-        `original().chainMethod1().chainMethod2();`
+        loadFixture('core/ast/navigator/navigator/09-unwraps-chained-method-calls.ts')
       );
       const callExpr = sourceFile.getFirstDescendantByKind(SyntaxKind.CallExpression);
       if (!callExpr) throw new Error('Expected call expression');
@@ -139,7 +158,10 @@ describe('pattern-matcher', () => {
 
     test('returns original call if no chain found', () => {
       const project = createProject();
-      const sourceFile = project.createSourceFile('test.ts', `myFunction();`);
+      const sourceFile = project.createSourceFile(
+        'test.ts',
+        loadFixture('core/ast/navigator/navigator/10-returns-original-call-if-no-chain-found.ts')
+      );
       const callExpr = sourceFile.getFirstDescendantByKind(SyntaxKind.CallExpression);
       if (!callExpr) throw new Error('Expected call expression');
 
@@ -151,7 +173,10 @@ describe('pattern-matcher', () => {
   describe('findCallExpressionByNameUnwrappingChains', () => {
     test('finds call expression and unwraps chains', () => {
       const project = createProject();
-      const sourceFile = project.createSourceFile('test.ts', `original().withPrivateSettings();`);
+      const sourceFile = project.createSourceFile(
+        'test.ts',
+        loadFixture('core/ast/navigator/navigator/11-finds-call-expression-and-unwraps-chains.ts')
+      );
 
       const result = findCallExpressionByNameUnwrappingChains(sourceFile, 'original', [
         'withPrivateSettings',
@@ -171,7 +196,7 @@ describe('plugin-navigator', () => {
       const project = createProject();
       const sourceFile = project.createSourceFile(
         'test.ts',
-        `export default definePlugin({ name: "Test" });`
+        loadFixture('core/ast/navigator/navigator/12-finds-define-plugin-call.ts')
       );
 
       const result = findDefinePluginCall(sourceFile);
@@ -180,7 +205,12 @@ describe('plugin-navigator', () => {
 
     test('returns nothing when definePlugin not found', () => {
       const project = createProject();
-      const sourceFile = project.createSourceFile('test.ts', `const x = 1;`);
+      const sourceFile = project.createSourceFile(
+        'test.ts',
+        loadFixture(
+          'core/ast/navigator/navigator/13-returns-nothing-when-define-plugin-not-found.ts'
+        )
+      );
 
       const result = findDefinePluginCall(sourceFile);
       expect(result).toBeUndefined();
@@ -192,7 +222,7 @@ describe('plugin-navigator', () => {
       const project = createProject();
       const sourceFile = project.createSourceFile(
         'test.ts',
-        `const settings = definePluginSettings({ option: { type: OptionType.STRING } });`
+        loadFixture('core/ast/navigator/navigator/14-finds-define-plugin-settings-call.ts')
       );
 
       const result = findDefinePluginSettings(sourceFile);
@@ -203,7 +233,7 @@ describe('plugin-navigator', () => {
       const project = createProject();
       const sourceFile = project.createSourceFile(
         'test.ts',
-        `const settings = definePluginSettings({}).withPrivateSettings<{}>();`
+        loadFixture('core/ast/navigator/navigator/15-unwraps-chained-with-private-settings-call.ts')
       );
 
       const result = findDefinePluginSettings(sourceFile);

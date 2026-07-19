@@ -2,20 +2,16 @@ import type { PluginConfig, PluginSetting } from '@nixcord/shared';
 import { SyntaxKind } from 'ts-morph';
 import { describe, expect, test } from 'vitest';
 import { extractSettingsFromObject } from '../../../../../src/extractor/settings-extractor.js';
-import { createProject } from '../../../../helpers/test-utils.js';
+import { createProject, loadFixture } from '../../../../helpers/test-utils.js';
 
 describe('extractSettingsFromObject()', () => {
   test('recursive settings extraction', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const settings = {
-        nested: {
-          type: OptionType.STRING,
-          description: "Nested",
-          default: "value"
-        }
-      };`
+      loadFixture(
+        'core/ast/extractor/settings-extractor/extract-from-object/01-recursive-settings-extraction.ts'
+      )
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('settings')
@@ -31,15 +27,9 @@ describe('extractSettingsFromObject()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const settings = {
-        level1: {
-          level2: {
-            type: OptionType.STRING,
-            description: "Deep",
-            default: "value"
-          }
-        }
-      };`
+      loadFixture(
+        'core/ast/extractor/settings-extractor/extract-from-object/02-handles-deeply-nested-settings-2-levels.ts'
+      )
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('settings')
@@ -59,17 +49,9 @@ describe('extractSettingsFromObject()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const settings = {
-        config: {
-          deep: {
-            deeper: {
-              type: OptionType.NUMBER,
-              description: "Deeply nested setting",
-              default: 42
-            }
-          }
-        }
-      };`
+      loadFixture(
+        'core/ast/extractor/settings-extractor/extract-from-object/03-handles-3-levels-of-nesting.ts'
+      )
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('settings')
@@ -99,29 +81,9 @@ describe('extractSettingsFromObject()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const settings = {
-        group1: {
-          nested1: {
-            type: OptionType.STRING,
-            description: "Nested 1",
-            default: "value1"
-          }
-        },
-        group2: {
-          nested2: {
-            type: OptionType.BOOLEAN,
-            description: "Nested 2",
-            default: true
-          }
-        },
-        group3: {
-          nested3: {
-            type: OptionType.NUMBER,
-            description: "Nested 3",
-            default: 123
-          }
-        }
-      };`
+      loadFixture(
+        'core/ast/extractor/settings-extractor/extract-from-object/04-handles-multiple-nested-groups-at-same-level.ts'
+      )
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('settings')
@@ -150,17 +112,9 @@ describe('extractSettingsFromObject()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const settings = {
-        visible: {
-          type: OptionType.STRING,
-          description: "Visible"
-        },
-        hidden: {
-          type: OptionType.STRING,
-          description: "Hidden",
-          hidden: true
-        }
-      };`
+      loadFixture(
+        'core/ast/extractor/settings-extractor/extract-from-object/05-filters-hidden-at-all-levels.ts'
+      )
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('settings')
@@ -176,13 +130,9 @@ describe('extractSettingsFromObject()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const settings = {
-        setting: {
-          type: OptionType.STRING,
-          description: "Restart needed",
-          restartNeeded: true
-        }
-      };`
+      loadFixture(
+        'core/ast/extractor/settings-extractor/extract-from-object/06-handles-restart-required-in-nested-extraction.ts'
+      )
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('settings')
@@ -198,7 +148,12 @@ describe('extractSettingsFromObject()', () => {
 
   test('handles empty object', () => {
     const project = createProject();
-    const sourceFile = project.createSourceFile('test.ts', `const settings = {};`);
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      loadFixture(
+        'core/ast/extractor/settings-extractor/extract-from-object/07-handles-empty-object.ts'
+      )
+    );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('settings')
       .getInitializerIfKindOrThrow(SyntaxKind.ObjectLiteralExpression);
@@ -212,9 +167,9 @@ describe('extractSettingsFromObject()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const settings = {
-        invalid: "not an object"
-      };`
+      loadFixture(
+        'core/ast/extractor/settings-extractor/extract-from-object/08-handles-non-object-initializers.ts'
+      )
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('settings')
@@ -229,21 +184,9 @@ describe('extractSettingsFromObject()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `function defineDefault<T>(value: T): T { return value; }
-      const settings = {
-        allowLevel: {
-          type: OptionType.COMPONENT,
-          component: () => null,
-          default: defineDefault({
-            error: true,
-            warn: false,
-            trace: false,
-            log: false,
-            info: false,
-            debug: false
-          })
-        }
-      };`
+      loadFixture(
+        'core/ast/extractor/settings-extractor/extract-from-object/09-handles-component-type-with-object-default-console-janitor-pattern.ts'
+      )
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('settings')
@@ -270,12 +213,9 @@ describe('extractSettingsFromObject()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const settings = {
-        userBasedCategoryList: {
-          type: OptionType.CUSTOM,
-          default: {}
-        }
-      };`
+      loadFixture(
+        'core/ast/extractor/settings-extractor/extract-from-object/10-handles-custom-type-with-nested-structure-pin-dms-pattern.ts'
+      )
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('settings')
@@ -300,29 +240,9 @@ describe('extractSettingsFromObject()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const settings = {
-        level1: {
-          level2: {
-            level3: {
-              level4: {
-                type: OptionType.STRING,
-                description: "4 levels deep",
-                default: "deep-value"
-              },
-              level4b: {
-                type: OptionType.NUMBER,
-                description: "Another 4 levels deep",
-                default: 42
-              }
-            },
-            level3b: {
-              type: OptionType.BOOLEAN,
-              description: "3 levels deep",
-              default: true
-            }
-          }
-        }
-      };`
+      loadFixture(
+        'core/ast/extractor/settings-extractor/extract-from-object/11-handles-very-deep-nesting-4-levels.ts'
+      )
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('settings')
@@ -372,15 +292,9 @@ describe('extractSettingsFromObject()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const settings = {
-        valid: {
-          type: OptionType.STRING,
-          description: "Valid setting",
-          default: "value"
-        },
-        invalid: "not an object",
-        alsoInvalid: null
-      };`
+      loadFixture(
+        'core/ast/extractor/settings-extractor/extract-from-object/12-handles-malformed-settings-structure-gracefully.ts'
+      )
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('settings')

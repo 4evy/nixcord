@@ -4,13 +4,22 @@ import {
   getDefaultPropertyInitializer,
   isCustomType,
 } from '../../../../src/extractor/type-helpers.js';
-import { createProject, createSettingProperties } from '../../../helpers/test-utils.js';
+import {
+  createProject,
+  createSettingProperties,
+  loadFixture,
+} from '../../../helpers/test-utils.js';
 
 describe('type-helpers', () => {
   describe('getDefaultPropertyInitializer', () => {
     test('returns default property initializer when exists', () => {
       const project = createProject();
-      const sourceFile = project.createSourceFile('test.ts', `const obj = { default: "value" };`);
+      const sourceFile = project.createSourceFile(
+        'test.ts',
+        loadFixture(
+          'core/ast/extractor/type-helpers/01-returns-default-property-initializer-when-exists.ts'
+        )
+      );
       const obj = sourceFile.getFirstDescendantByKind(SyntaxKind.ObjectLiteralExpression);
       if (!obj) throw new Error('Expected object literal');
 
@@ -21,7 +30,12 @@ describe('type-helpers', () => {
 
     test('returns undefined when default property does not exist', () => {
       const project = createProject();
-      const sourceFile = project.createSourceFile('test.ts', `const obj = { prop: "value" };`);
+      const sourceFile = project.createSourceFile(
+        'test.ts',
+        loadFixture(
+          'core/ast/extractor/type-helpers/02-returns-undefined-when-default-property-does-not-exist.ts'
+        )
+      );
       const obj = sourceFile.getFirstDescendantByKind(SyntaxKind.ObjectLiteralExpression);
       if (!obj) throw new Error('Expected object literal');
 
@@ -35,7 +49,7 @@ describe('type-helpers', () => {
       const project = createProject();
       const sourceFile = project.createSourceFile(
         'test.ts',
-        `const obj = { type: OptionType.CUSTOM };`
+        loadFixture('core/ast/extractor/type-helpers/03-returns-true-for-custom-type-property.ts')
       );
       const obj = sourceFile.getFirstDescendantByKind(SyntaxKind.ObjectLiteralExpression);
       if (!obj) throw new Error('Expected object literal');
@@ -48,15 +62,14 @@ describe('type-helpers', () => {
 
       const props = createSettingProperties({ typeNode });
       const result = isCustomType(obj, props);
-      // Note: This may return false if OptionType.CUSTOM is not resolved, but the function should handle it
-      expect(typeof result).toBe('boolean');
+      expect(result).toBe(true);
     });
 
     test('returns false for non-CUSTOM type', () => {
       const project = createProject();
       const sourceFile = project.createSourceFile(
         'test.ts',
-        `const obj = { type: OptionType.STRING };`
+        loadFixture('core/ast/extractor/type-helpers/04-returns-false-for-non-custom-type.ts')
       );
       const obj = sourceFile.getFirstDescendantByKind(SyntaxKind.ObjectLiteralExpression);
       if (!obj) throw new Error('Expected object literal');

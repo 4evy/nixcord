@@ -1,20 +1,16 @@
 import { SyntaxKind } from 'ts-morph';
 import { describe, expect, test } from 'vitest';
 import { resolveDefaultValue } from '../../../../src/extractor/default-value-resolution.js';
-import { createProject } from '../../../helpers/test-utils.js';
+import { createProject, loadFixture } from '../../../helpers/test-utils.js';
 
 describe('resolveDefaultValue', () => {
   test('resolves default for enum type without explicit default', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const setting = {
-        type: OptionType.SELECT,
-        options: [
-          { value: "option1", label: "Option 1" },
-          { value: "option2", label: "Option 2" }
-        ]
-      };`
+      loadFixture(
+        'core/ast/extractor/default-value-resolution/01-resolves-default-for-enum-type-without-explicit-default.ts'
+      )
     );
     const obj = sourceFile.getFirstDescendantByKind(SyntaxKind.ObjectLiteralExpression);
     if (!obj) throw new Error('Expected object literal');
@@ -36,7 +32,9 @@ describe('resolveDefaultValue', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const setting = { type: OptionType.STRING };`
+      loadFixture(
+        'core/ast/extractor/default-value-resolution/02-resolves-null-default-for-nullable-string-type.ts'
+      )
     );
     const obj = sourceFile.getFirstDescendantByKind(SyntaxKind.ObjectLiteralExpression);
     if (!obj) throw new Error('Expected object literal');
@@ -52,7 +50,9 @@ describe('resolveDefaultValue', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const setting = { type: OptionType.BOOLEAN };`
+      loadFixture(
+        'core/ast/extractor/default-value-resolution/03-resolves-false-default-for-boolean-type-without-explicit-default.ts'
+      )
     );
     const obj = sourceFile.getFirstDescendantByKind(SyntaxKind.ObjectLiteralExpression);
     if (!obj) throw new Error('Expected object literal');
@@ -68,7 +68,9 @@ describe('resolveDefaultValue', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const setting = { type: OptionType.STRING, default: "explicit" };`
+      loadFixture(
+        'core/ast/extractor/default-value-resolution/04-preserves-explicit-default-value.ts'
+      )
     );
     const obj = sourceFile.getFirstDescendantByKind(SyntaxKind.ObjectLiteralExpression);
     if (!obj) throw new Error('Expected object literal');
@@ -84,7 +86,9 @@ describe('resolveDefaultValue', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const setting = { type: OptionType.COMPONENT };`
+      loadFixture(
+        'core/ast/extractor/default-value-resolution/05-resolves-empty-object-default-for-attrs-type-without-default.ts'
+      )
     );
     const obj = sourceFile.getFirstDescendantByKind(SyntaxKind.ObjectLiteralExpression);
     if (!obj) throw new Error('Expected object literal');

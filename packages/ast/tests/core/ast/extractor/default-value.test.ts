@@ -1,14 +1,14 @@
 import { SyntaxKind } from 'ts-morph';
 import { describe, expect, test } from 'vitest';
 import { extractDefaultValue } from '../../../../src/extractor/default-value.js';
-import { createProject, unwrapResult } from '../../../helpers/test-utils.js';
+import { createProject, loadFixture, unwrapResult } from '../../../helpers/test-utils.js';
 
 describe('extractDefaultValue()', () => {
   test('BigInt literal -> integer string', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const obj = { default: 1026532993923293184n };`
+      loadFixture('core/ast/extractor/default-value/01-big-int-literal-integer-string.ts')
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
@@ -22,12 +22,9 @@ describe('extractDefaultValue()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `
-      const DEFAULT_KEYS = ["Ctrl", "K"] as const;
-      const DEFAULT_OBJ = { a: 1, b: "two" } as const;
-      const arr = { default: DEFAULT_KEYS };
-      const obj = { default: DEFAULT_OBJ };
-    `
+      loadFixture(
+        'core/ast/extractor/default-value/02-identifier-default-resolving-to-array-object.ts'
+      )
     );
     const arrLiteral = sourceFile
       .getVariableDeclarationOrThrow('arr')
@@ -46,7 +43,7 @@ describe('extractDefaultValue()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const obj = { default: "test-value" };`
+      loadFixture('core/ast/extractor/default-value/03-string-literals.ts')
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
@@ -58,7 +55,10 @@ describe('extractDefaultValue()', () => {
 
   test('numeric literals (integers)', () => {
     const project = createProject();
-    const sourceFile = project.createSourceFile('test.ts', `const obj = { default: 42 };`);
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      loadFixture('core/ast/extractor/default-value/04-numeric-literals-integers.ts')
+    );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
       .getInitializerIfKindOrThrow(SyntaxKind.ObjectLiteralExpression);
@@ -69,7 +69,10 @@ describe('extractDefaultValue()', () => {
 
   test('numeric literals (floats)', () => {
     const project = createProject();
-    const sourceFile = project.createSourceFile('test.ts', `const obj = { default: 3.14 };`);
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      loadFixture('core/ast/extractor/default-value/05-numeric-literals-floats.ts')
+    );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
       .getInitializerIfKindOrThrow(SyntaxKind.ObjectLiteralExpression);
@@ -80,7 +83,10 @@ describe('extractDefaultValue()', () => {
 
   test('boolean true', () => {
     const project = createProject();
-    const sourceFile = project.createSourceFile('test.ts', `const obj = { default: true };`);
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      loadFixture('core/ast/extractor/default-value/06-boolean-true.ts')
+    );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
       .getInitializerIfKindOrThrow(SyntaxKind.ObjectLiteralExpression);
@@ -91,7 +97,10 @@ describe('extractDefaultValue()', () => {
 
   test('boolean false', () => {
     const project = createProject();
-    const sourceFile = project.createSourceFile('test.ts', `const obj = { default: false };`);
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      loadFixture('core/ast/extractor/default-value/07-boolean-false.ts')
+    );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
       .getInitializerIfKindOrThrow(SyntaxKind.ObjectLiteralExpression);
@@ -102,7 +111,10 @@ describe('extractDefaultValue()', () => {
 
   test('null keyword', () => {
     const project = createProject();
-    const sourceFile = project.createSourceFile('test.ts', `const obj = { default: null };`);
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      loadFixture('core/ast/extractor/default-value/08-null-keyword.ts')
+    );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
       .getInitializerIfKindOrThrow(SyntaxKind.ObjectLiteralExpression);
@@ -113,7 +125,10 @@ describe('extractDefaultValue()', () => {
 
   test('undefined keyword', () => {
     const project = createProject();
-    const sourceFile = project.createSourceFile('test.ts', `const obj = { default: undefined };`);
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      loadFixture('core/ast/extractor/default-value/09-undefined-keyword.ts')
+    );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
       .getInitializerIfKindOrThrow(SyntaxKind.ObjectLiteralExpression);
@@ -125,7 +140,10 @@ describe('extractDefaultValue()', () => {
 
   test('array literals []', () => {
     const project = createProject();
-    const sourceFile = project.createSourceFile('test.ts', `const obj = { default: [] };`);
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      loadFixture('core/ast/extractor/default-value/10-array-literals.ts')
+    );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
       .getInitializerIfKindOrThrow(SyntaxKind.ObjectLiteralExpression);
@@ -137,19 +155,24 @@ describe('extractDefaultValue()', () => {
 
   test('object literals {}', () => {
     const project = createProject();
-    const sourceFile = project.createSourceFile('test.ts', `const obj = { default: {} };`);
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      loadFixture('core/ast/extractor/default-value/11-object-literals.ts')
+    );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
       .getInitializerIfKindOrThrow(SyntaxKind.ObjectLiteralExpression);
     const checker = project.getTypeChecker();
     const result = unwrapResult(extractDefaultValue(objLiteral, checker));
-    expect(typeof result).toBe('object');
     expect(result).toEqual({});
   });
 
   test('property access expressions (ignored)', () => {
     const project = createProject();
-    const sourceFile = project.createSourceFile('test.ts', `const obj = { default: someValue };`);
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      loadFixture('core/ast/extractor/default-value/12-property-access-expressions-ignored.ts')
+    );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
       .getInitializerIfKindOrThrow(SyntaxKind.ObjectLiteralExpression);
@@ -160,7 +183,10 @@ describe('extractDefaultValue()', () => {
 
   test('get() function calls (return undefined)', () => {
     const project = createProject();
-    const sourceFile = project.createSourceFile('test.ts', `const obj = { default: get("key") };`);
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      loadFixture('core/ast/extractor/default-value/13-get-function-calls-return-undefined.ts')
+    );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
       .getInitializerIfKindOrThrow(SyntaxKind.ObjectLiteralExpression);
@@ -173,12 +199,9 @@ describe('extractDefaultValue()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const getDefaultVoice = () => ({ voiceURI: "test-voice" });
-      const obj = {
-        get default() {
-          return getDefaultVoice()?.voiceURI;
-        }
-      };`
+      loadFixture(
+        'core/ast/extractor/default-value/14-computed-defaults-with-getters-return-undefined.ts'
+      )
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
@@ -191,7 +214,10 @@ describe('extractDefaultValue()', () => {
 
   test('handles missing default property', () => {
     const project = createProject();
-    const sourceFile = project.createSourceFile('test.ts', `const obj = { type: "STRING" };`);
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      loadFixture('core/ast/extractor/default-value/15-handles-missing-default-property.ts')
+    );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
       .getInitializerIfKindOrThrow(SyntaxKind.ObjectLiteralExpression);
@@ -204,7 +230,9 @@ describe('extractDefaultValue()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const obj = { default: defineDefault({ a: 1, b: "two" }) };`
+      loadFixture(
+        'core/ast/extractor/default-value/16-handles-nested-object-literal-in-function-call.ts'
+      )
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
@@ -218,7 +246,7 @@ describe('extractDefaultValue()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const obj = { default: (("test" as string) as any) };`
+      loadFixture('core/ast/extractor/default-value/17-handles-complex-nested-type-assertion.ts')
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
@@ -232,7 +260,9 @@ describe('extractDefaultValue()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const UNDEF = undefined; const obj = { default: UNDEF };`
+      loadFixture(
+        'core/ast/extractor/default-value/18-handles-identifier-resolving-to-undefined-keyword.ts'
+      )
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
@@ -246,8 +276,7 @@ describe('extractDefaultValue()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const Methods = { Random: 0, Constant: 1 } as const;
-      const obj = { default: Methods.Random };`
+      loadFixture('core/ast/extractor/default-value/19-handles-property-access-with-as-const.ts')
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
@@ -261,31 +290,25 @@ describe('extractDefaultValue()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const makeDefault = () => ({ a: 1, b: "two" });
-      const obj = { default: makeDefault() };`
+      loadFixture(
+        'core/ast/extractor/default-value/20-handles-function-call-returning-object-literal.ts'
+      )
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
       .getInitializerIfKindOrThrow(SyntaxKind.ObjectLiteralExpression);
     const checker = project.getTypeChecker();
     const result = unwrapResult(extractDefaultValue(objLiteral, checker));
-    // Should extract shape-only default (object) - function calls can resolve if arrow function body is available
-    expect(typeof result).toBe('object');
-    if (!result || typeof result !== 'object' || result === null) {
-      // Or may be undefined if function can't be resolved
-      expect(result).toBeUndefined();
-      return;
-    }
-    // Function call may resolve to actual object if it's an arrow function, or empty object if not
-    expect(Array.isArray(result)).toBe(false);
+    expect(result).toEqual({});
   });
 
   test('handles function call returning array literal', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const makeArray = () => [1, 2, 3];
-      const obj = { default: makeArray() };`
+      loadFixture(
+        'core/ast/extractor/default-value/21-handles-function-call-returning-array-literal.ts'
+      )
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
@@ -301,7 +324,9 @@ describe('extractDefaultValue()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      'const obj = { default: `simple-template` };'
+      loadFixture(
+        'core/ast/extractor/default-value/22-handles-simple-template-literal-without-substitutions.ts'
+      )
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
@@ -315,7 +340,9 @@ describe('extractDefaultValue()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      'const value = "test"; const obj = { default: `value-${value}` };'
+      loadFixture(
+        'core/ast/extractor/default-value/23-handles-template-expression-with-substitutions-returns-undefined.ts'
+      )
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
@@ -330,7 +357,9 @@ describe('extractDefaultValue()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      'const obj = { default: `template` as string };'
+      loadFixture(
+        'core/ast/extractor/default-value/24-handles-template-literal-in-as-expression.ts'
+      )
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
@@ -344,7 +373,9 @@ describe('extractDefaultValue()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const obj = { default: defineDefault({ [Symbol.iterator]: "test" }) };`
+      loadFixture(
+        'core/ast/extractor/default-value/25-handles-function-call-with-object-literal-containing-computed-property.ts'
+      )
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
@@ -359,7 +390,9 @@ describe('extractDefaultValue()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const obj = { default: defineDefault({ prop: () => {} }) };`
+      loadFixture(
+        'core/ast/extractor/default-value/26-handles-function-call-with-object-literal-containing-unsupported-prope.ts'
+      )
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
@@ -374,8 +407,9 @@ describe('extractDefaultValue()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const makeString = () => "test";
-      const obj = { default: makeString() };`
+      loadFixture(
+        'core/ast/extractor/default-value/27-handles-function-call-returning-non-array-non-object-literal.ts'
+      )
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
@@ -390,24 +424,23 @@ describe('extractDefaultValue()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const makeDefault = () => ({ a: 1 });
-      const obj = { default: makeDefault() };`
+      loadFixture('core/ast/extractor/default-value/28-handles-function-call-with-no-arguments.ts')
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
       .getInitializerIfKindOrThrow(SyntaxKind.ObjectLiteralExpression);
     const checker = project.getTypeChecker();
     const result = unwrapResult(extractDefaultValue(objLiteral, checker));
-    // Function call with no args should try to resolve via call resolver
-    expect(result === undefined || (typeof result === 'object' && result !== null)).toBe(true);
+    expect(result).toEqual({});
   });
 
   test('handles identifier resolving to unexpected node kind', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const FUNC = () => {};
-      const obj = { default: FUNC };`
+      loadFixture(
+        'core/ast/extractor/default-value/29-handles-identifier-resolving-to-unexpected-node-kind.ts'
+      )
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')

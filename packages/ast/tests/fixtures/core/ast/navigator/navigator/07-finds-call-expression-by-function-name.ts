@@ -1,0 +1,2 @@
+myFunction();
+otherFunction();

@@ -2,7 +2,7 @@ import fc from 'fast-check';
 import { SyntaxKind } from 'ts-morph';
 import { describe, expect, test } from 'vitest';
 import { tsTypeToNixType } from '../../../src/parser.js';
-import { createProject } from '../../helpers/test-utils.js';
+import { createProject, loadFixture } from '../../helpers/test-utils.js';
 
 const optionTypeCases = [
   { name: 'STRING', expected: 'types.str' },
@@ -46,31 +46,12 @@ describe('tsTypeToNixType()', () => {
     expect(result.nixType).toBe('types.float');
   });
 
-  test('PropertyAccessExpression types (enum)', () => {
+  test('NumericLiteral types', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const obj = { type: OptionType.BOOLEAN };`
+      loadFixture('core/ast/parser/01-numeric-literal-types.ts')
     );
-    const objLiteral = sourceFile
-      .getVariableDeclarationOrThrow('obj')
-      .getInitializerIfKindOrThrow(SyntaxKind.ObjectLiteralExpression);
-    const typeProp = objLiteral.getProperty('type');
-    const typeNode = typeProp?.asKind(SyntaxKind.PropertyAssignment)?.getInitializer();
-    const checker = project.getTypeChecker();
-    const program = project.getProgram();
-    if (!typeNode) {
-      throw new Error('Type node not found');
-    }
-    const result = tsTypeToNixType({ type: typeNode }, program, checker);
-    // Since OptionType is not defined, it should fall back to default inference
-    // We'll check that it handles the node correctly
-    expect(result.nixType).toBeDefined();
-  });
-
-  test('NumericLiteral types', () => {
-    const project = createProject();
-    const sourceFile = project.createSourceFile('test.ts', `const obj = { type: 0 };`);
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
       .getInitializerIfKindOrThrow(SyntaxKind.ObjectLiteralExpression);
@@ -97,10 +78,7 @@ describe('tsTypeToNixType()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `enum OptionType {
-        BOOLEAN = 3
-      }
-      const obj = { type: OptionType.BOOLEAN };`
+      loadFixture('core/ast/parser/02-option-type-map-mapping-boolean.ts')
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
@@ -121,10 +99,7 @@ describe('tsTypeToNixType()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `enum OptionType {
-        STRING = 0
-      }
-      const obj = { type: OptionType.STRING };`
+      loadFixture('core/ast/parser/03-option-type-map-mapping-string.ts')
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
@@ -144,10 +119,7 @@ describe('tsTypeToNixType()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `enum OptionType {
-        NUMBER = 1
-      }
-      const obj = { type: OptionType.NUMBER, default: 42 };`
+      loadFixture('core/ast/parser/04-option-type-map-mapping-number.ts')
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
@@ -189,17 +161,7 @@ describe('tsTypeToNixType()', () => {
       program,
       checker
     );
-    // SELECT maps to enum, but needs enum values
-    expect(result.nixType).toBeDefined();
-  });
-
-  test('OptionTypeMap mapping - SLIDER', () => {
-    const project = createProject();
-    const checker = project.getTypeChecker();
-    const program = project.getProgram();
-    // SLIDER is 5, which maps to FLOAT
-    const result = tsTypeToNixType({ type: undefined }, program, checker);
-    expect(result.nixType).toBe('types.str');
+    expect(result.nixType).toBe('types.enum');
   });
 
   test('OptionTypeMap mapping - COMPONENT', () => {
@@ -222,12 +184,7 @@ describe('tsTypeToNixType()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `enum OptionType {
-        STRING = 0,
-        NUMBER = 1,
-        CUSTOM = 7,
-      }
-      const obj = { type: OptionType.NUMBER | OptionType.CUSTOM, default: 42 };`
+      loadFixture('core/ast/parser/05-prefers-concrete-option-type-when-unioned-with-custom.ts')
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
@@ -247,10 +204,7 @@ describe('tsTypeToNixType()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `enum OptionType {
-        BIGINT = 2
-      }
-      const obj = { type: OptionType.BIGINT };`
+      loadFixture('core/ast/parser/06-option-type-map-mapping-bigint.ts')
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
@@ -271,10 +225,7 @@ describe('tsTypeToNixType()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `enum OptionType {
-        BOOLEAN = 3
-      }
-      const obj = { type: OptionType.BOOLEAN };`
+      loadFixture('core/ast/parser/07-handles-enum-member-resolution-numeric.ts')
     );
     const objLiteral = sourceFile
       .getVariableDeclarationOrThrow('obj')
@@ -288,47 +239,6 @@ describe('tsTypeToNixType()', () => {
     }
     const result = tsTypeToNixType({ type: typeNode }, program, checker);
     expect(result.nixType).toBe('types.bool');
-  });
-
-  test('handles enum member resolution (string)', () => {
-    const project = createProject();
-    const sourceFile = project.createSourceFile(
-      'test.ts',
-      `enum OptionType {
-        STRING = "STRING"
-      }
-      const obj = { type: OptionType.STRING };`
-    );
-    const objLiteral = sourceFile
-      .getVariableDeclarationOrThrow('obj')
-      .getInitializerIfKindOrThrow(SyntaxKind.ObjectLiteralExpression);
-    const typeProp = objLiteral.getProperty('type');
-    const typeNode = typeProp?.asKind(SyntaxKind.PropertyAssignment)?.getInitializer();
-    const checker = project.getTypeChecker();
-    const program = project.getProgram();
-    if (!typeNode) {
-      throw new Error('Type node not found');
-    }
-    const result = tsTypeToNixType({ type: typeNode }, program, checker);
-    // String enums may not resolve correctly, but should not crash
-    expect(result.nixType).toBeDefined();
-  });
-
-  test('handles Identifier types', () => {
-    const project = createProject();
-    const sourceFile = project.createSourceFile('test.ts', `const obj = { type: SomeType };`);
-    const objLiteral = sourceFile
-      .getVariableDeclarationOrThrow('obj')
-      .getInitializerIfKindOrThrow(SyntaxKind.ObjectLiteralExpression);
-    const typeProp = objLiteral.getProperty('type');
-    const typeNode = typeProp?.asKind(SyntaxKind.PropertyAssignment)?.getInitializer();
-    const checker = project.getTypeChecker();
-    const program = project.getProgram();
-    if (!typeNode) {
-      throw new Error('Type node not found');
-    }
-    const result = tsTypeToNixType({ type: typeNode }, program, checker);
-    expect(result.nixType).toBeDefined();
   });
 
   test('handles object default for CUSTOM/COMPONENT', () => {
@@ -349,20 +259,10 @@ describe('tsTypeToNixType()', () => {
         const project = createProject();
         const sourceFile = project.createSourceFile(
           'test.ts',
-          `enum OptionType {
-            STRING,
-            NUMBER,
-            BIGINT,
-            BOOLEAN,
-            SELECT,
-            SLIDER,
-            COMPONENT,
-            CUSTOM
-          }
-          const obj = { type: OptionType.${name} };`
+          loadFixture('core/ast/parser/option-type-enum-members.ts')
         );
         const objLiteral = sourceFile
-          .getVariableDeclarationOrThrow('obj')
+          .getVariableDeclarationOrThrow(name)
           .getInitializerIfKindOrThrow(SyntaxKind.ObjectLiteralExpression);
         const typeNode = objLiteral
           .getProperty('type')

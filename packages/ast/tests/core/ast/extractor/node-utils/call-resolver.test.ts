@@ -1,154 +1,49 @@
 import { SyntaxKind } from 'ts-morph';
 import { describe, expect, test } from 'vitest';
 import { resolveCallExpressionReturn } from '../../../../../src/foundation/index.js';
-import { createProject } from '../../../../helpers/test-utils.js';
+import { createProject, loadFixture } from '../../../../helpers/test-utils.js';
+
+const cases = [
+  {
+    name: 'resolves an arrow function object body',
+    fixture: 'core/ast/extractor/node-utils/call-resolver/arrow-object.ts',
+    kind: SyntaxKind.ObjectLiteralExpression,
+  },
+  {
+    name: 'resolves an arrow function array body',
+    fixture: 'core/ast/extractor/node-utils/call-resolver/arrow-array.ts',
+    kind: SyntaxKind.ArrayLiteralExpression,
+  },
+  {
+    name: 'rejects a non-call expression',
+    fixture: 'core/ast/extractor/node-utils/call-resolver/non-call.ts',
+    kind: undefined,
+  },
+  {
+    name: 'rejects an unresolved function',
+    fixture: 'core/ast/extractor/node-utils/call-resolver/unresolved.ts',
+    kind: undefined,
+  },
+  {
+    name: 'resolves through same-file symbol lookup',
+    fixture: 'core/ast/extractor/node-utils/call-resolver/same-file.ts',
+    kind: SyntaxKind.ObjectLiteralExpression,
+  },
+  {
+    name: 'does not execute a function declaration',
+    fixture: 'core/ast/extractor/node-utils/call-resolver/function-declaration.ts',
+    kind: undefined,
+  },
+] as const;
 
 describe('resolveCallExpressionReturn()', () => {
-  test('resolves arrow function call to body', () => {
+  test.each(cases)('$name', ({ fixture, kind }) => {
     const project = createProject();
-    const sourceFile = project.createSourceFile(
-      'test.ts',
-      `const fn = () => ({ a: 1 }); const x = fn();`
-    );
-    const varDecl = sourceFile.getVariableDeclarationOrThrow('x');
-    const initializer = varDecl.getInitializer();
-    expect(initializer?.getKind()).toBe(SyntaxKind.CallExpression);
-    if (initializer) {
-      const checker = project.getTypeChecker();
-      const resolved = resolveCallExpressionReturn(initializer, checker);
-      expect(resolved).toBeDefined();
-      const node = resolved;
-      expect(node?.getKind()).toBe(SyntaxKind.ObjectLiteralExpression);
-    }
-  });
+    const sourceFile = project.createSourceFile('test.ts', loadFixture(fixture));
+    const initializer = sourceFile.getVariableDeclarationOrThrow('x').getInitializerOrThrow();
 
-  test('resolves arrow function returning array', () => {
-    const project = createProject();
-    const sourceFile = project.createSourceFile(
-      'test.ts',
-      `const fn = () => [1, 2, 3]; const x = fn();`
-    );
-    const varDecl = sourceFile.getVariableDeclarationOrThrow('x');
-    const initializer = varDecl.getInitializer();
-    if (initializer) {
-      const checker = project.getTypeChecker();
-      const resolved = resolveCallExpressionReturn(initializer, checker);
-      expect(resolved).toBeDefined();
-      const node = resolved;
-      expect(node?.getKind()).toBe(SyntaxKind.ArrayLiteralExpression);
-    }
-  });
+    const resolved = resolveCallExpressionReturn(initializer, project.getTypeChecker());
 
-  test('returns undefined for non-call expression', () => {
-    const project = createProject();
-    const sourceFile = project.createSourceFile('test.ts', `const x = 42;`);
-    const varDecl = sourceFile.getVariableDeclarationOrThrow('x');
-    const initializer = varDecl.getInitializer();
-    if (initializer) {
-      const checker = project.getTypeChecker();
-      const resolved = resolveCallExpressionReturn(initializer, checker);
-      expect(resolved).toBeUndefined();
-    }
-  });
-
-  test('returns undefined for unresolved function', () => {
-    const project = createProject();
-    const sourceFile = project.createSourceFile('test.ts', `const x = unknownFunc();`);
-    const varDecl = sourceFile.getVariableDeclarationOrThrow('x');
-    const initializer = varDecl.getInitializer();
-    if (initializer) {
-      const checker = project.getTypeChecker();
-      const resolved = resolveCallExpressionReturn(initializer, checker);
-      expect(resolved).toBeUndefined();
-    }
-  });
-
-  test('handles arrow function call with same-file lookup fallback', () => {
-    const project = createProject();
-    const sourceFile = project.createSourceFile(
-      'test.ts',
-      `const makeObj = () => ({ a: 1 });
-      const x = makeObj();`
-    );
-    const varDecl = sourceFile.getVariableDeclarationOrThrow('x');
-    const initializer = varDecl.getInitializer();
-    if (initializer) {
-      const checker = project.getTypeChecker();
-      const resolved = resolveCallExpressionReturn(initializer, checker);
-      // Should use same-file lookup fallback
-      expect(resolved).toBeDefined();
-      const node = resolved;
-      expect(node?.getKind()).toBe(SyntaxKind.ObjectLiteralExpression);
-    }
-  });
-
-  test('handles function declaration call (returns nothing)', () => {
-    const project = createProject();
-    const sourceFile = project.createSourceFile(
-      'test.ts',
-      `function makeObj() { return { a: 1 }; }
-      const x = makeObj();`
-    );
-    const varDecl = sourceFile.getVariableDeclarationOrThrow('x');
-    const initializer = varDecl.getInitializer();
-    if (initializer) {
-      const checker = project.getTypeChecker();
-      const resolved = resolveCallExpressionReturn(initializer, checker);
-      // Function declarations are too complex, should return undefined
-      expect(resolved).toBeUndefined();
-    }
-  });
-
-  test('handles arrow function with undefined literal body', () => {
-    const project = createProject();
-    const sourceFile = project.createSourceFile(
-      'test.ts',
-      `const fn = () => undefined;
-      const x = fn();`
-    );
-    const varDecl = sourceFile.getVariableDeclarationOrThrow('x');
-    const initializer = varDecl.getInitializer();
-    if (initializer) {
-      const checker = project.getTypeChecker();
-      const resolved = resolveCallExpressionReturn(initializer, checker);
-      // Arrow function with undefined literal body may still resolve to undefined keyword
-      // This is acceptable behavior - both undefined and a node are valid outcomes
-      expect(resolved === undefined || resolved !== undefined).toBe(true);
-    }
-  });
-
-  test('handles aliased symbol resolution', () => {
-    const project = createProject();
-    const sourceFile = project.createSourceFile(
-      'test.ts',
-      `import { makeObj as importedMakeObj } from "./other";
-      const makeObj = importedMakeObj;
-      const x = makeObj();`
-    );
-    const varDecl = sourceFile.getVariableDeclarationOrThrow('x');
-    const initializer = varDecl.getInitializer();
-    if (initializer) {
-      const checker = project.getTypeChecker();
-      const resolved = resolveCallExpressionReturn(initializer, checker);
-      // Aliased symbols should be handled via getAliasedSymbol() fallback
-      expect(resolved === undefined || resolved !== undefined).toBe(true);
-    }
-  });
-
-  test('handles property access call expression (member call)', () => {
-    const project = createProject();
-    const sourceFile = project.createSourceFile(
-      'test.ts',
-      `const obj = { method: () => ({ a: 1 }) };
-      const x = obj.method();`
-    );
-    const varDecl = sourceFile.getVariableDeclarationOrThrow('x');
-    const initializer = varDecl.getInitializer();
-    if (initializer) {
-      const checker = project.getTypeChecker();
-      const resolved = resolveCallExpressionReturn(initializer, checker);
-      // Property access calls may resolve differently
-      expect(resolved === undefined || resolved !== undefined).toBe(true);
-    }
+    expect(resolved?.getKind()).toBe(kind);
   });
 });

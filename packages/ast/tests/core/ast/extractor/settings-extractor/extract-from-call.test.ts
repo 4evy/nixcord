@@ -6,33 +6,16 @@ import {
   extractSettingsFromCallDetailed,
 } from '../../../../../src/extractor/settings-extractor.js';
 import { findDefinePluginSettings } from '../../../../../src/navigator/plugin-navigator.js';
-import { createProject } from '../../../../helpers/test-utils.js';
+import { createProject, loadFixture } from '../../../../helpers/test-utils.js';
 
 describe('extractSettingsFromCall()', () => {
   test('extracts simple settings', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `export const enum OptionType {
-        STRING = 0,
-        NUMBER = 1,
-        BIGINT = 2,
-        BOOLEAN = 3,
-        SELECT = 4,
-        SLIDER = 5,
-        COMPONENT = 6,
-        CUSTOM = 7
-      }
-      function definePluginSettings(settings: Record<string, unknown>) {
-        return settings;
-      }
-      definePluginSettings({
-        setting1: {
-          type: OptionType.STRING,
-          description: "Setting 1",
-          default: "value1"
-        }
-      });`
+      loadFixture(
+        'core/ast/extractor/settings-extractor/extract-from-call/01-extracts-simple-settings.ts'
+      )
     );
     const callExpr = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)[0];
     if (!callExpr) {
@@ -52,34 +35,9 @@ describe('extractSettingsFromCall()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `export const enum OptionType {
-         STRING = 0,
-         NUMBER = 1,
-         BIGINT = 2,
-         BOOLEAN = 3,
-         SELECT = 4,
-         SLIDER = 5,
-         COMPONENT = 6,
-         CUSTOM = 7
-       }
-       function definePluginSettings(settings: Record<string, unknown>) {
-         return settings;
-       }
-       const enum Spacing {
-         COMPACT,
-         COZY
-       }
-       definePluginSettings({
-         iconSpacing: {
-           type: OptionType.SELECT,
-           description: "Spacing",
-           options: [
-             { label: "Compact", value: Spacing.COMPACT },
-             { label: "Cozy", value: Spacing.COZY }
-           ],
-           default: Spacing.COZY
-         }
-       });`
+      loadFixture(
+        'core/ast/extractor/settings-extractor/extract-from-call/02-emits-numeric-enum-literals-for-select-options.ts'
+      )
     );
     const callExpr = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)[0];
     if (!callExpr) throw new Error('Call expression not found');
@@ -95,37 +53,9 @@ describe('extractSettingsFromCall()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `export const enum OptionType {
-         STRING = 0,
-         NUMBER = 1,
-         BIGINT = 2,
-         BOOLEAN = 3,
-         SELECT = 4,
-         SLIDER = 5,
-         COMPONENT = 6,
-         CUSTOM = 7
-       }
-       function definePluginSettings(settings: Record<string, unknown>) {
-         return settings;
-       }
-       const Quality = {
-         High: 1,
-         Reasonable: 2,
-         Low: 3,
-         Horrible: 4,
-       } as const;
-       definePluginSettings({
-         gifQuality: {
-           type: OptionType.SELECT,
-           description: "GIF quality",
-           options: [
-             { label: "High", value: Quality.High, default: true },
-             { label: "Reasonable", value: Quality.Reasonable },
-             { label: "Low", value: Quality.Low },
-             { label: "Horrible", value: Quality.Horrible }
-           ]
-         }
-       });`
+      loadFixture(
+        'core/ast/extractor/settings-extractor/extract-from-call/03-extracts-select-options-from-const-object-property-access-values.ts'
+      )
     );
     const callExpr = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)[0];
     if (!callExpr) throw new Error('Call expression not found');
@@ -142,18 +72,9 @@ describe('extractSettingsFromCall()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `import { definePluginSettings, OptionType } from "@utils/types";
-       const settings = definePluginSettings({
-         automodEmbeds: {
-           type: OptionType.SELECT,
-           description: "Embeds",
-           options: [
-             { label: "Always", value: "always" },
-             { label: "Never", value: "never" }
-           ],
-           default: "always"
-         }
-       });`
+      loadFixture(
+        'core/ast/extractor/settings-extractor/extract-from-call/04-keeps-string-literal-enums-as-strings.ts'
+      )
     );
     const callExpr = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)[0];
     if (!callExpr) throw new Error('Call expression not found');
@@ -169,15 +90,9 @@ describe('extractSettingsFromCall()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `definePluginSettings({
-        config: {
-          nested: {
-            type: OptionType.STRING,
-            description: "Nested setting",
-            default: "value"
-          }
-        }
-      });`
+      loadFixture(
+        'core/ast/extractor/settings-extractor/extract-from-call/05-extracts-nested-settings-plugin-config.ts'
+      )
     );
     const callExpr = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)[0];
     if (!callExpr) {
@@ -197,17 +112,9 @@ describe('extractSettingsFromCall()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `definePluginSettings({
-        visible: {
-          type: OptionType.STRING,
-          description: "Visible"
-        },
-        hidden: {
-          type: OptionType.STRING,
-          description: "Hidden",
-          hidden: true
-        }
-      });`
+      loadFixture(
+        'core/ast/extractor/settings-extractor/extract-from-call/06-filters-hidden-settings.ts'
+      )
     );
     const callExpr = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)[0];
     if (!callExpr) {
@@ -224,13 +131,9 @@ describe('extractSettingsFromCall()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `definePluginSettings({
-        setting: {
-          type: OptionType.STRING,
-          description: "Requires restart",
-          restartNeeded: true
-        }
-      });`
+      loadFixture(
+        'core/ast/extractor/settings-extractor/extract-from-call/07-handles-restart-required-suffix.ts'
+      )
     );
     const callExpr = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)[0];
     if (!callExpr) {
@@ -249,39 +152,9 @@ describe('extractSettingsFromCall()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `export const enum OptionType {
-        STRING = 0,
-        NUMBER = 1,
-        BIGINT = 2,
-        BOOLEAN = 3,
-        SELECT = 4,
-        SLIDER = 5,
-        COMPONENT = 6,
-        CUSTOM = 7
-      }
-      function definePluginSettings(settings: Record<string, unknown>) {
-        return settings;
-      }
-      definePluginSettings({
-        choice: {
-          type: OptionType.SELECT,
-          description: "Choose option",
-          options: [
-            { value: "option1" },
-            { value: "option2" }
-          ]
-        },
-        enabled: {
-          type: OptionType.BOOLEAN,
-          description: "Enable feature",
-          default: true
-        },
-        message: {
-          type: OptionType.STRING,
-          description: "Message",
-          default: "test"
-        }
-      });`
+      loadFixture(
+        'core/ast/extractor/settings-extractor/extract-from-call/08-handles-enum-types-with-option-type-enum-real-plugin-pattern.ts'
+      )
     );
     const callExpr = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)[0];
     if (!callExpr) {
@@ -321,37 +194,9 @@ describe('extractSettingsFromCall()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `export const enum OptionType {
-        STRING = 0,
-        NUMBER = 1,
-        BIGINT = 2,
-        BOOLEAN = 3,
-        SELECT = 4,
-        SLIDER = 5,
-        COMPONENT = 6,
-        CUSTOM = 7
-      }
-      function definePluginSettings(settings: Record<string, unknown>) {
-        return settings;
-      }
-      definePluginSettings({
-        boolSetting: {
-          type: OptionType.BOOLEAN,
-          default: true
-        },
-        strSetting: {
-          type: OptionType.STRING,
-          default: "test"
-        },
-        intSetting: {
-          type: OptionType.NUMBER,
-          default: 42
-        },
-        floatSetting: {
-          type: OptionType.NUMBER,
-          default: 3.14
-        }
-      });`
+      loadFixture(
+        'core/ast/extractor/settings-extractor/extract-from-call/09-handles-all-default-value-types.ts'
+      )
     );
     const callExpr = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)[0];
     if (!callExpr) {
@@ -380,7 +225,12 @@ describe('extractSettingsFromCall()', () => {
 
   test('handles missing definePluginSettings call', () => {
     const project = createProject();
-    const sourceFile = project.createSourceFile('test.ts', `const x = 42;`);
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      loadFixture(
+        'core/ast/extractor/settings-extractor/extract-from-call/10-handles-missing-define-plugin-settings-call.ts'
+      )
+    );
     const callExpr = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)[0];
     if (!callExpr) {
       // No call expression, so we need to create one manually
@@ -401,7 +251,12 @@ describe('extractSettingsFromCall()', () => {
 
   test('handles empty settings object', () => {
     const project = createProject();
-    const sourceFile = project.createSourceFile('test.ts', `definePluginSettings({});`);
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      loadFixture(
+        'core/ast/extractor/settings-extractor/extract-from-call/11-handles-empty-settings-object.ts'
+      )
+    );
     const callExpr = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)[0];
     if (!callExpr) {
       throw new Error('Call expression not found');
@@ -414,7 +269,12 @@ describe('extractSettingsFromCall()', () => {
 
   test('treats empty settings object as a valid empty detailed result', () => {
     const project = createProject();
-    const sourceFile = project.createSourceFile('test.ts', `definePluginSettings({});`);
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      loadFixture(
+        'core/ast/extractor/settings-extractor/extract-from-call/12-treats-empty-settings-object-as-a-valid-empty-detailed-result.ts'
+      )
+    );
     const callExpr = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)[0];
     if (!callExpr) {
       throw new Error('Call expression not found');
@@ -436,8 +296,9 @@ describe('extractSettingsFromCall()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `const pairs = [["enabled", { type: OptionType.BOOLEAN, default: true }]];
-       definePluginSettings(Object.fromEntries(pairs));`
+      loadFixture(
+        'core/ast/extractor/settings-extractor/extract-from-call/13-reports-unsupported-generated-settings-patterns-in-detailed-results.ts'
+      )
     );
     const callExpr = sourceFile
       .getDescendantsOfKind(SyntaxKind.CallExpression)
@@ -461,12 +322,9 @@ describe('extractSettingsFromCall()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `definePluginSettings({
-        hiddenSetting: {
-          type: OptionType.STRING,
-          hidden: true,
-        }
-      });`
+      loadFixture(
+        'core/ast/extractor/settings-extractor/extract-from-call/14-reports-hidden-settings-as-skipped-detailed-results.ts'
+      )
     );
     const callExpr = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)[0];
     if (!callExpr) {
@@ -492,12 +350,9 @@ describe('extractSettingsFromCall()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.tsx',
-      `definePluginSettings({
-        preview: {
-          type: OptionType.COMPONENT,
-          component: PreviewComponent,
-        }
-      });`
+      loadFixture(
+        'core/ast/extractor/settings-extractor/extract-from-call/15-reports-component-only-settings-as-skipped-detailed-results.tsx'
+      )
     );
     const callExpr = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)[0];
     if (!callExpr) {
@@ -523,58 +378,9 @@ describe('extractSettingsFromCall()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.tsx',
-      `export const enum OptionType {
-        STRING = 0,
-        NUMBER = 1,
-        BIGINT = 2,
-        BOOLEAN = 3,
-        SELECT = 4,
-        SLIDER = 5,
-        COMPONENT = 6,
-        CUSTOM = 7
-      }
-      export const enum ActivityType {
-        PLAYING,
-        STREAMING,
-        LISTENING,
-        WATCHING,
-        CUSTOM_STATUS,
-        COMPETING,
-        HANG_STATUS
-      }
-      export const enum TimestampMode {
-        NONE,
-        NOW,
-        TIME,
-        CUSTOM
-      }
-      function definePluginSettings(settings: Record<string, unknown>) {
-        return {
-          ...settings,
-          withPrivateSettings<T extends object>() {
-            return this as typeof this & T;
-          }
-        };
-      }
-      const settings = definePluginSettings({
-        config: {
-          type: OptionType.COMPONENT,
-          component: () => null
-        },
-      }).withPrivateSettings<{
-        appID?: string;
-        appName?: string;
-        type?: ActivityType;
-        timestampMode?: TimestampMode;
-        startTime?: number;
-        loop?: boolean;
-        multiGreetChoices?: string[];
-        nestedFolders: Record<string, string>;
-        formats: {
-          cozyFormat: string;
-          compactFormat: string;
-        };
-      }>();`
+      loadFixture(
+        'core/ast/extractor/settings-extractor/extract-from-call/16-extracts-private-settings-from-with-private-settings-type-literals.tsx'
+      )
     );
     const callExpr = findDefinePluginSettings(sourceFile);
     if (!callExpr) throw new Error('Call expression not found');
@@ -620,17 +426,9 @@ describe('extractSettingsFromCall()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `function definePluginSettings(settings: Record<string, unknown>) {
-        return {
-          ...settings,
-          withPrivateSettings<T extends object>() {
-            return this as typeof this & T;
-          }
-        };
-      }
-      const settings = definePluginSettings({}).withPrivateSettings<{
-        type?: ActivityType;
-      }>();`
+      loadFixture(
+        'core/ast/extractor/settings-extractor/extract-from-call/17-extracts-known-external-enum-private-setting-types-without-resolved-im.ts'
+      )
     );
     const callExpr = findDefinePluginSettings(sourceFile);
     if (!callExpr) throw new Error('Call expression not found');
@@ -648,7 +446,12 @@ describe('extractSettingsFromCall()', () => {
 
   test('handles missing arguments', () => {
     const project = createProject();
-    const sourceFile = project.createSourceFile('test.ts', `definePluginSettings();`);
+    const sourceFile = project.createSourceFile(
+      'test.ts',
+      loadFixture(
+        'core/ast/extractor/settings-extractor/extract-from-call/18-handles-missing-arguments.ts'
+      )
+    );
     const callExpr = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)[0];
     if (!callExpr) {
       throw new Error('Call expression not found');
@@ -663,12 +466,9 @@ describe('extractSettingsFromCall()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `definePluginSettings({
-        setting: {
-          type: OptionType.STRING,
-          placeholder: "Enter value"
-        }
-      });`
+      loadFixture(
+        'core/ast/extractor/settings-extractor/extract-from-call/19-handles-placeholder-property.ts'
+      )
     );
     const callExpr = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)[0];
     if (!callExpr) {
@@ -687,25 +487,9 @@ describe('extractSettingsFromCall()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `export const enum OptionType {
-        STRING = 0,
-        NUMBER = 1,
-        BIGINT = 2,
-        BOOLEAN = 3,
-        SELECT = 4,
-        SLIDER = 5,
-        COMPONENT = 6,
-        CUSTOM = 7
-      }
-      function definePluginSettings(settings: Record<string, unknown>) {
-        return settings;
-      }
-      definePluginSettings({
-        setting: {
-          type: OptionType.STRING,
-          name: "Setting Name"
-        }
-      });`
+      loadFixture(
+        'core/ast/extractor/settings-extractor/extract-from-call/20-uses-name-as-description-fallback.ts'
+      )
     );
     const callExpr = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)[0];
     if (!callExpr) {
@@ -724,34 +508,9 @@ describe('extractSettingsFromCall()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `export const enum OptionType {
-        STRING = 0,
-        NUMBER = 1,
-        BIGINT = 2,
-        BOOLEAN = 3,
-        SELECT = 4,
-        SLIDER = 5,
-        COMPONENT = 6,
-        CUSTOM = 7
-      }
-      function definePluginSettings(settings: Record<string, unknown>) {
-        return settings;
-      }
-      const getDefaultVoice = () => ({ voiceURI: "default-voice" });
-      definePluginSettings({
-        voice: {
-          type: OptionType.COMPONENT,
-          component: () => null,
-          get default() {
-            return getDefaultVoice()?.voiceURI;
-          }
-        },
-        volume: {
-          type: OptionType.SLIDER,
-          description: "Volume",
-          default: 1
-        }
-      });`
+      loadFixture(
+        'core/ast/extractor/settings-extractor/extract-from-call/21-handles-computed-defaults-with-getters-like-vc-narrator-pattern.ts'
+      )
     );
     const callExpr = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)[0];
     if (!callExpr) {
@@ -783,41 +542,9 @@ describe('extractSettingsFromCall()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `export const enum OptionType {
-        STRING = 0,
-        NUMBER = 1,
-        BIGINT = 2,
-        BOOLEAN = 3,
-        SELECT = 4,
-        SLIDER = 5,
-        COMPONENT = 6,
-        CUSTOM = 7
-      }
-      function definePluginSettings(settings: Record<string, unknown>) {
-        return settings;
-      }
-      const indicatorLocations = {
-        list: { description: "In the member list" },
-        badges: { description: "In user profiles, as badges" },
-        messages: { description: "Inside messages" }
-      };
-      definePluginSettings({
-        ...Object.fromEntries(
-          Object.entries(indicatorLocations).map(([key, value]) => {
-            return [key, {
-              type: OptionType.BOOLEAN,
-              description: \`Show indicators \${value.description.toLowerCase()}\`,
-              restartNeeded: true,
-              default: true
-            }];
-          })
-        ),
-        colorMobileIndicator: {
-          type: OptionType.BOOLEAN,
-          description: "Whether to make the mobile indicator match the color of the user status.",
-          default: true
-        }
-      });`
+      loadFixture(
+        'core/ast/extractor/settings-extractor/extract-from-call/22-extracts-settings-from-object-entries-map-spreads.ts'
+      )
     );
     const callExpr = findDefinePluginSettings(sourceFile);
     if (!callExpr) throw new Error('Call expression not found');
@@ -842,32 +569,9 @@ describe('extractSettingsFromCall()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `export const enum OptionType {
-        STRING = 0,
-        NUMBER = 1,
-        BIGINT = 2,
-        BOOLEAN = 3,
-        SELECT = 4,
-        SLIDER = 5,
-        COMPONENT = 6,
-        CUSTOM = 7
-      }
-      function definePluginSettings(settings: Record<string, unknown>) {
-        return settings;
-      }
-      definePluginSettings(
-        Object.entries({
-          spotify: { description: "Open Spotify links in app" },
-          steam: { description: "Open Steam links in app" }
-        }).reduce((acc, [key, rule]) => {
-          acc[key] = {
-            type: OptionType.BOOLEAN,
-            description: rule.description,
-            default: true
-          };
-          return acc;
-        }, {} as Record<string, unknown>)
-      );`
+      loadFixture(
+        'core/ast/extractor/settings-extractor/extract-from-call/23-extracts-reducer-generated-settings-from-direct-object-literals.ts'
+      )
     );
     const callExpr = findDefinePluginSettings(sourceFile);
     if (!callExpr) throw new Error('Call expression not found');
@@ -890,31 +594,9 @@ describe('extractSettingsFromCall()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `export const enum OptionType {
-        STRING = 0,
-        NUMBER = 1,
-        BIGINT = 2,
-        BOOLEAN = 3,
-        SELECT = 4,
-        SLIDER = 5,
-        COMPONENT = 6,
-        CUSTOM = 7
-      }
-      function definePluginSettings(settings: Record<string, unknown>) {
-        return settings;
-      }
-      const generated = Object.entries({
-        spotify: { description: "Open Spotify links in app" }
-      }).reduce((acc, [key, rule]) => {
-        acc[key] = {
-          type: OptionType.BOOLEAN,
-          description: rule.description,
-          default: true,
-          hidden: true
-        };
-        return acc;
-      }, {} as Record<string, unknown>);
-      definePluginSettings(generated);`
+      loadFixture(
+        'core/ast/extractor/settings-extractor/extract-from-call/24-filters-hidden-reducer-generated-settings-unless-explicitly-skipped.ts'
+      )
     );
     const callExpr = findDefinePluginSettings(sourceFile);
     if (!callExpr) throw new Error('Call expression not found');
@@ -932,51 +614,9 @@ describe('extractSettingsFromCall()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.ts',
-      `export const enum OptionType {
-        STRING = 0,
-        NUMBER = 1,
-        BIGINT = 2,
-        BOOLEAN = 3,
-        SELECT = 4,
-        SLIDER = 5,
-        COMPONENT = 6,
-        CUSTOM = 7
-      }
-      function definePluginSettings(settings: Record<string, unknown>) {
-        return settings;
-      }
-      const soundTypes = [
-        { name: "Call Calling", id: "call_calling" },
-        { name: "Mute", id: "mute" }
-      ] as const;
-      const allSoundTypes = soundTypes || [];
-      function makeEmptyOverride() {
-        return {
-          enabled: false,
-          selectedSound: "default",
-          volume: 100,
-          useFile: false,
-          selectedFileId: undefined
-        };
-      }
-      const soundSettings = Object.fromEntries(
-        allSoundTypes.map(type => [
-          type.id,
-          {
-            type: OptionType.STRING,
-            description: \`Override for \${type.name}\`,
-            default: JSON.stringify(makeEmptyOverride()),
-            hidden: true
-          }
-        ])
-      );
-      definePluginSettings({
-        ...soundSettings,
-        overrides: {
-          type: OptionType.COMPONENT,
-          component: () => null
-        }
-      });`
+      loadFixture(
+        'core/ast/extractor/settings-extractor/extract-from-call/25-extracts-settings-from-array-map-spreads-with-json-stringify-defaults.ts'
+      )
     );
     const callExpr = findDefinePluginSettings(sourceFile);
     if (!callExpr) throw new Error('Call expression not found');
@@ -1001,28 +641,9 @@ describe('extractSettingsFromCall()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.tsx',
-      `export const enum OptionType {
-        STRING = 0,
-        NUMBER = 1,
-        BIGINT = 2,
-        BOOLEAN = 3,
-        SELECT = 4,
-        SLIDER = 5,
-        COMPONENT = 6,
-        CUSTOM = 7
-      }
-      const IS_MAC = false;
-      function definePluginSettings(settings: Record<string, unknown>) {
-        return settings;
-      }
-      const DEFAULT_KEYS = IS_MAC ? ["Meta", "Shift", "P"] : ["Control", "Shift", "P"];
-      definePluginSettings({
-        hotkey: {
-          type: OptionType.COMPONENT,
-          default: DEFAULT_KEYS,
-          component: () => null
-        }
-      });`
+      loadFixture(
+        'core/ast/extractor/settings-extractor/extract-from-call/26-classifies-component-defaults-from-conditional-string-array-constants.tsx'
+      )
     );
     const callExpr = findDefinePluginSettings(sourceFile);
     if (!callExpr) throw new Error('Call expression not found');
@@ -1043,35 +664,9 @@ describe('extractSettingsFromCall()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.tsx',
-      `export const enum OptionType {
-        STRING = 0,
-        NUMBER = 1,
-        BIGINT = 2,
-        BOOLEAN = 3,
-        SELECT = 4,
-        SLIDER = 5,
-        COMPONENT = 6,
-        CUSTOM = 7
-      }
-      function definePluginSettings(settings: Record<string, unknown>) {
-        return settings;
-      }
-      function SoundIdInput() {
-        const { soundId } = settings.use(["soundId"]);
-        return <TextInput value={soundId} onChange={v => settings.store.soundId = v} />;
-      }
-      const settings = definePluginSettings({
-        soundId: {
-          type: OptionType.COMPONENT,
-          description: "Enter the ID of the sound you want to play.",
-          component: SoundIdInput
-        },
-        scanQr: {
-          type: OptionType.COMPONENT,
-          description: "Scan a QR code",
-          component: () => <Button />
-        }
-      });`
+      loadFixture(
+        'core/ast/extractor/settings-extractor/extract-from-call/27-extracts-store-backed-bare-component-settings.tsx'
+      )
     );
     const callExpr = findDefinePluginSettings(sourceFile);
     if (!callExpr) throw new Error('Call expression not found');
@@ -1094,51 +689,9 @@ describe('extractSettingsFromCall()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.tsx',
-      `export const enum OptionType {
-        STRING = 0,
-        NUMBER = 1,
-        BIGINT = 2,
-        BOOLEAN = 3,
-        SELECT = 4,
-        SLIDER = 5,
-        COMPONENT = 6,
-        CUSTOM = 7
-      }
-      function definePluginSettings(settings: Record<string, unknown>) {
-        return settings;
-      }
-      const tags = [
-        {
-          name: "WEBHOOK",
-          displayName: "Webhook",
-          description: "Messages sent by webhooks"
-        },
-        {
-          name: "MODERATOR_STAFF",
-          displayName: "Staff",
-          description: "Can manage the server, channels or roles"
-        }
-      ] as const;
-      function SettingsComponent() {
-        const tagSettings = (settings.store.tagSettings ??= {});
-        tags.forEach(t => {
-          if (!tagSettings[t.name]) {
-            tagSettings[t.name] = {
-              text: t.displayName,
-              showInChat: true,
-              showInNotChat: true
-            };
-          }
-        });
-        return <div />;
-      }
-      const settings = definePluginSettings({
-        tagSettings: {
-          type: OptionType.COMPONENT,
-          component: SettingsComponent,
-          description: "fill me"
-        }
-      });`
+      loadFixture(
+        'core/ast/extractor/settings-extractor/extract-from-call/28-extracts-structured-settings-from-array-backed-component-stores.tsx'
+      )
     );
     const callExpr = findDefinePluginSettings(sourceFile);
     if (!callExpr) throw new Error('Call expression not found');
@@ -1193,32 +746,9 @@ describe('extractSettingsFromCall()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.tsx',
-      `export const enum OptionType {
-        STRING = 0,
-        NUMBER = 1,
-        BIGINT = 2,
-        BOOLEAN = 3,
-        SELECT = 4,
-        SLIDER = 5,
-        COMPONENT = 6,
-        CUSTOM = 7
-      }
-      function definePluginSettings(settings: Record<string, unknown>) {
-        return settings;
-      }
-      function Picker() {
-        const { streamMedia } = settings.use(["streamMedia"]);
-        return <SearchableSelect value={streamMedia} onChange={v => settings.store.streamMedia = v} />;
-      }
-      function SettingSection() {
-        return <Picker />;
-      }
-      const settings = definePluginSettings({
-        streamMedia: {
-          type: OptionType.COMPONENT,
-          component: SettingSection,
-        }
-      });`
+      loadFixture(
+        'core/ast/extractor/settings-extractor/extract-from-call/29-extracts-store-backed-component-settings-through-rendered-child-compon.tsx'
+      )
     );
     const callExpr = findDefinePluginSettings(sourceFile);
     if (!callExpr) throw new Error('Call expression not found');
@@ -1239,37 +769,9 @@ describe('extractSettingsFromCall()', () => {
     const project = createProject();
     const sourceFile = project.createSourceFile(
       'test.tsx',
-      `export const enum OptionType {
-        STRING = 0,
-        NUMBER = 1,
-        BIGINT = 2,
-        BOOLEAN = 3,
-        SELECT = 4,
-        SLIDER = 5,
-        COMPONENT = 6,
-        CUSTOM = 7
-      }
-      function definePluginSettings(settings: Record<string, unknown>) {
-        return settings;
-      }
-      const ErrorBoundary = { wrap: component => component };
-      function createDirSelector(settingKey: "logsDir" | "imageCacheDir", successMessage: string) {
-        return function DirSelector() {
-          return <FolderInput settingsKey={settingKey} successMessage={successMessage} />;
-        };
-      }
-      const ImageCacheDir = createDirSelector("imageCacheDir", "Successfully updated Image Cache Dir");
-      function FolderInput({ settingsKey, successMessage }) {
-        const path = settings.store[settingsKey];
-        return <Button onClick={() => { settings.store[settingsKey] = successMessage; }}>{path}</Button>;
-      }
-      const settings = definePluginSettings({
-        imageCacheDir: {
-          type: OptionType.COMPONENT,
-          description: "Select saved images directory",
-          component: ErrorBoundary.wrap(ImageCacheDir) as any
-        }
-      });`
+      loadFixture(
+        'core/ast/extractor/settings-extractor/extract-from-call/30-extracts-store-backed-component-settings-through-wrapped-factory-compo.tsx'
+      )
     );
     const callExpr = findDefinePluginSettings(sourceFile);
     if (!callExpr) throw new Error('Call expression not found');

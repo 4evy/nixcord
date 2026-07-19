@@ -1,8 +1,5 @@
-import { mkdtemp } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
 import type { DeprecatedData, PluginConfig, ReadonlyDeep } from '@nixcord/shared';
-import fse from 'fs-extra';
-import { join } from 'pathe';
+import { createFixture } from 'fs-fixture';
 import { describe, expect, test } from 'vitest';
 import { updateDeprecatedPlugins } from '../src/deprecated.js';
 import { toNixIdentifier } from '../src/identifier.js';
@@ -215,56 +212,48 @@ describe('generateMigrationsData()', () => {
 
 describe('updateDeprecatedPlugins()', () => {
   test('canonicalizes rename targets to active plugin option names', async () => {
-    const tempDir = await mkdtemp(join(tmpdir(), 'nixcord-deprecated-'));
-    try {
-      await fse.writeJson(join(tempDir, 'deprecated.json'), {
-        renames: {
-          PronounDB: { to: 'UserMessagesPronouns', date: '2999-01-01' },
-        },
-        removals: {},
-        settingRenames: {},
-      });
+    await using fixture = await createFixture();
+    await fixture.writeJson('deprecated.json', {
+      renames: {
+        PronounDB: { to: 'UserMessagesPronouns', date: '2999-01-01' },
+      },
+      removals: {},
+      settingRenames: {},
+    });
 
-      const result = await updateDeprecatedPlugins(
-        { renames: [], deletions: [] },
-        tempDir,
-        false,
-        { info: () => {}, warn: () => {}, error: () => {}, success: () => {}, debug: () => {} },
-        [],
-        new Set(['userMessagesPronouns']),
-        (name) => name.charAt(0).toLowerCase() + name.slice(1)
-      );
+    const result = await updateDeprecatedPlugins(
+      { renames: [], deletions: [] },
+      fixture.path,
+      false,
+      { info: () => {}, warn: () => {}, error: () => {}, success: () => {}, debug: () => {} },
+      [],
+      new Set(['userMessagesPronouns']),
+      (name) => name.charAt(0).toLowerCase() + name.slice(1)
+    );
 
-      expect(result.renames.PronounDB?.to).toBe('userMessagesPronouns');
-    } finally {
-      await fse.remove(tempDir);
-    }
+    expect(result.renames.PronounDB?.to).toBe('userMessagesPronouns');
   });
 
   test('drops renames that canonicalize to the same active plugin option', async () => {
-    const tempDir = await mkdtemp(join(tmpdir(), 'nixcord-deprecated-'));
-    try {
-      await fse.writeJson(join(tempDir, 'deprecated.json'), {
-        renames: {
-          petpet: { to: 'PetPet', date: '2999-01-01' },
-        },
-        removals: {},
-        settingRenames: {},
-      });
+    await using fixture = await createFixture();
+    await fixture.writeJson('deprecated.json', {
+      renames: {
+        petpet: { to: 'PetPet', date: '2999-01-01' },
+      },
+      removals: {},
+      settingRenames: {},
+    });
 
-      const result = await updateDeprecatedPlugins(
-        { renames: [], deletions: [] },
-        tempDir,
-        false,
-        { info: () => {}, warn: () => {}, error: () => {}, success: () => {}, debug: () => {} },
-        [],
-        new Set(['petpet']),
-        toNixIdentifier
-      );
+    const result = await updateDeprecatedPlugins(
+      { renames: [], deletions: [] },
+      fixture.path,
+      false,
+      { info: () => {}, warn: () => {}, error: () => {}, success: () => {}, debug: () => {} },
+      [],
+      new Set(['petpet']),
+      toNixIdentifier
+    );
 
-      expect(result.renames).toEqual({});
-    } finally {
-      await fse.remove(tempDir);
-    }
+    expect(result.renames).toEqual({});
   });
 });

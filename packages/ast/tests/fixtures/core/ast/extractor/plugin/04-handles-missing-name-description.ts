@@ -1,0 +1,1 @@
+definePlugin({ type: 'test' });

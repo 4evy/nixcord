@@ -1,0 +1,1 @@
+definePluginSettings({ test: { type: 'STRING' } });

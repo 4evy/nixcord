@@ -11,7 +11,7 @@
 }:
 let
   nodeModulesHashDarwin = "sha256-16ffPdl0ae/0EvLNQjeq3zIFEzQ29Sj4JN1/UGCa5r4=";
-  nodeModulesHashLinux = "sha256-0K8M9XfGHalOg9uO/m8vDTGf+FiAgp5oJAiCKPvtjqc=";
+  nodeModulesHashLinux = "sha256-UhbM9uzpgHus2E1fE4P1Xt+QFv33TcMj8dKypC5iPkk=";
   nodeModulesHash = if stdenvNoCC.isDarwin then nodeModulesHashDarwin else nodeModulesHashLinux;
 in
 stdenvNoCC.mkDerivation (finalAttrs: {

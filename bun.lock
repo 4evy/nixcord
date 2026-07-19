@@ -37,6 +37,7 @@
       },
       "devDependencies": {
         "@typescript/native-preview": "^7.0.0-dev.20260621.1",
+        "fs-fixture": "^2.14.0",
         "typescript": "npm:@typescript/typescript6@^6.0.1",
       },
     },
@@ -69,6 +70,9 @@
         "zod": "^4.4.3",
         "zod-validation-error": "^5.0.0",
       },
+      "devDependencies": {
+        "fs-fixture": "^2.14.0",
+      },
     },
     "packages/git-analyzer": {
       "name": "@nixcord/git-analyzer",
@@ -87,6 +91,9 @@
         "fs-extra": "^11.3.5",
         "pathe": "^2.0.3",
       },
+      "devDependencies": {
+        "fs-fixture": "^2.14.0",
+      },
     },
     "packages/parser": {
       "name": "@nixcord/parser",
@@ -101,6 +108,9 @@
         "pathe": "^2.0.3",
         "ts-morph": "^28.0.0",
         "zod": "^4.4.3",
+      },
+      "devDependencies": {
+        "fs-fixture": "^2.14.0",
       },
     },
     "packages/shared": {
@@ -883,6 +893,8 @@
     "forwarded-parse": ["forwarded-parse@2.1.2", "", {}, "sha512-alTFZZQDKMporBH77856pXgzhEzaUVmLCDk+egLgIgHst3Tpndzz8MnKe+GzRJRfvVdn69HhpW7cmXzvtLvJAw=="],
 
     "fs-extra": ["fs-extra@11.3.6", "", { "dependencies": { "graceful-fs": "^4.2.0", "jsonfile": "^6.0.1", "universalify": "^2.0.0" } }, "sha512-w8ZNZr2mKIc7qeNaQ9AVPT1+iFaI+Avd4xudVOvdDJ8VytREi1Ft5Ih7hd9jjehod8vAM5GMsfQ/TpPf4EyoEA=="],
+
+    "fs-fixture": ["fs-fixture@2.14.0", "", {}, "sha512-lZBaSOewY5snBSyOjn3fmo2ES5gOR7Q1Y6dILH0/xR0xejjUhux65OGaFWhQ+jiyvTi5HOHqXQrQ9v48Lsmqbw=="],
 
     "fs-minipass": ["fs-minipass@3.0.3", "", { "dependencies": { "minipass": "^7.0.3" } }, "sha512-XUBA9XClHbnJWSfBzjkm6RvPsyg3sryZt06BEQoXcF7EK/xpGaQYJgQKDJSUH5SGZ76Y7pFx1QBnXz09rU5Fbw=="],
 
