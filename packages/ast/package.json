@@ -19,7 +19,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "fast-check": "^4.8.0"
+    "fast-check": "4.9.0"
   },
   "files": [
     "dist"

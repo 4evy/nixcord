@@ -28,7 +28,7 @@
     "zod-validation-error": "^5.0.0"
   },
   "devDependencies": {
-    "fs-fixture": "^2.14.0"
+    "fs-fixture": "2.14.0"
   },
   "files": [
     "dist"

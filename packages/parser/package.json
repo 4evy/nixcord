@@ -25,7 +25,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "fs-fixture": "^2.14.0"
+    "fs-fixture": "2.14.0"
   },
   "files": [
     "dist"
