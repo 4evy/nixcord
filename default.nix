@@ -1,7 +1,7 @@
 (import (
   let
     lock = builtins.fromJSON (builtins.readFile ./flake.lock);
-    locked = lock.nodes.flake-compat.locked;
+    inherit (lock.nodes.flake-compat) locked;
   in
   fetchTarball {
     url =

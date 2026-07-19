@@ -33,28 +33,32 @@
             else
               "main";
           discordAvailable = pkgs.lib.meta.availableOn pkgs.stdenv.hostPlatform pkgs.discord;
-          discordPackages = pkgs.lib.optionalAttrs discordAvailable {
-            discord = pkgs.callPackage ./pkgs/discord { };
-            discord-ptb = pkgs.callPackage ./pkgs/discord { branch = "ptb"; };
-            discord-canary = pkgs.callPackage ./pkgs/discord { branch = "canary"; };
-            discord-development = pkgs.callPackage ./pkgs/discord { branch = "development"; };
+          discordVariants = {
+            discord = { };
+            discord-ptb.branch = "ptb";
+            discord-canary.branch = "canary";
+            discord-development.branch = "development";
           };
-          vencordPackage = pkgs.callPackage ./pkgs/vencord.nix { };
-          equicordPackage = pkgs.callPackage ./pkgs/equicord.nix { };
+          discordPackages = pkgs.lib.optionalAttrs discordAvailable (
+            pkgs.lib.mapAttrs (_name: args: pkgs.callPackage ./pkgs/discord args) discordVariants
+          );
+          vencord = pkgs.callPackage ./pkgs/vencord.nix { };
+          equicord = pkgs.callPackage ./pkgs/equicord.nix { };
           discordIntegrationChecks = pkgs.lib.optionalAttrs discordAvailable {
             discord-with-vencord = pkgs.callPackage ./pkgs/discord {
               withVencord = true;
-              vencord = vencordPackage;
+              inherit vencord;
             };
             discord-with-equicord = pkgs.callPackage ./pkgs/discord {
               withEquicord = true;
-              equicord = equicordPackage;
+              inherit equicord;
+            };
+            discord-with-krisp = pkgs.callPackage ./pkgs/discord {
+              withKrisp = true;
             };
           };
           docsArtifacts = import ./docs {
-            pkgs = pkgs;
-            lib = pkgs.lib;
-            inherit revision;
+            inherit pkgs revision;
           };
           docsSystems = [
             "x86_64-linux"
@@ -72,8 +76,7 @@
             discordPackages
             // docsPackages
             // {
-              vencord = vencordPackage;
-              equicord = equicordPackage;
+              inherit vencord equicord;
               generate = pkgs.callPackage ./pkgs/generate-options.nix { };
 
               docs-json = docsArtifacts.json;
@@ -84,9 +87,9 @@
             program = pkgs.lib.getExe (
               pkgs.writeShellApplication {
                 name = "generate-plugin-options";
-                runtimeInputs = with pkgs; [
-                  nix
-                  nixfmt
+                runtimeInputs = [
+                  pkgs.nix
+                  pkgs.nixfmt
                 ];
                 text = ''
                   generated=$(nix build .#generate --no-link --print-out-paths)
@@ -101,30 +104,47 @@
           };
         };
 
-      flake = {
-        homeModules.default =
-          { pkgs, ... }:
-          {
-            imports = [ ./modules/hm ];
-            _module.args.nixcordPkgs = inputs.self.packages.${pkgs.stdenv.hostPlatform.system};
+      flake =
+        let
+          mkNixcordModule =
+            {
+              class,
+              module,
+              output,
+            }:
+            { pkgs, ... }:
+            let
+              location = "${inputs.self.outPath}/flake.nix#${output}";
+            in
+            {
+              _class = class;
+              _file = location;
+              key = location;
+              imports = [ module ];
+              _module.args.nixcordPkgs = inputs.self.packages.${pkgs.stdenv.hostPlatform.system};
+            };
+        in
+        {
+          homeModules.default = mkNixcordModule {
+            class = "homeManager";
+            module = ./modules/hm;
+            output = "homeModules.default";
           };
-        homeModules.nixcord = inputs.self.homeModules.default;
+          homeModules.nixcord = inputs.self.homeModules.default;
 
-        nixosModules.default =
-          { pkgs, ... }:
-          {
-            imports = [ ./modules/nixos ];
-            _module.args.nixcordPkgs = inputs.self.packages.${pkgs.stdenv.hostPlatform.system};
+          nixosModules.default = mkNixcordModule {
+            class = "nixos";
+            module = ./modules/nixos;
+            output = "nixosModules.default";
           };
-        nixosModules.nixcord = inputs.self.nixosModules.default;
+          nixosModules.nixcord = inputs.self.nixosModules.default;
 
-        darwinModules.default =
-          { pkgs, ... }:
-          {
-            imports = [ ./modules/darwin ];
-            _module.args.nixcordPkgs = inputs.self.packages.${pkgs.stdenv.hostPlatform.system};
+          darwinModules.default = mkNixcordModule {
+            class = "darwin";
+            module = ./modules/darwin;
+            output = "darwinModules.default";
           };
-        darwinModules.nixcord = inputs.self.darwinModules.default;
-      };
+          darwinModules.nixcord = inputs.self.darwinModules.default;
+        };
     };
 }

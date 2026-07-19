@@ -123,8 +123,8 @@ let
 
   pluginSources =
     map
-      (file: rec {
-        path = file;
+      (path: {
+        inherit path;
         subpath = "modules/plugins/${baseNameOf (toString path)}";
         plugins = attrNames (fromJSON (readFile path));
         lines = linesWithNumbers path;

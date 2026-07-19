@@ -36,7 +36,7 @@ let
     ];
   };
 
-  system = stdenvNoCC.hostPlatform.system;
+  inherit (stdenvNoCC.hostPlatform) system;
 
   outputHashes = {
     x86_64-linux = "sha256-G+JO1hZWAbp0W4vOi8dU8j8cXnfcBb/+OEp9CrglVN0=";

@@ -39,8 +39,12 @@ in
       ;
     pnpmDeps = fetchPnpmDeps {
       inherit (oldAttrs) pname;
-      inherit pnpm patches postPatch;
-      inherit src;
+      inherit
+        pnpm
+        patches
+        postPatch
+        src
+        ;
       prePnpmInstall = ''
         export NODE_OPTIONS=--max-old-space-size=2048
         export pnpm_config_child_concurrency=1
@@ -78,8 +82,7 @@ in
             replaceVars ./scripts/update-vencord-family.sh {
               clientName = "Vencord";
               nixFile = "./pkgs/vencord.nix";
-              owner = vencord.src.owner;
-              repo = vencord.src.repo;
+              inherit (vencord.src) owner repo;
               versionVar = "version";
               hashVar = "hash";
               revVar = "rev";

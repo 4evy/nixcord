@@ -18,11 +18,14 @@ let
   rev = "29921a58a841680a3ee02d90eefee866a061497a";
   hash = "sha256-+fx5GZ1aAIs8Sy4qPvyURKIKR4otrcA/3ZimbGg6zlU=";
   pnpmDepsHash = "sha256-uGGHln3IRSZIBotzpC6muCpZdCD9M7DaOqN1Y60OtFo=";
-  owner = equicord.src.owner;
-  repo = equicord.src.repo;
+  inherit (equicord.src) owner repo;
   src = fetchFromGitHub {
-    inherit owner repo;
-    inherit rev hash;
+    inherit
+      owner
+      repo
+      rev
+      hash
+      ;
   };
   updateScript = writeShellApplication {
     name = "equicord-update";
@@ -40,8 +43,7 @@ let
         replaceVars ./scripts/update-vencord-family.sh {
           clientName = "Equicord";
           nixFile = "./pkgs/equicord.nix";
-          owner = equicord.src.owner;
-          repo = equicord.src.repo;
+          inherit (equicord.src) owner repo;
           versionVar = "version";
           hashVar = "hash";
           revVar = "rev";
@@ -63,14 +65,15 @@ in
     ];
   in
   {
-    inherit version src;
-    inherit patches;
+    inherit version src patches;
     pnpmDeps = fetchPnpmDeps {
-      inherit src;
-      inherit version;
-      inherit patches;
+      inherit
+        src
+        version
+        patches
+        pnpm
+        ;
       inherit (oldAttrs) pname;
-      inherit pnpm;
       prePnpmInstall = ''
         export NODE_OPTIONS=--max-old-space-size=2048
         export pnpm_config_child_concurrency=1
