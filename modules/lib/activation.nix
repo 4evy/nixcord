@@ -6,8 +6,7 @@
   wrapScript,
 }:
 let
-  userHome = if pkgs.stdenvNoCC.isDarwin then "/Users/${cfg.user}" else "/home/${cfg.user}";
-  xdgHome = "${userHome}/.config";
+  inherit (cfg) homeDirectory xdgConfigHome;
   disabledUpdateSettings = {
     SKIP_HOST_UPDATE = true;
     SKIP_MODULE_UPDATE = true;
@@ -19,9 +18,9 @@ in
 {
   disableDiscordUpdates = wrapScript ''
     set -euo pipefail
-    ${lib.getExe' pkgs.coreutils "install"} -d -o ${lib.escapeShellArg cfg.user} ${lib.optionalString pkgs.stdenvNoCC.isDarwin "-g staff"} "${cfg.discord.configDir}"
-    ${lib.getExe' pkgs.coreutils "install"} -d -o ${lib.escapeShellArg cfg.user} ${lib.optionalString pkgs.stdenvNoCC.isDarwin "-g staff"} "${cfg.configDir}"
-    config_dir="${cfg.discord.configDir}"
+    ${lib.getExe' pkgs.coreutils "install"} -d -o ${lib.escapeShellArg cfg.user} ${lib.optionalString pkgs.stdenvNoCC.isDarwin "-g staff"} ${lib.escapeShellArg cfg.discord.configDir}
+    ${lib.getExe' pkgs.coreutils "install"} -d -o ${lib.escapeShellArg cfg.user} ${lib.optionalString pkgs.stdenvNoCC.isDarwin "-g staff"} ${lib.escapeShellArg cfg.configDir}
+    config_dir=${lib.escapeShellArg cfg.discord.configDir}
     if [ -f "$config_dir/settings.json" ]; then
       ${lib.getExe' pkgs.jq "jq"} ${disabledUpdateSettingsJq} "$config_dir/settings.json" > "$config_dir/settings.json.tmp" && mv "$config_dir/settings.json.tmp" "$config_dir/settings.json"
     else
@@ -32,9 +31,11 @@ in
   fixDiscordModules = wrapScript ''
     set -euo pipefail
 
-    config_base="${
-      if pkgs.stdenvNoCC.isDarwin then "${userHome}/Library/Application Support" else "${xdgHome}"
-    }"
+    config_base=${
+      lib.escapeShellArg (
+        if pkgs.stdenvNoCC.isDarwin then "${homeDirectory}/Library/Application Support" else xdgConfigHome
+      )
+    }
 
     for branch in discord discord-ptb discord-canary discord-development; do
       config_dir="$config_base/$branch"
@@ -63,26 +64,28 @@ in
   setupDorionVencordSettings = wrapScript ''
     set -euo pipefail
 
-    webkit_base_dir="${
-      if pkgs.stdenvNoCC.isDarwin then
-        "${userHome}/Library/WebKit/com.spikehd.dorion/WebsiteData/Default"
-      else
-        "${userHome}/.local/share/dorion/profiles/default/webdata/localstorage"
-    }"
+    webkit_base_dir=${
+      lib.escapeShellArg (
+        if pkgs.stdenvNoCC.isDarwin then
+          "${homeDirectory}/Library/WebKit/com.spikehd.dorion/WebsiteData/Default"
+        else
+          "${homeDirectory}/.local/share/dorion/profiles/default/webdata/localstorage"
+      )
+    }
 
     encode_utf16le() {
       local input="$1"
       echo -n "$input" | ${lib.getExe' pkgs.iconv "iconv"} -f UTF-8 -t UTF-16LE | ${lib.getExe pkgs.xxd} -p | tr -d '\n' | tr '[:lower:]' '[:upper:]'
     }
 
-    vencord_settings='${builtins.toJSON (mkVencordCfg (lib.attrsets.recursiveUpdate cfg.config cfg.extraConfig))}'
+    vencord_settings=${lib.escapeShellArg (builtins.toJSON (mkVencordCfg (lib.recursiveUpdate cfg.config cfg.extraConfig)))}
 
     sqlite_paths=()
-    for sqlite_file in $(find "$webkit_base_dir" \( -name "*.sqlite3" -o -name "*.localstorage" \) -type f 2>/dev/null); do
+    while IFS= read -r -d ''' sqlite_file; do
       if ${lib.getExe pkgs.sqlite} "$sqlite_file" "SELECT COUNT(*) FROM ItemTable WHERE key = 'VencordSettings';" 2>/dev/null | grep -q "1"; then
         sqlite_paths+=("$sqlite_file")
       fi
-    done
+    done < <(find "$webkit_base_dir" \( -name "*.sqlite3" -o -name "*.localstorage" \) -type f -print0 2>/dev/null)
 
     encoded_settings=$(encode_utf16le "$vencord_settings")
 

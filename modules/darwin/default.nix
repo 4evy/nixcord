@@ -11,6 +11,8 @@ let
     ;
 in
 {
+  _class = "darwin";
+
   imports = [
     ../options
     ../plugins/migrations.nix
@@ -29,19 +31,22 @@ in
         fileCopyCommands
         ;
 
-      homeDir = "/Users/${cfg.user}";
+      configuredHome = lib.attrByPath [ cfg.user "home" ] null config.users.users;
+      homeDir = if configuredHome != null then configuredHome else "/Users/${cfg.user}";
       basePath = "${homeDir}/Library/Application Support";
 
       activationScripts = common.mkActivationScripts (script: ''
-        ${script}
+        sudo --user=${lib.escapeShellArg cfg.user} -- ${pkgs.runtimeShell} -c ${lib.escapeShellArg script}
       '');
 
       install = lib.getExe' pkgs.coreutils "install";
 
     in
-    mkMerge ([
+    mkMerge [
       {
         programs.nixcord = (mkConfigDirs cfg basePath) // {
+          homeDirectory = lib.mkDefault homeDir;
+          xdgConfigHome = lib.mkDefault "${homeDir}/.config";
           # Darwin dorion uses ~/.config instead of ~/Library/Application Support
           dorion.configDir = lib.mkDefault "${homeDir}/.config/dorion";
         };
@@ -52,9 +57,12 @@ in
         environment.systemPackages = packages.installed;
       }
       (mkIf cfg.discord.enable {
-        system.activationScripts.nixcord-disableDiscordUpdates.text =
-          activationScripts.disableDiscordUpdates;
-        system.activationScripts.nixcord-fixDiscordModules.text = activationScripts.fixDiscordModules;
+        # nix-darwin executes a fixed set of activation stages; custom
+        # activation attribute names are not included in the final script.
+        system.activationScripts.applications.text = lib.mkAfter ''
+          ${activationScripts.disableDiscordUpdates}
+          ${activationScripts.fixDiscordModules}
+        '';
       })
       (mkIf (fileSpecs != [ ]) {
         system.activationScripts.applications.text = lib.mkAfter (
@@ -78,9 +86,8 @@ in
         );
       })
       (mkIf cfg.dorion.enable {
-        system.activationScripts.nixcord-setupDorionVencordSettings.text =
-          activationScripts.setupDorionVencordSettings;
+        system.activationScripts.applications.text = lib.mkAfter activationScripts.setupDorionVencordSettings;
       })
-    ])
+    ]
   );
 }

@@ -16,7 +16,7 @@ in
 
   options.programs.nixcord = {
     user = mkOption {
-      type = types.str;
+      type = types.nonEmptyStr;
       description = "Target username for file ownership.";
     };
 

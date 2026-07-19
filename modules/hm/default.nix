@@ -11,6 +11,8 @@ let
     ;
 in
 {
+  _class = "homeManager";
+
   imports = [
     ../options
     ../plugins/migrations.nix
@@ -57,10 +59,12 @@ in
       );
 
     in
-    mkMerge ([
+    mkMerge [
       {
         programs.nixcord = {
           user = lib.mkDefault config.home.username;
+          homeDirectory = lib.mkDefault config.home.homeDirectory;
+          xdgConfigHome = lib.mkDefault config.xdg.configHome;
         }
         // mkConfigDirs cfg (
           if pkgs.stdenvNoCC.isLinux then
@@ -72,9 +76,11 @@ in
       {
         programs.nixcord.finalPackage = packages.final;
 
-        home.packages = packages.installed;
-        home.file = homeFiles;
-        home.activation = writableHomeActivations;
+        home = {
+          packages = packages.installed;
+          file = homeFiles;
+          activation = writableHomeActivations;
+        };
       }
       (mkIf cfg.discord.enable {
         home.activation.disableDiscordUpdates = activationScripts.disableDiscordUpdates;
@@ -83,6 +89,6 @@ in
       (mkIf cfg.dorion.enable {
         home.activation.setupDorionVencordSettings = activationScripts.setupDorionVencordSettings;
       })
-    ])
+    ]
   );
 }

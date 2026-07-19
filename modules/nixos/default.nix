@@ -8,6 +8,8 @@ let
   inherit (lib) mkIf mkMerge;
 in
 {
+  _class = "nixos";
+
   imports = [
     ../options
     ../plugins/migrations.nix
@@ -26,8 +28,11 @@ in
         fileCopyCommands
         ;
 
+      configuredHome = lib.attrByPath [ cfg.user "home" ] null config.users.users;
+      homeDir = if configuredHome != null then configuredHome else "/home/${cfg.user}";
+
       activationScripts = common.mkActivationScripts (script: ''
-        ${lib.getExe' pkgs.util-linux "runuser"} -u ${lib.escapeShellArg cfg.user} -- /bin/sh -c ${lib.escapeShellArg script}
+        ${lib.getExe' pkgs.util-linux "runuser"} -u ${lib.escapeShellArg cfg.user} -- ${pkgs.runtimeShell} -c ${lib.escapeShellArg script}
       '');
 
       writeFilesScript =
@@ -39,11 +44,7 @@ in
           set -euo pipefail
 
           target_user=${lib.escapeShellArg cfg.user}
-          target_group_default=${lib.escapeShellArg null}
-          target_group="$target_group_default"
-          if [ -z "$target_group" ]; then
-            target_group="$(${idBin} -gn "$target_user")"
-          fi
+          target_group="$(${idBin} -gn "$target_user")"
 
           copy_file() {
             local src="$1"
@@ -55,11 +56,11 @@ in
           ${fileCopyCommands}
         '';
     in
-    mkMerge ([
+    mkMerge [
       {
         programs.nixcord = {
-          homeDirectory = "/home/${cfg.user}";
-          xdgConfigHome = "${"/home/${cfg.user}"}/.config";
+          homeDirectory = lib.mkDefault homeDir;
+          xdgConfigHome = lib.mkDefault "${cfg.homeDirectory}/.config";
           finalPackage = packages.final;
         }
         // mkConfigDirs cfg cfg.xdgConfigHome;
@@ -68,22 +69,26 @@ in
       }
       (mkIf cfg.discord.enable {
         system.activationScripts.nixcord-disableDiscordUpdates = {
+          deps = [ "users" ];
           text = activationScripts.disableDiscordUpdates;
           supportsDryActivation = false;
         };
         system.activationScripts.nixcord-fixDiscordModules = {
+          deps = [ "users" ];
           text = activationScripts.fixDiscordModules;
           supportsDryActivation = false;
         };
       })
       (mkIf cfg.dorion.enable {
         system.activationScripts.nixcord-setupDorionVencordSettings = {
+          deps = [ "users" ];
           text = activationScripts.setupDorionVencordSettings;
           supportsDryActivation = false;
         };
       })
       (mkIf (fileSpecs != [ ]) {
         system.activationScripts.nixcord-writeFiles = {
+          deps = [ "users" ];
           # NixOS concatenates activation snippets in one shell, so keep this
           # snippet's strict shell options from affecting later snippets.
           text = ''
@@ -94,6 +99,6 @@ in
           supportsDryActivation = false;
         };
       })
-    ])
+    ]
   );
 }
