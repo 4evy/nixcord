@@ -41,6 +41,12 @@ in
       inherit (oldAttrs) pname;
       inherit pnpm patches postPatch;
       inherit src;
+      prePnpmInstall = ''
+        export NODE_OPTIONS=--max-old-space-size=2048
+        export pnpm_config_child_concurrency=1
+        export pnpm_config_network_concurrency=1
+        export pnpm_config_workspace_concurrency=1
+      '';
       fetcherVersion = 4;
       hash = pnpmDepsHash;
     };

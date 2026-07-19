@@ -33,10 +33,7 @@ jobs:
         with:
           fetch-depth: 1
 
-      - uses: DeterminateSystems/nix-installer-action@v21
-        with:
-          extra-conf: |
-            extra-nix-path = nixpkgs=flake:github:NixOS/nixpkgs/nixos-25.11
+      - uses: DeterminateSystems/nix-installer-action@v22
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v6.0.0
