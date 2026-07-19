@@ -10,7 +10,7 @@
   skipGitMigrations ? true,
 }:
 let
-  nodeModulesHashDarwin = "sha256-16ffPdl0ae/0EvLNQjeq3zIFEzQ29Sj4JN1/UGCa5r4=";
+  nodeModulesHashDarwin = "sha256-nRs7Aqwqc+HkJ6lrZvIp92IreJ6iq9biCYx3uc/Cw20=";
   nodeModulesHashLinux = "sha256-UhbM9uzpgHus2E1fE4P1Xt+QFv33TcMj8dKypC5iPkk=";
   nodeModulesHash = if stdenvNoCC.isDarwin then nodeModulesHashDarwin else nodeModulesHashLinux;
 in

@@ -39,8 +39,8 @@ let
   system = stdenvNoCC.hostPlatform.system;
 
   outputHashes = {
-    x86_64-linux = "sha256-YDEZQFyTFdh+vUBWuNPuqQ5IgwE3PcJ/VHDEVJUGRlw=";
-    aarch64-darwin = "sha256-uxmPw9Ae+zqmIETCe+iBgpJX1fxaUozwf9q3o//lmxU=";
+    x86_64-linux = "sha256-G+JO1hZWAbp0W4vOi8dU8j8cXnfcBb/+OEp9CrglVN0=";
+    aarch64-darwin = "sha256-XqlxTHxJiCena402QR2A/MastcA5mLBaHWnb7CifPMQ=";
   };
 
   deps = stdenvNoCC.mkDerivation {
