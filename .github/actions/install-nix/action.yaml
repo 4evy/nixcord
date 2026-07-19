@@ -1,0 +1,16 @@
+name: Install Nix
+description: Install Nix consistently across the repository workflows
+
+inputs:
+  extra-conf:
+    description: Additional nix.conf settings required by the job
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - uses: DeterminateSystems/nix-installer-action@ef8a148080ab6020fd15196c2084a2eea5ff2d25 # v22
+      with:
+        extra-conf: ${{ inputs.extra-conf }}
+        github-token: ${{ github.token }}

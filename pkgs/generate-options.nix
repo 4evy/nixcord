@@ -10,9 +10,15 @@
   skipGitMigrations ? true,
 }:
 let
-  nodeModulesHashDarwin = "sha256-nRs7Aqwqc+HkJ6lrZvIp92IreJ6iq9biCYx3uc/Cw20=";
-  nodeModulesHashLinux = "sha256-UhbM9uzpgHus2E1fE4P1Xt+QFv33TcMj8dKypC5iPkk=";
-  nodeModulesHash = if stdenvNoCC.isDarwin then nodeModulesHashDarwin else nodeModulesHashLinux;
+  nodeModulesHashes = {
+    x86_64-linux = "sha256-UhbM9uzpgHus2E1fE4P1Xt+QFv33TcMj8dKypC5iPkk=";
+    aarch64-linux = "sha256-1tFFJUekq3bNVTv1Sf5Dn6PWPH45/hVUZoWs9TSNqGA=";
+    aarch64-darwin = "sha256-yAVJmZE0eIxDlA51VZMA9ehAfKpZ2j9795supydcI/M=";
+    x86_64-darwin = "sha256-imH40YL8SoHFMw0LYpNY0oPmyf/22xIFJCUeBB2SW38=";
+  };
+  nodeModulesHash =
+    nodeModulesHashes.${stdenvNoCC.hostPlatform.system}
+      or (throw "Unsupported system: ${stdenvNoCC.hostPlatform.system}");
 in
 stdenvNoCC.mkDerivation (finalAttrs: {
   name = "nixcord-plugin-options";

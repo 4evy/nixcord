@@ -26,7 +26,7 @@
     "docs:build": "bun run --filter nixcord-docs build",
     "docs:check": "bun run --filter nixcord-docs check",
     "docs:preview": "bun run --filter nixcord-docs preview",
-    "check": "bun run typecheck && bun run lint && bun run format:check"
+    "check": "bun run typecheck && bun run docs:check && bun run lint && bun run format:check"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.4",

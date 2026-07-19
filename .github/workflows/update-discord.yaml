@@ -9,6 +9,8 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
+permissions: {}
+
 env:
   NIXPKGS_EXPR: >-
     let flake = builtins.getFlake (toString ./.);
@@ -24,16 +26,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
-      contents: write
+      contents: write # Commit refreshed Discord source metadata.
 
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           ref: ${{ github.ref_name }}
+          persist-credentials: false
 
-      - uses: DeterminateSystems/nix-installer-action@ef8a148080ab6020fd15196c2084a2eea5ff2d25 # v22
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: ./.github/actions/install-nix
 
       - name: Update sources
         run: |
@@ -76,6 +77,7 @@ jobs:
       - name: Commit and push changes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REF_NAME: ${{ github.ref_name }}
         run: |
           set -euo pipefail
           if git diff --quiet -- pkgs/discord/data/sources.json; then
@@ -87,6 +89,7 @@ jobs:
           git config user.email 'github-actions[bot]@users.noreply.github.com'
           git config pull.rebase true
           git config rebase.autoStash true
+          gh auth setup-git
 
           changes=$(jq -r --slurpfile old "$RUNNER_TEMP/discord-sources-before.json" '
             to_entries[]
@@ -104,8 +107,8 @@ jobs:
           for attempt in {1..5}; do
             git rebase --abort 2>/dev/null || true
             if git fetch origin \
-              && git pull --rebase origin "${{ github.ref_name }}" \
-              && git push origin "HEAD:${{ github.ref_name }}"; then
+              && git pull --rebase origin "$REF_NAME" \
+              && git push origin "HEAD:$REF_NAME"; then
               exit 0
             fi
             if [[ "$attempt" -eq 5 ]]; then

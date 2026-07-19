@@ -1,0 +1,114 @@
+name: Reusable Nix Checks
+
+on:
+  workflow_call:
+
+permissions: {}
+
+jobs:
+  check:
+    name: ${{ matrix.system }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - system: x86_64-linux
+            runner: ubuntu-24.04
+          - system: aarch64-linux
+            runner: ubuntu-24.04-arm
+          - system: aarch64-darwin
+            runner: macos-15
+          - system: x86_64-darwin
+            host_system: aarch64-darwin
+            nix_extra_conf: extra-platforms = x86_64-darwin
+            runner: macos-15
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - uses: ./.github/actions/install-nix
+        with:
+          extra-conf: ${{ matrix.nix_extra_conf || '' }}
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: pnpm-deps
+          path: .
+
+      - name: Import pnpm dependency stores
+        run: nix-store --import < pnpm-deps.nar
+
+      - name: Verify host and target architectures
+        env:
+          EXPECTED_HOST_SYSTEM: ${{ matrix.host_system || matrix.system }}
+          EXPECTED_SYSTEM: ${{ matrix.system }}
+        run: |
+          actual_host_system=$(nix eval --impure --raw --expr builtins.currentSystem)
+          if [[ "$actual_host_system" != "$EXPECTED_HOST_SYSTEM" ]]; then
+            echo "::error::Expected host $EXPECTED_HOST_SYSTEM, got $actual_host_system"
+            exit 1
+          fi
+          actual_system=$(nix --option system "$EXPECTED_SYSTEM" \
+            eval --impure --raw --expr builtins.currentSystem)
+          if [[ "$actual_system" != "$EXPECTED_SYSTEM" ]]; then
+            echo "::error::Expected target $EXPECTED_SYSTEM, got $actual_system"
+            exit 1
+          fi
+
+      - name: Run flake checks
+        env:
+          EXPECTED_SYSTEM: ${{ matrix.system }}
+        run: |
+          nix_args=()
+          if [[ "$RUNNER_OS" == "macOS" ]]; then
+            nix_args+=(--max-jobs 1 --cores 2)
+          fi
+          nix --option system "$EXPECTED_SYSTEM" flake check \
+            "${nix_args[@]}" --print-build-logs
+
+      - name: Build every package
+        env:
+          EXPECTED_SYSTEM: ${{ matrix.system }}
+        run: |
+          set -euo pipefail
+          available=$(nix --option system "$EXPECTED_SYSTEM" eval \
+            --json ".#packages.$EXPECTED_SYSTEM" --apply builtins.attrNames)
+          packages=(equicord vencord docs-json generate)
+          for package in docs discord discord-ptb discord-canary discord-development; do
+            if jq -e --arg package "$package" 'index($package) != null' <<< "$available" >/dev/null; then
+              packages+=("$package")
+            fi
+          done
+          installables=()
+          for package in "${packages[@]}"; do
+            installables+=(".#$package")
+          done
+          nix_args=()
+          if [[ "$RUNNER_OS" == "macOS" ]]; then
+            nix_args+=(--max-jobs 1 --cores 2)
+          fi
+          nix --option system "$EXPECTED_SYSTEM" build \
+            "${nix_args[@]}" --no-link --print-build-logs "${installables[@]}"
+
+      - name: Check generated plugin metadata
+        if: matrix.system == 'x86_64-linux'
+        env:
+          EXPECTED_SYSTEM: ${{ matrix.system }}
+        run: |
+          set -euo pipefail
+          generated=$(nix --option system "$EXPECTED_SYSTEM" build \
+            .#generate --no-link --print-out-paths)
+          for generated_file in "$generated"/plugins/*; do
+            committed_file="modules/plugins/$(basename "$generated_file")"
+            if ! cmp --silent "$generated_file" "$committed_file"; then
+              echo "::error file=$committed_file::Generated plugin metadata is stale"
+              diff -u "$committed_file" "$generated_file" || true
+              exit 1
+            fi
+          done

@@ -6,6 +6,7 @@ on:
       - "package.json"
       - "bun.lock"
       - "pkgs/generate-options.nix"
+      - "pkgs/scripts/update-fixed-output-hash.sh"
       - "docs/site.nix"
   schedule:
     - cron: "0 */8 * * *" # Every 8 hours
@@ -14,6 +15,8 @@ on:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
+
+permissions: {}
 
 env:
   NIXPKGS_EXPR: >-
@@ -27,19 +30,18 @@ env:
 jobs:
   update-plugins:
     name: Update and verify plugins
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     permissions:
-      contents: write
+      contents: write # Commit x86_64-linux dependency and generated metadata updates.
 
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           ref: ${{ github.ref_name }}
+          persist-credentials: false
 
-      - uses: DeterminateSystems/nix-installer-action@ef8a148080ab6020fd15196c2084a2eea5ff2d25 # v22
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: ./.github/actions/install-nix
 
       - name: Update Equicord and Vencord
         env:
@@ -54,43 +56,22 @@ jobs:
             "$update_script/bin/$update_bin"
           done
 
-      - name: Refresh Linux dependencies and generate plugin options
+      - name: Refresh x86_64-linux dependencies and generate plugin options
         env:
           NIXCORD_GENERATE_WITH_GIT: "1"
         run: |
           set -euo pipefail
+          system=$(nix eval --impure --raw --expr builtins.currentSystem)
+          if [[ "$system" != "x86_64-linux" ]]; then
+            echo "::error::Expected x86_64-linux, got $system"
+            exit 1
+          fi
           nix_file=pkgs/generate-options.nix
-          for attempt in {1..3}; do
-            if output=$(nix run .#generate 2>&1); then
-              break
-            fi
-            new_hash=$(grep -oE 'got:[[:space:]]+sha256-[A-Za-z0-9+/=]+' <<< "$output" \
-              | tail -1 | sed -E 's/got:[[:space:]]*//' || true)
-            if [[ -z "$new_hash" || "$attempt" -eq 3 ]]; then
-              printf '%s\n' "$output"
-              exit 1
-            fi
-            sed -i -E \
-              "s|nodeModulesHashLinux = \"[^\"]+\";|nodeModulesHashLinux = \"$new_hash\";|" \
-              "$nix_file"
-          done
+          hash_updater=pkgs/scripts/update-fixed-output-hash.sh
+          "$hash_updater" refresh "$nix_file" "$system" -- nix run .#generate
 
           docs_file=docs/site.nix
-          system=$(nix eval --impure --raw --expr builtins.currentSystem)
-          for attempt in {1..3}; do
-            if output=$(nix build --no-link .#docs 2>&1); then
-              break
-            fi
-            new_hash=$(grep -oE 'got:[[:space:]]+sha256-[A-Za-z0-9+/=]+' <<< "$output" \
-              | tail -1 | sed -E 's/got:[[:space:]]*//' || true)
-            if [[ -z "$new_hash" || "$attempt" -eq 3 ]]; then
-              printf '%s\n' "$output"
-              exit 1
-            fi
-            SYSTEM="$system" NEW_HASH="$new_hash" perl -pi -e \
-              's|^(\s*)\Q$ENV{SYSTEM}\E = "[^"]+";|$1$ENV{SYSTEM} = "$ENV{NEW_HASH}";|' \
-              "$docs_file"
-          done
+          "$hash_updater" refresh "$docs_file" "$system" -- nix build --no-link .#docs
 
       - name: Build packages and run checks
         run: |
@@ -118,6 +99,7 @@ jobs:
       - name: Commit and push changes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REF_NAME: ${{ github.ref_name }}
         run: |
           set -euo pipefail
           paths=(
@@ -138,6 +120,7 @@ jobs:
           git config user.email 'github-actions[bot]@users.noreply.github.com'
           git config pull.rebase true
           git config rebase.autoStash true
+          gh auth setup-git
 
           equicord_version=$(nix eval --raw .#equicord.version)
           vencord_version=$(nix eval --raw .#vencord.version)
@@ -149,8 +132,8 @@ jobs:
           for attempt in {1..5}; do
             git rebase --abort 2>/dev/null || true
             if git fetch origin \
-              && git pull --rebase origin "${{ github.ref_name }}" \
-              && git push origin "HEAD:${{ github.ref_name }}"; then
+              && git pull --rebase origin "$REF_NAME" \
+              && git push origin "HEAD:$REF_NAME"; then
               exit 0
             fi
             if [[ "$attempt" -eq 5 ]]; then
@@ -160,22 +143,35 @@ jobs:
             sleep $((attempt * 2))
           done
 
-  verify-darwin:
-    name: Verify plugins on Darwin
+  verify-platforms:
+    name: Verify plugins on ${{ matrix.system }}
     needs: update-plugins
-    runs-on: macos-latest
-    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - system: aarch64-linux
+            runner: ubuntu-24.04-arm
+          - system: aarch64-darwin
+            runner: macos-15
+          - system: x86_64-darwin
+            host_system: aarch64-darwin
+            nix_extra_conf: extra-platforms = x86_64-darwin
+            runner: macos-15
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
     permissions:
-      contents: write
+      contents: read
 
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           ref: ${{ github.ref_name }}
+          persist-credentials: false
 
-      - uses: DeterminateSystems/nix-installer-action@ef8a148080ab6020fd15196c2084a2eea5ff2d25 # v22
+      - uses: ./.github/actions/install-nix
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          extra-conf: ${{ matrix.nix_extra_conf || '' }}
 
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
@@ -185,71 +181,152 @@ jobs:
       - name: Import pnpm dependency stores
         run: nix-store --import < pnpm-deps.nar
 
-      - name: Refresh Darwin dependencies
+      - name: Refresh target dependencies
         env:
+          EXPECTED_HOST_SYSTEM: ${{ matrix.host_system || matrix.system }}
+          EXPECTED_SYSTEM: ${{ matrix.system }}
           NIXCORD_GENERATE_WITH_GIT: "1"
+          REF_NAME: ${{ github.ref_name }}
         run: |
           set -euo pipefail
-          git pull --rebase origin "${{ github.ref_name }}"
+          git pull --rebase origin "$REF_NAME"
+
+          actual_host_system=$(nix eval --impure --raw --expr builtins.currentSystem)
+          if [[ "$actual_host_system" != "$EXPECTED_HOST_SYSTEM" ]]; then
+            echo "::error::Expected host $EXPECTED_HOST_SYSTEM, got $actual_host_system"
+            exit 1
+          fi
+          actual_system=$(nix --option system "$EXPECTED_SYSTEM" \
+            eval --impure --raw --expr builtins.currentSystem)
+          if [[ "$actual_system" != "$EXPECTED_SYSTEM" ]]; then
+            echo "::error::Expected target $EXPECTED_SYSTEM, got $actual_system"
+            exit 1
+          fi
+
           nix_file=pkgs/generate-options.nix
-          for attempt in {1..3}; do
-            if output=$(nix run .#generate 2>&1); then
-              break
-            fi
-            new_hash=$(grep -oE 'got:[[:space:]]+sha256-[A-Za-z0-9+/=]+' <<< "$output" \
-              | tail -1 | sed -E 's/got:[[:space:]]*//' || true)
-            if [[ -z "$new_hash" || "$attempt" -eq 3 ]]; then
-              printf '%s\n' "$output"
-              exit 1
-            fi
-            NEW_HASH="$new_hash" perl -pi -e \
-              's|nodeModulesHashDarwin = "[^"]+";|nodeModulesHashDarwin = "$ENV{NEW_HASH}";|' \
-              "$nix_file"
-          done
+          hash_updater=pkgs/scripts/update-fixed-output-hash.sh
+          "$hash_updater" refresh "$nix_file" "$EXPECTED_SYSTEM" -- \
+            nix --option system "$EXPECTED_SYSTEM" run .#generate
           if ! git diff --quiet -- modules/plugins; then
-            echo "::error::Darwin generated different plugin metadata than Linux"
+            echo "::error::Generated plugin metadata differs on $EXPECTED_SYSTEM"
             git diff --stat -- modules/plugins
             exit 1
           fi
 
-          system=$(nix eval --impure --raw --expr builtins.currentSystem)
-          if nix eval --raw ".#packages.$system.docs.drvPath" >/dev/null 2>&1; then
+          if nix --option system "$EXPECTED_SYSTEM" eval \
+            --raw ".#packages.$EXPECTED_SYSTEM.docs.drvPath" >/dev/null 2>&1; then
             docs_file=docs/site.nix
-            for attempt in {1..3}; do
-              if output=$(nix build --no-link .#docs 2>&1); then
-                break
-              fi
-              new_hash=$(grep -oE 'got:[[:space:]]+sha256-[A-Za-z0-9+/=]+' <<< "$output" \
-                | tail -1 | sed -E 's/got:[[:space:]]*//' || true)
-              if [[ -z "$new_hash" || "$attempt" -eq 3 ]]; then
-                printf '%s\n' "$output"
-                exit 1
-              fi
-              SYSTEM="$system" NEW_HASH="$new_hash" perl -pi -e \
-                's|^(\s*)\Q$ENV{SYSTEM}\E = "[^"]+";|$1$ENV{SYSTEM} = "$ENV{NEW_HASH}";|' \
-                "$docs_file"
-            done
+            "$hash_updater" refresh "$docs_file" "$EXPECTED_SYSTEM" -- \
+              nix --option system "$EXPECTED_SYSTEM" build --no-link .#docs
           fi
 
       - name: Build packages and run checks
+        env:
+          EXPECTED_SYSTEM: ${{ matrix.system }}
         run: |
           set -euo pipefail
-          system=$(nix eval --impure --raw --expr builtins.currentSystem)
-          packages=(.#equicord .#vencord)
-          if nix eval --raw ".#packages.$system.docs.drvPath" >/dev/null 2>&1; then
-            packages+=(.#docs)
+          packages=(
+            ".#packages.$EXPECTED_SYSTEM.equicord"
+            ".#packages.$EXPECTED_SYSTEM.vencord"
+          )
+          if nix --option system "$EXPECTED_SYSTEM" eval \
+            --raw ".#packages.$EXPECTED_SYSTEM.docs.drvPath" >/dev/null 2>&1; then
+            packages+=(".#packages.$EXPECTED_SYSTEM.docs")
           fi
-          nix build --max-jobs 1 --cores 2 --no-link --print-build-logs "${packages[@]}"
-          nix flake check --max-jobs 1 --cores 2 --print-build-logs
+          nix_args=()
+          if [[ "$RUNNER_OS" == "macOS" ]]; then
+            nix_args+=(--max-jobs 1 --cores 2)
+          fi
+          nix --option system "$EXPECTED_SYSTEM" build \
+            "${nix_args[@]}" --no-link --print-build-logs "${packages[@]}"
+          nix --option system "$EXPECTED_SYSTEM" flake check \
+            "${nix_args[@]}" --print-build-logs
 
-      - name: Commit Darwin dependency hash
+      - name: Record dependency hashes
+        env:
+          EXPECTED_SYSTEM: ${{ matrix.system }}
+        run: |
+          set -euo pipefail
+          hash_updater=pkgs/scripts/update-fixed-output-hash.sh
+          node_modules_hash=$("$hash_updater" get pkgs/generate-options.nix "$EXPECTED_SYSTEM")
+
+          mkdir -p dependency-hashes
+          hashes_file="dependency-hashes/$EXPECTED_SYSTEM.txt"
+          printf 'node_modules %s %s\n' "$EXPECTED_SYSTEM" "$node_modules_hash" > "$hashes_file"
+
+          if nix --option system "$EXPECTED_SYSTEM" eval \
+            --raw ".#packages.$EXPECTED_SYSTEM.docs.drvPath" >/dev/null 2>&1; then
+            docs_hash=$("$hash_updater" get docs/site.nix "$EXPECTED_SYSTEM")
+            printf 'docs %s %s\n' "$EXPECTED_SYSTEM" "$docs_hash" >> "$hashes_file"
+          fi
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: dependency-hashes-${{ matrix.system }}
+          path: dependency-hashes
+          retention-days: 1
+
+  commit-platform-hashes:
+    name: Commit platform dependency hashes
+    needs: verify-platforms
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write # Commit dependency hashes verified by native platform jobs.
+
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ github.ref_name }}
+          persist-credentials: false
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: dependency-hashes-*
+          path: dependency-hashes
+          merge-multiple: true
+
+      - name: Apply verified dependency hashes
+        env:
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          git pull --rebase origin "$REF_NAME"
+
+          shopt -s nullglob
+          hash_files=(dependency-hashes/*.txt)
+          if [[ "${#hash_files[@]}" -ne 3 ]]; then
+            echo "::error::Expected 3 platform hash files, got ${#hash_files[@]}"
+            exit 1
+          fi
+
+          hash_updater=pkgs/scripts/update-fixed-output-hash.sh
+          for hashes_file in "${hash_files[@]}"; do
+            while read -r kind system hash; do
+              case "$kind" in
+                node_modules)
+                  target=pkgs/generate-options.nix
+                  ;;
+                docs)
+                  target=docs/site.nix
+                  ;;
+                *)
+                  echo "::error::Unknown dependency hash kind: $kind"
+                  exit 1
+                  ;;
+              esac
+              "$hash_updater" set "$target" "$system" "$hash"
+            done < "$hashes_file"
+          done
+
+      - name: Commit and push dependency hashes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REF_NAME: ${{ github.ref_name }}
         run: |
           set -euo pipefail
           paths=(pkgs/generate-options.nix docs/site.nix)
           if git diff --quiet -- "${paths[@]}"; then
-            echo "::notice::Darwin dependency hashes are already current"
+            echo "::notice::Platform dependency hashes are already current"
             exit 0
           fi
 
@@ -257,14 +334,15 @@ jobs:
           git config user.email 'github-actions[bot]@users.noreply.github.com'
           git config pull.rebase true
           git config rebase.autoStash true
+          gh auth setup-git
           git add -- "${paths[@]}"
-          git commit -m "plugins: update Darwin dependencies"
+          git commit -m "plugins: update platform dependency hashes"
 
           for attempt in {1..5}; do
             git rebase --abort 2>/dev/null || true
             if git fetch origin \
-              && git pull --rebase origin "${{ github.ref_name }}" \
-              && git push origin "HEAD:${{ github.ref_name }}"; then
+              && git pull --rebase origin "$REF_NAME" \
+              && git push origin "HEAD:$REF_NAME"; then
               exit 0
             fi
             if [[ "$attempt" -eq 5 ]]; then

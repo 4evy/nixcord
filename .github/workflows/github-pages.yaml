@@ -15,16 +15,23 @@ on:
       - ".github/workflows/github-pages.yaml"
   workflow_dispatch:
 
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+permissions: {}
+
 jobs:
   publish:
+    name: Build and publish documentation
     strategy:
       matrix:
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
     permissions:
       contents: read
-      pages: write
-      id-token: write
+      pages: write # Deploy the built site to GitHub Pages.
+      id-token: write # Authenticate the Pages deployment.
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -32,8 +39,9 @@ jobs:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 1
+          persist-credentials: false
 
-      - uses: DeterminateSystems/nix-installer-action@ef8a148080ab6020fd15196c2084a2eea5ff2d25 # v22
+      - uses: ./.github/actions/install-nix
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0

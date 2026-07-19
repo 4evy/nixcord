@@ -30,7 +30,7 @@
     {
       "customType": "regex",
       "description": "Track pinned tool versions in workflow inputs",
-      "managerFilePatterns": ["/^\\.github/workflows/.+\\.ya?ml$/"],
+      "managerFilePatterns": ["/^\\.github/(?:workflows|actions)/.+\\.ya?ml$/"],
       "matchStrings": [
         "# renovate: datasource=(?<datasource>[^\\s]+) depName=(?<depName>[^\\s]+)\\n\\s+[\\w-]+: \"(?<currentValue>[^\"]+)\""
       ]
