@@ -110,10 +110,8 @@ let
       );
       discordOverride = cfg.discord.package.override or null;
       discordOverrideArgs =
-        if builtins.isAttrs discordOverride && discordOverride ? __functionArgs then
-          discordOverride.__functionArgs
-        else if builtins.isFunction discordOverride then
-          builtins.functionArgs discordOverride
+        if discordOverride != null && lib.isFunction discordOverride then
+          lib.functionArgs discordOverride
         else
           { };
       discordPackageSupports = arg: discordOverrideArgs.${arg} or false;
@@ -133,7 +131,7 @@ let
           # deprecation window; until then it is a compatibility shim for
           # programs.nixcord.discord.commandLineArgs.
           commandLineArgs = discordCommandLineArgsValue;
-          branch = cfg.discord.branch;
+          inherit (cfg.discord) branch;
           vencord = if cfg.discord.vencord.enable then vencord else null;
           equicord = if cfg.discord.equicord.enable then equicord else null;
         }

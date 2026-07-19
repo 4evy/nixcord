@@ -8,5 +8,5 @@ lib.pipe
   ]
   [
     (map (path: import path { inherit lib; }))
-    lib.mergeAttrsList
+    (lib.foldl' lib.attrsets.unionOfDisjoint { })
   ]

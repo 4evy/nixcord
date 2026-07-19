@@ -15,6 +15,15 @@ let
         legcordSettings
         legcordWeb
         ;
+      inherit (cfg)
+        configDir
+        discord
+        dorion
+        equibop
+        legcord
+        vesktop
+        ;
+      inherit (cfg.discord) vencord equicord;
 
       copy =
         spec:
@@ -35,7 +44,7 @@ let
         [
           (copy {
             name = "${name}-settings";
-            enable = client.enable;
+            inherit (client) enable;
             src = fullSettings;
             dest = "${client.configDir}/settings/settings.json";
           })
@@ -70,7 +79,7 @@ let
       quickCssOnVesktop = cfg.vesktop.enable && quickCssEnabled && isQuickCssUsed cfg.vesktopConfig;
       quickCssOnEquibop = cfg.equibop.enable && quickCssEnabled && isQuickCssUsed cfg.equibopConfig;
 
-      desktopClients = with cfg; [
+      desktopClients = [
         {
           name = "vesktop";
           client = vesktop;
@@ -89,31 +98,29 @@ let
         }
       ];
 
-      discordMods = with cfg.discord; [
+      discordMods = [
         {
           name = "vencord";
-          enable = vencord.enable;
+          inherit (vencord) enable;
           src = settings.vencordSettingsFile;
         }
         {
           name = "equicord";
-          enable = equicord.enable;
+          inherit (equicord) enable;
           src = settings.equicordSettingsFile;
         }
       ];
 
-      discordModSettingsSpecs =
-        with cfg;
-        map (
-          mod:
-          copy {
-            name = "${mod.name}-settings";
-            enable = discord.enable && mod.enable;
-            inherit (mod) src;
-            dest = "${configDir}/settings/settings.json";
-            writable = true;
-          }
-        ) discordMods;
+      discordModSettingsSpecs = map (
+        mod:
+        copy {
+          name = "${mod.name}-settings";
+          enable = discord.enable && mod.enable;
+          inherit (mod) src;
+          dest = "${configDir}/settings/settings.json";
+          writable = true;
+        }
+      ) discordMods;
 
       legcordWebMods = [
         {
@@ -144,7 +151,7 @@ let
           ]
       ) legcordWebMods;
 
-      themeClients = with cfg; [
+      themeClients = [
         {
           name = "vesktop";
           client = vesktop;
@@ -170,7 +177,7 @@ let
         )
       ) themeClients;
 
-      oneOffSpecs = with cfg; [
+      oneOffSpecs = [
         (copy {
           name = "discord-quick-css";
           enable = quickCssOnDiscord;
@@ -214,7 +221,7 @@ let
   mkCopyCommands =
     args:
     let
-      mkCopy = spec: "copy_file ${spec.src} ${lib.escapeShellArg spec.dest} 0644";
+      mkCopy = spec: "copy_file ${lib.escapeShellArg spec.src} ${lib.escapeShellArg spec.dest} 0644";
     in
     lib.pipe (mkFileSpecs args) [
       (lib.concatMapStringsSep "\n" mkCopy)
@@ -222,8 +229,17 @@ let
 
   mkInstalledPackages =
     cfg: finalPackages:
+    let
+      inherit (cfg)
+        discord
+        dorion
+        equibop
+        legcord
+        vesktop
+        ;
+    in
     lib.pipe
-      (with cfg; [
+      [
         {
           enable = discord.enable && discord.installPackage;
           package = finalPackages.discord;
@@ -244,7 +260,7 @@ let
           enable = legcord.enable && legcord.installPackage;
           package = finalPackages.legcord;
         }
-      ])
+      ]
       [
         (lib.filter (entry: entry.enable))
         (map (entry: entry.package))

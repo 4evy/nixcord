@@ -37,6 +37,13 @@ let
 
       pluginsOf = attrs: attrs.plugins or { };
 
+      mergePlugins =
+        configs:
+        lib.pipe configs [
+          (map pluginsOf)
+          (lib.foldl' lib.recursiveUpdate { })
+        ];
+
       pluginNameMigrations = deprecatedPluginNameMigrations // generatedPluginNameMigrations;
 
       isPluginEnabled =
@@ -127,6 +134,7 @@ let
     {
       inherit
         pluginsOf
+        mergePlugins
         pluginNameMigrations
         collectDeprecatedPlugins
         collectEnabledEquicordOnlyPlugins
@@ -139,26 +147,24 @@ let
   mkAssertions =
     {
       cfg,
-      pluginsOf,
+      mergePlugins,
       collectEnabledEquicordOnlyPlugins,
       collectEnabledVencordOnlyPlugins,
     }:
     let
-      allPlugins.plugins = lib.mergeAttrsList (
-        with cfg;
-        [ config.plugins ]
-        ++ map pluginsOf [
-          extraConfig
-          vencordConfig
-          equicordConfig
-          vesktopConfig
-          equibopConfig
-        ]
-      );
+      allPlugins.plugins = mergePlugins [
+        cfg.config
+        cfg.extraConfig
+        cfg.vencordConfig
+        cfg.equicordConfig
+        cfg.vesktopConfig
+        cfg.equibopConfig
+      ];
       wrongEquicordPlugins = collectEnabledEquicordOnlyPlugins allPlugins;
       wrongVencordPlugins = collectEnabledVencordOnlyPlugins allPlugins;
-      hasVencordClient = with cfg; discord.vencord.enable || vesktop.enable || legcord.vencord.enable;
-      hasEquicordClient = with cfg; discord.equicord.enable || equibop.enable || legcord.equicord.enable;
+      hasVencordClient = cfg.discord.vencord.enable || cfg.vesktop.enable || cfg.legcord.vencord.enable;
+      hasEquicordClient =
+        cfg.discord.equicord.enable || cfg.equibop.enable || cfg.legcord.equicord.enable;
     in
     [
       {

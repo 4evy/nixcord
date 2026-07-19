@@ -72,7 +72,7 @@ let
         };
       };
     in
-    lib.mapAttrs (_name: spec: mkFullConfig spec) configSpecs;
+    lib.mapAttrs (_name: mkFullConfig) configSpecs;
 in
 {
   inherit

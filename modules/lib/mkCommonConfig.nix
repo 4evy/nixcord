@@ -23,7 +23,7 @@ let
     mkCopyCommands
     ;
 
-  parseRules = cfg.parseRules;
+  inherit (cfg) parseRules;
 
   inherit (pkgs.callPackage ./core.nix { inherit lib parseRules; }) mkVencordCfg mkFinalPackages;
 
@@ -52,9 +52,9 @@ let
 
   jsonFormat = pkgs.formats.json { };
 
-  quickCssFile = pkgs.writeText "nixcord-quickcss.css" cfg.quickCss;
+  quickCss = pkgs.writeText "nixcord-quickcss.css" cfg.quickCss;
 
-  settingsFiles = mkSettingsFiles {
+  settings = mkSettingsFiles {
     inherit
       pkgs
       cfg
@@ -66,38 +66,39 @@ let
       ;
   };
 
-  vesktopThemes = lib.mapAttrs (mkThemeFile { inherit pkgs; }) cfg.config.themes;
+  themes = lib.mapAttrs (mkThemeFile { inherit pkgs; }) cfg.config.themes;
 
-  dorionConfigFile =
-    if cfg.dorion.enable then
-      jsonFormat.generate "nixcord-dorion-config.json" (mkDorionConfigAttrs cfg)
-    else
-      null;
+  dorionAttrs = mkDorionConfigAttrs cfg;
 
-  legcordVencordWeb =
-    if cfg.legcord.enable && cfg.legcord.vencord.enable then
-      mkBrowserBuild {
-        inherit cfg;
-        pkg = cfg.discord.vencord.package;
-        browserJsPath = "dist/browser.js";
-        browserCssPath = "dist/browser.css";
-      }
-    else
-      null;
+  dorionConfig =
+    if cfg.dorion.enable then jsonFormat.generate "nixcord-dorion-config.json" dorionAttrs else null;
 
-  legcordEquicordWeb =
-    if cfg.legcord.enable && cfg.legcord.equicord.enable then
-      mkBrowserBuild {
-        inherit cfg;
-        pkg = cfg.discord.equicord.package;
-        browserJsPath = "dist/browser/browser.js";
-        browserCssPath = "dist/browser/browser.css";
-      }
-    else
-      null;
+  legcordWeb = {
+    vencord =
+      if cfg.legcord.enable && cfg.legcord.vencord.enable then
+        mkBrowserBuild {
+          inherit cfg;
+          pkg = cfg.discord.vencord.package;
+          browserJsPath = "dist/browser.js";
+          browserCssPath = "dist/browser.css";
+        }
+      else
+        null;
+
+    equicord =
+      if cfg.legcord.enable && cfg.legcord.equicord.enable then
+        mkBrowserBuild {
+          inherit cfg;
+          pkg = cfg.discord.equicord.package;
+          browserJsPath = "dist/browser/browser.js";
+          browserCssPath = "dist/browser/browser.css";
+        }
+      else
+        null;
+  };
 
   # Merge user legcord settings with auto-configured mods and noBundleUpdates.
-  legcordFinalSettings =
+  legcordAttrs =
     let
       inherit (cfg) legcord;
       bundledMods =
@@ -113,9 +114,9 @@ let
     in
     legcord.settings // autoSettings // { doneSetup = true; };
 
-  legcordSettingsFile =
-    if cfg.legcord.enable && legcordFinalSettings != { } then
-      jsonFormat.generate "nixcord-legcord-config.json" legcordFinalSettings
+  legcordSettings =
+    if cfg.legcord.enable && legcordAttrs != { } then
+      jsonFormat.generate "nixcord-legcord-config.json" legcordAttrs
     else
       null;
 
@@ -130,19 +131,18 @@ let
   };
 
   configs = fullConfigs // {
-    dorionAttrs = mkDorionConfigAttrs cfg;
+    inherit dorionAttrs legcordAttrs;
   };
 
   files = {
-    settings = settingsFiles;
-    themes = vesktopThemes;
-    quickCss = quickCssFile;
-    dorionConfig = dorionConfigFile;
-    legcordSettings = legcordSettingsFile;
-    legcordWeb = {
-      vencord = legcordVencordWeb;
-      equicord = legcordEquicordWeb;
-    };
+    inherit
+      settings
+      themes
+      quickCss
+      dorionConfig
+      legcordSettings
+      legcordWeb
+      ;
   };
 
   mkActivationScripts =

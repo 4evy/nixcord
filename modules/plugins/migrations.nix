@@ -17,8 +17,8 @@ let
       from = base ++ migration.from;
       to = base ++ migration.to;
       visible = false;
-      warn = migration.warn;
-      use = x: x;
+      inherit (migration) warn;
+      use = lib.id;
       condition = migration.condition or true;
     };
 in

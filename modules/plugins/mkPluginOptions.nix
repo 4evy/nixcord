@@ -54,10 +54,10 @@ let
     else
       let
         commonAttrs = {
-          description = setting.description;
+          inherit (setting) description;
         }
         // lib.optionalAttrs (setting ? default) { default = resolveDefault setting.default; }
-        // lib.optionalAttrs (setting.example != null) { example = setting.example; };
+        // lib.optionalAttrs (setting.example != null) { inherit (setting) example; };
         typeAttr =
           if setting.type == "types.enum" then
             { type = types.enum setting.enumValues; }

@@ -1,5 +1,4 @@
 {
-  config,
   lib,
   pkgs,
   nixcordPkgs ? { },
@@ -27,9 +26,9 @@ in
     package = mkOption {
       type = types.package;
       default = pkgs.callPackage ../../pkgs/discord (
-        lib.optionalAttrs (
-          pkgs.stdenvNoCC.isLinux && builtins.fromJSON (lib.versions.major lib.version) < 25
-        ) { libgbm = pkgs.mesa; }
+        lib.optionalAttrs (pkgs.stdenvNoCC.isLinux && lib.versionOlder lib.version "25") {
+          libgbm = pkgs.mesa;
+        }
       );
       defaultText = lib.literalExpression "pkgs.callPackage ../../pkgs/discord { }";
       description = "The Discord package to use.";
