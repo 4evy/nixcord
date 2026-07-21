@@ -14,9 +14,9 @@
   replaceVars,
 }:
 let
-  version = "1.14.16-2026-07-17";
-  rev = "0a5dfaa1caa0799899b4d14e3862b70c665d8223";
-  hash = "sha256-5j2BN51toR9ygtcL+DLChTdeGjoVjo8uBNjI86Q2wgY=";
+  version = "1.14.16-2026-07-20";
+  rev = "4b9c27d905d6255141617546227a56073916ebd4";
+  hash = "sha256-dhBD/xlgf0VXVEP6I5kB6wmyJz7k8Epy1m8mHKhZuqs=";
   pnpmDepsHash = "sha256-JmTSfUVHsMG0TcOwXkZWinRxpONZagtwKzESd8Q4LlQ=";
   src = fetchFromGitHub {
     inherit (vencord.src) owner repo;
