@@ -1,4 +1,7 @@
-{ pkgs }:
+{
+  pkgs,
+  openasar ? pkgs.openasar,
+}:
 
 {
   regression-matrix = import ./examples/regression-matrix.nix { inherit pkgs; };
@@ -9,6 +12,7 @@
   darwin-activation-stage = import ./darwin-activation-stage.nix { inherit pkgs; };
   hm-writable-files = import ./hm-writable-files.nix { inherit pkgs; };
   discord-package-arguments = import ./discord-package-arguments.nix { inherit pkgs; };
+  discord-openasar = import ./discord-openasar.nix { inherit pkgs openasar; };
   discord-launcher-c = import ./c/discord-launcher.nix { inherit pkgs; };
 }
 // pkgs.lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {

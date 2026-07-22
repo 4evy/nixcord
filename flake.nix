@@ -39,8 +39,11 @@
             discord-canary.branch = "canary";
             discord-development.branch = "development";
           };
+          openasar = pkgs.callPackage ./pkgs/openasar.nix { };
           discordPackages = pkgs.lib.optionalAttrs discordAvailable (
-            pkgs.lib.mapAttrs (_name: args: pkgs.callPackage ./pkgs/discord args) discordVariants
+            pkgs.lib.mapAttrs (
+              _name: args: pkgs.callPackage ./pkgs/discord ({ inherit openasar; } // args)
+            ) discordVariants
           );
           vencord = pkgs.callPackage ./pkgs/vencord.nix { };
           equicord = pkgs.callPackage ./pkgs/equicord.nix { };
@@ -48,6 +51,11 @@
             discord-with-vencord = pkgs.callPackage ./pkgs/discord {
               withVencord = true;
               inherit vencord;
+            };
+            discord-with-vencord-openasar = pkgs.callPackage ./pkgs/discord {
+              withVencord = true;
+              withOpenASAR = true;
+              inherit vencord openasar;
             };
             discord-with-equicord = pkgs.callPackage ./pkgs/discord {
               withEquicord = true;
@@ -70,13 +78,13 @@
         in
         {
           _module.args.pkgs = pkgs;
-          checks = import ./modules/tests { inherit pkgs; } // discordIntegrationChecks;
+          checks = import ./modules/tests { inherit pkgs openasar; } // discordIntegrationChecks;
 
           packages =
             discordPackages
             // docsPackages
             // {
-              inherit vencord equicord;
+              inherit vencord equicord openasar;
               generate = pkgs.callPackage ./pkgs/generate-options.nix { };
 
               docs-json = docsArtifacts.json;

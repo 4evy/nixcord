@@ -9,6 +9,7 @@ let
   jsonFormat = pkgs.formats.json { };
   vencordPackage = pkgs.callPackage ../../pkgs/vencord.nix { };
   equicordPackage = pkgs.callPackage ../../pkgs/equicord.nix { };
+  openasarPackage = pkgs.callPackage ../../pkgs/openasar.nix { };
 in
 {
   options.programs.nixcord.discord = {
@@ -26,7 +27,10 @@ in
     package = mkOption {
       type = types.package;
       default = pkgs.callPackage ../../pkgs/discord (
-        lib.optionalAttrs (pkgs.stdenvNoCC.isLinux && lib.versionOlder lib.version "25") {
+        {
+          openasar = nixcordPkgs.openasar or openasarPackage;
+        }
+        // lib.optionalAttrs (pkgs.stdenvNoCC.isLinux && lib.versionOlder lib.version "25") {
           libgbm = pkgs.mesa;
         }
       );
