@@ -5,6 +5,7 @@ on:
     paths:
       - "package.json"
       - "bun.lock"
+      - "flake.lock"
       - "pkgs/generate-options.nix"
       - "pkgs/scripts/update-fixed-output-hash.sh"
       - "docs/site.nix"
@@ -285,6 +286,7 @@ jobs:
     needs: verify-platforms
     runs-on: ubuntu-24.04
     permissions:
+      actions: write # Dispatch checks for the refreshed head commit.
       contents: write # Commit dependency hashes verified by native platform jobs.
 
     steps:
@@ -365,3 +367,16 @@ jobs:
             fi
             sleep $((attempt * 2))
           done
+
+      - name: Check refreshed head commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          current_sha=$(gh api \
+            "repos/$GITHUB_REPOSITORY/commits/$REF_NAME" --jq .sha)
+          if [[ "$current_sha" == "$GITHUB_SHA" ]]; then
+            echo "::notice::Plugin sources and dependency hashes did not change"
+            exit 0
+          fi
+          gh workflow run check.yaml --ref "$REF_NAME"
