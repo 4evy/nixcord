@@ -15,8 +15,8 @@
 }:
 let
   version = "1.15.0.1-2026-07-28";
-  rev = "88244a36cc07ae114371b7cc96b4e36e426835a3";
-  hash = "sha256-K5HVau5wecMBwKBdLq6hOScYH3OziTJ1W3Zp48pqaWc=";
+  rev = "93c7559e12f960274306e2d72289a7cde460244e";
+  hash = "sha256-wPlA/3iX0NyglLTtakZHSqaKu/mpBa6X5S51kgLFPOw=";
   pnpmDepsHash = "sha256-uGGHln3IRSZIBotzpC6muCpZdCD9M7DaOqN1Y60OtFo=";
   inherit (equicord.src) owner repo;
   src = fetchFromGitHub {
