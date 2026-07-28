@@ -36,7 +36,7 @@
     "@typescript/native-preview": "7.0.0-dev.20260707.2",
     "@vitest/coverage-v8": "4.1.10",
     "@vitest/ui": "4.1.10",
-    "equicord": "github:Equicord/Equicord#88244a36cc07ae114371b7cc96b4e36e426835a3",
+    "equicord": "github:Equicord/Equicord#93c7559e12f960274306e2d72289a7cde460244e",
     "fallow": "3.9.1",
     "renovate": "43.280.4",
     "typescript": "npm:@typescript/typescript6@6.0.2",
