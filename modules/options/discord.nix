@@ -1,4 +1,5 @@
 {
+  config,
   lib,
   pkgs,
   nixcordPkgs ? { },
@@ -10,6 +11,7 @@ let
   vencordPackage = pkgs.callPackage ../../pkgs/vencord.nix { };
   equicordPackage = pkgs.callPackage ../../pkgs/equicord.nix { };
   openasarPackage = pkgs.callPackage ../../pkgs/openasar.nix { };
+  selectedNixcordPkgs = if config.programs.nixcord.useGlobalPkgs then { } else nixcordPkgs;
 in
 {
   options.programs.nixcord.discord = {
@@ -28,7 +30,7 @@ in
       type = types.package;
       default = pkgs.callPackage ../../pkgs/discord (
         {
-          openasar = nixcordPkgs.openasar or openasarPackage;
+          openasar = selectedNixcordPkgs.openasar or openasarPackage;
         }
         // lib.optionalAttrs (pkgs.stdenvNoCC.isLinux && lib.versionOlder lib.version "25") {
           libgbm = pkgs.mesa;
@@ -60,7 +62,7 @@ in
       };
       package = mkOption {
         type = types.package;
-        default = nixcordPkgs.vencord or vencordPackage;
+        default = selectedNixcordPkgs.vencord or vencordPackage;
         defaultText = lib.literalExpression "pkgs.callPackage ../../pkgs/vencord.nix { }";
         description = "The Vencord package to use.";
       };
@@ -69,7 +71,7 @@ in
       enable = mkEnableOption "Equicord (alternative to Vencord)";
       package = mkOption {
         type = types.package;
-        default = nixcordPkgs.equicord or equicordPackage;
+        default = selectedNixcordPkgs.equicord or equicordPackage;
         defaultText = lib.literalExpression "pkgs.callPackage ../../pkgs/equicord.nix { }";
         description = "The Equicord package to use.";
       };
