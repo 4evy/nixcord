@@ -1766,6 +1766,16 @@
         "type": "types.bool",
         "default": false,
         "description": "Remove button tooltips. (restart required)"
+      },
+      "removeLibraryAboveDms": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Remove Library above DMs. (restart required)"
+      },
+      "removeFamilyCenterAboveDms": {
+        "type":"types.bool",
+        "default": false,
+        "description": "Remove Family Center above DMs. (restart required)"
       }
     }
   },
