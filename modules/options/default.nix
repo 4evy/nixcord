@@ -32,6 +32,18 @@ in
 
     enable = mkEnableOption "nixcord (Discord with Vencord/Equicord)";
 
+    useGlobalPkgs = mkOption {
+      type = types.bool;
+      default = false;
+      example = true;
+      description = ''
+        Whether to build Nixcord-provided packages with the package set passed
+        to the module instead of Nixcord's pinned package set. This may reduce
+        evaluation overhead, but uses a package combination that Nixcord does
+        not test.
+      '';
+    };
+
     configDir = mkOption {
       type = types.path;
       description = "Config directory for the selected client (Vencord or Equicord).";
