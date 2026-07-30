@@ -162,10 +162,6 @@ jobs:
             runner: ubuntu-24.04-arm
           - system: aarch64-darwin
             runner: macos-15
-          - system: x86_64-darwin
-            host_system: aarch64-darwin
-            nix_extra_conf: extra-platforms = x86_64-darwin
-            runner: macos-15
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 60
     permissions:
@@ -178,8 +174,6 @@ jobs:
           persist-credentials: false
 
       - uses: ./.github/actions/install-nix
-        with:
-          extra-conf: ${{ matrix.nix_extra_conf || '' }}
 
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
@@ -191,7 +185,7 @@ jobs:
 
       - name: Refresh target dependencies
         env:
-          EXPECTED_HOST_SYSTEM: ${{ matrix.host_system || matrix.system }}
+          EXPECTED_HOST_SYSTEM: ${{ matrix.system }}
           EXPECTED_SYSTEM: ${{ matrix.system }}
           NIXCORD_GENERATE_WITH_GIT: "1"
           REF_NAME: ${{ github.ref_name }}
@@ -312,8 +306,8 @@ jobs:
 
           shopt -s nullglob
           hash_files=(dependency-hashes/*.txt)
-          if [[ "${#hash_files[@]}" -ne 3 ]]; then
-            echo "::error::Expected 3 platform hash files, got ${#hash_files[@]}"
+          if [[ "${#hash_files[@]}" -ne 2 ]]; then
+            echo "::error::Expected 2 platform hash files, got ${#hash_files[@]}"
             exit 1
           fi
 
