@@ -40,7 +40,7 @@ let
 
   outputHashes = {
     x86_64-linux = "sha256-sP8alJeqbpRnNrjuAkppq/o1jZcmSJNWNPWUTKz2OWE=";
-    aarch64-darwin = "sha256-XqlxTHxJiCena402QR2A/MastcA5mLBaHWnb7CifPMQ=";
+    aarch64-darwin = "sha256-Pxq2oXh3hnKUS7m0R4hccOHkyF6aQhpUoYkTvbTDQcY=";
   };
 
   deps = stdenvNoCC.mkDerivation {
