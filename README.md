@@ -6,7 +6,10 @@
 
 **One Nix config for your Discord mods, themes, and clients.**
 
-Manage [Vencord](https://github.com/Vendicated/Vencord), [Equicord](https://github.com/Equicord/Equicord), [Vesktop](https://github.com/Vencord/Vesktop), [Dorion](https://github.com/SpikeHD/Dorion), and [Legcord](https://github.com/Legcord/Legcord) from your Nix config.
+Manage [Vencord](https://github.com/Vendicated/Vencord),
+[Equicord](https://github.com/Equicord/Equicord), [Vesktop](https://github.com/Vencord/Vesktop),
+[Dorion](https://github.com/SpikeHD/Dorion), and [Legcord](https://github.com/Legcord/Legcord) from
+your Nix config.
 
 [![Flake Checks](https://github.com/4evy/nixcord/actions/workflows/check.yaml/badge.svg?branch=main)](https://github.com/4evy/nixcord/actions/workflows/check.yaml)
 [![Docs](https://github.com/4evy/nixcord/actions/workflows/github-pages.yaml/badge.svg?branch=main)](https://github.com/4evy/nixcord/actions/workflows/github-pages.yaml)
@@ -14,12 +17,16 @@ Manage [Vencord](https://github.com/Vendicated/Vencord), [Equicord](https://gith
 [![GitHub stars](https://img.shields.io/github/stars/4evy/nixcord?style=flat-square&logo=github)](https://github.com/4evy/nixcord/stargazers)
 [![Built with Nix](https://img.shields.io/badge/built%20with-Nix-5277C3?style=flat-square&logo=nixos&logoColor=white)](https://nixos.org/)
 
-[Quickstart](#quickstart) | [Without Flakes](#without-flakes) | [Configuration](#configuration) | [Settings Converter](#settings-converter) | [Options](https://4evy.github.io/nixcord/) | [User Plugins](#third-party-user-plugins)
+[Quickstart](#quickstart) | [Without Flakes](#without-flakes) | [Configuration](#configuration) |
+[Settings Converter](#settings-converter) | [Options](https://4evy.github.io/nixcord/) |
+[User Plugins](#third-party-user-plugins)
 
 </div>
 
+<!-- prettier-ignore -->
 > [!IMPORTANT]
-> Nixcord is declarative, so changes made in the client's in-app "Plugins" menu are not persistent. Update your `.nix` file to make settings stick.
+> Nixcord is declarative, so changes made in the client's in-app "Plugins" menu are not persistent.
+> Update your `.nix` file to make settings stick.
 
 ## Quickstart
 
@@ -175,7 +182,8 @@ pkgsWithNixcord.nixcord.vencord
 
 You can configure Vencord, Equicord, Vesktop, Dorion, or Legcord
 
-**Tip:** Launch your client once manually to look through the plugins list so you know what you actually want to enable
+**Tip:** Launch your client once manually to look through the plugins list so you know what you
+actually want to enable
 
 ```nix
 {
@@ -219,7 +227,9 @@ Check the [online docs](https://4evy.github.io/nixcord/) for the full list of op
 
 ## Settings Converter
 
-Already have Vencord or Equicord configured? The docs include a browser-side [settings converter](https://4evy.github.io/nixcord/#sec-converter) that turns an exported `settings.json` into Nixcord config.
+Already have Vencord or Equicord configured? The docs include a browser-side
+[settings converter](https://4evy.github.io/nixcord/#sec-converter) that turns an exported
+`settings.json` into Nixcord config.
 
 ## Legcord
 
@@ -247,7 +257,8 @@ Already have Vencord or Equicord configured? The docs include a browser-side [se
 
 ## Third-Party User Plugins
 
-You can load custom Vencord/Equicord plugins that aren't in the upstream plugin list using `userPlugins`. Any plugin you add also needs to be enabled in `extraConfig.plugins`:
+You can load custom Vencord/Equicord plugins that aren't in the upstream plugin list using
+`userPlugins`. Any plugin you add also needs to be enabled in `extraConfig.plugins`:
 
 ```nix
 {
@@ -274,14 +285,18 @@ You can load custom Vencord/Equicord plugins that aren't in the upstream plugin 
 
 ## A Note on Dorion
 
-Dorion can read its Nix-managed `config.json` immediately, but Vencord settings live in Discord's WebKit `LocalStorage`. That SQLite database is only created after Dorion has successfully loaded Discord once, so Nixcord cannot patch `VencordSettings` on a completely fresh profile.
+Dorion can read its Nix-managed `config.json` immediately, but Vencord settings live in Discord's
+WebKit `LocalStorage`. That SQLite database is only created after Dorion has successfully loaded
+Discord once, so Nixcord cannot patch `VencordSettings` on a completely fresh profile.
 
 1. Run Dorion once before enabling Nixcord's Dorion module: `nix run nixpkgs#dorion`
 2. Log in, wait for Discord to finish loading, then close it.
 3. Enable `dorion.enable = true` in your config and rebuild.
 
+<!-- prettier-ignore -->
 > [!WARNING]
-> Upstream Dorion still marks Linux voice as unsupported because WebKitGTK WebRTC support is incomplete. Voice/video may fail even after Nixcord is configured.
+> Upstream Dorion still marks Linux voice as unsupported because WebKitGTK WebRTC support is
+> incomplete. Voice/video may fail even after Nixcord is configured.
 
 ## Docs
 
@@ -289,5 +304,7 @@ Dorion can read its Nix-managed `config.json` immediately, but Vencord settings 
 - **Build locally:** `nix build .#docs`
 - **JSON:** `nix build .#docs-json`
 
+<!-- prettier-ignore -->
 > [!CAUTION]
-> Vencord & Equicord violates Discord ToS. You probably know this already, but use at your own risk!
+> Vencord & Equicord violate Discord ToS. You probably know this already, but use at your own
+> risk!
