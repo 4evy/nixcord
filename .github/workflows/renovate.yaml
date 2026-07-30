@@ -9,6 +9,8 @@ on:
     paths:
       - ".github/renovate.json"
       - ".github/workflows/renovate.yaml"
+      - "flake.nix"
+      - "flake.lock"
       - "package.json"
       - "bun.lock"
   workflow_dispatch:
@@ -51,6 +53,38 @@ jobs:
           RENOVATE_GIT_PRIVATE_KEY: ${{ secrets.RENOVATE_GIT_PRIVATE_KEY }}
           RENOVATE_ONBOARDING: "false"
           RENOVATE_REPOSITORIES: '["${{ github.repository }}"]'
+
+      - name: Synchronize npins with the updated flake lock
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARGET_REF: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          gh auth setup-git
+
+          for attempt in {1..5}; do
+            git fetch origin "$TARGET_REF"
+            git switch --force-create npins-sync "origin/$TARGET_REF"
+            ./nix/sync-npins.sh
+
+            if git diff --quiet -- npins/sources.json; then
+              echo "::notice::npins already matches the updated flake lock"
+              exit 0
+            fi
+
+            git add npins/sources.json
+            git commit -m "chore(deps): sync npins with flake lock"
+            if git push origin "HEAD:$TARGET_REF"; then
+              exit 0
+            fi
+
+            if [[ "$attempt" -eq 5 ]]; then
+              echo "::error::Failed to push npins synchronization after 5 attempts"
+              exit 1
+            fi
+          done
 
       - name: Verify updated platform dependencies
         env:

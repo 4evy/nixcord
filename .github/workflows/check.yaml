@@ -43,6 +43,11 @@ jobs:
           node node_modules/renovate/dist/config-validator.js
           --strict --no-global .github/renovate.json
 
+      - name: Verify non-flake pins
+        run: |
+          ./nix/sync-npins.sh --check
+          nix shell nixpkgs#npins --command npins verify
+
       - name: Check TypeScript, docs, dead code, duplication, and formatting
         run: bun run check
 

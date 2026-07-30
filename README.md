@@ -14,7 +14,7 @@ Manage [Vencord](https://github.com/Vendicated/Vencord), [Equicord](https://gith
 [![GitHub stars](https://img.shields.io/github/stars/4evy/nixcord?style=flat-square&logo=github)](https://github.com/4evy/nixcord/stargazers)
 [![Built with Nix](https://img.shields.io/badge/built%20with-Nix-5277C3?style=flat-square&logo=nixos&logoColor=white)](https://nixos.org/)
 
-[Quickstart](#quickstart) | [Configuration](#configuration) | [Settings Converter](#settings-converter) | [Options](https://4evy.github.io/nixcord/) | [User Plugins](#third-party-user-plugins)
+[Quickstart](#quickstart) | [Without Flakes](#without-flakes) | [Configuration](#configuration) | [Settings Converter](#settings-converter) | [Options](https://4evy.github.io/nixcord/) | [User Plugins](#third-party-user-plugins)
 
 </div>
 
@@ -83,6 +83,59 @@ If you are managing your Mac system-wide
     # ... config
   };
 }
+```
+
+## Without Flakes
+
+Nixcord has a native `default.nix`; using it does not enable flakes or evaluate
+`flake.lock`. [npins](https://github.com/andir/npins) is the recommended way to
+pin both Nixpkgs and Nixcord:
+
+```sh
+nix-shell -p npins --run 'npins init'
+nix-shell -p npins --run 'npins add github 4evy nixcord --branch main'
+```
+
+Then import the pinned source and pass your existing package set:
+
+```nix
+let
+  sources = import ./npins;
+  pkgs = import sources.nixpkgs {
+    config.allowUnfree = true;
+  };
+  nixcord = import sources.nixcord { inherit pkgs; };
+in
+{
+  imports = [ nixcord.homeModules.nixcord ];
+
+  programs.nixcord = {
+    enable = true;
+    discord.vencord.enable = true;
+  };
+}
+```
+
+The same interface works with channels, `fetchTarball`, or any other source
+pinning tool: import the Nixcord source with `{ inherit pkgs; }`. It exposes
+`homeModules`, `nixosModules`, `darwinModules`, `packages`, `overlay`, and
+`overlays.default`. Package derivations are also available directly, so a source
+checkout supports commands such as:
+
+```sh
+nix-build -A vencord
+nix-build -A docs
+nix-shell
+```
+
+The overlay keeps Nixcord packages namespaced under `pkgs.nixcord`:
+
+```nix
+let
+  nixcord = import sources.nixcord { inherit pkgs; };
+  pkgsWithNixcord = pkgs.extend nixcord.overlay;
+in
+pkgsWithNixcord.nixcord.vencord
 ```
 
 ## Configuration
