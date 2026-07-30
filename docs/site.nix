@@ -39,7 +39,7 @@ let
   inherit (stdenvNoCC.hostPlatform) system;
 
   outputHashes = {
-    x86_64-linux = "sha256-G+JO1hZWAbp0W4vOi8dU8j8cXnfcBb/+OEp9CrglVN0=";
+    x86_64-linux = "sha256-sP8alJeqbpRnNrjuAkppq/o1jZcmSJNWNPWUTKz2OWE=";
     aarch64-darwin = "sha256-XqlxTHxJiCena402QR2A/MastcA5mLBaHWnb7CifPMQ=";
   };
 
