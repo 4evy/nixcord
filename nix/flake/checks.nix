@@ -41,10 +41,7 @@
     in
     {
       checks =
-        import ../../modules/tests {
-          inherit pkgs;
-          inherit (packages) openasar;
-        }
+        import ../../modules/tests { inherit pkgs; }
         // discordIntegrationChecks
         // {
           non-flake-interface = nonFlakeInterface;

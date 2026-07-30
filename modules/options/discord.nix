@@ -10,7 +10,7 @@ let
   jsonFormat = pkgs.formats.json { };
   vencordPackage = pkgs.callPackage ../../pkgs/vencord.nix { };
   equicordPackage = pkgs.callPackage ../../pkgs/equicord.nix { };
-  openasarPackage = pkgs.callPackage ../../pkgs/openasar.nix { };
+  openasarPackage = pkgs.openasar;
   selectedNixcordPkgs = if config.programs.nixcord.useGlobalPkgs then { } else nixcordPkgs;
 in
 {
