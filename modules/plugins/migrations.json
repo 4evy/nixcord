@@ -1994,6 +1994,28 @@
     {
       "from": [
         "LastFMRichPresence",
+        "instanceAPIBaseUrl"
+      ],
+      "to": [
+        "musicRichPresence",
+        "instanceApiBaseUrl"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "LastFMRichPresence",
+        "instanceBaseURL"
+      ],
+      "to": [
+        "musicRichPresence",
+        "instanceBaseUrl"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "LastFMRichPresence",
         "missingArt"
       ],
       "to": [
@@ -3501,17 +3523,6 @@
     {
       "from": [
         "statusWhilePlaying",
-        "excludeInvisible"
-      ],
-      "to": [
-        "autoDndWhilePlaying",
-        "excludeInvisible"
-      ],
-      "warn": false
-    },
-    {
-      "from": [
-        "statusWhilePlaying",
         "statusToSet"
       ],
       "to": [
@@ -4201,17 +4212,6 @@
       "to": [
         "autoDndWhilePlaying",
         "enable"
-      ],
-      "warn": true
-    },
-    {
-      "from": [
-        "AutoDNDWhilePlaying",
-        "excludeInvisible"
-      ],
-      "to": [
-        "autoDndWhilePlaying",
-        "excludeInvisible"
       ],
       "warn": true
     },
@@ -5002,6 +5002,28 @@
       "to": [
         "musicControls",
         "websocketUrl"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "musicRichPresence",
+        "instanceAPIBaseUrl"
+      ],
+      "to": [
+        "musicRichPresence",
+        "instanceApiBaseUrl"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "musicRichPresence",
+        "instanceBaseURL"
+      ],
+      "to": [
+        "musicRichPresence",
+        "instanceBaseUrl"
       ],
       "warn": true
     },

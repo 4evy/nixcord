@@ -135,6 +135,22 @@
       }
     }
   },
+  "autoDndWhilePlaying": {
+    "description": "Automatically updates your online status (online, idle, dnd) when launching games (Shared between Vencord and Equicord)",
+    "settings": {
+      "statusToSet": {
+        "type": "types.enum",
+        "enumValues": [
+          "online",
+          "idle",
+          "dnd",
+          "invisible"
+        ],
+        "default": "dnd",
+        "description": "Status to set while playing a game"
+      }
+    }
+  },
   "betterGifAltText": {
     "description": "Change GIF alt text from simply being 'GIF' to containing the gif tags / filename (Shared between Vencord and Equicord)",
     "settings": {}
@@ -504,21 +520,6 @@
       }
     }
   },
-  "favoriteGifSearch": {
-    "description": "Adds a search bar to favorite gifs. (Shared between Vencord and Equicord)",
-    "settings": {
-      "searchOption": {
-        "type": "types.enum",
-        "enumValues": [
-          "url",
-          "path",
-          "hostandpath"
-        ],
-        "default": "hostandpath",
-        "description": "The part of the url you want to search"
-      }
-    }
-  },
   "fixCodeblockGap": {
     "description": "Removes the gap between codeblocks and text below it (Shared between Vencord and Equicord)",
     "settings": {}
@@ -562,7 +563,7 @@
     "settings": {}
   },
   "gameActivityToggle": {
-    "description": "Adds a button next to the mic and deafen button to toggle game activity. (Shared between Vencord and Equicord)",
+    "description": "Adds a button next to the mic and deafen button to toggle game activity. Right click it to toggle Spotify activity. (Shared between Vencord and Equicord)",
     "settings": {
       "oldIcon": {
         "type": "types.bool",
@@ -885,10 +886,22 @@
         "default": null,
         "description": "The scrobbler backend to use."
       },
+      "instanceBaseUrl": {
+        "type": "types.nullOr types.str",
+        "default": null,
+        "description": "The base url of your ListenBrainz instance.",
+        "example": "https://example.org"
+      },
+      "instanceApiBaseUrl": {
+        "type": "types.nullOr types.str",
+        "default": null,
+        "description": "The base url of your ListenBrainz API.",
+        "example": "https://api.example.org"
+      },
       "apiKey": {
         "type": "types.nullOr types.str",
         "default": null,
-        "description": "Custom Last.fm API key. Not required but highly recommended to avoid rate limiting with our shared key"
+        "description": "Last.fm API key. Not required but highly recommended to avoid rate limiting with our shared key"
       },
       "username": {
         "type": "types.nullOr types.str",
@@ -1472,26 +1485,6 @@
       }
     }
   },
-  "showConnections": {
-    "description": "Show connected accounts in user popouts (Shared between Vencord and Equicord)",
-    "settings": {
-      "iconSize": {
-        "type": "types.int",
-        "default": 32,
-        "description": "Icon size (px)"
-      },
-      "iconSpacing": {
-        "type": "types.enum",
-        "enumValues": [
-          0,
-          1,
-          2
-        ],
-        "default": 1,
-        "description": "Icon margin\n\nValues: 0 = Compact, 1 = Cozy, 2 = Roomy"
-      }
-    }
-  },
   "showHiddenThings": {
     "description": "Displays various hidden & moderator-only things regardless of permissions. (Shared between Vencord and Equicord)",
     "settings": {
@@ -1829,7 +1822,7 @@
     }
   },
   "viewIcons": {
-    "description": "Makes avatars and banners in user profiles clickable, adds View Icon/Banner entries in the user, server and group channel context menu. (Shared between Vencord and Equicord)",
+    "description": "Makes avatars and banners in user profiles clickable, adds View Icon/Banner/Avatar Decoration entries in the user, server and group channel context menu. (Shared between Vencord and Equicord)",
     "settings": {
       "format": {
         "type": "types.enum",

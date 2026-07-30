@@ -290,7 +290,6 @@
     "sortFriendRequests": "SortFriendRequests",
     "sortFriends": "SortFriends",
     "splitLargeMessages": "SplitLargeMessages",
-    "spotifyActivityToggle": "SpotifyActivityToggle",
     "spotifyControls": "SpotifyControls",
     "spotifyCrack": "SpotifyCrack",
     "spotifyShareCommands": "SpotifyShareCommands",
@@ -438,6 +437,10 @@
     },
     "musicControls": {
       "websocketUrl": "websocketURL"
+    },
+    "musicRichPresence": {
+      "instanceApiBaseUrl": "instanceAPIBaseUrl",
+      "instanceBaseUrl": "instanceBaseURL"
     },
     "platformIndicators": {
       "consoleIcon": "ConsoleIcon"

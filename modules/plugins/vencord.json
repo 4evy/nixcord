@@ -52,22 +52,6 @@
       }
     }
   },
-  "autoDndWhilePlaying": {
-    "description": "Automatically updates your online status (online, idle, dnd) when launching games (Vencord-only)",
-    "settings": {
-      "statusToSet": {
-        "type": "types.enum",
-        "enumValues": [
-          "online",
-          "idle",
-          "dnd",
-          "invisible"
-        ],
-        "default": "dnd",
-        "description": "Status to set while playing a game"
-      }
-    }
-  },
   "betterFolders": {
     "description": "Shows server folders on dedicated sidebar and adds folder related improvements (Vencord-only)",
     "settings": {
@@ -185,10 +169,8 @@
         "description": "Allows sending fake emojis (also bypasses missing permission to use custom emojis) (restart required)"
       },
       "emojiSize": {
-        "type": "types.float",
-        "default": {
-          "__nixRaw": "48.0"
-        },
+        "type": "types.str",
+        "default": 48,
         "description": "Size of the emojis when sending"
       },
       "transformEmojis": {
@@ -202,10 +184,8 @@
         "description": "Allows sending fake stickers (also bypasses missing permission to use stickers) (restart required)"
       },
       "stickerSize": {
-        "type": "types.float",
-        "default": {
-          "__nixRaw": "160.0"
-        },
+        "type": "types.str",
+        "default": 160,
         "description": "Size of the stickers when sending"
       },
       "transformStickers": {
@@ -542,6 +522,26 @@
   "showAllMessageButtons": {
     "description": "Always show all message buttons no matter if you are holding the shift key or not. (Vencord-only)",
     "settings": {}
+  },
+  "showConnections": {
+    "description": "Show connected accounts in user popouts (Vencord-only)",
+    "settings": {
+      "iconSize": {
+        "type": "types.int",
+        "default": 32,
+        "description": "Icon size (px)"
+      },
+      "iconSpacing": {
+        "type": "types.enum",
+        "enumValues": [
+          0,
+          1,
+          2
+        ],
+        "default": 1,
+        "description": "Icon margin\n\nValues: 0 = Compact, 1 = Cozy, 2 = Roomy"
+      }
+    }
   },
   "showHiddenChannels": {
     "description": "Show channels that you do not have access to view. (Vencord-only)",

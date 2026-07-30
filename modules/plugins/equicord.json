@@ -182,27 +182,6 @@
     "description": "Mention someone randomly (Equicord-only)",
     "settings": {}
   },
-  "autoDndWhilePlaying": {
-    "description": "Automatically updates your online status (online, idle, dnd) when launching games (Equicord-only)",
-    "settings": {
-      "statusToSet": {
-        "type": "types.enum",
-        "enumValues": [
-          "online",
-          "idle",
-          "dnd",
-          "invisible"
-        ],
-        "default": "dnd",
-        "description": "Status to set while playing a game"
-      },
-      "excludeInvisible": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Prevent automatic status changes while your status is set to invisible"
-      }
-    }
-  },
   "autoZipper": {
     "description": "Automatically zips specified file types and folders before uploading to Discord (Equicord-only)",
     "settings": {
@@ -1717,6 +1696,11 @@
         "default": true,
         "description": "Remove profile animation effects on open. (restart required)"
       },
+      "removeProfileFrame": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Remove profile frames. (restart required)"
+      },
       "removeClanTag": {
         "type": "types.bool",
         "default": true,
@@ -1736,6 +1720,16 @@
         "type": "types.bool",
         "default": false,
         "description": "Remove quests above DMs list. (restart required)"
+      },
+      "removeLibraryAboveDms": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Remove library above DMs list. (restart required)"
+      },
+      "removeFamilyCenterAboveDms": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Remove family center above DMs list. (restart required)"
       },
       "removeServerBoostInfo": {
         "type": "types.bool",
@@ -2143,10 +2137,8 @@
         "description": "Allows sending fake emojis (also bypasses missing permission to use custom emojis) (restart required)"
       },
       "emojiSize": {
-        "type": "types.float",
-        "default": {
-          "__nixRaw": "48.0"
-        },
+        "type": "types.str",
+        "default": 48,
         "description": "Size of the emojis when sending"
       },
       "transformEmojis": {
@@ -2160,10 +2152,8 @@
         "description": "Allows sending fake stickers (also bypasses missing permission to use stickers) (restart required)"
       },
       "stickerSize": {
-        "type": "types.float",
-        "default": {
-          "__nixRaw": "160.0"
-        },
+        "type": "types.str",
+        "default": 160,
         "description": "Size of the stickers when sending"
       },
       "transformStickers": {
@@ -2231,6 +2221,21 @@
   "favoriteEmojiFirst": {
     "description": "Puts your favorite emoji first in the emoji autocomplete and also has emoji alias. (Equicord-only)",
     "settings": {}
+  },
+  "favoriteGifSearch": {
+    "description": "Adds a search bar to favorite gifs. (Equicord-only)",
+    "settings": {
+      "searchOption": {
+        "type": "types.enum",
+        "enumValues": [
+          "url",
+          "path",
+          "hostandpath"
+        ],
+        "default": "hostandpath",
+        "description": "The part of the url you want to search"
+      }
+    }
   },
   "favouriteAnything": {
     "description": "Favourite any image, video, or file attachment (Equicord-only)",
@@ -2604,7 +2609,13 @@
   },
   "friendshipRanks": {
     "description": "Adds badges showcasing how long you have been friends with a user for (Equicord-only)",
-    "settings": {}
+    "settings": {
+      "showFriendsInChat": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Show a friend icon on messages from friends."
+      }
+    }
   },
   "friendTags": {
     "description": "Allows you to filter by custom tags in the quick switcher by starting a search with & (Equicord-only)",
@@ -3841,6 +3852,11 @@
         "default": "en",
         "description": "Target language code for translations (e.g. en, es, fr, de, ja)."
       },
+      "excludedLanguages": {
+        "type": "types.str",
+        "default": "en",
+        "description": "Language codes to exclude from translation (e.g. en, es, fr, de, ja)."
+      },
       "confidenceRequirement": {
         "type": "types.float",
         "default": 0.8,
@@ -3880,6 +3896,16 @@
         "type": "types.bool",
         "default": true,
         "description": "Append a small (translated) indicator to translated messages."
+      },
+      "showOriginal": {
+        "type": "types.enum",
+        "enumValues": [
+          "no-orig",
+          "orig-in-subtext",
+          "trans-in-subtext"
+        ],
+        "default": "no-orig",
+        "description": "Show the original and translated text."
       }
     }
   },
@@ -5825,6 +5851,36 @@
       }
     }
   },
+  "showConnections": {
+    "description": "Show connected accounts in user popouts (Equicord-only)",
+    "settings": {
+      "iconSize": {
+        "type": "types.int",
+        "default": 32,
+        "description": "Icon size (px)"
+      },
+      "iconSpacing": {
+        "type": "types.enum",
+        "enumValues": [
+          0,
+          1,
+          2
+        ],
+        "default": 1,
+        "description": "Icon margin\n\nValues: 0 = Compact, 1 = Cozy, 2 = Roomy"
+      },
+      "showGithubOrgs": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Show GitHub organizations the user is a member of"
+      },
+      "showOnModal": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Show connected accounts in the full-size profile modal"
+      }
+    }
+  },
   "showHiddenChannels": {
     "description": "Show channels that you do not have access to view. (Equicord-only)",
     "settings": {
@@ -6421,20 +6477,6 @@
           "__nixRaw": "5.0"
         },
         "description": "Maximum slowmode duration allowed when splitting messages."
-      }
-    }
-  },
-  "spotifyActivityToggle": {
-    "description": "Adds a toggle button for Spotify activity visibility. (Equicord-only)",
-    "settings": {
-      "location": {
-        "type": "types.enum",
-        "enumValues": [
-          "PANEL",
-          "TOOLBOX"
-        ],
-        "default": "PANEL",
-        "description": "Where to show the Spotify toggle button."
       }
     }
   },

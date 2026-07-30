@@ -73,6 +73,7 @@ jobs:
             nix build --no-link .#generate.node_modules
             nix build --rebuild --no-link .#generate.node_modules
           '
+          nix run .#generate
 
           docs_file=docs/site.nix
           "$hash_updater" refresh "$docs_file" "$system" -- bash -euo pipefail -c '
@@ -218,6 +219,7 @@ jobs:
             nix --option system '$EXPECTED_SYSTEM' build \
               --rebuild --no-link .#generate.node_modules
           "
+          nix --option system "$EXPECTED_SYSTEM" run .#generate
           if ! git diff --quiet -- modules/plugins; then
             echo "::error::Generated plugin metadata differs on $EXPECTED_SYSTEM"
             git diff --stat -- modules/plugins
