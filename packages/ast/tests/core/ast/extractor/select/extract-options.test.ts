@@ -440,4 +440,20 @@ describe('extractSelectOptions()', () => {
     expect(result!.labels['false']).toBe('Disabled');
     expect(result!.values).toEqual([true, false]);
   });
+
+  test('resolves identifier arrays used as map targets', () => {
+    const project = createProject();
+    const sourceFile = project.createSourceFile(
+      'identifier-array-map.ts',
+      loadFixture(
+        'core/ast/extractor/select/extract-options/26-resolves-identifier-array-map-options.ts'
+      )
+    );
+    const objLiteral = sourceFile
+      .getVariableDeclarationOrThrow('obj')
+      .getInitializerIfKindOrThrow(SyntaxKind.ObjectLiteralExpression);
+    const result = unwrapResult(extractSelectOptions(objLiteral, project.getTypeChecker()));
+
+    expect(result.values).toEqual([16, 32, 48, 56, 64, 96, 128, 160, 256, 512, 1024]);
+  });
 });

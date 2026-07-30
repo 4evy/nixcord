@@ -18,6 +18,7 @@ import {
   resolveIdentifierInitializerNode,
   resolveSymbolInit,
   tryEvaluate,
+  unwrapNode,
 } from '../../../foundation/index.js';
 import { LABEL_PROPERTY, VALUE_PROPERTY } from '../../constants.js';
 import type { SelectOptionsResult } from '../../types.js';
@@ -144,15 +145,22 @@ const extractFromSpreadElement = (
 };
 
 export function extractOptionsFromArrayMap(arr: Node, checker: TypeChecker): SelectOptionsResult {
-  const arrayExpr = arr.asKind(SyntaxKind.ArrayLiteralExpression);
+  const unwrapped = unwrapNode(arr);
+  const arrayExpr =
+    unwrapped.asKind(SyntaxKind.ArrayLiteralExpression) ??
+    (() => {
+      const identifier = unwrapped.asKind(SyntaxKind.Identifier);
+      const resolved = identifier
+        ? resolveIdentifierInitializerNode(identifier, checker)
+        : undefined;
+      return resolved ? unwrapNode(resolved).asKind(SyntaxKind.ArrayLiteralExpression) : undefined;
+    })();
+
   if (!arrayExpr) {
     return extractionErrors.invalidNodeType('ArrayLiteralExpression', arr);
   }
 
-  const results = arrayExpr
-    .asKindOrThrow(SyntaxKind.ArrayLiteralExpression)
-    .getElements()
-    .map((el) => evaluate(el, checker));
+  const results = arrayExpr.getElements().map((el) => evaluate(el, checker));
 
   const okResults = results.filter(
     (result): result is Extract<typeof result, { ok: true }> => result.ok

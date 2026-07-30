@@ -169,7 +169,20 @@
         "description": "Allows sending fake emojis (also bypasses missing permission to use custom emojis) (restart required)"
       },
       "emojiSize": {
-        "type": "types.str",
+        "type": "types.enum",
+        "enumValues": [
+          16,
+          32,
+          48,
+          56,
+          64,
+          96,
+          128,
+          160,
+          256,
+          512,
+          1024
+        ],
         "default": 48,
         "description": "Size of the emojis when sending"
       },
@@ -184,7 +197,20 @@
         "description": "Allows sending fake stickers (also bypasses missing permission to use stickers) (restart required)"
       },
       "stickerSize": {
-        "type": "types.str",
+        "type": "types.enum",
+        "enumValues": [
+          16,
+          32,
+          48,
+          56,
+          64,
+          96,
+          128,
+          160,
+          256,
+          512,
+          1024
+        ],
         "default": 160,
         "description": "Size of the stickers when sending"
       },
