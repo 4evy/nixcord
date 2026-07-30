@@ -87,16 +87,23 @@ If you are managing your Mac system-wide
 
 ## Without Flakes
 
-Nixcord has a native `default.nix`; using it does not enable flakes or evaluate
-`flake.lock`. [npins](https://github.com/andir/npins) is the recommended way to
-pin both Nixpkgs and Nixcord:
+Nixcord has a native `default.nix`; using it does not enable flakes or evaluate `flake.lock`.
+[npins](https://github.com/andir/npins) is the recommended way to pin both Nixpkgs and Nixcord.
+
+Run these commands from the root of your Nix configuration. They create an `npins` directory, pin
+the same Nixpkgs release used in the flake quickstart, and pin Nixcord's `main` branch:
 
 ```sh
-nix-shell -p npins --run 'npins init'
+nix-shell -p npins --run 'npins init --bare'
+nix-shell -p npins --run 'npins add github NixOS nixpkgs --branch nixos-26.05 --name nixpkgs'
 nix-shell -p npins --run 'npins add github 4evy nixcord --branch main'
 ```
 
-Then import the pinned source and pass your existing package set:
+Commit the generated `npins/default.nix` and `npins/sources.json` files so every machine evaluates
+the same revisions.
+
+Import the pinned sources, create your package set, and pass that package set to Nixcord. For
+example, in a Home Manager configuration:
 
 ```nix
 let
@@ -116,11 +123,37 @@ in
 }
 ```
 
-The same interface works with channels, `fetchTarball`, or any other source
-pinning tool: import the Nixcord source with `{ inherit pkgs; }`. It exposes
-`homeModules`, `nixosModules`, `darwinModules`, `packages`, `overlay`, and
-`overlays.default`. Package derivations are also available directly, so a source
-checkout supports commands such as:
+If your configuration already provides `pkgs`, reuse it instead of importing Nixpkgs again. For
+NixOS or nix-darwin, select the corresponding module just as in the flake examples above:
+
+```nix
+# NixOS
+imports = [ nixcord.nixosModules.nixcord ];
+
+# nix-darwin
+imports = [ nixcord.darwinModules.nixcord ];
+```
+
+System-wide NixOS and nix-darwin configurations must also set `programs.nixcord.user` to the user
+whose Discord configuration Nixcord should manage.
+
+Update the pins explicitly when you want newer revisions, then review and commit the changes to
+`npins/sources.json`:
+
+```sh
+nix-shell -p npins --run 'npins update nixpkgs nixcord'
+```
+
+The same import interface works if the Nixcord source comes from a channel, `fetchTarball`, or
+another pinning tool:
+
+```nix
+nixcord = import path-to-nixcord { inherit pkgs; };
+```
+
+The imported source exposes `homeModules`, `nixosModules`, `darwinModules`, `packages`, `overlay`,
+and `overlays.default`. Package derivations are also available directly, so a source checkout
+supports:
 
 ```sh
 nix-build -A vencord
