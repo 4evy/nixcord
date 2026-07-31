@@ -130,7 +130,17 @@ in
 }
 ```
 
-If your configuration already provides `pkgs`, reuse it instead of importing Nixpkgs again. For
+**If your configuration already provides `pkgs`, reuse it instead of importing Nixpkgs again.**
+
+Or if you're using something like [nixtamal](https://nixtamal.toast.al/) inside home-manager and/or can't use `pkgs` you can write:
+```nix
+let
+  nixcord = import nixtamal.nixcord { nixpkgs = nixtamal.nixpkgs; };
+in
+...
+```
+
+For
 NixOS or nix-darwin, select the corresponding module just as in the flake examples above:
 
 ```nix
