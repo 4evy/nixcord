@@ -11,7 +11,7 @@
 }:
 let
   nodeModulesHashes = {
-    x86_64-linux = "sha256-Z8esMtKnTolbQF8aHj9PQf7ZbXl00iKl8iK5H0tFHP4=";
+    x86_64-linux = "sha256-vDtMSBTHD1sS532vVYZ7YtlUa+yJFjmHuUX9rhydesg=";
     aarch64-linux = "sha256-QrWXe5QSxvh3jCvSMXAFfkBwZdnhMSE7gJjgB3TbFgA=";
     aarch64-darwin = "sha256-/GY3vFvznL3yPQIxNAd5TzoIV3m+ltlmOMn46x0doY4=";
   };
