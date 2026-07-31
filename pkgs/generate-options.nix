@@ -12,8 +12,8 @@
 let
   nodeModulesHashes = {
     x86_64-linux = "sha256-Z8esMtKnTolbQF8aHj9PQf7ZbXl00iKl8iK5H0tFHP4=";
-    aarch64-linux = "sha256-T9TpfzqzcnJChjIRKjA42Ok8JOpc3HoFsc7bIXl5yZc=";
-    aarch64-darwin = "sha256-W0su9ONYCKSSPvSwZOlQ2UtMKnZLPROZZQVzRt+wC0Q=";
+    aarch64-linux = "sha256-QrWXe5QSxvh3jCvSMXAFfkBwZdnhMSE7gJjgB3TbFgA=";
+    aarch64-darwin = "sha256-/GY3vFvznL3yPQIxNAd5TzoIV3m+ltlmOMn46x0doY4=";
   };
   nodeModulesHash =
     nodeModulesHashes.${stdenvNoCC.hostPlatform.system}
