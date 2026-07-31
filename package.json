@@ -38,7 +38,7 @@
     "@vitest/ui": "4.1.10",
     "equicord": "github:Equicord/Equicord#4b1c3eeaba15209f9829e2fe65ddd13e5598528b",
     "fallow": "3.10.0",
-    "renovate": "43.285.4",
+    "renovate": "43.285.6",
     "typescript": "npm:@typescript/typescript6@6.0.2",
     "vencord": "github:Vendicated/Vencord#c84389de5a964f15fa37628b393c4d1a9ca80810",
     "vite": "8.1.5",
