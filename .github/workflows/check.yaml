@@ -35,8 +35,18 @@ jobs:
 
       - name: Lint and security-audit GitHub Actions
         run: >-
-          nix shell nixpkgs#yamllint nixpkgs#actionlint nixpkgs#zizmor
-          --command bash -c 'yamllint . && actionlint && zizmor --pedantic .'
+          nix shell nixpkgs#yamllint nixpkgs#actionlint nixpkgs#zizmor nixpkgs#shellcheck
+          --command bash -c
+          'yamllint . && actionlint && zizmor --pedantic .
+          && shellcheck .github/scripts/*.sh'
+
+      - name: Enforce GitHub-signed workflow commits
+        run: |
+          set -euo pipefail
+          if git grep -nE 'git (commit|push)( |$)' -- .github/workflows; then
+            echo "::error::Workflows must commit through .github/scripts/commit-changes.sh"
+            exit 1
+          fi
 
       - name: Validate Renovate configuration
         run: >-

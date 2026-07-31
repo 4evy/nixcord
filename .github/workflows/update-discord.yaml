@@ -6,7 +6,8 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  # Serialize every workflow that can push to the same branch.
+  group: repository-updates-${{ github.ref_name }}
   cancel-in-progress: false
 
 permissions: {}
@@ -74,9 +75,9 @@ jobs:
             .#discord-canary \
             .#discord-development
 
-      - name: Commit and push changes
+      - name: Commit source changes
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
           REF_NAME: ${{ github.ref_name }}
         run: |
           set -euo pipefail
@@ -85,8 +86,6 @@ jobs:
             exit 0
           fi
 
-          git config user.name 'github-actions[bot]'
-          git config user.email 'github-actions[bot]@users.noreply.github.com'
           git config pull.rebase true
           git config rebase.autoStash true
           gh auth setup-git
@@ -96,23 +95,18 @@ jobs:
             | select(.value.version != $old[0][.key].version)
             | "  \(.key): \($old[0][.key].version) -> \(.value.version)"
           ' pkgs/discord/data/sources.json)
-          message="discord: update sources"
-          if [[ -n "$changes" ]]; then
-            message+=$'\n\n'"$changes"
-          fi
-
-          git add pkgs/discord/data/sources.json
-          git commit -m "$message"
 
           for attempt in {1..5}; do
             git rebase --abort 2>/dev/null || true
             if git fetch origin \
               && git pull --rebase origin "$REF_NAME" \
-              && git push origin "HEAD:$REF_NAME"; then
+              && bash .github/scripts/commit-changes.sh \
+                "$REF_NAME" "discord: update sources" "$changes" \
+                pkgs/discord/data/sources.json; then
               exit 0
             fi
             if [[ "$attempt" -eq 5 ]]; then
-              echo "::error::Failed to push after 5 attempts"
+              echo "::error::Failed to commit Discord sources after 5 attempts"
               exit 1
             fi
             sleep $((attempt * 2))
