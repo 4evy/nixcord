@@ -2248,21 +2248,6 @@
     "description": "Puts your favorite emoji first in the emoji autocomplete and also has emoji alias. (Equicord-only)",
     "settings": {}
   },
-  "favoriteGifSearch": {
-    "description": "Adds a search bar to favorite gifs. (Equicord-only)",
-    "settings": {
-      "searchOption": {
-        "type": "types.enum",
-        "enumValues": [
-          "url",
-          "path",
-          "hostandpath"
-        ],
-        "default": "hostandpath",
-        "description": "The part of the url you want to search"
-      }
-    }
-  },
   "favouriteAnything": {
     "description": "Favourite any image, video, or file attachment (Equicord-only)",
     "settings": {}
@@ -4705,7 +4690,7 @@
     }
   },
   "profileSets": {
-    "description": "Allows you to save and load different profile presets, via the Profile Section in Settings. (Equicord-only)",
+    "description": "Allows you to save and load different profile presets. (Equicord-only)",
     "settings": {
       "avatarSize": {
         "type": "types.float",
