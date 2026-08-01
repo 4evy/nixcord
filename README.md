@@ -130,18 +130,33 @@ in
 }
 ```
 
-**If your configuration already provides `pkgs`, reuse it instead of importing Nixpkgs again.**
+If your configuration already has a package set available independently of module arguments, pass
+it as `pkgs` to reuse its Nixpkgs configuration and overlays.
 
-Or if you're using something like [nixtamal](https://nixtamal.toast.al/) inside home-manager and/or can't use `pkgs` you can write:
+Home Manager's usual `pkgs` module argument cannot be used to calculate that module's `imports`; it
+is provided through the module graph after imports are collected. When your pinned inputs are
+available through `home-manager.extraSpecialArgs`, pass the pinned Nixpkgs source instead. With
+[Nixtamal](https://nixtamal.toast.al/):
+
 ```nix
+# `nixtamal` is provided through `home-manager.extraSpecialArgs`.
+{ nixtamal, ... }:
+
 let
-  nixcord = import nixtamal.nixcord { nixpkgs = nixtamal.nixpkgs; };
+  nixcord = import nixtamal.nixcord {
+    nixpkgs = nixtamal.nixpkgs;
+  };
 in
-...
+{
+  imports = [ nixcord.homeModules.nixcord ];
+}
 ```
 
-For
-NixOS or nix-darwin, select the corresponding module just as in the flake examples above:
+This gives `nixcord.packages` a separate package set from the supplied Nixpkgs source; it does not
+inherit the Home Manager package set's configuration or overlays. An empty argument set also works,
+but uses Nixcord's bundled Nixpkgs pin for package outputs.
+
+For NixOS or nix-darwin, select the corresponding module just as in the flake examples above:
 
 ```nix
 # NixOS
