@@ -21,12 +21,25 @@ export type OptionEntry = RawOption & {
 
 export type OptionCategory = 'core' | 'shared' | 'vencord' | 'equicord';
 
+export type OptionCategoryFilter = OptionCategory | 'all';
+
+export type OptionReferenceSearchState = {
+  category: OptionCategoryFilter;
+  query: string;
+};
+
+export type OptionHashTarget = {
+  category: OptionCategory;
+  optionName?: string;
+  pluginName?: string;
+};
+
 export type PluginOptionGroup = {
   category: OptionCategory;
   name: string;
   optionCount: number;
   options: OptionEntry[];
-  searchText: string;
+  totalOptionCount: number;
 };
 
 export type OptionSectionItem =
@@ -40,9 +53,11 @@ export type OptionSectionItem =
     };
 
 export type OptionSection = {
+  category: OptionCategory;
   description: string;
   id: string;
   items: OptionSectionItem[];
   optionCount: number;
   title: string;
+  totalOptionCount: number;
 };
