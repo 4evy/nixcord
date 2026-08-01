@@ -48,9 +48,13 @@ trap 'rm -f "$request_file" "$response_file" "$additions_file" "$deletions_file"
 
 for path in "${changed_paths[@]}"; do
   if [[ -f "$path" ]]; then
-    contents=$(base64 < "$path" | tr -d '\n')
-    jq -cn --arg path "$path" --arg contents "$contents" \
-      '{path: $path, contents: $contents}' >> "$additions_file"
+    # Stream file contents so large generated files do not exceed the
+    # operating system's per-argument size limit.
+    # shellcheck disable=SC2094 # jq receives $path as metadata, not as output.
+    base64 < "$path" \
+      | tr -d '\n' \
+      | jq -Rsc --arg path "$path" \
+        '{path: $path, contents: .}' >> "$additions_file"
   elif [[ ! -e "$path" ]]; then
     jq -cn --arg path "$path" '{path: $path}' >> "$deletions_file"
   else

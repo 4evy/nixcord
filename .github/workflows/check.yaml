@@ -48,6 +48,9 @@ jobs:
             exit 1
           fi
 
+      - name: Test GitHub-signed commit helper
+        run: bash .github/scripts/test-commit-changes.sh
+
       - name: Validate Renovate configuration
         run: >-
           node node_modules/renovate/dist/config-validator.js
