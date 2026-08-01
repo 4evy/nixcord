@@ -17,15 +17,15 @@ let {
 <header class="titlepage">
   <hgroup class="mb-5">
     {#if level === 1}
-      <h1 {id} class="title mb-4 mt-0 scroll-mt-4 text-[2.35rem] leading-tight font-semibold text-[#0a3e68] dark:text-[#8ccff0]">
+      <h1 {id} class="title mb-4 mt-0 scroll-mt-20 text-[2.35rem] leading-tight font-semibold text-[#0a3e68] dark:text-[#8ccff0]">
         {title}
       </h1>
     {:else if level === 2}
-      <h2 {id} class="title mt-8 mb-4 scroll-mt-4 text-[1.9rem] leading-tight font-semibold text-[#0a3e68] dark:text-[#8ccff0]">
+      <h2 {id} class="title mt-8 mb-4 scroll-mt-20 text-[1.9rem] leading-tight font-semibold text-[#0a3e68] dark:text-[#8ccff0]">
         {title}
       </h2>
     {:else}
-      <h3 {id} class="title mt-7 mb-3 scroll-mt-4 text-[1.45rem] leading-snug font-semibold text-neutral-900 dark:text-neutral-100">
+      <h3 {id} class="title mt-7 mb-3 scroll-mt-20 text-[1.45rem] leading-snug font-semibold text-neutral-900 dark:text-neutral-100">
         {title}
       </h3>
     {/if}

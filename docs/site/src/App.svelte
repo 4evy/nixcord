@@ -2,7 +2,7 @@
 import { ModeWatcher } from 'mode-watcher';
 import { mainToc, revision } from './content';
 import IntroductionSection from './components/IntroductionSection.svelte';
-import ModeToggle from './components/ModeToggle.svelte';
+import ManualNav from './components/ManualNav.svelte';
 import OptionsReference from './components/OptionsReference.svelte';
 import PrefaceSection from './components/PrefaceSection.svelte';
 import SettingsConverter from './components/SettingsConverter.svelte';
@@ -29,9 +29,7 @@ import TitlePage from './components/TitlePage.svelte';
     id="content"
     class="book relative mx-auto min-h-screen max-w-[62rem] border-x border-neutral-300 bg-white px-5 py-8 text-[16px] shadow-[0_22px_70px_rgba(15,23,42,0.08)] sm:px-10 lg:px-16 max-sm:border-x-0 max-sm:px-4 max-sm:shadow-none dark:border-neutral-800 dark:bg-[#12171d] dark:shadow-[0_22px_70px_rgba(0,0,0,0.28)]"
   >
-    <div class="absolute top-5 right-5 sm:top-6 sm:right-10 lg:right-16">
-      <ModeToggle />
-    </div>
+    <ManualNav />
 
     <TitlePage id="nixcord-manual" title="Nixcord manual" subtitle={`Version ${revision}`} rule />
     <TableOfContents title="Table of Contents" items={mainToc} />
