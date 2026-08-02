@@ -57,4 +57,35 @@ describe('applyPluginOverrides', () => {
       applyPluginOverrides(fixture.getPath('overrides.json'), fixture.getPath('plugins'))
     ).rejects.toThrow('Plugin overrides must be a JSON object');
   });
+
+  test('rejects non-object category overrides', async () => {
+    await using fixture = await createFixture({
+      'overrides.json': JSON.stringify({ shared: [] }),
+      plugins: {
+        [CLI_CONFIG.filenames.shared]: '{}',
+      },
+    });
+
+    await expect(
+      applyPluginOverrides(fixture.getPath('overrides.json'), fixture.getPath('plugins'))
+    ).rejects.toThrow('Plugin overrides category must be a JSON object: shared');
+  });
+
+  test('keeps prototype-shaped JSON keys as ordinary data', async () => {
+    await using fixture = await createFixture({
+      'overrides.json': '{"shared":{"__proto__":{"polluted":true}}}',
+      plugins: {
+        [CLI_CONFIG.filenames.shared]: '{}',
+        [CLI_CONFIG.filenames.vencord]: '{}',
+        [CLI_CONFIG.filenames.equicord]: '{}',
+      },
+    });
+
+    await applyPluginOverrides(fixture.getPath('overrides.json'), fixture.getPath('plugins'));
+
+    const output = await fixture.readJson(`plugins/${CLI_CONFIG.filenames.shared}`);
+    expect(Object.hasOwn(output, '__proto__')).toBe(true);
+    expect(Reflect.get(output, '__proto__')).toEqual({ polluted: true });
+    expect(Object.prototype).not.toHaveProperty('polluted');
+  });
 });

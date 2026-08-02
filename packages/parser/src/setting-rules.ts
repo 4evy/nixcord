@@ -1,4 +1,4 @@
-import type { SettingScalar, SettingType, SettingValue } from '@nixcord/shared';
+import type { SettingListElement, SettingScalar, SettingType, SettingValue } from '@nixcord/shared';
 import type { OptionTypeName } from './source-profiles.js';
 
 export interface SelectOption {
@@ -78,20 +78,45 @@ export const inferTypeFromValue = (
       : { kind: 'string', nullable: true };
   }
   if (Array.isArray(value)) {
-    const stringEvidence =
-      value.length > 0
-        ? value.every((item) => typeof item === 'string')
-        : /(?:string\[\]|Array\s*<\s*string\s*>)/.test(contextualType ?? '');
-    return { kind: 'list', element: stringEvidence ? 'string' : 'attrs' };
+    const contextualElement = listElementFromContext(contextualType);
+    if (contextualElement) return { kind: 'list', element: contextualElement };
+    if (value.length === 0) return { kind: 'list', element: 'anything' };
+    if (value.every((item) => typeof item === 'string')) return { kind: 'list', element: 'string' };
+    if (value.every((item) => typeof item === 'number')) return { kind: 'list', element: 'number' };
+    if (value.every((item) => typeof item === 'boolean'))
+      return { kind: 'list', element: 'boolean' };
+    if (value.every((item) => item !== null && typeof item === 'object' && !Array.isArray(item)))
+      return { kind: 'list', element: 'attrs' };
+    return { kind: 'list', element: 'anything' };
   }
   if (value && typeof value === 'object') return { kind: 'attrs', nullable: false };
-  if (/(?:string\[\]|Array\s*<\s*string\s*>)/.test(contextualType ?? ''))
-    return { kind: 'list', element: 'string' };
-  if (/(?:\[\]|Array\s*<)/.test(contextualType ?? '')) return { kind: 'list', element: 'attrs' };
+  const contextualListElement = listElementFromContext(contextualType);
+  if (contextualListElement) return { kind: 'list', element: contextualListElement };
   if (/(?:Record\s*<|\{)/.test(contextualType ?? '')) return { kind: 'attrs', nullable: true };
   if ((contextualType ?? '').includes('boolean')) return { kind: 'boolean' };
   if ((contextualType ?? '').includes('number')) return { kind: 'float' };
   return { kind: 'string', nullable: true };
+};
+
+const listElementFromContext = (
+  contextualType: string | undefined
+): SettingListElement | undefined => {
+  if (!contextualType) return undefined;
+  const type = contextualType.replace(/\s+/g, ' ').trim();
+  const arrayElement =
+    type.match(/^(?:readonly )?(.+?)\[\]$/)?.[1] ??
+    type.match(/^(?:Readonly)?Array\s*<\s*(.+)\s*>$/)?.[1];
+  if (!arrayElement) return undefined;
+  const element = arrayElement
+    .trim()
+    .replace(/^\((.*)\)$/, '$1')
+    .trim();
+  if (element === 'string' || /^(?:string\s*\|\s*)+never$/.test(element)) return 'string';
+  if (element === 'number') return 'number';
+  if (element === 'boolean') return 'boolean';
+  if (element === 'any' || element === 'unknown' || element === 'never') return 'anything';
+  if (element.includes('|') && !/^\{.*\}$/.test(element)) return 'anything';
+  return 'attrs';
 };
 
 const RULES: Readonly<Record<OptionTypeName, (input: SettingRuleInput) => SettingRuleResult>> = {

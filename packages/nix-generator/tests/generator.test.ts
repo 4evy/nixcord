@@ -212,6 +212,20 @@ describe('generateSettingJson()', () => {
     expect(result.default).toEqual(['item1', 'item2']);
   });
 
+  test.each([
+    ['number', 'types.listOf types.number'],
+    ['boolean', 'types.listOf types.bool'],
+    ['attrs', 'types.listOf types.attrs'],
+    ['anything', 'types.listOf types.anything'],
+  ] as const)('lowers %s list elements to their Nix type', (element, expected) => {
+    const result = generateSettingJson({
+      name: 'items',
+      type: { kind: 'list', element },
+      default: [],
+    });
+    expect(result.type).toBe(expected);
+  });
+
   test('nested default values (objects)', () => {
     const setting: PluginSetting = {
       name: 'config',
