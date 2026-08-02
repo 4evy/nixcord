@@ -205,4 +205,42 @@ describe('parsePlugins()', () => {
       ])
     );
   });
+
+  test('uses executed control evidence for dynamically indexed store settings', async () => {
+    await using fixture = await createFixture({
+      'src/plugins/dynamic-switch/index.tsx': `
+        import { definePluginSettings } from "@api/Settings";
+        import { Switch } from "@webpack/common";
+        import definePlugin, { OptionType } from "@utils/types";
+
+        const keys = ["flag"];
+        const settings = definePluginSettings({
+          flag: {
+            type: OptionType.COMPONENT,
+            component: () => {
+              const key = keys.at(0)!;
+              return <Switch
+                value={settings.store[key]}
+                onChange={value => settings.store[key] = value}
+              />;
+            },
+          },
+        });
+
+        export default definePlugin({
+          name: "DynamicSwitch",
+          description: "fixture",
+          settings,
+        });
+      `,
+    });
+
+    const result = await parsePlugins(fixture.path, { executionMode: 'fallback' });
+    expect(result.vencordPlugins.DynamicSwitch?.settings.flag).toMatchObject({
+      type: { kind: 'boolean' },
+    });
+    expect((result.vencordPlugins.DynamicSwitch?.settings.flag as PluginSetting).default).toBe(
+      undefined
+    );
+  });
 });
