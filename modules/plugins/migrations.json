@@ -4788,6 +4788,17 @@
     {
       "from": [
         "RPCEditor",
+        "appIds"
+      ],
+      "to": [
+        "rpcEditor",
+        "appIds"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "RPCEditor",
         "enable"
       ],
       "to": [

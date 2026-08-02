@@ -184,7 +184,7 @@
           1024
         ],
         "default": 48,
-        "description": "Size of the emojis when sending"
+        "description": "Size of the emojis when sending\n\nValues: 16 = 16px, 32 = 32px, 48 = 48px, 56 = 56px, 64 = 64px, 96 = 96px, 128 = 128px, 160 = 160px, 256 = 256px, 512 = 512px, 1024 = 1024px"
       },
       "transformEmojis": {
         "type": "types.bool",
@@ -212,7 +212,7 @@
           1024
         ],
         "default": 160,
-        "description": "Size of the stickers when sending"
+        "description": "Size of the stickers when sending\n\nValues: 16 = 16px, 32 = 32px, 48 = 48px, 56 = 56px, 64 = 64px, 96 = 96px, 128 = 128px, 160 = 160px, 256 = 256px, 512 = 512px, 1024 = 1024px"
       },
       "transformStickers": {
         "type": "types.bool",
@@ -542,6 +542,29 @@
         ],
         "default": 2,
         "description": "Mode\n\nValues: 2 = Only online friend count, 1 = Only server count, 3 = Both server and online friend counts"
+      }
+    }
+  },
+  "settings": {
+    "description": "Adds Settings UI and debug info (Vencord-only)",
+    "settings": {
+      "settingsLocation": {
+        "type": "types.enum",
+        "enumValues": [
+          "top",
+          "aboveNitro",
+          "belowNitro",
+          "aboveActivity",
+          "belowActivity",
+          "bottom"
+        ],
+        "default": "aboveNitro",
+        "description": "Where to put the Vencord settings section"
+      },
+      "includeVencordInfoWhenCopying": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Also copy Vencord info (Vencord, Electron, Chromium) when clicking the version info in the bottom left area of the Settings page"
       }
     }
   },

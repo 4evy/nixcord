@@ -1235,18 +1235,22 @@
       }
     }
   },
+  "concatenatedModules": {
+    "description": "Extract modules that have been concatenated by the bundler (Equicord-only)",
+    "settings": {}
+  },
   "contentWarning": {
     "description": "Allows you to specify certain trigger words that will be blurred by default. Hovering/Clicking on the blurred content will reveal it. (Equicord-only)",
     "settings": {
-      "onClick": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Only show trigger content on click instead of hover"
-      },
       "triggerWords": {
         "type": "types.nullOr (types.listOf types.str)",
         "default": null,
         "description": "Words to blur in messages (restart required)"
+      },
+      "onClick": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Only show trigger content on click instead of hover"
       }
     }
   },
@@ -2152,7 +2156,7 @@
           1024
         ],
         "default": 48,
-        "description": "Size of the emojis when sending"
+        "description": "Size of the emojis when sending\n\nValues: 16 = 16px, 32 = 32px, 48 = 48px, 56 = 56px, 64 = 64px, 96 = 96px, 128 = 128px, 160 = 160px, 256 = 256px, 512 = 512px, 1024 = 1024px"
       },
       "transformEmojis": {
         "type": "types.bool",
@@ -2180,7 +2184,7 @@
           1024
         ],
         "default": 160,
-        "description": "Size of the stickers when sending"
+        "description": "Size of the stickers when sending\n\nValues: 16 = 16px, 32 = 32px, 48 = 48px, 56 = 56px, 64 = 64px, 96 = 96px, 128 = 128px, 160 = 160px, 256 = 256px, 512 = 512px, 1024 = 1024px"
       },
       "transformStickers": {
         "type": "types.bool",
@@ -2246,7 +2250,13 @@
   },
   "favoriteEmojiFirst": {
     "description": "Puts your favorite emoji first in the emoji autocomplete and also has emoji alias. (Equicord-only)",
-    "settings": {}
+    "settings": {
+      "aliasMap": {
+        "type": "types.attrs",
+        "default": {},
+        "description": "Manage your emoji aliases."
+      }
+    }
   },
   "favouriteAnything": {
     "description": "Favourite any image, video, or file attachment (Equicord-only)",
@@ -2436,8 +2446,8 @@
         "description": "Optional GoFile API token"
       },
       "fallbackOrder": {
-        "type": "types.nullOr types.str",
-        "default": null,
+        "type": "types.str",
+        "default": "zipline,ezhost,nest,encryptinghost,s3,catbox,0x0,litterbox,gofile,tmpfiles,buzzheavier,tempsh,filebin,pixelvault,pixeldrain,webdav,sharex",
         "description": "Fallback uploader order"
       },
       "pixelVaultKey": {
@@ -3205,6 +3215,11 @@
         "type": "types.int",
         "default": 50,
         "description": "Amount of messages to keep in the log"
+      },
+      "keywordEntries": {
+        "type": "types.listOf types.str",
+        "default": [],
+        "description": "Manage keywords"
       }
     }
   },
@@ -5669,7 +5684,12 @@
   },
   "rpcEditor": {
     "description": "Edit the type and content of any Rich Presence (Equicord-only)",
-    "settings": {}
+    "settings": {
+      "appIds": {
+        "type": "types.listOf types.attrs",
+        "default": []
+      }
+    }
   },
   "saveFavoriteGifs": {
     "description": "Export favorited GIF urls (Equicord-only)",
@@ -5776,6 +5796,29 @@
   "serverSearch": {
     "description": "Navigate your servers better with a quick search button (Equicord-only)",
     "settings": {}
+  },
+  "settings": {
+    "description": "Adds Settings UI and debug info (Equicord-only)",
+    "settings": {
+      "settingsLocation": {
+        "type": "types.enum",
+        "enumValues": [
+          "top",
+          "aboveNitro",
+          "belowNitro",
+          "aboveActivity",
+          "belowActivity",
+          "bottom"
+        ],
+        "default": "aboveNitro",
+        "description": "Where to put the Equicord settings section"
+      },
+      "includeVencordInfoWhenCopying": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Also copy Equicord info (Equicord, Electron, Chromium) when clicking the version info in the bottom left area of the Settings page"
+      }
+    }
   },
   "showAllMessageButtons": {
     "description": "Always show all message buttons no matter if you are holding the shift key or not. (Equicord-only)",
