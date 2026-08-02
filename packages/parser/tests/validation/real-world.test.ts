@@ -266,6 +266,11 @@ describe.skipIf(!existsSync(EQUICORD_PATH))('pinned Equicord source', () => {
         showInNotChat: { description: 'Show Webhook tag in member list and profiles' },
       },
     });
+    expect(result.equicordPlugins.CustomFolderIcons?.settings.folderIcons).toMatchObject({
+      type: { kind: 'attrs', nullable: false },
+      default: {},
+      hidden: true,
+    });
   });
 
   test('covers every upstream Equicord plugin entry and declared setting', async () => {
@@ -315,6 +320,15 @@ describe.skipIf(!existsSync(VENCORD_PATH) || !existsSync(EQUICORD_PATH))(
       });
       expect(categorized.equicordOnly.Settings?.settings.settingsLocation).toMatchObject({
         description: 'Where to put the Equicord settings section',
+      });
+      expect(categorized.generic.SilentMessageToggle).toBeUndefined();
+      expect(categorized.vencordOnly.SilentMessageToggle?.settings.persistState).toMatchObject({
+        type: { kind: 'boolean' },
+        default: false,
+      });
+      expect(categorized.equicordOnly.SilentMessageToggle?.settings.persistState).toMatchObject({
+        type: { kind: 'enum', values: ['none', 'channels', 'restarts'] },
+        default: 'none',
       });
     }, 120_000);
   }

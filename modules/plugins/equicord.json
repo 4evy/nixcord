@@ -1327,6 +1327,11 @@
         "type": "types.bool",
         "default": false,
         "description": "Use a solid background on the background of the image"
+      },
+      "folderIcons": {
+        "type": "types.attrs",
+        "default": {},
+        "description": "folder icon settings"
       }
     }
   },
@@ -6194,6 +6199,26 @@
         "type": "types.str",
         "default": "",
         "description": "Comma-separated Discord user IDs to silence pings and server badges."
+      }
+    }
+  },
+  "silentMessageToggle": {
+    "description": "Adds a button to the chat bar to toggle sending a silent message. (Equicord-only)",
+    "settings": {
+      "persistState": {
+        "type": "types.enum",
+        "enumValues": [
+          "none",
+          "channels",
+          "restarts"
+        ],
+        "default": "none",
+        "description": "How to persist the silent message toggle state"
+      },
+      "autoDisable": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Automatically disable the silent message toggle again after sending one"
       }
     }
   },
