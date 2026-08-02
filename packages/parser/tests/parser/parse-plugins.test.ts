@@ -147,4 +147,62 @@ describe('parsePlugins()', () => {
       },
     });
   });
+
+  test('finds component-backed settings persisted outside the settings component', async () => {
+    await using fixture = await createFixture({
+      'src/plugins/folder-icons/settings.tsx': `
+        import { definePluginSettings } from "@api/Settings";
+        import { OptionType } from "@utils/types";
+
+        export const settings = definePluginSettings({
+          folderIcons: {
+            type: OptionType.COMPONENT,
+            hidden: true,
+            description: "Per-folder icon data",
+            component: () => <></>,
+          },
+        });
+      `,
+      'src/plugins/folder-icons/store.ts': `
+        import { settings } from "./settings";
+
+        export function initializeFolderIcons() {
+          settings.store.folderIcons ??= {};
+        }
+      `,
+      'src/plugins/folder-icons/index.tsx': `
+        import definePlugin from "@utils/types";
+        import { settings } from "./settings";
+        import { initializeFolderIcons } from "./store";
+
+        export function getFolderIcons() {
+          initializeFolderIcons();
+          return settings.store.folderIcons;
+        }
+
+        export default definePlugin({
+          name: "FolderIcons",
+          description: "fixture",
+          settings,
+        });
+      `,
+    });
+
+    const result = await parsePlugins(fixture.path, { executionMode: 'disabled' });
+    expect(result.vencordPlugins.FolderIcons?.settings.folderIcons).toMatchObject({
+      type: { kind: 'attrs', nullable: false },
+      default: {},
+      hidden: true,
+      description: 'Per-folder icon data',
+    });
+    expect(result.diagnostics).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          pluginName: 'FolderIcons',
+          settingPath: 'folderIcons',
+          code: 'component-ui-only',
+        }),
+      ])
+    );
+  });
 });

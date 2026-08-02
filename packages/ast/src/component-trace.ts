@@ -412,6 +412,61 @@ const isDefaultAssignment = (assignment: BinaryExpression): boolean =>
     assignment.getOperatorToken().getKind()
   );
 
+const storeDefault = (
+  roots: readonly Node[],
+  settingKey: string,
+  evaluator: StaticEvaluator,
+  ignoreActionCallbacks = false
+): Pick<ComponentTrace, 'hasDefault' | 'defaultValue'> => {
+  let hasDefault = false;
+  let defaultValue: StaticValue;
+  for (const root of roots) {
+    const aliases = storeAliases(root, evaluator);
+    for (const assignment of root.getDescendantsOfKind(SyntaxKind.BinaryExpression)) {
+      if (
+        !isDefaultAssignment(assignment) ||
+        (ignoreActionCallbacks && isActionCallback(assignment))
+      )
+        continue;
+      const path = storePath(assignment.getLeft(), evaluator, new Map(), aliases);
+      if (path?.length !== 1 || path[0] !== settingKey) continue;
+      const result = evaluator.evaluate(assignment.getRight());
+      if (result.known) {
+        hasDefault = true;
+        defaultValue = result.value as StaticValue;
+      }
+    }
+  }
+  return { hasDefault, ...(hasDefault ? { defaultValue } : {}) };
+};
+
+export function traceStoreSetting(
+  roots: readonly Node[],
+  settingKey: string,
+  evaluator: StaticEvaluator
+): ComponentTrace {
+  const combinedStoreEvidence = roots.reduce<StoreEvidence>(
+    (combined, root) => {
+      const evidence = storeEvidence(root, settingKey, evaluator);
+      return {
+        read: combined.read || evidence.read,
+        write: combined.write || evidence.write,
+      };
+    },
+    { read: false, write: false }
+  );
+  const persistent = combinedStoreEvidence.read && combinedStoreEvidence.write;
+  const { hasDefault, defaultValue } = storeDefault(roots, settingKey, evaluator, true);
+
+  return {
+    persistent,
+    hasDefault,
+    ...(hasDefault ? { defaultValue } : {}),
+    controls: [],
+    evidence: persistent ? [`settings.store.${settingKey} has paired read/write evidence`] : [],
+  };
+}
+
 export function traceComponentSetting(
   component: Node,
   settingKey: string,
@@ -517,21 +572,7 @@ export function traceComponentSetting(
   const hasNestedDefaults = Object.keys(nestedDefaults).length > 0;
   const hasNestedLabels = Object.keys(nestedLabels).length > 0;
 
-  let hasDefault = false;
-  let defaultValue: StaticValue;
-  for (const target of targets) {
-    const aliases = storeAliases(target, evaluator);
-    for (const assignment of target.getDescendantsOfKind(SyntaxKind.BinaryExpression)) {
-      if (!isDefaultAssignment(assignment)) continue;
-      const path = storePath(assignment.getLeft(), evaluator, new Map(), aliases);
-      if (path?.length !== 1 || path[0] !== settingKey) continue;
-      const result = evaluator.evaluate(assignment.getRight());
-      if (result.known) {
-        hasDefault = true;
-        defaultValue = result.value as StaticValue;
-      }
-    }
-  }
+  const { hasDefault, defaultValue } = storeDefault(targets, settingKey, evaluator);
 
   const evidence = [
     ...(referenced ? [`settings.store.${settingKey} has paired read/write evidence`] : []),

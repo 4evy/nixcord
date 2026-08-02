@@ -5,6 +5,7 @@ import {
   StaticEvaluator,
   type StaticValue,
   traceComponentSetting,
+  traceStoreSetting,
 } from '@nixcord/ast';
 import {
   CLI_CONFIG,
@@ -67,6 +68,7 @@ interface DirectoryParseResult {
 interface PluginContext {
   readonly pluginDir: string;
   readonly pluginPath: string;
+  readonly sourceFiles: readonly SourceFile[];
   readonly profile: SourceProfile;
   readonly session: AnalysisSession;
   readonly evaluator: StaticEvaluator;
@@ -818,7 +820,7 @@ async function normalizeSetting(
   }
 
   if ((optionType === 'COMPONENT' || optionType === 'CUSTOM') && !hasDefault && component) {
-    const trace = traceComponentSetting(
+    let trace = traceComponentSetting(
       component,
       key,
       context.session.checker,
@@ -826,6 +828,10 @@ async function normalizeSetting(
       context.profile.controlComponents,
       context.pluginPath
     );
+    if (!trace.persistent) {
+      const pluginTrace = traceStoreSetting(context.sourceFiles, key, context.evaluator);
+      if (pluginTrace.persistent) trace = pluginTrace;
+    }
     const traced = settingFromComponentTrace(key, trace, metadata, context.profile, contextualType);
     if (traced) {
       if (trace.settingName && trace.settingName !== key) {
@@ -1175,10 +1181,16 @@ async function parseSinglePlugin(
   pluginPath: string,
   entry: SourceFile,
   sourceFiles: readonly SourceFile[],
-  baseContext: Omit<PluginContext, 'pluginDir' | 'pluginPath' | 'diagnostics'>
+  baseContext: Omit<PluginContext, 'pluginDir' | 'pluginPath' | 'sourceFiles' | 'diagnostics'>
 ): Promise<PluginParseResult> {
   const diagnostics: ParseDiagnostic[] = [];
-  const context: PluginContext = { ...baseContext, pluginDir, pluginPath, diagnostics };
+  const context: PluginContext = {
+    ...baseContext,
+    pluginDir,
+    pluginPath,
+    sourceFiles,
+    diagnostics,
+  };
   try {
     const definePluginCall = findDefinePluginCall(entry, context.profile, context.session.checker);
     if (!definePluginCall) {
