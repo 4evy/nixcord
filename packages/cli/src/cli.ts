@@ -20,6 +20,7 @@ const DESCRIPTION =
 const CliOptionsSchema = z.object({
   equicord: z.string().optional(),
   output: z.string().min(1, 'Output path cannot be empty'),
+  overrides: z.string().min(1, 'Overrides path cannot be empty').optional(),
   verbose: z.boolean(),
   vencord: z.string().optional(),
   version: z.boolean(),
@@ -71,6 +72,13 @@ export const buildCli = (): Application<CommandContext> => {
           brief: 'Output file path',
           placeholder: 'path',
           default: DEFAULT_OUTPUT,
+        },
+        overrides: {
+          kind: 'parsed',
+          parse: stringParser,
+          brief: 'Path to plugin option overrides JSON',
+          placeholder: 'path',
+          optional: true,
         },
         vencordPlugins: {
           kind: 'parsed',
@@ -151,6 +159,9 @@ export const buildCli = (): Application<CommandContext> => {
         vencordPluginsDir: validationResult.data.vencordPlugins,
         equicordPluginsDir: validationResult.data.equicordPlugins,
         skipGitMigrations: validationResult.data.skipGitMigrations,
+        ...(validationResult.data.overrides
+          ? { overridesPath: resolve(process.cwd(), validationResult.data.overrides) }
+          : {}),
       };
 
       const params: GeneratePluginOptionsParams = { ...baseParams, equicordPath };

@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => ({
   generateParseRulesModule: vi.fn(() => 'rules'),
   generateMigrationsJson: vi.fn(() => '{"renames":[],"removals":[]}'),
   updateDeprecatedPlugins: vi.fn(async () => ({ renames: {}, removals: {}, settingRenames: {} })),
+  applyPluginOverrides: vi.fn(async () => undefined),
   oraPromise: vi.fn((promise: Promise<unknown>) => promise),
 }));
 
@@ -37,9 +38,19 @@ vi.mock('../../src/runner/spinner.js', () => ({
   oraPromise: mocks.oraPromise,
 }));
 
+vi.mock('../../src/plugin-overrides.js', () => ({
+  applyPluginOverrides: mocks.applyPluginOverrides,
+}));
+
 const basePlugin = {
   name: 'Sample',
   settings: {},
+};
+
+const emptyResultFields = {
+  settingRenames: [],
+  pluginRenames: [],
+  diagnostics: [],
 };
 
 function createLogger() {
@@ -87,10 +98,12 @@ describe('runGeneratePluginOptions', () => {
     const vencordResult = {
       vencordPlugins: { Shared: basePlugin, SoloV: basePlugin },
       equicordPlugins: {},
+      ...emptyResultFields,
     };
     const equicordResult = {
       vencordPlugins: {},
       equicordPlugins: { Shared: basePlugin, SoloE: basePlugin },
+      ...emptyResultFields,
     };
 
     mocks.parsePlugins.mockResolvedValueOnce(vencordResult).mockResolvedValueOnce(equicordResult);
@@ -101,12 +114,14 @@ describe('runGeneratePluginOptions', () => {
     });
 
     const outputPath = fixture.getPath('result', 'modules.nix');
+    const overridesPath = fixture.getPath('overrides.json');
     const result = await runGeneratePluginOptions({
       vencordPath: vencordRepo,
       equicordPath: equicordRepo,
       vencordPluginsDir: CLI_CONFIG.directories.vencordPlugins,
       equicordPluginsDir: CLI_CONFIG.directories.equicordPlugins,
       outputPath,
+      overridesPath,
       verbose: false,
       logger,
     });
@@ -146,6 +161,10 @@ describe('runGeneratePluginOptions', () => {
       equicordPluginsDir: CLI_CONFIG.directories.equicordPlugins,
     });
     expect(mocks.oraPromise).toHaveBeenCalledTimes(2);
+    expect(mocks.applyPluginOverrides).toHaveBeenCalledWith(
+      overridesPath,
+      join(dirname(outputPath), CLI_CONFIG.directories.output)
+    );
   });
 
   test('skips ora spinner when verbose logging is enabled', async () => {
@@ -155,6 +174,7 @@ describe('runGeneratePluginOptions', () => {
     mocks.parsePlugins.mockResolvedValue({
       vencordPlugins: { Only: basePlugin },
       equicordPlugins: {},
+      ...emptyResultFields,
     });
     mocks.categorizePlugins.mockReturnValue({
       generic: {},
@@ -185,23 +205,31 @@ describe('runGeneratePluginOptions', () => {
     mocks.parsePlugins.mockResolvedValue({
       vencordPlugins: { Only: basePlugin },
       equicordPlugins: {},
+      settingRenames: [],
+      pluginRenames: [],
       diagnostics: [
         {
+          code: 'component-only-setting-skipped',
+          severity: 'info',
+          stage: 'normalization',
           pluginName: 'Only',
-          filePath: '/tmp/only/index.ts',
-          kind: 'component-only-setting-skipped',
+          location: { file: '/tmp/only/index.ts', line: 1, column: 1 },
           message: 'Skipped component-only setting',
         },
         {
+          code: 'component-only-setting-skipped',
+          severity: 'info',
+          stage: 'normalization',
           pluginName: 'Only',
-          filePath: '/tmp/only/index.ts',
-          kind: 'component-only-setting-skipped',
+          location: { file: '/tmp/only/index.ts', line: 1, column: 1 },
           message: 'Skipped component-only setting',
         },
         {
+          code: 'unsupported-generated-settings-pattern',
+          severity: 'warning',
+          stage: 'evaluation',
           pluginName: 'Other',
-          filePath: '/tmp/other/index.ts',
-          kind: 'unsupported-generated-settings-pattern',
+          location: { file: '/tmp/other/index.ts', line: 1, column: 1 },
           message: 'Unsupported generated settings pattern',
         },
       ],
@@ -246,6 +274,7 @@ describe('runGeneratePluginOptions', () => {
     mocks.parsePlugins.mockResolvedValue({
       vencordPlugins: { Broken: { name: 'Broken' } as unknown as PluginConfig },
       equicordPlugins: {},
+      ...emptyResultFields,
     });
 
     const result = await runGeneratePluginOptions({
@@ -282,10 +311,12 @@ describe('validateParsedResults', () => {
     const valid = {
       vencordPlugins: { Demo: basePlugin },
       equicordPlugins: {},
+      ...emptyResultFields,
     };
     const invalid = {
       vencordPlugins: { Broken: { name: 'Broken' } as unknown as PluginConfig },
       equicordPlugins: {},
+      ...emptyResultFields,
     };
 
     expect(() => validateParsedResults(valid, valid)).not.toThrow();
