@@ -11,6 +11,7 @@ let
     ./one-off-clients.nix
     ./themes.nix
     ./equicord-content-warning.nix
+    ./plugin-option-schema.nix
   ];
 in
 testLib.run.tests "config-output-test" tests

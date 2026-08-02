@@ -138,7 +138,7 @@ describe('generateSettingJson()', () => {
     expect(result.description).not.toContain('1 =');
   });
 
-  test('enum type without enumValues', () => {
+  test('empty enum keeps an explicit empty domain for the Nix type builder', () => {
     const setting: PluginSetting = {
       name: 'choice',
       type: { kind: 'enum', values: [] },
@@ -146,7 +146,7 @@ describe('generateSettingJson()', () => {
     };
     const result = generateSettingJson(setting);
     expect(result.type).toBe('types.enum');
-    expect(result.enumValues).toBeUndefined();
+    expect(result.enumValues).toEqual([]);
   });
 
   test('setting with description', () => {
@@ -368,6 +368,20 @@ describe('generatePluginJson()', () => {
     expect(result.description).toBe('Test plugin');
     expect(Object.keys(result.settings)).toHaveLength(0);
   });
+
+  test('rejects settings that normalize to the same Nix identifier', () => {
+    const config: PluginConfig = {
+      name: 'TestPlugin',
+      settings: {
+        first: { name: 'BadgeAPI', type: { kind: 'boolean' } },
+        second: { name: 'Badge-API', type: { kind: 'boolean' } },
+      },
+    };
+
+    expect(() => generatePluginJson('TestPlugin', config)).toThrow(
+      'Settings "BadgeAPI" and "Badge-API" in plugin "TestPlugin" both normalize to "badgeApi"'
+    );
+  });
 });
 
 describe('generatePluginModule()', () => {
@@ -484,5 +498,16 @@ describe('generatePluginModule()', () => {
     expect(parsed.ClearURLs).toBeUndefined();
     expect(parsed.clearUrls.settings.badgeApi).toBeDefined();
     expect(parsed.clearUrls.settings.BadgeAPI).toBeUndefined();
+  });
+
+  test('rejects plugins that normalize to the same Nix identifier', () => {
+    const plugins: ReadonlyDeep<Record<string, PluginConfig>> = {
+      ClearURLs: { name: 'ClearURLs', settings: {} },
+      'Clear-URLs': { name: 'Clear-URLs', settings: {} },
+    };
+
+    expect(() => generatePluginModule(plugins)).toThrow(
+      'Plugins "ClearURLs" and "Clear-URLs" both normalize to "clearUrls"'
+    );
   });
 });
