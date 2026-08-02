@@ -111,4 +111,40 @@ describe('parsePlugins()', () => {
       pluginRenames: [],
     });
   });
+
+  test('preserves defaults and metadata when a setting definition object is reused', async () => {
+    await using fixture = await createFixture({
+      'src/plugins/reused/index.ts': `
+        import { definePluginSettings } from "@api/Settings";
+        import definePlugin, { OptionType } from "@utils/types";
+
+        const shared = {
+          type: OptionType.STRING,
+          default: "same",
+          description: "shared definition",
+        };
+        const settings = definePluginSettings({ first: shared, second: shared });
+
+        export default definePlugin({
+          name: "ReusedDefinition",
+          description: "fixture",
+          settings,
+        });
+      `,
+    });
+
+    const result = await parsePlugins(fixture.path, { executionMode: 'disabled' });
+    expect(result.vencordPlugins.ReusedDefinition?.settings).toMatchObject({
+      first: {
+        type: { kind: 'string', nullable: false },
+        default: 'same',
+        description: 'shared definition',
+      },
+      second: {
+        type: { kind: 'string', nullable: false },
+        default: 'same',
+        description: 'shared definition',
+      },
+    });
+  });
 });
