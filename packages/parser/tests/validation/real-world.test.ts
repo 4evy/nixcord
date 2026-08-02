@@ -21,6 +21,12 @@ const parseVencord = () => (vencordPromise ??= parsePlugins(VENCORD_PATH));
 const parseEquicord = () => (equicordPromise ??= parsePlugins(EQUICORD_PATH));
 
 const ENTRY_GLOBS = ['*/index.{ts,tsx}', '_core/*.{ts,tsx}'];
+const SETTING_OMISSION_DIAGNOSTICS = new Set([
+  'component-ui-only',
+  'execution-failed',
+  'execution-limit',
+  'execution-timeout',
+]);
 
 const expectedEntryIds = async (sourceRoot: string, pluginRoot: string): Promise<string[]> =>
   (await fg(ENTRY_GLOBS, { cwd: join(sourceRoot, pluginRoot), onlyFiles: true }))
@@ -110,9 +116,12 @@ const auditSettingCoverage = async (
     if (owner.entryRelative.startsWith('_core/') && owner.entryRelative.split('/').length !== 2)
       continue;
 
-    const hasDiagnostic = (settingPath: string): boolean =>
+    const hasOmissionDiagnostic = (settingPath: string): boolean =>
       diagnostics.some(
-        (item) => item.pluginName === owner.plugin.name && item.settingPath === settingPath
+        (item) =>
+          item.pluginName === owner.plugin.name &&
+          item.settingPath === settingPath &&
+          SETTING_OMISSION_DIAGNOSTICS.has(item.code)
       );
     for (const call of sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)) {
       const expression = call.getExpression();
@@ -135,7 +144,7 @@ const auditSettingCoverage = async (
           if (key) keys.add(key);
         }
         for (const key of keys)
-          if (!(key in owner.plugin.settings) && !hasDiagnostic(key))
+          if (!(key in owner.plugin.settings) && !hasOmissionDiagnostic(key))
             missing.push(`${owner.plugin.name}.${key}`);
       }
 
@@ -271,6 +280,12 @@ describe.skipIf(!existsSync(EQUICORD_PATH))('pinned Equicord source', () => {
       default: {},
       hidden: true,
     });
+    expect(result.vencordPlugins.FavoriteEmojiFirst?.settings).not.toHaveProperty('aliases');
+    expect(result.vencordPlugins.FavoriteEmojiFirst?.settings).not.toHaveProperty('aliasMap');
+    expect(result.equicordPlugins.KeywordNotify?.settings).not.toHaveProperty('keywords');
+    expect(result.equicordPlugins.KeywordNotify?.settings).not.toHaveProperty('keywordEntries');
+    expect(result.equicordPlugins.RPCEditor?.settings).not.toHaveProperty('replacedAppIds');
+    expect(result.equicordPlugins.RPCEditor?.settings).not.toHaveProperty('appIds');
   });
 
   test('covers every upstream Equicord plugin entry and declared setting', async () => {
