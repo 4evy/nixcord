@@ -97,6 +97,44 @@ describe('component setting traces', () => {
     expect(result).toMatchObject({ persistent: false, storeReferenced: false, controls: [] });
   });
 
+  test('does not classify less common event handlers as persistent settings', () => {
+    const result = trace(
+      `
+        const Component = () => (
+          <Button
+            label={settings.store.token}
+            onDoubleClick={() => settings.store.token = "new"}
+          />
+        );
+      `,
+      'token'
+    );
+    expect(result).toMatchObject({
+      persistent: false,
+      storeReferenced: true,
+      hasDefault: false,
+      controls: [],
+    });
+  });
+
+  test('does not infer reset actions as component defaults', () => {
+    const result = trace(
+      `
+        const Component = () => (
+          <>
+            <Switch
+              value={settings.store.flag}
+              onChange={value => settings.store.flag = value}
+            />
+            <Button onClick={() => settings.store.flag = true} />
+          </>
+        );
+      `,
+      'flag'
+    );
+    expect(result).toMatchObject({ persistent: true, hasDefault: false });
+  });
+
   test('does not expose values persisted only through an external data API', () => {
     const result = trace(
       `

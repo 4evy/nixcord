@@ -225,13 +225,27 @@ const referencesSettingsStore = (node: Node): boolean =>
     return property?.getExpression().getText() === 'settings' && property.getName() === 'use';
   });
 
-const isActionCallback = (node: Node): boolean => {
+const jsxCallbackAttribute = (node: Node): string | undefined => {
   const expression = node.getFirstAncestorByKind(SyntaxKind.JsxExpression);
   const attribute = expression?.getParentIfKind(SyntaxKind.JsxAttribute);
-  return Boolean(
-    attribute && ['onClick', 'onPress', 'action'].includes(attribute.getNameNode().getText())
-  );
+  return attribute?.getNameNode().getText();
 };
+
+const SETTING_BINDING_CALLBACKS = new Set([
+  'onChange',
+  'onInput',
+  'onSelect',
+  'onValueChange',
+  'select',
+]);
+
+const isActionCallback = (node: Node): boolean => {
+  const attribute = jsxCallbackAttribute(node);
+  if (!attribute || SETTING_BINDING_CALLBACKS.has(attribute)) return false;
+  return attribute === 'action' || /^on[A-Z]/.test(attribute);
+};
+
+const isJsxCallback = (node: Node): boolean => jsxCallbackAttribute(node) !== undefined;
 
 const storeEvidence = (
   node: Node,
@@ -399,10 +413,7 @@ const storeDefault = (
   for (const root of roots) {
     const aliases = storeAliases(root, evaluator);
     for (const assignment of root.getDescendantsOfKind(SyntaxKind.BinaryExpression)) {
-      if (
-        !isDefaultAssignment(assignment) ||
-        (ignoreActionCallbacks && isActionCallback(assignment))
-      )
+      if (!isDefaultAssignment(assignment) || (ignoreActionCallbacks && isJsxCallback(assignment)))
         continue;
       const path = storePath(assignment.getLeft(), evaluator, new Map(), aliases);
       if (path?.length !== 1 || path[0] !== settingKey) continue;
@@ -524,7 +535,7 @@ export function traceComponentSetting(
   const hasNestedDefaults = Object.keys(nestedDefaults).length > 0;
   const hasNestedLabels = Object.keys(nestedLabels).length > 0;
 
-  const { hasDefault, defaultValue } = storeDefault(targets, settingKey, evaluator);
+  const { hasDefault, defaultValue } = storeDefault(targets, settingKey, evaluator, true);
   const storeReferenced = targets.some(referencesSettingsStore);
 
   const evidence = [
