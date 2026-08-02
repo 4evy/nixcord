@@ -17,7 +17,7 @@ export interface SliceExecutionOptions {
 }
 
 export interface SliceTraceEvent {
-  readonly kind: 'read' | 'write' | 'control' | 'render';
+  readonly kind: 'read' | 'write' | 'control';
   readonly path?: readonly string[];
   readonly component?: string;
   readonly value?: unknown;
@@ -201,14 +201,54 @@ const directTopLevelBindingName = (declaration: Node): string | undefined => {
   return undefined;
 };
 
+const syntacticImportBindings = (sourceFile: SourceFile): Map<string, ImportBinding> => {
+  const bindings = new Map<string, ImportBinding>();
+  for (const declaration of sourceFile.getImportDeclarations()) {
+    const moduleName = declaration.getModuleSpecifierValue();
+    const defaultImport = declaration.getDefaultImport();
+    if (defaultImport)
+      bindings.set(defaultImport.getText(), {
+        localName: defaultImport.getText(),
+        moduleName,
+        importedName: 'default',
+        declaration,
+        reference: defaultImport,
+      });
+    const namespaceImport = declaration.getNamespaceImport();
+    if (namespaceImport)
+      bindings.set(namespaceImport.getText(), {
+        localName: namespaceImport.getText(),
+        moduleName,
+        importedName: '*',
+        declaration,
+        reference: namespaceImport,
+      });
+    for (const namedImport of declaration.getNamedImports()) {
+      const reference = namedImport.getAliasNode() ?? namedImport.getNameNode();
+      bindings.set(reference.getText(), {
+        localName: reference.getText(),
+        moduleName,
+        importedName: namedImport.getName(),
+        declaration,
+        reference,
+      });
+    }
+  }
+  return bindings;
+};
+
 const importBindingsFor = (nodes: readonly Node[]): ImportBinding[] => {
   const bindings = new Map<string, ImportBinding>();
+  const syntactic = new Map<string, ImportBinding>();
+  for (const node of nodes)
+    for (const [name, binding] of syntacticImportBindings(node.getSourceFile()))
+      syntactic.set(name, binding);
   for (const node of nodes) {
     for (const identifier of [
       ...(node.isKind(SyntaxKind.Identifier) ? [node] : []),
       ...node.getDescendantsOfKind(SyntaxKind.Identifier),
     ]) {
-      const binding = importBinding(identifier);
+      const binding = importBinding(identifier) ?? syntactic.get(identifier.getText());
       if (binding) bindings.set(binding.localName, binding);
     }
   }
@@ -270,6 +310,11 @@ function buildSlice(
   const declarationKeys = new Set<string>();
   const enclosingBindings = new Set<string>();
   const visiting = new Set<string>();
+  const enclosingVariable = target.getFirstAncestorByKind(SyntaxKind.VariableDeclaration);
+  if (enclosingVariable?.getVariableStatement()?.getParent()?.isKind(SyntaxKind.SourceFile)) {
+    const name = enclosingVariable.getNameNode();
+    if (name.isKind(SyntaxKind.Identifier)) enclosingBindings.add(name.getText());
+  }
 
   const visit = (node: Node): boolean => {
     for (const identifier of [
@@ -422,6 +467,13 @@ function buildSlice(
               `const ${bindingName} = __runtime.importValue("", "", ${JSON.stringify(bindingName)});`
           )
       : [];
+    const enclosingBindingExportLines = isTargetModule
+      ? [...enclosingBindings]
+          .sort((left, right) => left.localeCompare(right))
+          .map(
+            (bindingName) => `${exportsParameter}[${JSON.stringify(bindingName)}] = ${bindingName};`
+          )
+      : [];
     const targetInitializer = target.isKind(SyntaxKind.VariableDeclaration)
       ? target.getInitializer()
       : target;
@@ -435,9 +487,10 @@ function buildSlice(
       `${factoriesName}[${JSON.stringify(moduleId)}] = (${exportsParameter}, ${requireParameter}) => {`,
       ...[
         ...(targetCanBeInitializedBeforeImports ? targetLines : []),
+        ...enclosingBindingLines,
+        ...enclosingBindingExportLines,
         ...importLines,
         ...(!targetCanBeInitializedBeforeImports ? targetLines : []),
-        ...enclosingBindingLines,
         ...declarationLines,
         ...exportLines,
       ].map((line) => `  ${line}`),
@@ -500,7 +553,7 @@ export async function executeComponentSlice(
   checker: TypeChecker,
   options: SliceExecutionOptions
 ): Promise<SliceExecutionResult> {
-  const timeoutMs = options.timeoutMs ?? 1_000;
+  const timeoutMs = options.timeoutMs ?? 3_000;
   const maxOutputBytes = options.maxOutputBytes ?? 256 * 1024;
   const maxTraceEvents = options.maxTraceEvents ?? 256;
   const slice = buildSlice(component, checker, {
