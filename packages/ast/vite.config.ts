@@ -1,27 +1,26 @@
-import { createViteConfig } from '../../vite.config.shared.js';
+import { defineConfig } from 'vite';
 
-export default createViteConfig({
-  mode: 'lib',
-  external: [/^node:/, '@nixcord/shared', 'ts-morph'],
-  testTimeout: 20000,
-  testPool: 'threads',
-  testIsolate: false,
-  coverage: {
-    provider: 'v8',
-    reporter: ['text', 'json', 'html'],
-    exclude: [
-      'src/navigator/index.ts',
-      'src/extractor/select/default/index.ts',
-      'src/extractor/select/index.ts',
-      'src/extractor/select/options/index.ts',
-      'src/extractor/select/patterns/index.ts',
-      'src/extractor/type-inference/index.ts',
-      'src/extractor/constants.ts',
-      'src/extractor/types.ts',
-      'src/extractor/type-helpers.ts',
-      'src/extractor/type-inference/types.ts',
-      '**/*.test.ts',
-      '**/dist/**',
-    ],
+export default defineConfig({
+  build: {
+    lib: {
+      entry: {
+        index: 'src/index.ts',
+        'execution-runner': 'src/execution-runner.ts',
+      },
+      formats: ['es'],
+    },
+    outDir: 'dist',
+    emptyOutDir: true,
+    minify: false,
+    sourcemap: true,
+    rolldownOptions: {
+      external: [/^node:/, 'ts-morph'],
+      output: { entryFileNames: '[name].js' },
+    },
+  },
+  test: {
+    testTimeout: 20_000,
+    pool: 'threads',
+    isolate: false,
   },
 });

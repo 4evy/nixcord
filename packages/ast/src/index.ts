@@ -1,14 +1,24 @@
-export * from './extractor/constants.js';
-export * from './extractor/default-value.js';
-export * from './extractor/default-value-checks/index.js';
-export * from './extractor/default-value-resolution.js';
-export * from './extractor/enum-resolver.js';
-export * from './extractor/plugin.js';
-export * from './extractor/select/index.js';
-export * from './extractor/settings-extractor.js';
-export * from './extractor/type-helpers.js';
-export * from './extractor/type-inference/index.js';
-export * from './extractor/types.js';
-export * from './foundation/index.js';
-export * from './navigator/index.js';
-export * from './parser.js';
+export type {
+  AnalysisSession,
+  AnalysisSessionOptions,
+} from './analysis-session.js';
+export { createAnalysisSession } from './analysis-session.js';
+export type {
+  ComponentControlEvidence,
+  ComponentTrace,
+} from './component-trace.js';
+export { traceComponentSetting } from './component-trace.js';
+export type {
+  EvaluationEvidence,
+  EvaluationResult,
+  StaticEvaluatorOptions,
+  StaticScalar,
+  StaticValue,
+} from './evaluator.js';
+export { createStaticEvaluator, StaticEvaluator } from './evaluator.js';
+export type {
+  SliceExecutionOptions,
+  SliceExecutionResult,
+  SliceTraceEvent,
+} from './execution-slice.js';
+export { executeComponentSlice } from './execution-slice.js';
