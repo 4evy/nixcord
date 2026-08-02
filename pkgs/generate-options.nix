@@ -1,6 +1,7 @@
 {
   stdenvNoCC,
   lib,
+  callPackage,
   nodejs,
   bun,
   writableTmpDirAsHomeHook,
@@ -10,99 +11,36 @@
   skipGitMigrations ? true,
 }:
 let
-  nodeModulesHashes = {
-    x86_64-linux = "sha256-KCtjnyirnofKAt73v9PgItYYoKVMA6gBrdXJcDEA8g0=";
-    aarch64-linux = "sha256-UFK8RdinhJmsUi6U0bRo7F6qV0KvN6gohG9cj0F4hFE=";
-    aarch64-darwin = "sha256-PXbn3Wr3RfRaRzlf1EOCvz8rZweKzSpOVQ744zto1Xw=";
-  };
-  nodeModulesHash =
-    nodeModulesHashes.${stdenvNoCC.hostPlatform.system}
-      or (throw "Unsupported system: ${stdenvNoCC.hostPlatform.system}");
-  bunCPU = if stdenvNoCC.hostPlatform.isAarch64 then "arm64" else "x64";
-  bunOS = if stdenvNoCC.hostPlatform.isDarwin then "darwin" else "linux";
+  sources = import ./generate-options/sources.nix { inherit lib; };
 in
 stdenvNoCC.mkDerivation (finalAttrs: {
-  name = "nixcord-plugin-options";
+  pname = "nixcord-plugin-options";
   version = "generated";
 
-  src = lib.fileset.toSource {
-    root = ../.;
-    fileset = lib.fileset.unions [
-      ../package.json
-      ../bun.lock
-      ../docs/site/package.json
-      ../tsconfig.base.json
-      ../vitest.workspace.ts
-      ../vite.config.shared.ts
-      ../modules/plugins/overrides.json
-      ../modules/plugins/deprecated.nix
-      ../modules/plugins/deprecated.json
-      ../modules/plugins/migrations.nix
-      ../packages
-    ];
-  };
+  __structuredAttrs = true;
+  strictDeps = true;
 
-  node_modules = stdenvNoCC.mkDerivation {
-    pname = "nixcord-node_modules";
-    inherit (finalAttrs) version src;
+  src = sources.project;
 
-    impureEnvVars = lib.fetchers.proxyImpureEnvVars ++ [
-      "GIT_PROXY_COMMAND"
-      "SOCKS_SERVER"
-    ];
-
-    nativeBuildInputs = [
-      bun
-      writableTmpDirAsHomeHook
-    ];
-
-    dontConfigure = true;
-
-    buildPhase = ''
-      runHook preBuild
-
-      bun install \
-        --frozen-lockfile \
-        --ignore-scripts \
-        --backend=copyfile \
-        --linker=isolated \
-        --os=${bunOS} \
-        --cpu=${bunCPU} \
-        --no-progress
-
-      runHook postBuild
-    '';
-
-    installPhase = ''
-      runHook preInstall
-
-      mkdir -p $out
-      cp -R --parents node_modules packages/*/node_modules docs/site/node_modules $out
-
-      runHook postInstall
-    '';
-
-    dontFixup = true;
-
-    outputHash = nodeModulesHash;
-    outputHashAlgo = "sha256";
-    outputHashMode = "recursive";
+  node_modules = callPackage ./generate-options/node-modules.nix {
+    inherit (finalAttrs) version;
+    src = sources.dependencies;
   };
 
   nativeBuildInputs = [
     bun
     nodejs
-    nix
     writableTmpDirAsHomeHook
   ];
+
+  nativeInstallCheckInputs = [ nix ];
 
   configurePhase = ''
     runHook preConfigure
 
-    rm -rf node_modules docs/site/node_modules
     cp -R ${finalAttrs.node_modules}/. .
-    chmod -R u+w ./node_modules ./docs/site/node_modules
-    patchShebangs --build node_modules docs/site/node_modules
+    chmod -R u+w node_modules packages/*/node_modules
+    patchShebangs --build node_modules packages/*/node_modules
 
     runHook postConfigure
   '';
@@ -130,7 +68,6 @@ stdenvNoCC.mkDerivation (finalAttrs: {
     runHook preInstall
 
     mkdir -p "$out/plugins"
-    cp modules/plugins/deprecated.nix "$out/plugins/deprecated.nix"
     cp modules/plugins/deprecated.json "$out/plugins/deprecated.json"
     cp modules/plugins/migrations.nix "$out/plugins/migrations.nix"
 
@@ -140,45 +77,9 @@ stdenvNoCC.mkDerivation (finalAttrs: {
       --equicord "${equicordSource}" \
       --equicord-plugins src/equicordplugins \
       --output "$out/dummy.nix" \
+      --overrides modules/plugins/overrides.json \
       ${lib.optionalString skipGitMigrations "--skip-git-migrations"} \
       --verbose
-
-    ${lib.getExe nodejs} <<'NODE'
-      const fs = require("node:fs");
-      const path = require("node:path");
-
-      const overridesPath = "modules/plugins/overrides.json";
-      if (!fs.existsSync(overridesPath)) process.exit(0);
-
-      const isPlainObject = value =>
-        value !== null && typeof value === "object" && !Array.isArray(value);
-
-      const merge = (base, override) => {
-        if (!isPlainObject(base) || !isPlainObject(override)) return override;
-
-        const result = { ...base };
-        for (const [key, value] of Object.entries(override)) {
-          result[key] = key in result ? merge(result[key], value) : value;
-        }
-        return result;
-      };
-
-      const overrides = JSON.parse(fs.readFileSync(overridesPath, "utf8"));
-      const files = {
-        shared: "shared.json",
-        vencord: "vencord.json",
-        equicord: "equicord.json",
-      };
-
-      for (const [category, filename] of Object.entries(files)) {
-        if (!overrides[category]) continue;
-
-        const targetPath = path.join(process.env.out, "plugins", filename);
-        const generated = JSON.parse(fs.readFileSync(targetPath, "utf8"));
-        const merged = merge(generated, overrides[category]);
-        fs.writeFileSync(targetPath, JSON.stringify(merged, null, 2) + "\n");
-      }
-    NODE
 
     runHook postInstall
   '';
@@ -188,9 +89,7 @@ stdenvNoCC.mkDerivation (finalAttrs: {
   installCheckPhase = ''
     runHook preInstallCheck
 
-    set -a
-    NIX_STATE_DIR="$TMPDIR/nix-state"
-    set +a
+    export NIX_STATE_DIR="$TMPDIR/nix-state"
     mkdir -p "$NIX_STATE_DIR"
 
     for nixFile in "$out/plugins"/*.nix; do
@@ -201,6 +100,12 @@ stdenvNoCC.mkDerivation (finalAttrs: {
       fi
     done
 
+    for jsonFile in "$out/plugins"/*.json; do
+      ${lib.getExe nodejs} -e \
+        'JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8"))' \
+        "$jsonFile"
+    done
+
     runHook postInstallCheck
   '';
 
@@ -208,6 +113,6 @@ stdenvNoCC.mkDerivation (finalAttrs: {
     description = "Generate nixcord Vencord and Equicord plugin option files";
     homepage = "https://github.com/4evy/nixcord";
     license = lib.licenses.mit;
-    platforms = lib.platforms.unix;
+    inherit (finalAttrs.node_modules.meta) platforms;
   };
 })

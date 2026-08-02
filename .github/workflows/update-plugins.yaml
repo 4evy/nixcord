@@ -13,6 +13,7 @@ on:
       - "bun.lock"
       - "flake.lock"
       - "pkgs/generate-options.nix"
+      - "pkgs/generate-options/**"
       - "pkgs/scripts/update-fixed-output-hash.sh"
       - "docs/site.nix"
   schedule:
@@ -76,9 +77,9 @@ jobs:
             echo "::error::Expected x86_64-linux, got $system"
             exit 1
           fi
-          nix_file=pkgs/generate-options.nix
+          node_modules_file=pkgs/generate-options/node-modules.nix
           hash_updater=pkgs/scripts/update-fixed-output-hash.sh
-          "$hash_updater" refresh "$nix_file" "$system" -- bash -euo pipefail -c '
+          "$hash_updater" refresh "$node_modules_file" "$system" -- bash -euo pipefail -c '
             nix build --no-link .#generate.node_modules
             nix build --rebuild --no-link .#generate.node_modules
           '
@@ -121,6 +122,7 @@ jobs:
             pkgs/equicord.nix
             pkgs/vencord.nix
             pkgs/generate-options.nix
+            pkgs/generate-options
             docs/site.nix
             package.json
             bun.lock
@@ -211,9 +213,9 @@ jobs:
             exit 1
           fi
 
-          nix_file=pkgs/generate-options.nix
+          node_modules_file=pkgs/generate-options/node-modules.nix
           hash_updater=pkgs/scripts/update-fixed-output-hash.sh
-          "$hash_updater" refresh "$nix_file" "$EXPECTED_SYSTEM" -- bash -euo pipefail -c "
+          "$hash_updater" refresh "$node_modules_file" "$EXPECTED_SYSTEM" -- bash -euo pipefail -c "
             nix --option system '$EXPECTED_SYSTEM' build \
               --no-link .#generate.node_modules
             nix --option system '$EXPECTED_SYSTEM' build \
@@ -268,7 +270,7 @@ jobs:
         run: |
           set -euo pipefail
           hash_updater=pkgs/scripts/update-fixed-output-hash.sh
-          node_modules_hash=$("$hash_updater" get pkgs/generate-options.nix "$EXPECTED_SYSTEM")
+          node_modules_hash=$("$hash_updater" get pkgs/generate-options/node-modules.nix "$EXPECTED_SYSTEM")
 
           mkdir -p dependency-hashes
           hashes_file="dependency-hashes/$EXPECTED_SYSTEM.txt"
@@ -333,7 +335,7 @@ jobs:
             while read -r kind system hash; do
               case "$kind" in
                 node_modules)
-                  target=pkgs/generate-options.nix
+                  target=pkgs/generate-options/node-modules.nix
                   ;;
                 docs)
                   target=docs/site.nix
@@ -358,6 +360,7 @@ jobs:
             pkgs/equicord.nix
             pkgs/vencord.nix
             pkgs/generate-options.nix
+            pkgs/generate-options
             docs/site.nix
             package.json
             bun.lock
