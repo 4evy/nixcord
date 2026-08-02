@@ -570,6 +570,10 @@ const rawObjectFromAst = (
     const result = evaluator.evaluate(initializer);
     if (result.known) output[key] = result.value;
   }
+  // `visited` is a recursion stack, not a global deduplication set. The same definition object may
+  // legitimately be reused by multiple settings; keeping it marked after this branch returns would
+  // cause every later reference to lose its default and metadata.
+  visited.delete(visitKey);
   return output;
 };
 
