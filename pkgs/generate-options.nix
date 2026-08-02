@@ -60,7 +60,18 @@ stdenvNoCC.mkDerivation (finalAttrs: {
 
   checkPhase = ''
     runHook preCheck
-    ./node_modules/.bin/vitest run --no-isolate --experimental.fsModuleCache --maxWorkers=4 --testTimeout=30000
+    ./node_modules/.bin/vitest run \
+      --exclude 'packages/parser/tests/validation/**' \
+      --no-isolate \
+      --experimental.fsModuleCache \
+      --maxWorkers=1 \
+      --testTimeout=30000
+    ./node_modules/.bin/vitest run \
+      packages/parser/tests/validation/real-world.test.ts \
+      --no-isolate \
+      --experimental.fsModuleCache \
+      --maxWorkers=1 \
+      --testTimeout=30000
     runHook postCheck
   '';
 
