@@ -92,11 +92,7 @@ const evidenceFor = (node: Node): EvaluationEvidence => {
 const nodeKey = (node: Node): string =>
   `${node.getSourceFile().getFilePath()}:${node.getStart()}:${node.getEnd()}`;
 
-const propertyName = (
-  node: Node,
-  evaluator: StaticEvaluator,
-  env: Environment
-): string | undefined => {
+const literalPropertyName = (node: Node): string | undefined => {
   if (
     node.isKind(SyntaxKind.Identifier) ||
     node.isKind(SyntaxKind.StringLiteral) ||
@@ -104,12 +100,7 @@ const propertyName = (
   ) {
     return node.getText().replace(/^['"]|['"]$/g, '');
   }
-  const computed = node.asKind(SyntaxKind.ComputedPropertyName)?.getExpression();
-  if (!computed) return undefined;
-  const result = evaluator.evaluate(computed, env);
-  return result.known && ['string', 'number'].includes(typeof result.value)
-    ? String(result.value)
-    : undefined;
+  return undefined;
 };
 
 const importedDeclaration = (node: import('ts-morph').Identifier): Node | undefined => {
@@ -220,6 +211,33 @@ export class StaticEvaluator {
     state.active.delete(key);
     if (cacheable && result.known && !isCallable(result.value)) this.#memo.set(key, result);
     return result;
+  }
+
+  #chargeOperations(amount: number, state: EvaluationState, node: Node): EvaluationResult<true> {
+    if (!Number.isSafeInteger(amount) || amount < 0)
+      return unknown('invalid collection size', node);
+    state.operations += amount;
+    return state.operations > this.#maxOperations
+      ? unknown('evaluation operation limit exceeded', node)
+      : known(true, node);
+  }
+
+  #propertyName(
+    node: Node,
+    environment: Environment,
+    depth: number,
+    state: EvaluationState
+  ): EvaluationResult<string> {
+    const literal = literalPropertyName(node);
+    if (literal !== undefined) return known(literal, node);
+    const computed = node.asKind(SyntaxKind.ComputedPropertyName)?.getExpression();
+    if (!computed) return unknown('unknown computed property name', node);
+    const result = this.#evaluate(computed, environment, depth + 1, state);
+    return result.known && ['string', 'number'].includes(typeof result.value)
+      ? known(String(result.value), node)
+      : result.known
+        ? unknown('unknown computed property name', node)
+        : result;
   }
 
   #dispatch(
@@ -375,8 +393,8 @@ export class StaticEvaluator {
       }
       if (!property.isKind(SyntaxKind.PropertyAssignment))
         return unknown('unsupported object member', property as Node);
-      const name = propertyName(property.getNameNode(), this, environment);
-      if (name === undefined) return unknown('unknown computed property name', property);
+      const name = this.#propertyName(property.getNameNode(), environment, depth, state);
+      if (!name.known) return name;
       const item = this.#evaluate(
         unwrapExpression(property.getInitializerOrThrow()),
         environment,
@@ -384,7 +402,7 @@ export class StaticEvaluator {
         state
       );
       if (!item.known) return item;
-      value[name] = cloneRuntime(item.value);
+      value[name.value] = cloneRuntime(item.value);
     }
     return known(value as StaticValue, node);
   }
@@ -627,6 +645,15 @@ export class StaticEvaluator {
       const value = args[0] ? this.#evaluate(args[0], environment, depth + 1, state) : undefined;
       if (!value?.known || isCallable(value.value))
         return value?.known ? unknown('Array.from input is not known', call) : value;
+      const input = value.value;
+      const length =
+        typeof input === 'string' || Array.isArray(input)
+          ? input.length
+          : input && typeof input === 'object' && !isCallable(input)
+            ? Number((input as Record<string, RuntimeValue>).length ?? 0)
+            : 0;
+      const charged = this.#chargeOperations(length, state, call);
+      if (!charged.known) return charged;
       let output = Array.from(value.value as Iterable<StaticValue>);
       if (args[1]) {
         const callback = this.#evaluate(args[1], environment, depth + 1, state);
