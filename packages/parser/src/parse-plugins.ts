@@ -658,6 +658,13 @@ const nestedConfigFromDefaults = (
   ),
 });
 
+const implicitDefaultForType = (type: SettingType): Partial<Pick<PluginSetting, 'default'>> => {
+  if (type.kind === 'string' && type.nullable) return { default: null };
+  if (type.kind === 'list') return { default: [] };
+  if (type.kind === 'attrs') return { default: type.nullable ? null : {} };
+  return {};
+};
+
 const settingFromComponentTrace = (
   key: string,
   trace: ReturnType<typeof traceComponentSetting>,
@@ -665,16 +672,12 @@ const settingFromComponentTrace = (
   profile: SourceProfile,
   contextualType?: string
 ): PluginSetting | PluginConfig | undefined => {
-  const settingName = trace.settingName ?? key;
   if (trace.nestedDefaults)
-    return nestedConfigFromDefaults(settingName, trace.nestedDefaults, trace.nestedLabels, profile);
+    return nestedConfigFromDefaults(key, trace.nestedDefaults, trace.nestedLabels, profile);
   if (!trace.persistent) return undefined;
   const control = trace.controls[0];
   let type: SettingType;
-  if (trace.inferredValue !== undefined) {
-    const inferred = jsonValue(trace.inferredValue);
-    type = inferTypeFromValue(inferred.valid ? inferred.value : undefined, contextualType);
-  } else if (control?.kind === 'boolean') type = { kind: 'boolean' };
+  if (control?.kind === 'boolean') type = { kind: 'boolean' };
   else if (control?.kind === 'number') type = { kind: 'float' };
   else if (control?.kind === 'enum' && control.values?.length)
     type = { kind: 'enum', values: control.values };
@@ -684,18 +687,12 @@ const settingFromComponentTrace = (
   } else type = inferTypeFromValue(undefined, contextualType);
   const converted = jsonValue(trace.defaultValue);
   return {
-    name: settingName,
+    name: key,
     type,
     ...metadata,
     ...(trace.hasDefault && converted.valid
       ? { default: converted.value }
-      : type.kind === 'string' && type.nullable
-        ? { default: null }
-        : type.kind === 'list'
-          ? { default: [] }
-          : type.kind === 'attrs'
-            ? { default: type.nullable ? null : {} }
-            : {}),
+      : implicitDefaultForType(type)),
   };
 };
 
@@ -833,27 +830,9 @@ async function normalizeSetting(
       if (pluginTrace.persistent) trace = pluginTrace;
     }
     const traced = settingFromComponentTrace(key, trace, metadata, context.profile, contextualType);
-    if (traced) {
-      if (trace.settingName && trace.settingName !== key) {
-        context.diagnostics.push(
-          diagnostic(
-            'component-setting-remapped',
-            'info',
-            'normalization',
-            `Component setting ${key} is backed by persistent value ${trace.settingName}`,
-            {
-              pluginName,
-              settingPath,
-              node: component,
-              evidence: trace.evidence,
-            }
-          )
-        );
-      }
-      return traced;
-    }
+    if (traced) return traced;
 
-    if (context.executionMode === 'fallback') {
+    if (context.executionMode === 'fallback' && trace.storeReferenced) {
       const executed = await context.executionLimit(() =>
         executeComponentSlice(component, context.session.checker, {
           settingKey: key,
@@ -861,20 +840,38 @@ async function normalizeSetting(
         })
       );
       if (executed.ok) {
-        const persistent = executed.events.some(
-          (event) => event.path?.[0] === key && (event.kind === 'read' || event.kind === 'write')
+        const readsSetting = executed.events.some(
+          (event) => event.kind === 'read' && event.path?.[0] === key
         );
-        if (persistent) {
-          const converted = jsonValue(executed.value);
+        const writes = executed.events.filter(
+          (event) => event.kind === 'write' && event.path?.[0] === key
+        );
+        if (readsSetting && writes.length > 0) {
+          const controlKind = executed.events.flatMap((event) => {
+            if (event.kind !== 'control' || !event.component) return [];
+            const component = event.component.split('.').at(-1);
+            const kind = component ? context.profile.controlComponents[component] : undefined;
+            return kind ? [kind] : [];
+          })[0];
+          const convertedDefault = jsonValue(executed.value);
+          const convertedWrite = jsonValue(writes.at(-1)?.value);
+          const type: SettingType =
+            controlKind === 'boolean'
+              ? { kind: 'boolean' }
+              : controlKind === 'number'
+                ? { kind: 'float' }
+                : executed.hasDefault && convertedDefault.valid
+                  ? inferTypeFromValue(convertedDefault.value, contextualType)
+                  : convertedWrite.valid
+                    ? inferTypeFromValue(convertedWrite.value, contextualType)
+                    : inferTypeFromValue(undefined, contextualType);
           return {
             name: key,
-            type: converted.valid
-              ? inferTypeFromValue(converted.value)
-              : { kind: 'string', nullable: true },
+            type,
             ...metadata,
-            ...(executed.hasDefault && converted.valid
-              ? { default: converted.value }
-              : { default: null }),
+            ...(executed.hasDefault && convertedDefault.valid
+              ? { default: convertedDefault.value }
+              : implicitDefaultForType(type)),
           };
         }
       } else {

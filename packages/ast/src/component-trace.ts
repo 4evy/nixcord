@@ -10,11 +10,10 @@ export interface ComponentControlEvidence {
 }
 
 export interface ComponentTrace {
-  readonly settingName?: string;
   readonly persistent: boolean;
+  readonly storeReferenced: boolean;
   readonly hasDefault: boolean;
   readonly defaultValue?: StaticValue;
-  readonly inferredValue?: StaticValue;
   readonly nestedDefaults?: Readonly<Record<string, StaticValue>>;
   readonly nestedLabels?: Readonly<Record<string, string>>;
   readonly controls: readonly ComponentControlEvidence[];
@@ -218,6 +217,14 @@ interface StoreEvidence {
   readonly write: boolean;
 }
 
+const referencesSettingsStore = (node: Node): boolean =>
+  [node, ...node.getDescendants()].some((candidate) => {
+    if (candidate.getText() === 'settings.store') return true;
+    const call = candidate.asKind(SyntaxKind.CallExpression);
+    const property = call?.getExpression().asKind(SyntaxKind.PropertyAccessExpression);
+    return property?.getExpression().getText() === 'settings' && property.getName() === 'use';
+  });
+
 const isActionCallback = (node: Node): boolean => {
   const expression = node.getFirstAncestorByKind(SyntaxKind.JsxExpression);
   const attribute = expression?.getParentIfKind(SyntaxKind.JsxAttribute);
@@ -271,37 +278,6 @@ const storeEvidence = (
       read = true;
   }
   return { read, write };
-};
-
-const persistentApiValues = (
-  node: Node,
-  evaluator: StaticEvaluator,
-  checker: TypeChecker
-): ReadonlyMap<string, StaticValue | undefined> => {
-  const values = new Map<string, StaticValue | undefined>();
-  for (const call of node.getDescendantsOfKind(SyntaxKind.CallExpression)) {
-    if (isActionCallback(call)) continue;
-    const property = call.getExpression().asKind(SyntaxKind.PropertyAccessExpression);
-    if (!property || !['set', 'update'].includes(property.getName())) continue;
-    const owner = property.getExpression().getText().split('.').at(-1);
-    if (owner !== 'DataStore') continue;
-    for (const argument of call.getArguments().slice(1)) {
-      if (!argument.isKind(SyntaxKind.Identifier)) continue;
-      const name = argument.getText();
-      const declaration = resolvedDeclaration(argument, checker);
-      const initializer = declaration?.isKind(SyntaxKind.VariableDeclaration)
-        ? declaration.getInitializer()
-        : undefined;
-      const result = initializer ? evaluator.evaluate(initializer) : undefined;
-      values.set(
-        name,
-        result?.known && !('callable' in Object(result.value ?? {}))
-          ? (result.value as StaticValue)
-          : undefined
-      );
-    }
-  }
-  return values;
 };
 
 const jsxControl = (
@@ -460,6 +436,7 @@ export function traceStoreSetting(
 
   return {
     persistent,
+    storeReferenced: roots.some(referencesSettingsStore),
     hasDefault,
     ...(hasDefault ? { defaultValue } : {}),
     controls: [],
@@ -476,14 +453,6 @@ export function traceComponentSetting(
   allowedRoot?: string
 ): ComponentTrace {
   const targets = collectTargets(component, checker, allowedRoot);
-  const apiValues = new Map<string, StaticValue | undefined>();
-  for (const target of targets)
-    for (const [name, value] of persistentApiValues(target, evaluator, checker))
-      apiValues.set(name, value);
-  const derivedName = [...apiValues.keys()].find(
-    (name) => name !== settingKey && apiValues.get(name) !== undefined
-  );
-  const evidenceKeys = derivedName ? [settingKey, derivedName] : [settingKey];
   const allControls = targets.flatMap((target) =>
     [
       ...(target.isKind(SyntaxKind.JsxSelfClosingElement) ||
@@ -493,20 +462,7 @@ export function traceComponentSetting(
       ...target.getDescendantsOfKind(SyntaxKind.JsxSelfClosingElement),
       ...target.getDescendantsOfKind(SyntaxKind.JsxOpeningElement),
     ]
-      .flatMap((jsx) =>
-        evidenceKeys.flatMap((name) => {
-          const isDerived = name === derivedName;
-          const control = jsxControl(
-            jsx,
-            name,
-            evaluator,
-            isDerived,
-            isDerived && apiValues.get(name) !== undefined,
-            controlKinds
-          );
-          return control ? [control] : [];
-        })
-      )
+      .map((jsx) => jsxControl(jsx, settingKey, evaluator, false, false, controlKinds))
       .filter((value): value is ComponentControlEvidence => value !== undefined)
   );
   const controls = allControls.filter(
@@ -554,10 +510,6 @@ export function traceComponentSetting(
     { read: false, write: false }
   );
   const referenced = combinedStoreEvidence.read && combinedStoreEvidence.write;
-  const persistentApi =
-    controls.length > 0 &&
-    (apiValues.has(settingKey) ||
-      (derivedName !== undefined && apiValues.get(derivedName) !== undefined));
   const nestedResults = targets.map((target) =>
     forEachNestedDefaults(target, settingKey, evaluator)
   );
@@ -573,21 +525,18 @@ export function traceComponentSetting(
   const hasNestedLabels = Object.keys(nestedLabels).length > 0;
 
   const { hasDefault, defaultValue } = storeDefault(targets, settingKey, evaluator);
+  const storeReferenced = targets.some(referencesSettingsStore);
 
   const evidence = [
     ...(referenced ? [`settings.store.${settingKey} has paired read/write evidence`] : []),
-    ...(persistentApi ? ['recognized persistent data API writes the setting value'] : []),
     ...controls.map((control) => `${control.component} binds the setting`),
     ...(hasNestedDefaults ? ['component initializes nested store values'] : []),
   ];
   return {
-    ...(derivedName ? { settingName: derivedName } : {}),
-    persistent: referenced || persistentApi || controls.length > 0 || hasNestedDefaults,
+    persistent: referenced || controls.length > 0 || hasNestedDefaults,
+    storeReferenced,
     hasDefault,
     ...(hasDefault ? { defaultValue } : {}),
-    ...(derivedName && apiValues.get(derivedName) !== undefined
-      ? { inferredValue: apiValues.get(derivedName) }
-      : {}),
     ...(hasNestedDefaults ? { nestedDefaults } : {}),
     ...(hasNestedLabels ? { nestedLabels } : {}),
     controls,

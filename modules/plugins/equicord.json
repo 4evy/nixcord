@@ -1242,15 +1242,15 @@
   "contentWarning": {
     "description": "Allows you to specify certain trigger words that will be blurred by default. Hovering/Clicking on the blurred content will reveal it. (Equicord-only)",
     "settings": {
-      "triggerWords": {
-        "type": "types.nullOr (types.listOf types.str)",
-        "default": null,
-        "description": "Words to blur in messages (restart required)"
-      },
       "onClick": {
         "type": "types.bool",
         "default": false,
         "description": "Only show trigger content on click instead of hover"
+      },
+      "triggerWords": {
+        "type": "types.nullOr (types.listOf types.str)",
+        "default": null,
+        "description": "Words to blur in messages (restart required)"
       }
     }
   },
@@ -2255,13 +2255,7 @@
   },
   "favoriteEmojiFirst": {
     "description": "Puts your favorite emoji first in the emoji autocomplete and also has emoji alias. (Equicord-only)",
-    "settings": {
-      "aliasMap": {
-        "type": "types.attrs",
-        "default": {},
-        "description": "Manage your emoji aliases."
-      }
-    }
+    "settings": {}
   },
   "favouriteAnything": {
     "description": "Favourite any image, video, or file attachment (Equicord-only)",
@@ -3220,11 +3214,6 @@
         "type": "types.int",
         "default": 50,
         "description": "Amount of messages to keep in the log"
-      },
-      "keywordEntries": {
-        "type": "types.listOf types.str",
-        "default": [],
-        "description": "Manage keywords"
       }
     }
   },
@@ -5689,12 +5678,7 @@
   },
   "rpcEditor": {
     "description": "Edit the type and content of any Rich Presence (Equicord-only)",
-    "settings": {
-      "appIds": {
-        "type": "types.listOf types.attrs",
-        "default": []
-      }
-    }
+    "settings": {}
   },
   "saveFavoriteGifs": {
     "description": "Export favorited GIF urls (Equicord-only)",

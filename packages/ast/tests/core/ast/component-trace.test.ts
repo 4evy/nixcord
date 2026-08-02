@@ -23,8 +23,23 @@ describe('component setting traces', () => {
     );
     expect(result).toMatchObject({
       persistent: true,
+      storeReferenced: true,
       controls: [{ component: 'TextInput', kind: 'string' }],
     });
+  });
+
+  test('retains store provenance when a computed key needs execution fallback', () => {
+    const result = trace(
+      `
+        const keys = ["flag"];
+        const Component = () => {
+          const key = keys.at(0);
+          return <Switch value={settings.store[key]} onChange={value => settings.store[key] = value} />;
+        };
+      `,
+      'flag'
+    );
+    expect(result).toMatchObject({ persistent: false, storeReferenced: true, controls: [] });
   });
 
   test('captures nested store initialization from data-driven loops and aliases', () => {
@@ -57,7 +72,7 @@ describe('component setting traces', () => {
       'const Component = () => <Button onClick={() => alert("hi")} />;',
       'value'
     );
-    expect(result).toMatchObject({ persistent: false, controls: [] });
+    expect(result).toMatchObject({ persistent: false, storeReferenced: false, controls: [] });
   });
 
   test('ignores generic action callbacks even when they write a settings store', () => {
@@ -65,7 +80,7 @@ describe('component setting traces', () => {
       'const Component = () => <Button onClick={() => settings.store.token = "new"} />;',
       'token'
     );
-    expect(result).toMatchObject({ persistent: false, controls: [] });
+    expect(result).toMatchObject({ persistent: false, storeReferenced: true, controls: [] });
   });
 
   test('does not follow components rendered from generic action callbacks', () => {
@@ -79,10 +94,10 @@ describe('component setting traces', () => {
       `,
       'setDatabaseTimezone'
     );
-    expect(result).toMatchObject({ persistent: false, controls: [] });
+    expect(result).toMatchObject({ persistent: false, storeReferenced: false, controls: [] });
   });
 
-  test('derives persistent values written through a recognized data API', () => {
+  test('does not expose values persisted only through an external data API', () => {
     const result = trace(
       `
         let triggerWords = [""];
@@ -94,12 +109,7 @@ describe('component setting traces', () => {
       `,
       'flagged'
     );
-    expect(result).toMatchObject({
-      settingName: 'triggerWords',
-      persistent: true,
-      inferredValue: [''],
-      controls: [{ component: 'TextInput', kind: 'string' }],
-    });
+    expect(result).toMatchObject({ persistent: false, storeReferenced: false, controls: [] });
   });
 
   test('follows a store-backed component returned by an imported factory', () => {
