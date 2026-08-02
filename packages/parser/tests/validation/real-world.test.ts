@@ -300,6 +300,14 @@ describe.skipIf(!existsSync(EQUICORD_PATH))('pinned Equicord source', () => {
     expect(
       (result.equicordPlugins.RandomVoice?.settings.keybind as PluginSetting).default
     ).toBeUndefined();
+    expect(result.equicordPlugins.MessageLoggerEnhanced?.settings.imageCacheDir).toMatchObject({
+      type: { kind: 'string', nullable: true },
+      default: null,
+    });
+    expect(result.equicordPlugins.MessageLoggerEnhanced?.settings.logsDir).toMatchObject({
+      type: { kind: 'string', nullable: true },
+      default: null,
+    });
     expect(result.vencordPlugins.FavoriteEmojiFirst?.settings).not.toHaveProperty('aliases');
     expect(result.vencordPlugins.FavoriteEmojiFirst?.settings).not.toHaveProperty('aliasMap');
     expect(result.equicordPlugins.KeywordNotify?.settings).not.toHaveProperty('keywords');

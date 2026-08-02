@@ -248,7 +248,7 @@ describe('parsePlugins()', () => {
     await using fixture = await createFixture({
       'src/plugins/renamed-binding/component.tsx': `
         import { Switch } from "@webpack/common";
-        import { pluginSettings as config } from "./settings";
+        import { pluginSettings as config } from "./index";
 
         export function FlagComponent() {
           return (
@@ -274,6 +274,7 @@ describe('parsePlugins()', () => {
       'src/plugins/renamed-binding/index.ts': `
         import definePlugin from "@utils/types";
         import { pluginSettings } from "./settings";
+        export { pluginSettings };
 
         export default definePlugin({
           name: "RenamedBinding",

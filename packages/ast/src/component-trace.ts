@@ -143,6 +143,26 @@ const staticKey = (
 const nodeKey = (node: Node): string =>
   `${node.getSourceFile().getFilePath()}:${node.getStart()}:${node.getEnd()}`;
 
+const bindingName = (node: Node): string | undefined => {
+  if (node.isKind(SyntaxKind.VariableDeclaration)) return node.getName();
+  if (node.isKind(SyntaxKind.PropertyAssignment)) return node.getName();
+  return undefined;
+};
+
+const importedName = (node: Node): string | undefined => {
+  if (!node.isKind(SyntaxKind.Identifier)) return undefined;
+  const localName = node.getText();
+  for (const declaration of node.getSourceFile().getImportDeclarations()) {
+    const named = declaration
+      .getNamedImports()
+      .find(
+        (specifier) => (specifier.getAliasNode()?.getText() ?? specifier.getName()) === localName
+      );
+    if (named) return named.getName();
+  }
+  return undefined;
+};
+
 const isSettingsObject = (
   node: Node,
   checker: TypeChecker,
@@ -155,7 +175,19 @@ const isSettingsObject = (
   if (visited.has(key)) return false;
   visited.add(key);
   if (bindingKeys.has(key)) return true;
+  const importName = importedName(node);
+  if (importName && settingsBindings.some((binding) => bindingName(binding) === importName))
+    return true;
   const declaration = resolvedDeclaration(node, checker);
+  if (
+    !declaration &&
+    node.isKind(SyntaxKind.Identifier) &&
+    settingsBindings.some((binding) => {
+      const name = bindingName(binding);
+      return name === node.getText();
+    })
+  )
+    return true;
   if (!declaration) return false;
   if (bindingKeys.has(nodeKey(declaration))) return true;
   if (declaration.isKind(SyntaxKind.VariableDeclaration)) {

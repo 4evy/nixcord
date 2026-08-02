@@ -79,8 +79,7 @@ export const inferTypeFromValue = (
   }
   if (Array.isArray(value)) {
     const contextualElement = listElementFromContext(contextualType);
-    if (contextualElement) return { kind: 'list', element: contextualElement };
-    if (value.length === 0) return { kind: 'list', element: 'anything' };
+    if (value.length === 0) return { kind: 'list', element: contextualElement ?? 'anything' };
     if (value.every((item) => typeof item === 'string')) return { kind: 'list', element: 'string' };
     if (value.every((item) => typeof item === 'number')) return { kind: 'list', element: 'number' };
     if (value.every((item) => typeof item === 'boolean'))
