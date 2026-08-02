@@ -7,7 +7,7 @@ export type {
   ComponentControlEvidence,
   ComponentTrace,
 } from './component-trace.js';
-export { traceComponentSetting } from './component-trace.js';
+export { traceComponentSetting, traceStoreSetting } from './component-trace.js';
 export type {
   EvaluationEvidence,
   EvaluationResult,
