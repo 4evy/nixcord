@@ -20,6 +20,7 @@ import {
 import fse from 'fs-extra';
 import { dirname, join, normalize, resolve } from 'pathe';
 import * as z from 'zod';
+import { applyPluginOverrides } from '../plugin-overrides.js';
 import { oraPromise } from './spinner.js';
 
 type SourceLabel = 'Vencord' | 'Equicord';
@@ -45,6 +46,7 @@ const GeneratePluginOptionsParamsSchema = z.object({
   vencordPluginsDir: z.string().min(1),
   equicordPluginsDir: z.string().min(1),
   outputPath: z.string().min(1),
+  overridesPath: z.string().min(1).optional(),
   verbose: z.boolean().optional(),
   logger: LoggerSchema,
   skipGitMigrations: z.boolean().optional(),
@@ -123,7 +125,8 @@ const parseSource = async ({
         Object.keys(result.vencordPlugins).length + Object.keys(result.equicordPlugins).length;
       return `Parsed ${total} plugins from ${label}`;
     },
-    failText: (error) => `Failed to parse ${label} plugins: ${error.message}`,
+    failText: (error) =>
+      `Failed to parse ${label} plugins: ${error instanceof Error ? error.message : String(error)}`,
   });
 };
 
@@ -187,7 +190,7 @@ const summarizeDiagnostics = (
   return {
     total: diagnostics.length,
     byKind: summarizeCounts(
-      diagnostics.map((diagnostic) => diagnostic.kind),
+      diagnostics.map((diagnostic) => diagnostic.code),
       Number.POSITIVE_INFINITY
     ),
     topPlugins: summarizeCounts(
@@ -198,7 +201,7 @@ const summarizeDiagnostics = (
     ),
     topFiles: summarizeCounts(
       diagnostics.flatMap((diagnostic) =>
-        diagnostic.filePath === undefined ? [] : [diagnostic.filePath]
+        diagnostic.location === undefined ? [] : [diagnostic.location.file]
       ),
       10
     ),
@@ -275,7 +278,7 @@ export const runGeneratePluginOptions = async (
       parsedParams.logger.warn(`Parser reported ${diagnostics.length} diagnostics`);
       for (const diagnostic of diagnostics.slice(0, 20)) {
         parsedParams.logger.warn(
-          `${diagnostic.kind}${diagnostic.pluginName ? ` (${diagnostic.pluginName})` : ''}: ${diagnostic.message}`
+          `${diagnostic.code}${diagnostic.pluginName ? ` (${diagnostic.pluginName})` : ''}: ${diagnostic.message}`
         );
       }
     }
@@ -385,6 +388,10 @@ export const runGeneratePluginOptions = async (
       if (verbose) {
         parsedParams.logger.warn(`Failed to extract migrations: ${error}`);
       }
+    }
+
+    if (parsedParams.overridesPath) {
+      await applyPluginOverrides(parsedParams.overridesPath, outputSummary.pluginsDir);
     }
 
     return Ok(summary);
