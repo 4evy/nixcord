@@ -253,6 +253,57 @@ describe('categorizePlugins()', () => {
     expect(result.equicordOnly.FakeNitro).toBeDefined();
   });
 
+  test('splits same-name plugins when a setting has incompatible client types', () => {
+    const vencordResult: ParsedPluginsResult = {
+      vencordPlugins: {
+        SilentMessageToggle: {
+          name: 'SilentMessageToggle',
+          settings: {
+            persistState: {
+              name: 'persistState',
+              type: { kind: 'boolean' },
+              default: false,
+            },
+          },
+        },
+      },
+      equicordPlugins: {},
+      settingRenames: [],
+      pluginRenames: [],
+      diagnostics: [],
+    };
+
+    const equicordResult: ParsedPluginsResult = {
+      vencordPlugins: {
+        SilentMessageToggle: {
+          name: 'SilentMessageToggle',
+          settings: {
+            persistState: {
+              name: 'persistState',
+              type: { kind: 'enum', values: ['none', 'channels', 'restarts'] },
+              default: 'none',
+            },
+          },
+        },
+      },
+      equicordPlugins: {},
+      settingRenames: [],
+      pluginRenames: [],
+      diagnostics: [],
+    };
+
+    const result = categorizePlugins(vencordResult, equicordResult);
+    expect(result.generic.SilentMessageToggle).toBeUndefined();
+    expect(result.vencordOnly.SilentMessageToggle?.settings.persistState).toMatchObject({
+      type: { kind: 'boolean' },
+      default: false,
+    });
+    expect(result.equicordOnly.SilentMessageToggle?.settings.persistState).toMatchObject({
+      type: { kind: 'enum', values: ['none', 'channels', 'restarts'] },
+      default: 'none',
+    });
+  });
+
   test('uses equicord config for shared plugins', () => {
     const vencordResult: ParsedPluginsResult = {
       vencordPlugins: {

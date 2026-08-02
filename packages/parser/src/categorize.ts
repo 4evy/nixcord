@@ -7,24 +7,30 @@ const CLIENT_SPECIFIC_PLUGINS = new Set(
   Object.values(SOURCE_PROFILES).flatMap((profile) => profile.clientSpecificPlugins)
 );
 
-const collectSettingNames = (config: PluginConfig): readonly string[] => {
-  const names: string[] = [];
-  const collect = (settings: PluginConfig['settings']) => {
+const collectSettingSurface = (config: PluginConfig): readonly string[] => {
+  const entries: string[] = [];
+  const collect = (settings: PluginConfig['settings'], parentPath = '') => {
     for (const [key, setting] of Object.entries(settings)) {
+      const name = setting.name ?? key;
+      const path = parentPath ? `${parentPath}.${name}` : name;
       if ('settings' in setting) {
-        collect(setting.settings);
+        collect(setting.settings, path);
       } else {
-        names.push(setting.name ?? key);
+        const type =
+          setting.type.kind === 'enum'
+            ? { kind: setting.type.kind, values: setting.type.values }
+            : setting.type;
+        entries.push(`${path}:${JSON.stringify(type)}`);
       }
     }
   };
   collect(config.settings);
-  return names.sort();
+  return entries.sort();
 };
 
 const hasSameSettingSurface = (left: PluginConfig, right: PluginConfig): boolean => {
-  const leftNames = collectSettingNames(left);
-  const rightNames = collectSettingNames(right);
+  const leftNames = collectSettingSurface(left);
+  const rightNames = collectSettingSurface(right);
   return (
     leftNames.length === rightNames.length && leftNames.every((name, i) => name === rightNames[i])
   );

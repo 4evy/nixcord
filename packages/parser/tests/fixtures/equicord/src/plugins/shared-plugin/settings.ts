@@ -7,7 +7,7 @@ export default definePluginSettings({
     description: 'Choose behavior',
     options: [
       { label: 'Default', value: 'default' },
-      { label: 'Equicord', value: 'equicord', default: true },
+      { label: 'Alt', value: 'alt', default: true },
     ],
   },
   message: {
