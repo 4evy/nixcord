@@ -13,8 +13,6 @@ export const map = <T, E, U>(r: Result<T, E>, fn: (v: T) => U): Result<U, E> =>
 export const flatMap = <T, E, U>(r: Result<T, E>, fn: (v: T) => Result<U, E>): Result<U, E> =>
   r.ok ? fn(r.value) : r;
 export const unwrapOr = <T, E>(r: Result<T, E>, fallback: T): T => (r.ok ? r.value : fallback);
-export const unwrapOrUndefined = <T, E>(r: Result<T, E>): T | undefined =>
-  r.ok ? r.value : undefined;
 
 export const fromNullable = <T, E>(
   value: T | null | undefined,
