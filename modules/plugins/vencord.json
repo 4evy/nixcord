@@ -651,6 +651,21 @@
       }
     }
   },
+  "silentMessageToggle": {
+    "description": "Adds a button to the chat bar to toggle sending a silent message. (Vencord-only)",
+    "settings": {
+      "persistState": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Whether to persist the state of the silent message toggle when changing channels"
+      },
+      "autoDisable": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Automatically disable the silent message toggle again after sending one"
+      }
+    }
+  },
   "silentTyping": {
     "description": "Hide that you are typing (Vencord-only)",
     "settings": {

@@ -1548,26 +1548,6 @@
       }
     }
   },
-  "silentMessageToggle": {
-    "description": "Adds a button to the chat bar to toggle sending a silent message. (Shared between Vencord and Equicord)",
-    "settings": {
-      "persistState": {
-        "type": "types.enum",
-        "enumValues": [
-          "none",
-          "channels",
-          "restarts"
-        ],
-        "default": "none",
-        "description": "How to persist the silent message toggle state"
-      },
-      "autoDisable": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Automatically disable the silent message toggle again after sending one"
-      }
-    }
-  },
   "spotifyCrack": {
     "description": "Free listen along, no auto-pausing in voice chat, and allows activity to continue playing when idling (Shared between Vencord and Equicord)",
     "settings": {
