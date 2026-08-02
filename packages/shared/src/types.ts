@@ -1,19 +1,36 @@
 import * as z from 'zod';
-import type { Exact, ReadonlyDeep, SetRequired, Simplify } from './type-utils.js';
+import type { ReadonlyDeep } from './type-utils.js';
+
+export type SettingScalar = string | number | boolean;
+
+export interface SettingObject {
+  readonly [key: string]: SettingValue;
+}
+
+export type SettingValue = null | SettingScalar | readonly SettingValue[] | SettingObject;
+
+export type SettingType =
+  | { readonly kind: 'boolean' }
+  | { readonly kind: 'string'; readonly nullable: boolean }
+  | { readonly kind: 'integer' }
+  | { readonly kind: 'float' }
+  | { readonly kind: 'attrs'; readonly nullable: boolean }
+  | { readonly kind: 'list'; readonly element: 'string' | 'attrs' }
+  | {
+      readonly kind: 'enum';
+      readonly values: readonly SettingScalar[];
+      readonly labels?: Readonly<Record<string, string>>;
+    };
 
 export interface PluginSetting {
   readonly name: string;
-  readonly type: string;
+  readonly type: SettingType;
   readonly description?: string;
-  readonly default?: unknown;
-  readonly enumValues?: readonly (string | number | boolean)[];
-  readonly enumLabels?: ReadonlyDeep<Record<string, string> & Partial<Record<number, string>>>;
-  readonly example?: string;
+  readonly default?: SettingValue;
+  readonly placeholder?: string;
   readonly hidden?: boolean;
   readonly restartNeeded?: boolean;
 }
-
-export type PluginSettingRequired = SetRequired<PluginSetting, 'name' | 'type'>;
 
 export interface PluginConfig {
   readonly name: string;
@@ -23,14 +40,37 @@ export interface PluginConfig {
   readonly directoryName?: string;
 }
 
+const SettingScalarSchema = z.union([z.string(), z.number(), z.boolean()]);
+
+const SettingValueSchema: z.ZodType<SettingValue> = z.lazy(() =>
+  z.union([
+    z.null(),
+    SettingScalarSchema,
+    z.array(SettingValueSchema),
+    z.record(z.string(), SettingValueSchema),
+  ])
+);
+
+const SettingTypeSchema: z.ZodType<SettingType> = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('boolean') }),
+  z.object({ kind: z.literal('string'), nullable: z.boolean() }),
+  z.object({ kind: z.literal('integer') }),
+  z.object({ kind: z.literal('float') }),
+  z.object({ kind: z.literal('attrs'), nullable: z.boolean() }),
+  z.object({ kind: z.literal('list'), element: z.enum(['string', 'attrs']) }),
+  z.object({
+    kind: z.literal('enum'),
+    values: z.array(SettingScalarSchema),
+    labels: z.record(z.string(), z.string()).optional(),
+  }),
+]);
+
 const PluginSettingSchema = z.object({
   name: z.string(),
-  type: z.string(),
+  type: SettingTypeSchema,
   description: z.string().optional(),
-  default: z.unknown().optional(),
-  enumValues: z.array(z.union([z.string(), z.number(), z.boolean()])).optional(),
-  enumLabels: z.record(z.union([z.string(), z.number()]), z.string()).optional(),
-  example: z.string().optional(),
+  default: SettingValueSchema.optional(),
+  placeholder: z.string().optional(),
   hidden: z.boolean().optional(),
   restartNeeded: z.boolean().optional(),
 });
@@ -56,44 +96,37 @@ const PluginRenameSchema = z.object({
   newName: z.string(),
 });
 
-export const PARSE_DIAGNOSTIC_KINDS = [
-  'empty-settings-extraction',
-  'unsupported-settings-argument',
-  'unsupported-generated-settings-pattern',
-  'unresolved-settings-identifier',
-  'unsupported-select-options-pattern',
-  'unresolved-select-options-identifier',
-  'component-only-setting-skipped',
-  'hidden-setting-skipped',
-  'custom-setting-without-default',
-  'custom-component-setting-without-static-info',
-  'skipped-plugin',
-  'failed-plugin',
-] as const;
-
-export type ParseDiagnosticKind = (typeof PARSE_DIAGNOSTIC_KINDS)[number];
-
 const ParseDiagnosticSchema = z.object({
+  code: z.string(),
+  severity: z.enum(['info', 'warning', 'error']),
+  stage: z.enum(['discovery', 'evaluation', 'execution', 'normalization']),
   pluginName: z.string().optional(),
-  filePath: z.string().optional(),
-  kind: z.enum(PARSE_DIAGNOSTIC_KINDS),
+  settingPath: z.string().optional(),
+  location: z
+    .object({
+      file: z.string(),
+      line: z.number().int().positive(),
+      column: z.number().int().positive(),
+    })
+    .optional(),
   message: z.string(),
+  evidence: z.array(z.string()).optional(),
 });
 
 export const ParsedPluginsResultSchema = z.object({
   vencordPlugins: z.record(z.string(), PluginConfigSchema),
   equicordPlugins: z.record(z.string(), PluginConfigSchema),
-  settingRenames: z.array(SettingRenameSchema).optional(),
-  pluginRenames: z.array(PluginRenameSchema).optional(),
-  diagnostics: z.array(ParseDiagnosticSchema).optional(),
+  settingRenames: z.array(SettingRenameSchema),
+  pluginRenames: z.array(PluginRenameSchema),
+  diagnostics: z.array(ParseDiagnosticSchema),
 });
 
 export interface ParsedPluginsResult {
   readonly vencordPlugins: ReadonlyDeep<Record<string, PluginConfig>>;
   readonly equicordPlugins: ReadonlyDeep<Record<string, PluginConfig>>;
-  readonly settingRenames?: readonly SettingRename[];
-  readonly pluginRenames?: readonly PluginRename[];
-  readonly diagnostics?: readonly ParseDiagnostic[];
+  readonly settingRenames: readonly SettingRename[];
+  readonly pluginRenames: readonly PluginRename[];
+  readonly diagnostics: readonly ParseDiagnostic[];
 }
 
 export interface SettingRename {
@@ -108,15 +141,18 @@ export interface PluginRename {
 }
 
 export interface ParseDiagnostic {
+  readonly code: string;
+  readonly severity: 'info' | 'warning' | 'error';
+  readonly stage: 'discovery' | 'evaluation' | 'execution' | 'normalization';
   readonly pluginName?: string;
-  readonly filePath?: string;
-  readonly kind: ParseDiagnosticKind;
+  readonly settingPath?: string;
+  readonly location?: {
+    readonly file: string;
+    readonly line: number;
+    readonly column: number;
+  };
   readonly message: string;
-}
-
-export interface PluginInfo {
-  readonly name?: string;
-  readonly description?: string;
+  readonly evidence?: readonly string[];
 }
 
 export type DeprecatedRenameEntry = {
@@ -133,16 +169,3 @@ export type DeprecatedData = {
   removals: Record<string, DeprecatedRemovalEntry>;
   settingRenames: Record<string, Record<string, string>>;
 };
-
-export type PluginInfoStrict = Simplify<Exact<PluginInfo, PluginInfo>>;
-
-export const OptionTypeMap: Readonly<Record<number, string>> = {
-  0: 'STRING',
-  1: 'NUMBER',
-  2: 'BIGINT',
-  3: 'BOOLEAN',
-  4: 'SELECT',
-  5: 'SLIDER',
-  6: 'COMPONENT',
-  7: 'CUSTOM',
-} as const;
