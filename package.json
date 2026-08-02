@@ -1,20 +1,17 @@
 {
   "private": true,
+  "type": "module",
   "workspaces": [
     "packages/*",
     "docs/site"
   ],
-  "dependencies": {
-    "@nixcord/parser": "workspace:*",
-    "@nixcord/shared": "workspace:*"
-  },
   "scripts": {
-    "build": "bun run --filter '*' build && tsgo --build --emitDeclarationOnly --force",
+    "build": "bun run --filter '*' build && tsc --build --emitDeclarationOnly --force",
     "test": "vitest run --exclude 'packages/parser/tests/validation/**' --no-isolate --experimental.fsModuleCache --maxWorkers=4",
     "test:all": "bun run test && bun run test:upstream",
     "test:upstream": "vitest run packages/parser/tests/validation/real-world.test.ts --no-isolate --experimental.fsModuleCache --maxWorkers=4",
     "test:watch": "vitest --exclude 'packages/parser/tests/validation/**' --no-isolate --maxWorkers=4",
-    "typecheck": "tsgo --build",
+    "typecheck": "tsc --build",
     "clean": "rm -rf packages/*/dist",
     "format": "biome check --write .",
     "format:check": "biome check .",
@@ -33,9 +30,7 @@
     "@types/bun": "1.3.14",
     "@types/fs-extra": "11.0.4",
     "@types/node": "26.1.2",
-    "@typescript/native-preview": "7.0.0-dev.20260707.2",
-    "@vitest/coverage-v8": "4.1.10",
-    "@vitest/ui": "4.1.10",
+    "@typescript/native": "npm:typescript@7.0.2",
     "equicord": "github:Equicord/Equicord#90b40c3bfb2de9b510545962bdbc05bc34405708",
     "fallow": "3.10.0",
     "renovate": "44.4.6",
