@@ -4,7 +4,14 @@
     "outDir": "./dist",
     "rootDir": "./src"
   },
-  "include": ["src/**/*"],
+  "include": [
+    "src/index.ts",
+    "src/categorize.ts",
+    "src/migrations.ts",
+    "src/parse-plugins.ts",
+    "src/setting-rules.ts",
+    "src/source-profiles.ts"
+  ],
   "references": [
     { "path": "../shared" },
     { "path": "../ast" },

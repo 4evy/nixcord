@@ -1,5 +1,5 @@
 import { definePluginSettings } from '@api/Settings';
-import { OptionType } from '@utils/types';
+import definePlugin, { OptionType } from '@utils/types';
 
 export const settings = definePluginSettings({
   message: {
@@ -8,3 +8,8 @@ export const settings = definePluginSettings({
     default: 'hello',
   },
 });
+
+export default definePlugin({
+  description: 'Uses the directory-derived plugin name',
+  settings,
+} as any);
