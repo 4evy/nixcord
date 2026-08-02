@@ -79,8 +79,9 @@ export const inferTypeFromValue = (
   }
   if (Array.isArray(value)) {
     const stringEvidence =
-      value.every((item) => typeof item === 'string') ||
-      (value.length === 0 && /(?:string\[\]|Array\s*<\s*string\s*>)/.test(contextualType ?? ''));
+      value.length > 0
+        ? value.every((item) => typeof item === 'string')
+        : /(?:string\[\]|Array\s*<\s*string\s*>)/.test(contextualType ?? '');
     return { kind: 'list', element: stringEvidence ? 'string' : 'attrs' };
   }
   if (value && typeof value === 'object') return { kind: 'attrs', nullable: false };
