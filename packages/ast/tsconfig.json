@@ -2,10 +2,16 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": "./src"
+    "rootDir": "./src",
+    "types": ["node", "bun"]
   },
-  "include": ["src/**/*"],
-  "references": [
-    { "path": "../shared" }
+  "include": [
+    "src/index.ts",
+    "src/analysis-session.ts",
+    "src/evaluator.ts",
+    "src/node-helpers.ts",
+    "src/component-trace.ts",
+    "src/execution-slice.ts",
+    "src/execution-runner.ts"
   ]
 }
