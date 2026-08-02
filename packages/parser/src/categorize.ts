@@ -1,7 +1,11 @@
 import type { ParsedPluginsResult, PluginConfig, ReadonlyDeep } from '@nixcord/shared';
 import { filterNullish } from '@nixcord/shared';
+import { SOURCE_PROFILES } from './source-profiles.js';
 
 const PLUGIN_RENAME_MAP: Record<string, string> = { oneko: 'CursorBuddy' };
+const CLIENT_SPECIFIC_PLUGINS = new Set(
+  Object.values(SOURCE_PROFILES).flatMap((profile) => profile.clientSpecificPlugins)
+);
 
 const collectSettingNames = (config: PluginConfig): readonly string[] => {
   const names: string[] = [];
@@ -72,12 +76,14 @@ export function categorizePlugins(
   const genericMatches = pluginMatches.filter(
     ({ config, equicordConfig }) =>
       equicordConfig !== undefined &&
+      !CLIENT_SPECIFIC_PLUGINS.has(config.name) &&
       !equicordConfig.isModified &&
       hasSameSettingSurface(config, equicordConfig)
   );
   const vencordMatches = pluginMatches.filter(
     ({ config, equicordConfig }) =>
       equicordConfig === undefined ||
+      CLIENT_SPECIFIC_PLUGINS.has(config.name) ||
       equicordConfig.isModified ||
       !hasSameSettingSurface(config, equicordConfig)
   );

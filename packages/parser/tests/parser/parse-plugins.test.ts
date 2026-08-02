@@ -30,30 +30,42 @@ describe('parsePlugins()', () => {
         'NoNamePlugin',
         'No Settings',
         'DiscordEnum',
+        'NoTrack',
       ])
     );
 
     expect(plugins['Shared Plugin']?.settings).toMatchObject({
-      mode: { type: 'types.enum', default: 'default', enumValues: ['default', 'alt'] },
-      message: { type: 'types.str', default: 'vencord' },
+      mode: {
+        type: { kind: 'enum', values: ['default', 'alt'] },
+        default: 'default',
+      },
+      message: { type: { kind: 'string', nullable: false }, default: 'vencord' },
     });
     expect((plugins.NestedSettings?.settings.enabled as PluginSetting).default).toBe(true);
     expect((plugins.NoNamePlugin?.settings.message as PluginSetting).default).toBe('hello');
     expect(plugins['No Settings']?.settings).toEqual({});
+    expect(plugins.NoTrack).toMatchObject({
+      directoryName: '_core/noTrack.ts',
+      settings: {
+        disableAnalytics: {
+          type: { kind: 'boolean' },
+          default: true,
+          restartNeeded: true,
+        },
+      },
+    });
 
     expect(plugins.DiscordEnum?.settings.activity).toMatchObject({
-      type: 'types.enum',
+      type: { kind: 'enum', values: [0, 1, 2] },
       default: 1,
-      enumValues: [0, 1, 2],
     });
     expect(plugins.CustomRPC?.settings.config).toBeUndefined();
     expect(plugins.CustomRPC?.settings.appID).toMatchObject({
-      type: 'types.nullOr types.str',
+      type: { kind: 'string', nullable: true },
       default: null,
     });
     expect(plugins.CustomRPC?.settings.type).toMatchObject({
-      type: 'types.enum',
-      enumValues: [0, 1, 2, 3, 4, 5, 6],
+      type: { kind: 'enum', values: [0, 1, 2, 3, 4, 5, 6] },
     });
 
     expect(result.pluginRenames).toEqual(
@@ -75,8 +87,8 @@ describe('parsePlugins()', () => {
       expect.arrayContaining([
         expect.objectContaining({
           pluginName: 'MixedDiagnostics',
-          kind: 'component-only-setting-skipped',
-          message: expect.stringContaining('setting "preview"'),
+          code: 'component-ui-only',
+          stage: 'normalization',
         }),
       ])
     );
