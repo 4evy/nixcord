@@ -1,4 +1,4 @@
-import type { PluginConfig, PluginSetting, ReadonlyDeep } from '@nixcord/shared';
+import type { PluginConfig, PluginSetting, ReadonlyDeep, SettingType } from '@nixcord/shared';
 import {
   INTEGER_STRING_PATTERN,
   isArray,
@@ -9,8 +9,14 @@ import {
   isObject,
   isString,
   NIX_ENUM_TYPE,
+  NIX_TYPE_ATTRS,
+  NIX_TYPE_BOOL,
   NIX_TYPE_FLOAT,
   NIX_TYPE_INT,
+  NIX_TYPE_LIST_OF_ATTRS,
+  NIX_TYPE_LIST_OF_STR,
+  NIX_TYPE_NULL_OR_STR,
+  NIX_TYPE_STR,
 } from '@nixcord/shared';
 import { toNixIdentifier } from './identifier.js';
 
@@ -62,19 +68,37 @@ const buildEnumMappingDescription = (
   return mappings.length === 0 ? undefined : mappings.join(', ');
 };
 
-const resolveDefault = (setting: Readonly<PluginSetting>): unknown | undefined => {
+const lowerSettingType = (type: SettingType): string => {
+  switch (type.kind) {
+    case 'boolean':
+      return NIX_TYPE_BOOL;
+    case 'string':
+      return type.nullable ? NIX_TYPE_NULL_OR_STR : NIX_TYPE_STR;
+    case 'integer':
+      return NIX_TYPE_INT;
+    case 'float':
+      return NIX_TYPE_FLOAT;
+    case 'attrs':
+      return type.nullable ? `types.nullOr ${NIX_TYPE_ATTRS}` : NIX_TYPE_ATTRS;
+    case 'list':
+      return type.element === 'string' ? NIX_TYPE_LIST_OF_STR : NIX_TYPE_LIST_OF_ATTRS;
+    case 'enum':
+      return NIX_ENUM_TYPE;
+  }
+};
+
+const resolveDefault = (setting: Readonly<PluginSetting>, nixType: string): unknown | undefined => {
   if (setting.default === undefined) return undefined;
   if (setting.default === null) return null;
 
-  const type = setting.type;
   const val = setting.default;
 
   // Float integers need to stay as floats (e.g. 1 -> 1.0)
-  if (isNumber(val) && type === NIX_TYPE_FLOAT && Number.isInteger(val))
+  if (isNumber(val) && nixType === NIX_TYPE_FLOAT && Number.isInteger(val))
     return { __nixRaw: val.toFixed(1) };
 
   // String integers used as int defaults (e.g. BigInt IDs)
-  if (type === NIX_TYPE_INT && isString(val) && INTEGER_STRING_PATTERN.test(val))
+  if (nixType === NIX_TYPE_INT && isString(val) && INTEGER_STRING_PATTERN.test(val))
     return { __nixRaw: val };
 
   if (
@@ -91,35 +115,36 @@ const resolveDefault = (setting: Readonly<PluginSetting>): unknown | undefined =
 };
 
 const buildSettingDescription = (setting: Readonly<PluginSetting>): string | undefined => {
-  if (!setting.description) return undefined;
+  const description = setting.description
+    ? `${setting.description}${setting.restartNeeded ? ' (restart required)' : ''}`
+    : undefined;
+  if (!description) return undefined;
 
-  const isIntegerEnum = setting.enumValues?.every(isNumber) && setting.type === NIX_ENUM_TYPE;
-  if (!isIntegerEnum || !setting.enumValues) return setting.description;
+  if (setting.type.kind !== 'enum' || !setting.type.values.every(isNumber)) return description;
 
-  const mapping = buildEnumMappingDescription(setting.enumValues, setting.enumLabels);
-  return mapping !== undefined
-    ? `${setting.description}\n\nValues: ${mapping}`
-    : setting.description;
+  const mapping = buildEnumMappingDescription(setting.type.values, setting.type.labels);
+  return mapping !== undefined ? `${description}\n\nValues: ${mapping}` : description;
 };
 
 export const generateSettingJson = (
   setting: Readonly<PluginSetting>,
   _category?: PluginCategory
 ): PluginSettingJson => {
-  const json: PluginSettingJson = { type: setting.type };
+  const nixType = lowerSettingType(setting.type);
+  const json: PluginSettingJson = { type: nixType };
 
-  if (setting.type?.includes('enum') && setting.enumValues) {
-    json.enumValues = [...setting.enumValues];
+  if (setting.type.kind === 'enum' && setting.type.values.length > 0) {
+    json.enumValues = [...setting.type.values];
   }
 
-  const resolvedDefault = resolveDefault(setting);
+  const resolvedDefault = resolveDefault(setting, nixType);
   if (resolvedDefault !== undefined) json.default = resolvedDefault;
 
   const description = buildSettingDescription(setting);
   if (description) json.description = description;
 
-  if (setting.example && !setting.description?.includes(setting.example)) {
-    json.example = setting.example;
+  if (setting.placeholder && !setting.description?.includes(setting.placeholder)) {
+    json.example = setting.placeholder;
   }
 
   return json;

@@ -6,7 +6,7 @@ describe('generateSettingJson()', () => {
   test('regular setting -> includes type', () => {
     const setting: PluginSetting = {
       name: 'message',
-      type: 'types.str',
+      type: { kind: 'string', nullable: false },
       description: 'Message to display',
       default: 'Hello',
     };
@@ -19,7 +19,7 @@ describe('generateSettingJson()', () => {
   test('boolean type with default', () => {
     const setting: PluginSetting = {
       name: 'enabled',
-      type: 'types.bool',
+      type: { kind: 'boolean' },
       description: 'Enable feature',
       default: true,
     };
@@ -31,7 +31,7 @@ describe('generateSettingJson()', () => {
   test('string type with default', () => {
     const setting: PluginSetting = {
       name: 'message',
-      type: 'types.str',
+      type: { kind: 'string', nullable: false },
       description: 'Message',
       default: 'Hello World',
     };
@@ -43,7 +43,7 @@ describe('generateSettingJson()', () => {
   test('integer type with default', () => {
     const setting: PluginSetting = {
       name: 'count',
-      type: 'types.int',
+      type: { kind: 'integer' },
       description: 'Count',
       default: 42,
     };
@@ -55,7 +55,7 @@ describe('generateSettingJson()', () => {
   test('float type with default', () => {
     const setting: PluginSetting = {
       name: 'ratio',
-      type: 'types.float',
+      type: { kind: 'float' },
       description: 'Ratio',
       default: 3.14,
     };
@@ -67,7 +67,7 @@ describe('generateSettingJson()', () => {
   test('float type with integer default emits __nixRaw', () => {
     const setting: PluginSetting = {
       name: 'pitch',
-      type: 'types.float',
+      type: { kind: 'float' },
       description: 'Pitch',
       default: 1,
     };
@@ -79,7 +79,7 @@ describe('generateSettingJson()', () => {
   test('int type with BigInt-like default string emits __nixRaw', () => {
     const setting: PluginSetting = {
       name: 'emojiId',
-      type: 'types.int',
+      type: { kind: 'integer' },
       description: 'Emoji ID',
       default: '1026532993923293184',
     };
@@ -91,9 +91,8 @@ describe('generateSettingJson()', () => {
   test('enum type with enumValues', () => {
     const setting: PluginSetting = {
       name: 'choice',
-      type: 'types.enum',
+      type: { kind: 'enum', values: ['option1', 'option2'] },
       description: 'Choose option',
-      enumValues: ['option1', 'option2'],
     };
     const result = generateSettingJson(setting);
     expect(result.type).toBe('types.enum');
@@ -103,14 +102,16 @@ describe('generateSettingJson()', () => {
   test('enum type with enumLabels generates Values: description', () => {
     const setting: PluginSetting = {
       name: 'choice',
-      type: 'types.enum',
-      description: 'Choose option',
-      enumValues: [0, 1, 2],
-      enumLabels: {
-        0: 'Option Zero',
-        1: 'Option One',
-        2: 'Option Two',
+      type: {
+        kind: 'enum',
+        values: [0, 1, 2],
+        labels: {
+          0: 'Option Zero',
+          1: 'Option One',
+          2: 'Option Two',
+        },
       },
+      description: 'Choose option',
     };
     const result = generateSettingJson(setting);
     expect(result.type).toBe('types.enum');
@@ -120,14 +121,16 @@ describe('generateSettingJson()', () => {
   test('enum type with non-string labels are filtered out', () => {
     const setting: PluginSetting = {
       name: 'choice',
-      type: 'types.enum',
-      description: 'Choose option',
-      enumValues: [0, 1, 2],
-      enumLabels: {
-        0: 'Option Zero',
-        1: {} as unknown as string,
-        2: 'Option Two',
+      type: {
+        kind: 'enum',
+        values: [0, 1, 2],
+        labels: {
+          0: 'Option Zero',
+          1: {} as unknown as string,
+          2: 'Option Two',
+        },
       },
+      description: 'Choose option',
     };
     const result = generateSettingJson(setting);
     expect(result.description).toContain('Values: 0 = Option Zero, 2 = Option Two');
@@ -138,7 +141,7 @@ describe('generateSettingJson()', () => {
   test('enum type without enumValues', () => {
     const setting: PluginSetting = {
       name: 'choice',
-      type: 'types.enum',
+      type: { kind: 'enum', values: [] },
       description: 'Choose option',
     };
     const result = generateSettingJson(setting);
@@ -149,7 +152,7 @@ describe('generateSettingJson()', () => {
   test('setting with description', () => {
     const setting: PluginSetting = {
       name: 'message',
-      type: 'types.str',
+      type: { kind: 'string', nullable: false },
       description: 'A description\nwith multiple lines',
     };
     const result = generateSettingJson(setting);
@@ -159,7 +162,7 @@ describe('generateSettingJson()', () => {
   test('setting without description', () => {
     const setting: PluginSetting = {
       name: 'message',
-      type: 'types.str',
+      type: { kind: 'string', nullable: false },
     };
     const result = generateSettingJson(setting);
     expect(result.description).toBeUndefined();
@@ -168,9 +171,9 @@ describe('generateSettingJson()', () => {
   test('setting with example', () => {
     const setting: PluginSetting = {
       name: 'message',
-      type: 'types.str',
+      type: { kind: 'string', nullable: false },
       description: 'Message',
-      example: 'example-value',
+      placeholder: 'example-value',
     };
     const result = generateSettingJson(setting);
     expect(result.example).toBe('example-value');
@@ -179,7 +182,7 @@ describe('generateSettingJson()', () => {
   test('setting without default', () => {
     const setting: PluginSetting = {
       name: 'message',
-      type: 'types.str',
+      type: { kind: 'string', nullable: false },
       description: 'Message',
     };
     const result = generateSettingJson(setting);
@@ -189,7 +192,7 @@ describe('generateSettingJson()', () => {
   test('nullOr types.str with null default', () => {
     const setting: PluginSetting = {
       name: 'serverUrl',
-      type: 'types.nullOr types.str',
+      type: { kind: 'string', nullable: true },
       description: 'Server URL',
       default: null,
     };
@@ -201,7 +204,7 @@ describe('generateSettingJson()', () => {
   test('nested default values (arrays)', () => {
     const setting: PluginSetting = {
       name: 'items',
-      type: 'types.listOf types.str',
+      type: { kind: 'list', element: 'string' },
       description: 'Items',
       default: ['item1', 'item2'],
     };
@@ -212,7 +215,7 @@ describe('generateSettingJson()', () => {
   test('nested default values (objects)', () => {
     const setting: PluginSetting = {
       name: 'config',
-      type: 'types.attrs',
+      type: { kind: 'attrs', nullable: false },
       description: 'Configuration',
       default: { key: 'value' },
     };
@@ -229,13 +232,13 @@ describe('generatePluginJson()', () => {
       settings: {
         enable: {
           name: 'enable',
-          type: 'types.bool',
+          type: { kind: 'boolean' },
           description: 'Enable plugin',
           default: true,
         },
         message: {
           name: 'message',
-          type: 'types.str',
+          type: { kind: 'string', nullable: false },
           description: 'Message',
           default: 'test',
         },
@@ -255,7 +258,7 @@ describe('generatePluginJson()', () => {
       settings: {
         message: {
           name: 'message',
-          type: 'types.str',
+          type: { kind: 'string', nullable: false },
           description: 'Message',
           default: 'test',
         },
@@ -306,7 +309,7 @@ describe('generatePluginJson()', () => {
           settings: {
             nested: {
               name: 'nested',
-              type: 'types.str',
+              type: { kind: 'string', nullable: false },
               description: 'Nested setting',
               default: 'value',
             },
@@ -326,12 +329,12 @@ describe('generatePluginJson()', () => {
       settings: {
         setting1: {
           name: 'setting1',
-          type: 'types.str',
+          type: { kind: 'string', nullable: false },
           description: 'Setting 1',
         },
         setting2: {
           name: 'setting2',
-          type: 'types.int',
+          type: { kind: 'integer' },
           description: 'Setting 2',
         },
       },
@@ -452,7 +455,7 @@ describe('generatePluginModule()', () => {
         settings: {
           BadgeAPI: {
             name: 'BadgeAPI',
-            type: 'types.bool',
+            type: { kind: 'boolean' },
             description: 'Show API badge',
             default: false,
           },
