@@ -1,6 +1,6 @@
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { PluginSetting } from '@nixcord/shared';
+import { ParsedPluginsResultSchema, type PluginSetting } from '@nixcord/shared';
 import { createFixture } from 'fs-fixture';
 import { describe, expect, test } from 'vitest';
 import { parsePlugins } from '../../src/index.js';
@@ -242,5 +242,151 @@ describe('parsePlugins()', () => {
     expect((result.vencordPlugins.DynamicSwitch?.settings.flag as PluginSetting).default).toBe(
       undefined
     );
+  });
+
+  test('traces component settings through renamed settings bindings', async () => {
+    await using fixture = await createFixture({
+      'src/plugins/renamed-binding/component.tsx': `
+        import { Switch } from "@webpack/common";
+        import { pluginSettings as config } from "./settings";
+
+        export function FlagComponent() {
+          return (
+            <Switch
+              value={config.store.flag}
+              onChange={value => config.store.flag = value}
+            />
+          );
+        }
+      `,
+      'src/plugins/renamed-binding/settings.ts': `
+        import { definePluginSettings } from "@api/Settings";
+        import { OptionType } from "@utils/types";
+        import { FlagComponent } from "./component";
+
+        export const pluginSettings = definePluginSettings({
+          flag: {
+            type: OptionType.COMPONENT,
+            component: FlagComponent,
+          },
+        });
+      `,
+      'src/plugins/renamed-binding/index.ts': `
+        import definePlugin from "@utils/types";
+        import { pluginSettings } from "./settings";
+
+        export default definePlugin({
+          name: "RenamedBinding",
+          description: "fixture",
+          settings: pluginSettings,
+        });
+      `,
+    });
+
+    const result = await parsePlugins(fixture.path);
+    expect(result.vencordPlugins.RenamedBinding?.settings.flag).toMatchObject({
+      type: { kind: 'boolean' },
+    });
+    expect(result.diagnostics).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          pluginName: 'RenamedBinding',
+          settingPath: 'flag',
+          code: 'component-ui-only',
+        }),
+      ])
+    );
+  });
+
+  test('preserves list element types and uses anything for heterogeneous arrays', async () => {
+    await using fixture = await createFixture({
+      'src/plugins/list-types/index.ts': `
+        import { definePluginSettings } from "@api/Settings";
+        import definePlugin, { OptionType } from "@utils/types";
+
+        const settings = definePluginSettings({
+          records: { type: OptionType.CUSTOM, default: [] as Array<{ id: string }> },
+          numbers: { type: OptionType.CUSTOM, default: [1, 2] as number[] },
+          booleans: { type: OptionType.CUSTOM, default: [true, false] as boolean[] },
+          mixed: { type: OptionType.CUSTOM, default: [1, "two"] },
+          unknownEmpty: { type: OptionType.CUSTOM, default: [] },
+        });
+
+        export default definePlugin({ name: "ListTypes", description: "fixture", settings });
+      `,
+    });
+
+    const result = await parsePlugins(fixture.path, { executionMode: 'disabled' });
+    expect(result.vencordPlugins.ListTypes?.settings).toMatchObject({
+      records: { type: { kind: 'list', element: 'attrs' }, default: [] },
+      numbers: { type: { kind: 'list', element: 'number' }, default: [1, 2] },
+      booleans: { type: { kind: 'list', element: 'boolean' }, default: [true, false] },
+      mixed: { type: { kind: 'list', element: 'anything' }, default: [1, 'two'] },
+      unknownEmpty: { type: { kind: 'list', element: 'anything' }, default: [] },
+    });
+  });
+
+  test('does not invent a default when a platform-dependent default is unresolved', async () => {
+    await using fixture = await createFixture({
+      'src/plugins/platform-default/index.tsx': `
+        import { definePluginSettings } from "@api/Settings";
+        import { TextInput } from "@webpack/common";
+        import definePlugin, { OptionType } from "@utils/types";
+
+        const platformDefault = IS_MAC ? ["Meta", "P"] : ["Control", "P"];
+        const settings = definePluginSettings({
+          hotkey: {
+            type: OptionType.COMPONENT,
+            default: platformDefault,
+            component: () => (
+              <TextInput
+                value={settings.store.hotkey.join("+")}
+                onChange={value => settings.store.hotkey = value.split("+")}
+              />
+            ),
+          },
+        });
+
+        export default definePlugin({ name: "PlatformDefault", description: "fixture", settings });
+      `,
+    });
+
+    const result = await parsePlugins(fixture.path, { executionMode: 'disabled' });
+    const hotkey = result.vencordPlugins.PlatformDefault?.settings.hotkey as PluginSetting;
+    expect(hotkey.type).toEqual({ kind: 'list', element: 'string' });
+    expect(hotkey.default).toBeUndefined();
+  });
+
+  test('omits non-finite defaults without producing invalid parser output', async () => {
+    await using fixture = await createFixture({
+      'src/plugins/non-finite/index.ts': `
+        import { definePluginSettings } from "@api/Settings";
+        import definePlugin, { OptionType } from "@utils/types";
+
+        const settings = definePluginSettings({
+          threshold: { type: OptionType.NUMBER, default: Infinity },
+        });
+
+        export default definePlugin({ name: "NonFinite", description: "fixture", settings });
+      `,
+    });
+
+    const result = await parsePlugins(fixture.path, { executionMode: 'disabled' });
+    expect(result.vencordPlugins.NonFinite?.settings.threshold).toMatchObject({
+      type: { kind: 'float' },
+    });
+    expect((result.vencordPlugins.NonFinite?.settings.threshold as PluginSetting).default).toBe(
+      undefined
+    );
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          pluginName: 'NonFinite',
+          settingPath: 'threshold',
+          code: 'unsupported-default-value',
+        }),
+      ])
+    );
+    expect(ParsedPluginsResultSchema.safeParse(result).success).toBe(true);
   });
 });

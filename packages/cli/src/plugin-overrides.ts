@@ -7,12 +7,22 @@ type JsonObject = Record<string, unknown>;
 const isPlainObject = (value: unknown): value is JsonObject =>
   value !== null && typeof value === 'object' && !Array.isArray(value);
 
+const defineJsonProperty = (target: JsonObject, key: string, value: unknown): void => {
+  Object.defineProperty(target, key, {
+    value,
+    enumerable: true,
+    configurable: true,
+    writable: true,
+  });
+};
+
 const merge = (base: unknown, override: unknown): unknown => {
   if (!isPlainObject(base) || !isPlainObject(override)) return override;
 
-  const result: JsonObject = { ...base };
+  const result: JsonObject = Object.create(null) as JsonObject;
+  for (const [key, value] of Object.entries(base)) defineJsonProperty(result, key, value);
   for (const [key, value] of Object.entries(override)) {
-    result[key] = key in result ? merge(result[key], value) : value;
+    defineJsonProperty(result, key, key in result ? merge(result[key], value) : value);
   }
   return result;
 };
@@ -34,10 +44,16 @@ export const applyPluginOverrides = async (
 
   for (const [category, filename] of Object.entries(files)) {
     const override = overrides[category];
-    if (!override) continue;
+    if (override === undefined) continue;
+    if (!isPlainObject(override)) {
+      throw new TypeError(`Plugin overrides category must be a JSON object: ${category}`);
+    }
 
     const targetPath = resolve(pluginsDir, filename);
     const generated = (await fse.readJson(targetPath)) as unknown;
+    if (!isPlainObject(generated)) {
+      throw new TypeError(`Generated plugin metadata must be a JSON object: ${targetPath}`);
+    }
     const merged = merge(generated, override);
     await fse.writeFile(targetPath, `${JSON.stringify(merged, null, 2)}\n`);
   }

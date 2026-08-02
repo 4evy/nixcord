@@ -13,7 +13,10 @@ import {
   NIX_TYPE_BOOL,
   NIX_TYPE_FLOAT,
   NIX_TYPE_INT,
+  NIX_TYPE_LIST_OF_ANYTHING,
   NIX_TYPE_LIST_OF_ATTRS,
+  NIX_TYPE_LIST_OF_BOOL,
+  NIX_TYPE_LIST_OF_NUMBER,
   NIX_TYPE_LIST_OF_STR,
   NIX_TYPE_NULL_OR_STR,
   NIX_TYPE_STR,
@@ -81,7 +84,18 @@ const lowerSettingType = (type: SettingType): string => {
     case 'attrs':
       return type.nullable ? `types.nullOr ${NIX_TYPE_ATTRS}` : NIX_TYPE_ATTRS;
     case 'list':
-      return type.element === 'string' ? NIX_TYPE_LIST_OF_STR : NIX_TYPE_LIST_OF_ATTRS;
+      switch (type.element) {
+        case 'string':
+          return NIX_TYPE_LIST_OF_STR;
+        case 'number':
+          return NIX_TYPE_LIST_OF_NUMBER;
+        case 'boolean':
+          return NIX_TYPE_LIST_OF_BOOL;
+        case 'attrs':
+          return NIX_TYPE_LIST_OF_ATTRS;
+        case 'anything':
+          return NIX_TYPE_LIST_OF_ANYTHING;
+      }
     case 'enum':
       return NIX_ENUM_TYPE;
   }

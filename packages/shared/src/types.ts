@@ -9,13 +9,15 @@ export interface SettingObject {
 
 export type SettingValue = null | SettingScalar | readonly SettingValue[] | SettingObject;
 
+export type SettingListElement = 'string' | 'number' | 'boolean' | 'attrs' | 'anything';
+
 export type SettingType =
   | { readonly kind: 'boolean' }
   | { readonly kind: 'string'; readonly nullable: boolean }
   | { readonly kind: 'integer' }
   | { readonly kind: 'float' }
   | { readonly kind: 'attrs'; readonly nullable: boolean }
-  | { readonly kind: 'list'; readonly element: 'string' | 'attrs' }
+  | { readonly kind: 'list'; readonly element: SettingListElement }
   | {
       readonly kind: 'enum';
       readonly values: readonly SettingScalar[];
@@ -57,7 +59,10 @@ const SettingTypeSchema: z.ZodType<SettingType> = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('integer') }),
   z.object({ kind: z.literal('float') }),
   z.object({ kind: z.literal('attrs'), nullable: z.boolean() }),
-  z.object({ kind: z.literal('list'), element: z.enum(['string', 'attrs']) }),
+  z.object({
+    kind: z.literal('list'),
+    element: z.enum(['string', 'number', 'boolean', 'attrs', 'anything']),
+  }),
   z.object({
     kind: z.literal('enum'),
     values: z.array(SettingScalarSchema),

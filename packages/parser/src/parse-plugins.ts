@@ -2,6 +2,7 @@ import {
   type AnalysisSession,
   createAnalysisSession,
   executeComponentSlice,
+  resolvedDeclaration,
   StaticEvaluator,
   type StaticValue,
   traceComponentSetting,
@@ -229,9 +230,7 @@ const apiCalls = (
 
 const declarationInitializer = (node: Node, checker: TypeChecker): Node | undefined => {
   try {
-    const symbol = checker.getSymbolAtLocation(node) ?? node.getSymbol();
-    const resolved = symbol?.isAlias() ? symbol.getAliasedSymbol() : symbol;
-    const declaration = resolved?.getValueDeclaration() ?? resolved?.getDeclarations()[0];
+    const declaration = resolvedDeclaration(node, checker);
     if (declaration && 'getInitializer' in declaration)
       return (declaration as { getInitializer(): Node | undefined }).getInitializer();
   } catch {
@@ -258,6 +257,69 @@ const resolveNode = (node: Node | undefined, checker: TypeChecker): Node | undef
     return initializer && initializer !== node ? resolveNode(initializer, checker) : unwrapped;
   }
   return unwrapped;
+};
+
+const explicitTypeText = (
+  node: Node | undefined,
+  checker: TypeChecker,
+  visited = new Set<string>()
+): string | undefined => {
+  if (!node) return undefined;
+  const key = `${node.getSourceFile().getFilePath()}:${node.getStart()}:${node.getEnd()}`;
+  if (visited.has(key)) return undefined;
+  visited.add(key);
+
+  const assertedType =
+    node.asKind(SyntaxKind.AsExpression)?.getTypeNode() ??
+    node.asKind(SyntaxKind.TypeAssertionExpression)?.getTypeNode() ??
+    node.asKind(SyntaxKind.SatisfiesExpression)?.getTypeNode();
+  if (assertedType) return assertedType.getText();
+
+  if (node.isKind(SyntaxKind.Identifier)) {
+    try {
+      const declaration = resolvedDeclaration(node, checker);
+      if (declaration?.isKind(SyntaxKind.VariableDeclaration)) {
+        const declaredType = declaration.getTypeNode()?.getText();
+        if (declaredType) return declaredType;
+        const fromInitializer = explicitTypeText(declaration.getInitializer(), checker, visited);
+        if (fromInitializer) return fromInitializer;
+      }
+    } catch {}
+  }
+
+  const unwrapped = unwrapNode(node);
+  if (unwrapped.isKind(SyntaxKind.ConditionalExpression)) {
+    const branchTypes = [unwrapped.getWhenTrue(), unwrapped.getWhenFalse()]
+      .map((branch) => explicitTypeText(branch, checker, new Set(visited)))
+      .filter((type): type is string => type !== undefined);
+    if (branchTypes.length === 2 && branchTypes[0] === branchTypes[1]) return branchTypes[0];
+  }
+  if (unwrapped.isKind(SyntaxKind.ArrayLiteralExpression)) {
+    const elements = unwrapped.getElements();
+    if (elements.length === 0) return undefined;
+    if (elements.every((element) => unwrapNode(element).isKind(SyntaxKind.StringLiteral)))
+      return 'string[]';
+    if (elements.every((element) => unwrapNode(element).isKind(SyntaxKind.NumericLiteral)))
+      return 'number[]';
+    if (
+      elements.every((element) => {
+        const candidate = unwrapNode(element);
+        return (
+          candidate.isKind(SyntaxKind.TrueKeyword) || candidate.isKind(SyntaxKind.FalseKeyword)
+        );
+      })
+    )
+      return 'boolean[]';
+    if (elements.every((element) => unwrapNode(element).isKind(SyntaxKind.ObjectLiteralExpression)))
+      return 'Record<string, unknown>[]';
+  }
+
+  try {
+    const type = checker.getTypeAtLocation(node).getText();
+    return type && type !== '{}' ? type : undefined;
+  } catch {
+    return undefined;
+  }
 };
 
 const objectPropertyInitializer = (
@@ -314,6 +376,17 @@ const findSettingsCall = (
   return referenced ?? apiCalls(sourceFiles, 'definePluginSettings', profile, checker)[0];
 };
 
+const settingsBindingsForCall = (call: CallExpression): readonly Node[] => {
+  const binding = call.getAncestors().find((ancestor) => {
+    if (ancestor.isKind(SyntaxKind.VariableDeclaration))
+      return ancestor.getInitializer()?.containsRange(call.getStart(), call.getEnd()) ?? false;
+    if (ancestor.isKind(SyntaxKind.PropertyAssignment))
+      return ancestor.getInitializer()?.containsRange(call.getStart(), call.getEnd()) ?? false;
+    return ancestor.isKind(SyntaxKind.ExportAssignment);
+  });
+  return binding ? [binding] : [];
+};
+
 const evaluated = (node: Node | undefined, evaluator: StaticEvaluator): unknown => {
   if (!node) return undefined;
   const result = evaluator.evaluate(node);
@@ -326,6 +399,7 @@ const isRecord = (value: unknown): value is RawRecord =>
 const jsonValue = (
   value: unknown
 ): { readonly valid: true; readonly value: SettingValue } | { readonly valid: false } => {
+  if (typeof value === 'number' && !Number.isFinite(value)) return { valid: false };
   if (value === null || ['string', 'number', 'boolean'].includes(typeof value))
     return { valid: true, value: value as SettingValue };
   if (Array.isArray(value)) {
@@ -658,13 +732,6 @@ const nestedConfigFromDefaults = (
   ),
 });
 
-const implicitDefaultForType = (type: SettingType): Partial<Pick<PluginSetting, 'default'>> => {
-  if (type.kind === 'string' && type.nullable) return { default: null };
-  if (type.kind === 'list') return { default: [] };
-  if (type.kind === 'attrs') return { default: type.nullable ? null : {} };
-  return {};
-};
-
 const settingFromComponentTrace = (
   key: string,
   trace: ReturnType<typeof traceComponentSetting>,
@@ -690,9 +757,7 @@ const settingFromComponentTrace = (
     name: key,
     type,
     ...metadata,
-    ...(trace.hasDefault && converted.valid
-      ? { default: converted.value }
-      : implicitDefaultForType(type)),
+    ...(trace.hasDefault && converted.valid ? { default: converted.value } : {}),
   };
 };
 
@@ -702,7 +767,8 @@ async function normalizeSetting(
   definitionNode: ObjectLiteralExpression | undefined,
   context: PluginContext,
   pluginName: string,
-  settingPath: string
+  settingPath: string,
+  settingsBindings: readonly Node[] = []
 ): Promise<PluginSetting | PluginConfig | undefined> {
   const definitionKeys = new Set([
     'type',
@@ -740,7 +806,8 @@ async function normalizeSetting(
                 undefined,
                 context,
                 pluginName,
-                `${settingPath}.${childKey}`
+                `${settingPath}.${childKey}`,
+                settingsBindings
               ),
             ] as const)
           : ([childKey, undefined] as const)
@@ -786,35 +853,27 @@ async function normalizeSetting(
   };
   const defaultNode = objectPropertyInitializer(definitionNode, 'default');
   const convertedDefault = jsonValue(raw.default);
-  const hasDefault = Object.hasOwn(raw, 'default') && convertedDefault.valid;
+  const hasDeclaredDefault = Object.hasOwn(raw, 'default');
+  const hasDefault = hasDeclaredDefault && convertedDefault.valid;
+  if (hasDeclaredDefault && !convertedDefault.valid) {
+    context.diagnostics.push(
+      diagnostic(
+        'unsupported-default-value',
+        'warning',
+        'normalization',
+        'Default value is not finite or JSON-serializable and was omitted',
+        {
+          pluginName,
+          settingPath,
+          ...(defaultNode ? { node: defaultNode } : {}),
+        }
+      )
+    );
+  }
   const typeNode = objectPropertyInitializer(definitionNode, 'type');
   const optionType = optionTypeFrom(typeNode, raw.type, context.profile);
   const component = componentInitializer(definitionNode);
-  let contextualType: string | undefined;
-  if (defaultNode) {
-    try {
-      contextualType = context.session.checker.getTypeAtLocation(defaultNode).getText();
-    } catch {}
-    if (!contextualType || contextualType === '{}') {
-      const resolvedDefault = resolveNode(defaultNode, context.session.checker);
-      const conditional = resolvedDefault?.asKind(SyntaxKind.ConditionalExpression);
-      const candidates = conditional
-        ? [conditional.getWhenTrue(), conditional.getWhenFalse()]
-        : resolvedDefault
-          ? [resolvedDefault]
-          : [];
-      if (
-        candidates.length > 0 &&
-        candidates.every((candidate) => candidate.isKind(SyntaxKind.ArrayLiteralExpression))
-      )
-        contextualType = 'string[]';
-      else if (
-        candidates.length > 0 &&
-        candidates.every((candidate) => candidate.isKind(SyntaxKind.ObjectLiteralExpression))
-      )
-        contextualType = 'Record<string, unknown>';
-    }
-  }
+  const contextualType = explicitTypeText(defaultNode, context.session.checker);
 
   if ((optionType === 'COMPONENT' || optionType === 'CUSTOM') && !hasDefault && component) {
     let trace = traceComponentSetting(
@@ -823,10 +882,17 @@ async function normalizeSetting(
       context.session.checker,
       context.evaluator,
       context.profile.controlComponents,
-      context.pluginPath
+      context.pluginPath,
+      settingsBindings
     );
     if (!trace.persistent) {
-      const pluginTrace = traceStoreSetting(context.sourceFiles, key, context.evaluator);
+      const pluginTrace = traceStoreSetting(
+        context.sourceFiles,
+        key,
+        context.session.checker,
+        context.evaluator,
+        settingsBindings
+      );
       if (pluginTrace.persistent) trace = pluginTrace;
     }
     const traced = settingFromComponentTrace(key, trace, metadata, context.profile, contextualType);
@@ -871,7 +937,7 @@ async function normalizeSetting(
             ...metadata,
             ...(executed.hasDefault && convertedDefault.valid
               ? { default: convertedDefault.value }
-              : implicitDefaultForType(type)),
+              : {}),
           };
         }
       } else {
@@ -1100,6 +1166,7 @@ async function extractSettings(
     return privateSettings(settingsCall, context);
   }
   const nodeMap = settingNodeMap(argument, context.session.checker, context.evaluator);
+  const settingsBindings = settingsBindingsForCall(settingsCall);
   const entries = await Promise.all(
     Object.keys(rawSettings).map(async (key) => {
       try {
@@ -1111,7 +1178,8 @@ async function extractSettings(
           nodeMap.get(key),
           context,
           pluginName,
-          key
+          key,
+          settingsBindings
         );
         return [normalized?.name ?? key, normalized] as const;
       } catch (error) {

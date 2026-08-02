@@ -276,6 +276,30 @@ describe.skipIf(!existsSync(EQUICORD_PATH))('pinned Equicord source', () => {
       default: {},
       hidden: true,
     });
+    expect(result.equicordPlugins.BetterBanReasons?.settings.reasons).toMatchObject({
+      type: { kind: 'list', element: 'attrs' },
+      default: [],
+    });
+    expect(result.equicordPlugins.UrlHighlighter?.settings.patterns).toMatchObject({
+      type: { kind: 'list', element: 'attrs' },
+      default: [],
+    });
+    expect(result.vencordPlugins.IgnoreActivities?.settings.ignoredActivities).toMatchObject({
+      type: { kind: 'list', element: 'attrs' },
+      default: [],
+    });
+    expect(result.equicordPlugins.CommandPalette?.settings.hotkey).toMatchObject({
+      type: { kind: 'list', element: 'string' },
+    });
+    expect(
+      (result.equicordPlugins.CommandPalette?.settings.hotkey as PluginSetting).default
+    ).toBeUndefined();
+    expect(result.equicordPlugins.RandomVoice?.settings.keybind).toMatchObject({
+      type: { kind: 'list', element: 'string' },
+    });
+    expect(
+      (result.equicordPlugins.RandomVoice?.settings.keybind as PluginSetting).default
+    ).toBeUndefined();
     expect(result.vencordPlugins.FavoriteEmojiFirst?.settings).not.toHaveProperty('aliases');
     expect(result.vencordPlugins.FavoriteEmojiFirst?.settings).not.toHaveProperty('aliasMap');
     expect(result.equicordPlugins.KeywordNotify?.settings).not.toHaveProperty('keywords');

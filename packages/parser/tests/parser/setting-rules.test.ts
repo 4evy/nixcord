@@ -61,7 +61,7 @@ describe('declarative setting rules', () => {
     ).toMatchObject({ type: { kind: 'list', element: 'string' }, defaultValue: [] });
   });
 
-  test('empty arrays default to attribute lists when their element type is not string', () => {
+  test('empty arrays preserve contextual element types and otherwise accept anything', () => {
     expect(
       applySettingRule({
         hasDefault: true,
@@ -77,6 +77,6 @@ describe('declarative setting rules', () => {
         defaultValue: [],
         options: [],
       })
-    ).toMatchObject({ type: { kind: 'list', element: 'attrs' }, defaultValue: [] });
+    ).toMatchObject({ type: { kind: 'list', element: 'anything' }, defaultValue: [] });
   });
 });

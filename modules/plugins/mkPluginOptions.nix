@@ -20,7 +20,10 @@ let
     "types.nullOr types.attrs" = types.nullOr types.attrs;
     "types.nullOr (types.listOf types.str)" = types.nullOr (types.listOf types.str);
     "types.listOf types.str" = types.listOf types.str;
+    "types.listOf types.number" = types.listOf types.number;
+    "types.listOf types.bool" = types.listOf types.bool;
     "types.listOf types.attrs" = types.listOf types.attrs;
+    "types.listOf types.anything" = types.listOf types.anything;
   };
 
   normalizeSetting =

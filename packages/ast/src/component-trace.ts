@@ -140,9 +140,36 @@ const staticKey = (
     : undefined;
 };
 
+const nodeKey = (node: Node): string =>
+  `${node.getSourceFile().getFilePath()}:${node.getStart()}:${node.getEnd()}`;
+
+const isSettingsObject = (
+  node: Node,
+  checker: TypeChecker,
+  settingsBindings: readonly Node[],
+  visited = new Set<string>()
+): boolean => {
+  if (settingsBindings.length === 0) return node.getText() === 'settings';
+  const bindingKeys = new Set(settingsBindings.map(nodeKey));
+  const key = nodeKey(node);
+  if (visited.has(key)) return false;
+  visited.add(key);
+  if (bindingKeys.has(key)) return true;
+  const declaration = resolvedDeclaration(node, checker);
+  if (!declaration) return false;
+  if (bindingKeys.has(nodeKey(declaration))) return true;
+  if (declaration.isKind(SyntaxKind.VariableDeclaration)) {
+    const initializer = declaration.getInitializer();
+    return initializer ? isSettingsObject(initializer, checker, settingsBindings, visited) : false;
+  }
+  return false;
+};
+
 const storePath = (
   node: Node,
   evaluator: StaticEvaluator,
+  checker: TypeChecker,
+  settingsBindings: readonly Node[],
   bindings: ReadonlyMap<string, StaticValue> = new Map(),
   aliases: ReadonlyMap<string, readonly string[]> = new Map()
 ): string[] | undefined => {
@@ -159,7 +186,19 @@ const storePath = (
       current = current.getExpression();
       continue;
     }
-    if (current.getText() === 'settings.store') return parts;
+    const storeProperty = current.asKind(SyntaxKind.PropertyAccessExpression);
+    if (
+      storeProperty?.getName() === 'store' &&
+      isSettingsObject(storeProperty.getExpression(), checker, settingsBindings)
+    )
+      return parts;
+    const storeElement = current.asKind(SyntaxKind.ElementAccessExpression);
+    if (
+      storeElement &&
+      staticKey(storeElement.getArgumentExpression(), evaluator, bindings) === 'store' &&
+      isSettingsObject(storeElement.getExpression(), checker, settingsBindings)
+    )
+      return parts;
     if (current.isKind(SyntaxKind.PropertyAccessExpression)) {
       parts.unshift(current.getName());
       current = current.getExpression();
@@ -181,6 +220,8 @@ const storePath = (
 const storeAliases = (
   node: Node,
   evaluator: StaticEvaluator,
+  checker: TypeChecker,
+  settingsBindings: readonly Node[],
   bindings: ReadonlyMap<string, StaticValue> = new Map()
 ): Map<string, readonly string[]> => {
   const aliases = new Map<string, readonly string[]>();
@@ -206,7 +247,7 @@ const storeAliases = (
       ].includes(assignment.getOperatorToken().getKind())
         ? assignment.getLeft()
         : unwrapped;
-    const path = storePath(source, evaluator, bindings, aliases);
+    const path = storePath(source, evaluator, checker, settingsBindings, bindings, aliases);
     if (path) aliases.set(declaration.getName(), path);
   }
   return aliases;
@@ -217,12 +258,24 @@ interface StoreEvidence {
   readonly write: boolean;
 }
 
-const referencesSettingsStore = (node: Node): boolean =>
+const referencesSettingsStore = (
+  node: Node,
+  checker: TypeChecker,
+  settingsBindings: readonly Node[]
+): boolean =>
   [node, ...node.getDescendants()].some((candidate) => {
-    if (candidate.getText() === 'settings.store') return true;
+    const store = candidate.asKind(SyntaxKind.PropertyAccessExpression);
+    if (
+      store?.getName() === 'store' &&
+      isSettingsObject(store.getExpression(), checker, settingsBindings)
+    )
+      return true;
     const call = candidate.asKind(SyntaxKind.CallExpression);
     const property = call?.getExpression().asKind(SyntaxKind.PropertyAccessExpression);
-    return property?.getExpression().getText() === 'settings' && property.getName() === 'use';
+    return Boolean(
+      property?.getName() === 'use' &&
+        isSettingsObject(property.getExpression(), checker, settingsBindings)
+    );
   });
 
 const jsxCallbackAttribute = (node: Node): string | undefined => {
@@ -251,14 +304,20 @@ const storeEvidence = (
   node: Node,
   settingKey: string,
   evaluator: StaticEvaluator,
+  checker: TypeChecker,
+  settingsBindings: readonly Node[],
   bindings: ReadonlyMap<string, StaticValue> = new Map()
 ): StoreEvidence => {
-  const aliases = storeAliases(node, evaluator, bindings);
+  const aliases = storeAliases(node, evaluator, checker, settingsBindings, bindings);
   let read = false;
   let write = false;
   for (const candidate of [node, ...node.getDescendants()]) {
     if (isActionCallback(candidate)) continue;
-    if (storePath(candidate, evaluator, bindings, aliases)?.[0] !== settingKey) continue;
+    if (
+      storePath(candidate, evaluator, checker, settingsBindings, bindings, aliases)?.[0] !==
+      settingKey
+    )
+      continue;
     const assignment = candidate.getFirstAncestorByKind(SyntaxKind.BinaryExpression);
     const assignmentKind = assignment?.getOperatorToken().getKind();
     const isAssignment =
@@ -280,7 +339,10 @@ const storeEvidence = (
   for (const call of node.getDescendantsOfKind(SyntaxKind.CallExpression)) {
     if (isActionCallback(call)) continue;
     const property = call.getExpression().asKind(SyntaxKind.PropertyAccessExpression);
-    if (property?.getExpression().getText() !== 'settings' || property.getName() !== 'use')
+    if (
+      property?.getName() !== 'use' ||
+      !isSettingsObject(property.getExpression(), checker, settingsBindings)
+    )
       continue;
     const keys = call.getArguments()[0];
     if (!keys) {
@@ -298,6 +360,8 @@ const jsxControl = (
   node: Node,
   settingKey: string,
   evaluator: StaticEvaluator,
+  checker: TypeChecker,
+  settingsBindings: readonly Node[],
   directIdentifier = false,
   assumeRelated = false,
   controlKinds: Readonly<Record<string, ComponentControlEvidence['kind']>> = CONTROL_KINDS
@@ -315,7 +379,7 @@ const jsxControl = (
       ?.asKind(SyntaxKind.JsxExpression)
       ?.getExpression();
     if (!expression) return false;
-    const evidence = storeEvidence(expression, settingKey, evaluator);
+    const evidence = storeEvidence(expression, settingKey, evaluator, checker, settingsBindings);
     return (
       assumeRelated ||
       evidence.read ||
@@ -363,11 +427,13 @@ interface NestedComponentDefaults {
 const forEachNestedDefaults = (
   target: Node,
   settingKey: string,
-  evaluator: StaticEvaluator
+  evaluator: StaticEvaluator,
+  checker: TypeChecker,
+  settingsBindings: readonly Node[]
 ): NestedComponentDefaults => {
   const defaults: Record<string, StaticValue> = {};
   const labels: Record<string, string> = {};
-  const aliases = storeAliases(target, evaluator);
+  const aliases = storeAliases(target, evaluator, checker, settingsBindings);
   for (const call of target.getDescendantsOfKind(SyntaxKind.CallExpression)) {
     const property = call.getExpression().asKind(SyntaxKind.PropertyAccessExpression);
     if (property?.getName() !== 'forEach') continue;
@@ -382,7 +448,14 @@ const forEachNestedDefaults = (
         .getBody()
         .getDescendantsOfKind(SyntaxKind.BinaryExpression)) {
         if (!isDefaultAssignment(assignment)) continue;
-        const path = storePath(assignment.getLeft(), evaluator, bindings, aliases);
+        const path = storePath(
+          assignment.getLeft(),
+          evaluator,
+          checker,
+          settingsBindings,
+          bindings,
+          aliases
+        );
         if (path?.[0] !== settingKey || path.length < 2) continue;
         const value = evaluator.evaluate(assignment.getRight(), bindings);
         if (value.known && !('callable' in Object(value.value ?? {})))
@@ -406,16 +479,25 @@ const storeDefault = (
   roots: readonly Node[],
   settingKey: string,
   evaluator: StaticEvaluator,
+  checker: TypeChecker,
+  settingsBindings: readonly Node[],
   ignoreActionCallbacks = false
 ): Pick<ComponentTrace, 'hasDefault' | 'defaultValue'> => {
   let hasDefault = false;
   let defaultValue: StaticValue;
   for (const root of roots) {
-    const aliases = storeAliases(root, evaluator);
+    const aliases = storeAliases(root, evaluator, checker, settingsBindings);
     for (const assignment of root.getDescendantsOfKind(SyntaxKind.BinaryExpression)) {
       if (!isDefaultAssignment(assignment) || (ignoreActionCallbacks && isJsxCallback(assignment)))
         continue;
-      const path = storePath(assignment.getLeft(), evaluator, new Map(), aliases);
+      const path = storePath(
+        assignment.getLeft(),
+        evaluator,
+        checker,
+        settingsBindings,
+        new Map(),
+        aliases
+      );
       if (path?.length !== 1 || path[0] !== settingKey) continue;
       const result = evaluator.evaluate(assignment.getRight());
       if (result.known) {
@@ -430,11 +512,13 @@ const storeDefault = (
 export function traceStoreSetting(
   roots: readonly Node[],
   settingKey: string,
-  evaluator: StaticEvaluator
+  checker: TypeChecker,
+  evaluator: StaticEvaluator,
+  settingsBindings: readonly Node[] = []
 ): ComponentTrace {
   const combinedStoreEvidence = roots.reduce<StoreEvidence>(
     (combined, root) => {
-      const evidence = storeEvidence(root, settingKey, evaluator);
+      const evidence = storeEvidence(root, settingKey, evaluator, checker, settingsBindings);
       return {
         read: combined.read || evidence.read,
         write: combined.write || evidence.write,
@@ -443,11 +527,18 @@ export function traceStoreSetting(
     { read: false, write: false }
   );
   const persistent = combinedStoreEvidence.read && combinedStoreEvidence.write;
-  const { hasDefault, defaultValue } = storeDefault(roots, settingKey, evaluator, true);
+  const { hasDefault, defaultValue } = storeDefault(
+    roots,
+    settingKey,
+    evaluator,
+    checker,
+    settingsBindings,
+    true
+  );
 
   return {
     persistent,
-    storeReferenced: roots.some(referencesSettingsStore),
+    storeReferenced: roots.some((root) => referencesSettingsStore(root, checker, settingsBindings)),
     hasDefault,
     ...(hasDefault ? { defaultValue } : {}),
     controls: [],
@@ -461,7 +552,8 @@ export function traceComponentSetting(
   checker: TypeChecker,
   evaluator = new StaticEvaluator(checker),
   controlKinds: Readonly<Record<string, ComponentControlEvidence['kind']>> = CONTROL_KINDS,
-  allowedRoot?: string
+  allowedRoot?: string,
+  settingsBindings: readonly Node[] = []
 ): ComponentTrace {
   const targets = collectTargets(component, checker, allowedRoot);
   const allControls = targets.flatMap((target) =>
@@ -473,7 +565,18 @@ export function traceComponentSetting(
       ...target.getDescendantsOfKind(SyntaxKind.JsxSelfClosingElement),
       ...target.getDescendantsOfKind(SyntaxKind.JsxOpeningElement),
     ]
-      .map((jsx) => jsxControl(jsx, settingKey, evaluator, false, false, controlKinds))
+      .map((jsx) =>
+        jsxControl(
+          jsx,
+          settingKey,
+          evaluator,
+          checker,
+          settingsBindings,
+          false,
+          false,
+          controlKinds
+        )
+      )
       .filter((value): value is ComponentControlEvidence => value !== undefined)
   );
   const controls = allControls.filter(
@@ -512,7 +615,14 @@ export function traceComponentSetting(
   );
   const combinedStoreEvidence = targets.reduce<StoreEvidence>(
     (combined, target) => {
-      const evidence = storeEvidence(target, settingKey, evaluator, dynamicBindings);
+      const evidence = storeEvidence(
+        target,
+        settingKey,
+        evaluator,
+        checker,
+        settingsBindings,
+        dynamicBindings
+      );
       return {
         read: combined.read || evidence.read,
         write: combined.write || evidence.write,
@@ -522,7 +632,7 @@ export function traceComponentSetting(
   );
   const referenced = combinedStoreEvidence.read && combinedStoreEvidence.write;
   const nestedResults = targets.map((target) =>
-    forEachNestedDefaults(target, settingKey, evaluator)
+    forEachNestedDefaults(target, settingKey, evaluator, checker, settingsBindings)
   );
   const nestedDefaults = Object.assign(
     {},
@@ -535,8 +645,17 @@ export function traceComponentSetting(
   const hasNestedDefaults = Object.keys(nestedDefaults).length > 0;
   const hasNestedLabels = Object.keys(nestedLabels).length > 0;
 
-  const { hasDefault, defaultValue } = storeDefault(targets, settingKey, evaluator, true);
-  const storeReferenced = targets.some(referencesSettingsStore);
+  const { hasDefault, defaultValue } = storeDefault(
+    targets,
+    settingKey,
+    evaluator,
+    checker,
+    settingsBindings,
+    true
+  );
+  const storeReferenced = targets.some((target) =>
+    referencesSettingsStore(target, checker, settingsBindings)
+  );
 
   const evidence = [
     ...(referenced ? [`settings.store.${settingKey} has paired read/write evidence`] : []),
