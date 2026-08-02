@@ -42,8 +42,15 @@ let
   data = mapAttrs (_: normalizeSetting) (lib.importJSON file);
 
   resolveDefault =
-    value:
-    if builtins.isAttrs value && builtins.attrNames value == [ "__nixRaw" ] then
+    type: value:
+    if
+      builtins.elem type [
+        "types.int"
+        "types.float"
+      ]
+      && builtins.isAttrs value
+      && builtins.attrNames value == [ "__nixRaw" ]
+    then
       # Raw Nix expressions serialized as { __nixRaw = "1.0"; }
       builtins.fromJSON value.__nixRaw
     else
@@ -59,11 +66,13 @@ let
         commonAttrs = {
           inherit (setting) description;
         }
-        // lib.optionalAttrs (setting ? default) { default = resolveDefault setting.default; }
+        // lib.optionalAttrs (setting ? default) {
+          default = resolveDefault setting.type setting.default;
+        }
         // lib.optionalAttrs (setting.example != null) { inherit (setting) example; };
         typeAttr =
           if setting.type == "types.enum" then
-            { type = types.enum setting.enumValues; }
+            { type = types.enum (setting.enumValues or [ ]); }
           else
             { type = typeMap.${setting.type}; };
       in
