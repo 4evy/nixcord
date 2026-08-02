@@ -50,6 +50,22 @@ describe('StaticEvaluator', () => {
     expect(result).toMatchObject({ known: true, value: ['one', 'two', 'three'] });
   });
 
+  test('evaluates values imported from a default export assignment', () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    project.createSourceFile('/values.ts', 'export default [{ value: "one" }, { value: "two" }];');
+    const sourceFile = project.createSourceFile(
+      '/fixture.ts',
+      'import values from "./values"; const result = values;'
+    );
+    project.resolveSourceFileDependencies();
+    const initializer = sourceFile.getVariableDeclarationOrThrow('result').getInitializerOrThrow();
+
+    expect(new StaticEvaluator(project.getTypeChecker()).evaluate(initializer)).toMatchObject({
+      known: true,
+      value: [{ value: 'one' }, { value: 'two' }],
+    });
+  });
+
   test('falls back to source declarations when a partial project cannot bind a local symbol', () => {
     const project = new Project({ useInMemoryFileSystem: true });
     const sourceFile = project.createSourceFile(
