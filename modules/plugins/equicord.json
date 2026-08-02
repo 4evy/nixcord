@@ -297,7 +297,7 @@
     "description": "Create custom reasons to use in the Discord ban modal, and/or show a text input by default instead of the options. (Equicord-only)",
     "settings": {
       "reasons": {
-        "type": "types.listOf types.str",
+        "type": "types.listOf types.attrs",
         "default": [],
         "description": "Your custom reasons"
       },
@@ -1225,8 +1225,7 @@
     "description": "Raycast style command palette for running actions anywhere in Discord (Equicord-only)",
     "settings": {
       "hotkey": {
-        "type": "types.listOf types.str",
-        "default": []
+        "type": "types.listOf types.str"
       },
       "closeAfterExecute": {
         "type": "types.bool",
@@ -5118,8 +5117,7 @@
     "description": "Adds a button near mute to join a random voice channel. (Equicord-only)",
     "settings": {
       "keybind": {
-        "type": "types.listOf types.str",
-        "default": []
+        "type": "types.listOf types.str"
       },
       "keybindEnabled": {
         "type": "types.bool",
@@ -7171,7 +7169,7 @@
     "description": "Highlights URLs in messages that match your patterns. (Equicord-only)",
     "settings": {
       "patterns": {
-        "type": "types.listOf types.str",
+        "type": "types.listOf types.attrs",
         "default": [],
         "description": "URL patterns to highlight using glob patterns."
       },

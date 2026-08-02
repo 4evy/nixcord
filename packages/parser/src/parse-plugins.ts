@@ -732,12 +732,20 @@ const nestedConfigFromDefaults = (
   ),
 });
 
+const implicitDefaultForType = (type: SettingType): Partial<Pick<PluginSetting, 'default'>> => {
+  if (type.kind === 'string' && type.nullable) return { default: null };
+  if (type.kind === 'list') return { default: [] };
+  if (type.kind === 'attrs') return { default: type.nullable ? null : {} };
+  return {};
+};
+
 const settingFromComponentTrace = (
   key: string,
   trace: ReturnType<typeof traceComponentSetting>,
   metadata: Pick<PluginSetting, 'description' | 'placeholder' | 'hidden' | 'restartNeeded'>,
   profile: SourceProfile,
-  contextualType?: string
+  contextualType: string | undefined,
+  allowImplicitDefault: boolean
 ): PluginSetting | PluginConfig | undefined => {
   if (trace.nestedDefaults)
     return nestedConfigFromDefaults(key, trace.nestedDefaults, trace.nestedLabels, profile);
@@ -757,7 +765,11 @@ const settingFromComponentTrace = (
     name: key,
     type,
     ...metadata,
-    ...(trace.hasDefault && converted.valid ? { default: converted.value } : {}),
+    ...(trace.hasDefault && converted.valid
+      ? { default: converted.value }
+      : allowImplicitDefault
+        ? implicitDefaultForType(type)
+        : {}),
   };
 };
 
@@ -874,6 +886,8 @@ async function normalizeSetting(
   const optionType = optionTypeFrom(typeNode, raw.type, context.profile);
   const component = componentInitializer(definitionNode);
   const contextualType = explicitTypeText(defaultNode, context.session.checker);
+  const hasSourceDefault =
+    Object.hasOwn(raw, 'default') || Boolean(definitionNode?.getProperty('default'));
 
   if ((optionType === 'COMPONENT' || optionType === 'CUSTOM') && !hasDefault && component) {
     let trace = traceComponentSetting(
@@ -895,7 +909,14 @@ async function normalizeSetting(
       );
       if (pluginTrace.persistent) trace = pluginTrace;
     }
-    const traced = settingFromComponentTrace(key, trace, metadata, context.profile, contextualType);
+    const traced = settingFromComponentTrace(
+      key,
+      trace,
+      metadata,
+      context.profile,
+      contextualType,
+      !hasSourceDefault
+    );
     if (traced) return traced;
 
     if (context.executionMode === 'fallback' && trace.storeReferenced) {
@@ -937,7 +958,9 @@ async function normalizeSetting(
             ...metadata,
             ...(executed.hasDefault && convertedDefault.valid
               ? { default: convertedDefault.value }
-              : {}),
+              : !hasSourceDefault
+                ? implicitDefaultForType(type)
+                : {}),
           };
         }
       } else {

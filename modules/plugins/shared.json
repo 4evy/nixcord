@@ -657,7 +657,7 @@
         "description": "Ignore all competing activities (These are normally special game activities)"
       },
       "ignoredActivities": {
-        "type": "types.listOf types.str",
+        "type": "types.listOf types.attrs",
         "default": []
       }
     }
@@ -1775,8 +1775,7 @@
     "description": "Announces when users join, leave, or move voice channels via narrator (Shared between Vencord and Equicord)",
     "settings": {
       "voice": {
-        "type": "types.nullOr types.str",
-        "default": null
+        "type": "types.nullOr types.str"
       },
       "volume": {
         "type": "types.float",
