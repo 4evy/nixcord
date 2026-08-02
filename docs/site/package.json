@@ -8,20 +8,20 @@
     "dev:options": "bun run prepare-options && vite --host 127.0.0.1",
     "generate-logo": "bun run scripts/generate-nix-logo.ts",
     "build": "vite build",
-    "check": "tsgo --noEmit --project tsconfig.json",
+    "check": "tsc --noEmit --project tsconfig.json",
     "preview": "vite preview --host 127.0.0.1"
   },
   "dependencies": {
-    "@sveltejs/vite-plugin-svelte": "^7.1.2",
-    "@tailwindcss/vite": "^4.3.1",
+    "@sveltejs/vite-plugin-svelte": "^7.2.0",
+    "@tailwindcss/vite": "^4.3.3",
     "highlight.js": "^11.11.1",
     "mode-watcher": "^1.1.0",
-    "svelte": "^5.56.3",
-    "tailwindcss": "^4.3.1",
-    "vite": "^8.0.16"
+    "svelte": "^5.56.8",
+    "tailwindcss": "^4.3.3",
+    "vite": "^8.2.0"
   },
   "devDependencies": {
-    "@typescript/native-preview": "7.0.0-dev.20260707.2",
+    "@typescript/native": "npm:typescript@7.0.2",
     "fs-fixture": "2.14.0",
     "typescript": "npm:@typescript/typescript6@6.0.2"
   }
