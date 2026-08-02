@@ -148,6 +148,7 @@ const sourceDeclaration = (node: import('ts-morph').Identifier): Node | undefine
 };
 
 const initializerOf = (declaration: Node): Node | undefined => {
+  if (declaration.isKind(SyntaxKind.ExportAssignment)) return declaration.getExpression();
   if ('getInitializer' in declaration) {
     return (declaration as { getInitializer(): Node | undefined }).getInitializer();
   }
@@ -310,21 +311,31 @@ export class StaticEvaluator {
     if (name === 'NaN') return known(Number.NaN, node);
     if (name === 'Infinity') return known(Number.POSITIVE_INFINITY, node);
 
-    const declaration =
-      resolvedDeclaration(node, this.#checker) ??
-      importedDeclaration(node) ??
-      sourceDeclaration(node);
-    if (!declaration) return unknown(`unresolved identifier ${name}`, node);
-    if (declaration.isKind(SyntaxKind.EnumMember)) {
-      const value = declaration.getValue();
-      if (typeof value === 'string' || typeof value === 'number') return known(value, node);
+    let foundDeclaration = false;
+    for (const resolveCandidate of [
+      () => resolvedDeclaration(node, this.#checker),
+      () => importedDeclaration(node),
+      () => sourceDeclaration(node),
+    ]) {
+      const declaration = resolveCandidate();
+      if (!declaration) continue;
+      foundDeclaration = true;
+      if (declaration.isKind(SyntaxKind.EnumMember)) {
+        const value = declaration.getValue();
+        if (typeof value === 'string' || typeof value === 'number') return known(value, node);
+      }
+      if (declaration.isKind(SyntaxKind.FunctionDeclaration))
+        return known({ callable: true, node: declaration, environment }, node);
+      const initializer = initializerOf(declaration);
+      if (initializer)
+        return this.#evaluate(unwrapExpression(initializer), environment, depth + 1, state);
     }
-    if (declaration.isKind(SyntaxKind.FunctionDeclaration))
-      return known({ callable: true, node: declaration, environment }, node);
-    const initializer = initializerOf(declaration);
-    return initializer
-      ? this.#evaluate(unwrapExpression(initializer), environment, depth + 1, state)
-      : unknown(`identifier ${name} has no value initializer`, node);
+    return unknown(
+      foundDeclaration
+        ? `identifier ${name} has no value initializer`
+        : `unresolved identifier ${name}`,
+      node
+    );
   }
 
   #array(
