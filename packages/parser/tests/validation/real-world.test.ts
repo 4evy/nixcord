@@ -21,12 +21,7 @@ const parseVencord = () => (vencordPromise ??= parsePlugins(VENCORD_PATH));
 const parseEquicord = () => (equicordPromise ??= parsePlugins(EQUICORD_PATH));
 
 const ENTRY_GLOBS = ['*/index.{ts,tsx}', '_core/*.{ts,tsx}'];
-const SETTING_OMISSION_DIAGNOSTICS = new Set([
-  'component-ui-only',
-  'execution-failed',
-  'execution-limit',
-  'execution-timeout',
-]);
+const SETTING_OMISSION_DIAGNOSTICS = new Set(['component-ui-only']);
 
 const expectedEntryIds = async (sourceRoot: string, pluginRoot: string): Promise<string[]> =>
   (await fg(ENTRY_GLOBS, { cwd: join(sourceRoot, pluginRoot), onlyFiles: true }))
@@ -188,6 +183,7 @@ describe.skipIf(!existsSync(VENCORD_PATH))('pinned Vencord source', () => {
         .sort((left, right) => (left ?? '').localeCompare(right ?? ''))
     ).toEqual(expectedEntries);
     expect(result.diagnostics.filter((item) => item.severity === 'error')).toEqual([]);
+    expect(result.diagnostics.filter((item) => item.code.startsWith('execution-'))).toEqual([]);
     expect(
       await auditSettingCoverage(
         VENCORD_PATH,
@@ -304,6 +300,7 @@ describe.skipIf(!existsSync(EQUICORD_PATH))('pinned Equicord source', () => {
         .sort((left, right) => (left ?? '').localeCompare(right ?? ''))
     ).toEqual(expectedEquicordEntries);
     expect(result.diagnostics.filter((item) => item.severity === 'error')).toEqual([]);
+    expect(result.diagnostics.filter((item) => item.code.startsWith('execution-'))).toEqual([]);
     expect(
       await auditSettingCoverage(
         EQUICORD_PATH,
