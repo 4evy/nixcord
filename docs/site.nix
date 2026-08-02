@@ -39,8 +39,8 @@ let
   inherit (stdenvNoCC.hostPlatform) system;
 
   outputHashes = {
-    x86_64-linux = "sha256-sP8alJeqbpRnNrjuAkppq/o1jZcmSJNWNPWUTKz2OWE=";
-    aarch64-darwin = "sha256-Pxq2oXh3hnKUS7m0R4hccOHkyF6aQhpUoYkTvbTDQcY=";
+    x86_64-linux = "sha256-cT71HCs+XwhsYmaxnoJ1P18uAzA2z4z+SusP4JGwD8c=";
+    aarch64-darwin = "sha256-+P5kSKIAfVuGEHIFkyE9NS5ggCmT7YCrLJHq/FAbf7g=";
   };
 
   deps = stdenvNoCC.mkDerivation {
