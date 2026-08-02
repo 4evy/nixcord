@@ -87,6 +87,35 @@ interface PluginParseResult {
 
 type RawRecord = Record<string, unknown>;
 
+interface UnresolvedAstValue {
+  readonly node: Node;
+  readonly path?: string;
+  readonly reason: string;
+}
+
+const DIAGNOSTIC_SETTING_FIELDS = new Set([
+  'default',
+  'description',
+  'name',
+  'options',
+  'placeholder',
+  'restartNeeded',
+  'hidden',
+]);
+
+const recordUnresolvedAstValue = (
+  unresolved: UnresolvedAstValue[],
+  item: UnresolvedAstValue
+): void => {
+  const segments = item.path?.split('.') ?? [];
+  if (
+    segments.length > 1 &&
+    !segments.slice(1).some((segment) => DIAGNOSTIC_SETTING_FIELDS.has(segment))
+  )
+    return;
+  unresolved.push(item);
+};
+
 const emptyDirectoryResult = (): DirectoryParseResult => ({
   plugins: {} as ReadonlyDeep<Record<string, PluginConfig>>,
   settingRenames: [],
@@ -231,8 +260,12 @@ const apiCalls = (
 const declarationInitializer = (node: Node, checker: TypeChecker): Node | undefined => {
   try {
     const declaration = resolvedDeclaration(node, checker);
-    if (declaration && 'getInitializer' in declaration)
-      return (declaration as { getInitializer(): Node | undefined }).getInitializer();
+    if (declaration && 'getInitializer' in declaration) {
+      const initializer = (declaration as { getInitializer(): Node | undefined }).getInitializer();
+      if (initializer) return initializer;
+    }
+    if (node.isKind(SyntaxKind.Identifier))
+      return node.getSourceFile().getVariableDeclaration(node.getText())?.getInitializer();
   } catch {
     return undefined;
   }
@@ -325,8 +358,13 @@ const explicitTypeText = (
 const objectPropertyInitializer = (
   object: ObjectLiteralExpression | undefined,
   name: string
-): Node | undefined =>
-  object?.getProperty(name)?.asKind(SyntaxKind.PropertyAssignment)?.getInitializer();
+): Node | undefined => {
+  const property = object?.getProperty(name);
+  return (
+    property?.asKind(SyntaxKind.PropertyAssignment)?.getInitializer() ??
+    property?.asKind(SyntaxKind.ShorthandPropertyAssignment)?.getNameNode()
+  );
+};
 
 const objectArgument = (call: CallExpression | undefined): ObjectLiteralExpression | undefined =>
   call?.getArguments()[0]?.asKind(SyntaxKind.ObjectLiteralExpression);
@@ -519,6 +557,11 @@ const optionsFromNode = (node: Node | undefined, context: PluginContext): Select
         });
     }
   }
+  const conditional = resolved?.asKind(SyntaxKind.ConditionalExpression);
+  if (conditional)
+    return [conditional.getWhenTrue(), conditional.getWhenFalse()].flatMap((branch) =>
+      optionsFromNode(branch, context)
+    );
   const array = resolved?.asKind(SyntaxKind.ArrayLiteralExpression);
   if (!array) return [];
   return array.getElements().flatMap((element) => {
@@ -616,35 +659,83 @@ const rawObjectFromAst = (
   object: ObjectLiteralExpression,
   checker: TypeChecker,
   evaluator: StaticEvaluator,
-  visited = new Set<string>()
+  visited = new Set<string>(),
+  unresolved: UnresolvedAstValue[] = [],
+  parentPath = ''
 ): RawRecord => {
   const visitKey = `${object.getSourceFile().getFilePath()}:${object.getStart()}`;
-  if (visited.has(visitKey)) return {};
+  if (visited.has(visitKey)) {
+    recordUnresolvedAstValue(unresolved, {
+      node: object,
+      ...(parentPath ? { path: parentPath } : {}),
+      reason: 'Cyclic object definition could not be normalized',
+    });
+    return {};
+  }
   visited.add(visitKey);
   const output: RawRecord = {};
   for (const property of object.getProperties()) {
     if (property.isKind(SyntaxKind.SpreadAssignment)) {
+      const spreadObject = resolveNode(property.getExpression(), checker)?.asKind(
+        SyntaxKind.ObjectLiteralExpression
+      );
+      if (spreadObject) {
+        Object.assign(
+          output,
+          rawObjectFromAst(spreadObject, checker, evaluator, visited, unresolved, parentPath)
+        );
+        continue;
+      }
       const spread = evaluator.evaluate(property.getExpression());
       if (spread.known && isRecord(spread.value)) Object.assign(output, spread.value);
+      else
+        recordUnresolvedAstValue(unresolved, {
+          node: property.getExpression(),
+          ...(parentPath ? { path: parentPath } : {}),
+          reason: spread.known ? 'Spread value did not evaluate to an object' : spread.reason,
+        });
       continue;
     }
     if (property.isKind(SyntaxKind.ShorthandPropertyAssignment)) {
       const result = evaluator.evaluate(property.getNameNode());
       if (result.known) output[property.getName()] = result.value;
+      else
+        recordUnresolvedAstValue(unresolved, {
+          node: property.getNameNode(),
+          path: parentPath ? `${parentPath}.${property.getName()}` : property.getName(),
+          reason: result.reason,
+        });
+      continue;
+    }
+    if (property.isKind(SyntaxKind.GetAccessor) && property.getName() === 'default') {
+      recordUnresolvedAstValue(unresolved, {
+        node: property,
+        path: parentPath ? `${parentPath}.default` : 'default',
+        reason: 'Runtime default accessor could not be evaluated statically',
+      });
       continue;
     }
     if (!property.isKind(SyntaxKind.PropertyAssignment)) continue;
     const key = propertyKey(property.getNameNode(), evaluator);
-    if (key === undefined) continue;
+    if (key === undefined) {
+      recordUnresolvedAstValue(unresolved, {
+        node: property.getNameNode(),
+        ...(parentPath ? { path: parentPath } : {}),
+        reason: 'Computed property name could not be evaluated statically',
+      });
+      continue;
+    }
+    const path = parentPath ? `${parentPath}.${key}` : key;
     const initializer = resolveNode(property.getInitializer(), checker);
     const nested = initializer?.asKind(SyntaxKind.ObjectLiteralExpression);
     if (nested) {
-      output[key] = rawObjectFromAst(nested, checker, evaluator, visited);
+      output[key] = rawObjectFromAst(nested, checker, evaluator, visited, unresolved, path);
       continue;
     }
     if (!initializer) continue;
     const result = evaluator.evaluate(initializer);
     if (result.known) output[key] = result.value;
+    else recordUnresolvedAstValue(unresolved, { node: initializer, path, reason: result.reason });
   }
   // `visited` is a recursion stack, not a global deduplication set. The same definition object may
   // legitimately be reused by multiple settings; keeping it marked after this branch returns would
@@ -656,11 +747,12 @@ const rawObjectFromAst = (
 const rawSettingsFromArgument = (
   argument: Node,
   checker: TypeChecker,
-  evaluator: StaticEvaluator
+  evaluator: StaticEvaluator,
+  unresolved: UnresolvedAstValue[]
 ): RawRecord | undefined => {
   const resolved = resolveNode(argument, checker);
   const object = resolved?.asKind(SyntaxKind.ObjectLiteralExpression);
-  return object ? rawObjectFromAst(object, checker, evaluator) : undefined;
+  return object ? rawObjectFromAst(object, checker, evaluator, new Set(), unresolved) : undefined;
 };
 
 const componentInitializer = (
@@ -1012,6 +1104,7 @@ async function normalizeSetting(
   const rule = applySettingRule({
     optionType,
     hasDefault,
+    hasDeclaredDefault: hasSourceDefault,
     ...(hasDefault ? { defaultValue: convertedDefault.value } : {}),
     options:
       contextualEnumValues && contextualEnumValues.length > 1
@@ -1160,11 +1253,22 @@ async function extractSettings(
 ): Promise<Record<string, PluginSetting | PluginConfig>> {
   const argument = settingsCall.getArguments()[0];
   if (!argument) return privateSettings(settingsCall, context);
+  const unresolved: UnresolvedAstValue[] = [];
   const directSettings = rawSettingsFromArgument(
     argument,
     context.session.checker,
-    context.evaluator
+    context.evaluator,
+    unresolved
   );
+  for (const item of unresolved) {
+    context.diagnostics.push(
+      diagnostic('unresolved-setting-expression', 'warning', 'evaluation', item.reason, {
+        pluginName,
+        ...(item.path ? { settingPath: item.path } : {}),
+        node: item.node,
+      })
+    );
+  }
   const result = directSettings ? undefined : context.evaluator.evaluate(argument);
   const rawSettings =
     directSettings ?? (result?.known && isRecord(result.value) ? result.value : undefined);

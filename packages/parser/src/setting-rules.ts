@@ -10,6 +10,7 @@ export interface SelectOption {
 export interface SettingRuleInput {
   readonly optionType?: OptionTypeName;
   readonly hasDefault: boolean;
+  readonly hasDeclaredDefault?: boolean;
   readonly defaultValue?: SettingValue;
   readonly options: readonly SelectOption[];
   readonly contextualType?: string;
@@ -27,32 +28,38 @@ const withDefault = (
   fallback?: SettingValue
 ): SettingRuleResult => ({
   type,
-  hasDefault: input.hasDefault || fallback !== undefined,
+  hasDefault: input.hasDefault || (input.hasDeclaredDefault !== true && fallback !== undefined),
   ...(input.hasDefault
     ? { defaultValue: input.defaultValue }
-    : fallback !== undefined
+    : input.hasDeclaredDefault !== true && fallback !== undefined
       ? { defaultValue: fallback }
       : {}),
 });
 
 const selectRule = (input: SettingRuleInput): SettingRuleResult => {
-  const values = input.options.map((option) => option.value);
+  const seen = new Set<SettingScalar>();
+  const options = input.options.filter((option) => {
+    if (seen.has(option.value)) return false;
+    seen.add(option.value);
+    return true;
+  });
+  const values = options.map((option) => option.value);
   if (
     values.length === 2 &&
     values.includes(true) &&
     values.includes(false) &&
     values.every((value) => typeof value === 'boolean')
   ) {
-    const selected = input.options.find((option) => option.isDefault)?.value;
+    const selected = options.find((option) => option.isDefault)?.value;
     return withDefault({ kind: 'boolean' }, input, selected ?? false);
   }
   if (values.length === 0) return withDefault({ kind: 'string', nullable: true }, input, null);
   const labels = Object.fromEntries(
-    input.options.flatMap((option) =>
+    options.flatMap((option) =>
       option.label === undefined ? [] : [[String(option.value), option.label]]
     )
   );
-  const selected = input.options.find((option) => option.isDefault)?.value ?? values[0];
+  const selected = options.find((option) => option.isDefault)?.value ?? values[0];
   return withDefault(
     {
       kind: 'enum',
@@ -122,7 +129,10 @@ const RULES: Readonly<Record<OptionTypeName, (input: SettingRuleInput) => Settin
   BOOLEAN: (input) => withDefault({ kind: 'boolean' }, input, false),
   STRING: (input) =>
     withDefault(
-      { kind: 'string', nullable: !input.hasDefault || input.defaultValue === null },
+      {
+        kind: 'string',
+        nullable: input.hasDeclaredDefault !== true || input.defaultValue === null,
+      },
       input,
       null
     ),

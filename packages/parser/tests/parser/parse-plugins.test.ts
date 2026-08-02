@@ -358,6 +358,108 @@ describe('parsePlugins()', () => {
     expect(hotkey.default).toBeUndefined();
   });
 
+  test('partially evaluates object spreads without inventing unresolved defaults', async () => {
+    await using fixture = await createFixture({
+      'src/plugins/partial-spread/index.ts': `
+        import { definePluginSettings } from "@api/Settings";
+        import definePlugin, { OptionType } from "@utils/types";
+
+        declare const runtimeDefault: string;
+        const generated = {
+          known: { type: OptionType.STRING, default: "known" },
+          dynamic: { type: OptionType.STRING, default: runtimeDefault },
+        };
+        const settings = definePluginSettings({
+          ...generated,
+          direct: { type: OptionType.BOOLEAN, default: true },
+        });
+
+        export default definePlugin({ name: "PartialSpread", description: "fixture", settings });
+      `,
+    });
+
+    const result = await parsePlugins(fixture.path, { executionMode: 'disabled' });
+    expect(result.vencordPlugins.PartialSpread?.settings).toMatchObject({
+      known: {
+        type: { kind: 'string', nullable: false },
+        default: 'known',
+      },
+      dynamic: {
+        type: { kind: 'string', nullable: false },
+      },
+      direct: {
+        type: { kind: 'boolean' },
+        default: true,
+      },
+    });
+    expect(
+      (result.vencordPlugins.PartialSpread?.settings.dynamic as PluginSetting).default
+    ).toBeUndefined();
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: 'unresolved-setting-expression',
+          pluginName: 'PartialSpread',
+          settingPath: 'dynamic.default',
+        }),
+      ])
+    );
+  });
+
+  test('unions option values from platform-conditional array spreads', async () => {
+    await using fixture = await createFixture({
+      'src/plugins/conditional-options/index.ts': `
+        import { definePluginSettings } from "@api/Settings";
+        import definePlugin, { OptionType } from "@utils/types";
+
+        const options = [
+          { label: "Always", value: "always", default: true },
+          ...(IS_DESKTOP ? [{ label: "Desktop", value: "desktop" }] : []),
+          ...(IS_WEB ? [{ label: "Web", value: "web" }] : []),
+        ];
+        const settings = definePluginSettings({
+          mode: { type: OptionType.SELECT, options },
+        });
+
+        export default definePlugin({ name: "ConditionalOptions", description: "fixture", settings });
+      `,
+    });
+
+    const result = await parsePlugins(fixture.path, { executionMode: 'disabled' });
+    expect(result.vencordPlugins.ConditionalOptions?.settings.mode).toMatchObject({
+      type: { kind: 'enum', values: ['always', 'desktop', 'web'] },
+      default: 'always',
+    });
+  });
+
+  test('reads select options from an imported default-exported array', async () => {
+    await using fixture = await createFixture({
+      'src/plugins/imported-options/options.ts': `
+        export default [
+          { label: "One", value: "one", default: true },
+          { label: "Two", value: "two" },
+        ];
+      `,
+      'src/plugins/imported-options/index.ts': `
+        import { definePluginSettings } from "@api/Settings";
+        import definePlugin, { OptionType } from "@utils/types";
+        import options from "./options";
+
+        const settings = definePluginSettings({
+          mode: { type: OptionType.SELECT, options },
+        });
+
+        export default definePlugin({ name: "ImportedOptions", description: "fixture", settings });
+      `,
+    });
+
+    const result = await parsePlugins(fixture.path, { executionMode: 'disabled' });
+    expect(result.vencordPlugins.ImportedOptions?.settings.mode).toMatchObject({
+      type: { kind: 'enum', values: ['one', 'two'] },
+      default: 'one',
+    });
+  });
+
   test('omits non-finite defaults without producing invalid parser output', async () => {
     await using fixture = await createFixture({
       'src/plugins/non-finite/index.ts': `

@@ -50,6 +50,23 @@ describe('declarative setting rules', () => {
     });
   });
 
+  test('deduplicates repeated select values while preserving their first label', () => {
+    expect(
+      applySettingRule({
+        optionType: 'SELECT',
+        hasDefault: false,
+        options: [
+          { value: 'high', label: 'High', isDefault: true },
+          { value: 'low', label: 'Low', isDefault: false },
+          { value: 'low', label: 'Lowest', isDefault: false },
+        ],
+      })
+    ).toMatchObject({
+      type: { kind: 'enum', values: ['high', 'low'], labels: { high: 'High', low: 'Low' } },
+      defaultValue: 'high',
+    });
+  });
+
   test('empty arrays use contextual string-list evidence', () => {
     expect(
       applySettingRule({

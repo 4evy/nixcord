@@ -22,6 +22,69 @@ const parseEquicord = () => (equicordPromise ??= parsePlugins(EQUICORD_PATH));
 
 const ENTRY_GLOBS = ['*/index.{ts,tsx}', '_core/*.{ts,tsx}'];
 const SETTING_OMISSION_DIAGNOSTICS = new Set(['component-ui-only']);
+const UPSTREAM_PARSE_TIMEOUT = 120_000;
+
+const assertNormalizedSettingSemantics = (plugins: ParsedPluginsResult['vencordPlugins']): void => {
+  const visit = (settings: (typeof plugins)[string]['settings'], parentPath: string): void => {
+    for (const [name, setting] of Object.entries(settings)) {
+      const path = `${parentPath}.${name}`;
+      if ('settings' in setting) {
+        visit(setting.settings, path);
+        continue;
+      }
+      const value = setting.default;
+      if (setting.type.kind === 'enum') {
+        expect(setting.type.values.length, `${path} has an empty enum domain`).toBeGreaterThan(0);
+        expect(new Set(setting.type.values).size, `${path} has duplicate enum values`).toBe(
+          setting.type.values.length
+        );
+        if (value !== undefined)
+          expect(
+            setting.type.values.some((candidate) => Object.is(candidate, value)),
+            `${path} has a default outside its enum domain`
+          ).toBe(true);
+        continue;
+      }
+      if (value === undefined) continue;
+      switch (setting.type.kind) {
+        case 'boolean':
+          expect(typeof value, `${path} has a non-boolean default`).toBe('boolean');
+          break;
+        case 'string':
+          expect(
+            typeof value === 'string' || (setting.type.nullable && value === null),
+            `${path} has a default incompatible with its string type`
+          ).toBe(true);
+          break;
+        case 'integer':
+          expect(
+            (typeof value === 'number' && Number.isInteger(value)) ||
+              (typeof value === 'string' && /^[0-9]+$/.test(value)),
+            `${path} has a non-integral default`
+          ).toBe(true);
+          break;
+        case 'float':
+          expect(
+            typeof value === 'number' && Number.isFinite(value),
+            `${path} has a non-number default`
+          ).toBe(true);
+          break;
+        case 'attrs':
+          expect(
+            (setting.type.nullable && value === null) ||
+              (typeof value === 'object' && value !== null && !Array.isArray(value)),
+            `${path} has a default incompatible with its attribute-set type`
+          ).toBe(true);
+          break;
+        case 'list':
+          expect(Array.isArray(value), `${path} has a non-list default`).toBe(true);
+          break;
+      }
+    }
+  };
+
+  for (const [name, plugin] of Object.entries(plugins)) visit(plugin.settings, name);
+};
 
 const expectedEntryIds = async (sourceRoot: string, pluginRoot: string): Promise<string[]> =>
   (await fg(ENTRY_GLOBS, { cwd: join(sourceRoot, pluginRoot), onlyFiles: true }))
@@ -143,6 +206,28 @@ const auditSettingCoverage = async (
             missing.push(`${owner.plugin.name}.${key}`);
       }
 
+      if (name === 'definePlugin') {
+        const pluginObject = call.getArguments()[0]?.asKind(SyntaxKind.ObjectLiteralExpression);
+        const optionsNode = pluginObject
+          ?.getProperty('options')
+          ?.asKind(SyntaxKind.PropertyAssignment)
+          ?.getInitializer();
+        if (!optionsNode) continue;
+        const keys = new Set<string>();
+        const result = evaluator.evaluate(optionsNode);
+        if (result.known && result.value && typeof result.value === 'object')
+          for (const key of Object.keys(result.value)) keys.add(key);
+        const object = optionsNode.asKind(SyntaxKind.ObjectLiteralExpression);
+        for (const property of object?.getProperties() ?? []) {
+          if (!property.isKind(SyntaxKind.PropertyAssignment)) continue;
+          const key = propertyName(property.getNameNode(), evaluator);
+          if (key) keys.add(key);
+        }
+        for (const key of keys)
+          if (!(key in owner.plugin.settings) && !hasOmissionDiagnostic(key))
+            missing.push(`${owner.plugin.name}.${key}`);
+      }
+
       const property = expression.asKind(SyntaxKind.PropertyAccessExpression);
       if (property?.getName() === 'withPrivateSettings') {
         const literal = call.getTypeArguments()[0]?.asKind(SyntaxKind.TypeLiteral);
@@ -165,11 +250,12 @@ describe.skipIf(!existsSync(VENCORD_PATH))('pinned Vencord source', () => {
 
   beforeAll(async () => {
     result = await parseVencord();
-  }, 60_000);
+  }, UPSTREAM_PARSE_TIMEOUT);
 
   test('parses the complete plugin tree into the public result schema', () => {
     expect(ParsedPluginsResultSchema.safeParse(result).success).toBe(true);
     expect(Object.keys(result.vencordPlugins).length).toBeGreaterThan(150);
+    assertNormalizedSettingSemantics(result.vencordPlugins);
   });
 
   test('covers every upstream Vencord plugin entry and declared setting', async () => {
@@ -232,12 +318,14 @@ describe.skipIf(!existsSync(EQUICORD_PATH))('pinned Equicord source', () => {
 
   beforeAll(async () => {
     result = await parseEquicord();
-  }, 60_000);
+  }, UPSTREAM_PARSE_TIMEOUT);
 
   test('parses both inherited and Equicord-only plugin trees', () => {
     expect(ParsedPluginsResultSchema.safeParse(result).success).toBe(true);
     expect(Object.keys(result.vencordPlugins).length).toBeGreaterThan(150);
     expect(Object.keys(result.equicordPlugins).length).toBeGreaterThan(190);
+    assertNormalizedSettingSemantics(result.vencordPlugins);
+    assertNormalizedSettingSemantics(result.equicordPlugins);
   });
 
   test('handles Equicord generated, imported, and nested defaults', () => {
@@ -308,6 +396,18 @@ describe.skipIf(!existsSync(EQUICORD_PATH))('pinned Equicord source', () => {
       type: { kind: 'string', nullable: true },
       default: null,
     });
+    expect(result.equicordPlugins.FileUpload?.settings.serviceType).toMatchObject({
+      type: { kind: 'enum' },
+    });
+    expect(
+      (result.equicordPlugins.FileUpload?.settings.serviceType as PluginSetting).type
+    ).toMatchObject({ values: expect.arrayContaining(['0x0']) });
+    expect(result.equicordPlugins.MusicControls?.settings.translateTo).toMatchObject({
+      type: { kind: 'enum' },
+    });
+    expect(
+      (result.equicordPlugins.MusicControls?.settings.translateTo as PluginSetting).type
+    ).toMatchObject({ values: expect.arrayContaining(['auto', 'en', 'ja']) });
     expect(result.vencordPlugins.FavoriteEmojiFirst?.settings).not.toHaveProperty('aliases');
     expect(result.vencordPlugins.FavoriteEmojiFirst?.settings).not.toHaveProperty('aliasMap');
     expect(result.equicordPlugins.KeywordNotify?.settings).not.toHaveProperty('keywords');
