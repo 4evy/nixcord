@@ -60,4 +60,23 @@ describe('declarative setting rules', () => {
       })
     ).toMatchObject({ type: { kind: 'list', element: 'string' }, defaultValue: [] });
   });
+
+  test('empty arrays default to attribute lists when their element type is not string', () => {
+    expect(
+      applySettingRule({
+        hasDefault: true,
+        defaultValue: [],
+        options: [],
+        contextualType: 'Array<KeywordEntry>',
+      })
+    ).toMatchObject({ type: { kind: 'list', element: 'attrs' }, defaultValue: [] });
+
+    expect(
+      applySettingRule({
+        hasDefault: true,
+        defaultValue: [],
+        options: [],
+      })
+    ).toMatchObject({ type: { kind: 'list', element: 'attrs' }, defaultValue: [] });
+  });
 });
