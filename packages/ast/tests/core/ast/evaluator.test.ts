@@ -99,4 +99,26 @@ describe('StaticEvaluator', () => {
     );
     expect(budget).toMatchObject({ known: false, reason: 'evaluation operation limit exceeded' });
   });
+
+  test('keeps computed property evaluation inside the active cycle and depth budgets', () => {
+    const result = evaluateInitializer('const result = { [result]: 1 };');
+    expect(result).toMatchObject({ known: false, reason: 'cyclic expression dependency' });
+  });
+
+  test('charges Array.from output against the operation budget before allocating it', () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const source = project.createSourceFile(
+      '/array-from-budget.ts',
+      'const result = Array.from({ length: 100_000 });'
+    );
+    const initializer = source.getVariableDeclarationOrThrow('result').getInitializerOrThrow();
+    const result = new StaticEvaluator(project.getTypeChecker(), {
+      maxOperations: 20,
+    }).evaluate(initializer);
+
+    expect(result).toMatchObject({
+      known: false,
+      reason: 'evaluation operation limit exceeded',
+    });
+  });
 });
