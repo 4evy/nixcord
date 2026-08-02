@@ -1,1 +1,0 @@
-const x = ActivityType.STREAMING;

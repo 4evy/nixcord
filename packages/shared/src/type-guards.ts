@@ -5,13 +5,6 @@ export const isNull = (x: unknown): x is null => x === null;
 export const isArray = Array.isArray;
 export const isObject = (x: unknown): x is object =>
   typeof x === 'object' && x !== null && !isArray(x);
-export const isNonNullObject = (x: unknown): x is object & { [k: string]: unknown } =>
-  typeof x === 'object' && x !== null && !isArray(x);
-
-export const isStringOrNumber = (x: unknown): x is string | number => isString(x) || isNumber(x);
-export const isPrimitive = (x: unknown): x is string | number | boolean =>
-  isString(x) || isNumber(x) || isBoolean(x);
-
 export const filterNullish = <T extends Record<string, unknown>>(obj: T): T =>
   Object.fromEntries(Object.entries(obj).filter(([, v]) => v != null)) as T;
 
