@@ -280,6 +280,8 @@ async function runSandboxed(payload: RunnerPayload, execute: SliceExecutor): Pro
   }
 }
 
+process.stdout.write('__NIXCORD_SLICE_READY__\n');
+
 let input = '';
 process.stdin.setEncoding('utf8');
 for await (const chunk of process.stdin) input += chunk;
