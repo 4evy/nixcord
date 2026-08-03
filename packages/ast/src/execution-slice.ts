@@ -568,6 +568,8 @@ export async function executeComponentSlice(
     settingKey: options.settingKey,
     maxTraceEvents,
   });
+  const readyMarker = Buffer.from('__NIXCORD_SLICE_READY__\n');
+  const startupTimeoutMs = 30_000;
 
   return await new Promise<SliceExecutionResult>((resolveResult) => {
     const child = spawn(
@@ -583,10 +585,15 @@ export async function executeComponentSlice(
     const stderr: Buffer[] = [];
     let outputBytes = 0;
     let settled = false;
+    let ready = false;
+    let readyBuffer = Buffer.alloc(0);
+    let executionTimer: ReturnType<typeof setTimeout> | undefined;
+    let startupTimer: ReturnType<typeof setTimeout> | undefined;
     const finish = (result: SliceExecutionResult) => {
       if (settled) return;
       settled = true;
-      clearTimeout(timer);
+      if (executionTimer) clearTimeout(executionTimer);
+      if (startupTimer) clearTimeout(startupTimer);
       resolveResult(result);
     };
     const collect = (target: Buffer[], chunk: Buffer) => {
@@ -603,7 +610,44 @@ export async function executeComponentSlice(
       }
       target.push(chunk);
     };
-    child.stdout.on('data', (chunk: Buffer) => collect(stdout, chunk));
+    const startExecution = () => {
+      ready = true;
+      if (startupTimer) clearTimeout(startupTimer);
+      executionTimer = setTimeout(() => {
+        child.kill('SIGKILL');
+        finish({
+          ok: false,
+          code: 'execution-timeout',
+          message: `slice exceeded ${timeoutMs}ms`,
+          evidence: slice.evidence,
+        });
+      }, timeoutMs);
+      child.stdin.end(payload);
+    };
+    child.stdout.on('data', (chunk: Buffer) => {
+      if (ready) {
+        collect(stdout, chunk);
+        return;
+      }
+      readyBuffer = Buffer.concat([readyBuffer, chunk]);
+      if (readyBuffer.byteLength > maxOutputBytes) {
+        child.kill('SIGKILL');
+        finish({
+          ok: false,
+          code: 'execution-limit',
+          message: `slice output exceeded ${maxOutputBytes} bytes`,
+          evidence: slice.evidence,
+        });
+        return;
+      }
+      const markerIndex = readyBuffer.indexOf(readyMarker);
+      if (markerIndex < 0) return;
+      const responseStart = markerIndex + readyMarker.byteLength;
+      const response = readyBuffer.subarray(responseStart);
+      readyBuffer = Buffer.alloc(0);
+      if (response.byteLength > 0) collect(stdout, response);
+      startExecution();
+    });
     child.stderr.on('data', (chunk: Buffer) => collect(stderr, chunk));
     child.on('error', (error) =>
       finish({
@@ -638,15 +682,17 @@ export async function executeComponentSlice(
         });
       }
     });
-    const timer = setTimeout(() => {
+    // Loading Node and the isolated runner can be slow on cold or constrained
+    // builders. Start the caller-provided execution budget only after the
+    // runner is ready to evaluate the dependency slice.
+    startupTimer = setTimeout(() => {
       child.kill('SIGKILL');
       finish({
         ok: false,
         code: 'execution-timeout',
-        message: `slice exceeded ${timeoutMs}ms`,
+        message: `slice runner failed to start within ${startupTimeoutMs}ms`,
         evidence: slice.evidence,
       });
-    }, timeoutMs);
-    child.stdin.end(payload);
+    }, startupTimeoutMs);
   });
 }
