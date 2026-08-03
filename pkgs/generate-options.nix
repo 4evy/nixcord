@@ -11,9 +11,9 @@
 }:
 let
   nodeModulesHashes = {
-    x86_64-linux = "sha256-CTZQNhmEfWwx71L+oHNn5JaJyPjw6lwbYW//nSN1JK8=";
-    aarch64-linux = "sha256-pM26PHKtspng5WkcdX+B6xew9MqTa4hbpHvrsVt1WQc=";
-    aarch64-darwin = "sha256-VCrdJiRQp1cSCRsgvjg4x8wg/wd0vjtbt2o/JZIFOkk=";
+    x86_64-linux = "sha256-eHGpf9/Ib6a+UDbFzYTPYC/j+jqypKkvAB/qFWq2GZ0=";
+    aarch64-linux = "sha256-nmKq/2soonSq2+qvzbWfHeqv2SEL5nWdCQKJUBtMbV8=";
+    aarch64-darwin = "sha256-rTYjE7KJc7RbjmcztTthSgl7tY8AbZy6HpxMgHdcbQg=";
   };
   nodeModulesHash =
     nodeModulesHashes.${stdenvNoCC.hostPlatform.system}
