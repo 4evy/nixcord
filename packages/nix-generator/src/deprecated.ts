@@ -132,6 +132,21 @@ export async function updateDeprecatedPlugins(
     : { renames: {}, removals: {}, settingRenames: {} };
   const normalize = normalizePluginName ?? ((n: string) => n);
 
+  // Prune stale persisted entries before merging migrations discovered in the
+  // current sources. An upstream migratePluginSettings() call is intentionally
+  // dated when it is observed, so an entry that is still declared upstream
+  // must be able to replace its expired persisted copy in the same run.
+  for (const [name, entry] of Object.entries(existing.renames)) {
+    if (!entry.date || isExpired(entry.date, RENAME_EXPIRY_DAYS)) {
+      delete existing.renames[name];
+    }
+  }
+  for (const [name, entry] of Object.entries(existing.removals)) {
+    if (isExpired(entry.date, REMOVAL_EXPIRY_DAYS)) {
+      delete existing.removals[name];
+    }
+  }
+
   // Merge new renames (skip dot-named plugins, don't overwrite existing entries)
   for (const rename of migrations.renames) {
     if (!isValidPluginName(rename.oldName) || !isValidPluginName(rename.newName)) continue;
@@ -168,25 +183,6 @@ export async function updateDeprecatedPlugins(
     }
   }
   removeSelfRenames(existing.renames, normalize);
-
-  // Remove permanent (dateless) renames - they predate the date system and are well past expiry
-  for (const [name, entry] of Object.entries(existing.renames)) {
-    if (!entry.date) {
-      delete existing.renames[name];
-    }
-  }
-
-  // Prune expired dated entries
-  for (const [name, entry] of Object.entries(existing.renames)) {
-    if (entry.date && isExpired(entry.date, RENAME_EXPIRY_DAYS)) {
-      delete existing.renames[name];
-    }
-  }
-  for (const [name, entry] of Object.entries(existing.removals)) {
-    if (isExpired(entry.date, REMOVAL_EXPIRY_DAYS)) {
-      delete existing.removals[name];
-    }
-  }
 
   // Don't include removals for plugins that are also in renames (they were renamed, not deleted)
   // Use case-insensitive comparison since git may report different casings for the same plugin

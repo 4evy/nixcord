@@ -211,6 +211,36 @@ describe('generateMigrationsData()', () => {
 });
 
 describe('updateDeprecatedPlugins()', () => {
+  test('refreshes an expired rename that is still declared by current sources', async () => {
+    await using fixture = await createFixture();
+    await fixture.writeJson('deprecated.json', {
+      renames: {
+        OldPlugin: { to: 'NewPlugin', date: '2000-01-01' },
+      },
+      removals: {},
+      settingRenames: {},
+    });
+
+    const result = await updateDeprecatedPlugins(
+      {
+        renames: [
+          {
+            oldName: 'OldPlugin',
+            newName: 'NewPlugin',
+            commitDate: '2999-01-01T00:00:00.000Z',
+            commitHash: 'source-migration',
+          },
+        ],
+        deletions: [],
+      },
+      fixture.path,
+      false,
+      { info: () => {}, warn: () => {}, error: () => {}, success: () => {}, debug: () => {} }
+    );
+
+    expect(result.renames.OldPlugin).toEqual({ to: 'NewPlugin', date: '2999-01-01' });
+  });
+
   test('canonicalizes rename targets to active plugin option names', async () => {
     await using fixture = await createFixture();
     await fixture.writeJson('deprecated.json', {
