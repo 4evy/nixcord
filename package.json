@@ -32,7 +32,7 @@
     "@types/node": "26.1.2",
     "@typescript/native": "npm:typescript@7.0.2",
     "equicord": "github:Equicord/Equicord#90b40c3bfb2de9b510545962bdbc05bc34405708",
-    "fallow": "3.10.0",
+    "fallow": "3.11.0",
     "renovate": "44.6.0",
     "typescript": "npm:@typescript/typescript6@6.0.2",
     "vencord": "github:Vendicated/Vencord#c84389de5a964f15fa37628b393c4d1a9ca80810",
