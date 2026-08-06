@@ -1297,42 +1297,6 @@
       }
     }
   },
-  "replaceGoogleSearch": {
-    "description": "Replaces the Google search with different Engine(s) (Shared between Vencord and Equicord)",
-    "settings": {
-      "customEngineName": {
-        "type": "types.nullOr types.str",
-        "default": null,
-        "description": "Name of the custom search engine",
-        "example": "Google"
-      },
-      "customEngineUrl": {
-        "type": "types.nullOr types.str",
-        "default": null,
-        "description": "The URL of your Engine",
-        "example": "https://google.com/search?q="
-      },
-      "replacementEngine": {
-        "type": "types.enum",
-        "enumValues": [
-          "off",
-          "custom",
-          "Google",
-          "DuckDuckGo",
-          "Brave",
-          "Bing",
-          "Yahoo",
-          "Yandex",
-          "GitHub",
-          "Reddit",
-          "Wikipedia",
-          "Startpage"
-        ],
-        "default": "off",
-        "description": "Replace with a specific search engine instead of adding a menu"
-      }
-    }
-  },
   "replyTimestamp": {
     "description": "Shows a timestamp on replied-message previews (Shared between Vencord and Equicord)",
     "settings": {}

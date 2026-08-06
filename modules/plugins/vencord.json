@@ -493,6 +493,43 @@
       }
     }
   },
+  "replaceGoogleSearch": {
+    "description": "Replaces the Google search with different Engine(s) (Vencord-only)",
+    "settings": {
+      "customEngineName": {
+        "type": "types.nullOr types.str",
+        "default": null,
+        "description": "Name of the custom search engine",
+        "example": "Google"
+      },
+      "customEngineUrl": {
+        "type": "types.nullOr types.str",
+        "default": null,
+        "description": "The URL of your Engine",
+        "example": "https://google.com/search?q="
+      },
+      "replacementEngine": {
+        "type": "types.enum",
+        "enumValues": [
+          "off",
+          "custom",
+          "Google",
+          "DuckDuckGo",
+          "Brave",
+          "Bing",
+          "Yahoo",
+          "Yandex",
+          "GitHub",
+          "Reddit",
+          "Wikipedia",
+          "Startpage",
+          "Kagi"
+        ],
+        "default": "off",
+        "description": "Replace with a specific search engine instead of adding a menu"
+      }
+    }
+  },
   "reviewDb": {
     "description": "Review other users (Adds a new settings to profiles) (Vencord-only)",
     "settings": {
