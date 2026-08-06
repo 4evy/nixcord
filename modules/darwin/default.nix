@@ -74,6 +74,7 @@ in
             ${lib.optionalString cfg.discord.enable (mkDir cfg.discord.configDir)}
             ${lib.optionalString cfg.vesktop.enable (mkDir cfg.vesktop.configDir)}
             ${lib.optionalString cfg.equibop.enable (mkDir cfg.equibop.configDir)}
+            ${lib.optionalString cfg.goofcord.enable (mkDir cfg.goofcord.configDir)}
             ${lib.optionalString cfg.dorion.enable (mkDir cfg.dorion.configDir)}
             ${lib.optionalString cfg.legcord.enable (mkDir cfg.legcord.configDir)}
 

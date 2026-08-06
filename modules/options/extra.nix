@@ -16,6 +16,11 @@ in
       default = { };
       description = "Additional config merged into `programs.nixcord.config` for Equibop only.";
     };
+    goofcordConfig = mkOption {
+      type = jsonAttrs;
+      default = { };
+      description = "Additional config merged into `programs.nixcord.config` for GoofCord only.";
+    };
     vencordConfig = mkOption {
       type = jsonAttrs;
       default = { };

@@ -95,13 +95,17 @@ let
 
   mkVencordCfg = mkVencordCfgInner "";
 
-  # mkFinalPackages :: { cfg, vencord, equicord } -> { discord, vesktop, equibop, dorion }
+  # mkFinalPackages :: { cfg, vencord, equicord } -> { discord, vesktop, equibop, goofcord, dorion, legcord }
   # Builds the final patched packages for each client.
   mkFinalPackages =
     {
       cfg,
       vencord,
       equicord,
+      goofcordBrowserBuild,
+      goofcordSettingsBootstrap,
+      goofcordQuickCss,
+      goofcordThemes,
     }:
     let
       discordCommandLineArgs = lib.lists.unique (
@@ -185,6 +189,27 @@ let
             })
         else
           null;
+
+      goofcord =
+        if cfg.goofcord.package == null || !cfg.goofcord.enable then
+          cfg.goofcord.package
+        else
+          cfg.goofcord.package.overrideAttrs (old: {
+            postInstall = (old.postInstall or "") + ''
+              nixcordSupportDir="$out/share/nixcord/goofcord"
+              mkdir -p "$nixcordSupportDir"
+
+              cat assets/preVencord.js ${lib.escapeShellArg goofcordSettingsBootstrap} \
+                > "$nixcordSupportDir/preVencord.js"
+              cp assets/postVencord.js "$nixcordSupportDir/postVencord.js"
+              cp ${lib.escapeShellArg "${goofcordBrowserBuild}/browser.js"} \
+                "$nixcordSupportDir/clientMod.js"
+              cp ${lib.escapeShellArg "${goofcordBrowserBuild}/browser.css"} \
+                "$nixcordSupportDir/clientMod.css"
+              cp ${lib.escapeShellArg goofcordQuickCss} "$nixcordSupportDir/quickCss.css"
+              cp ${lib.escapeShellArg goofcordThemes} "$nixcordSupportDir/themes.css"
+            '';
+          });
 
       dorion = cfg.dorion.package;
 

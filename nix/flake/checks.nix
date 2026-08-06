@@ -33,6 +33,7 @@
       };
       nonFlakeInterface =
         assert nonFlake.packages.vencord.drvPath == packages.vencord.drvPath;
+        assert nonFlake.packages.goofcord.drvPath == packages.goofcord.drvPath;
         assert nonFlake ? homeModules;
         assert nonFlake ? nixosModules;
         assert nonFlake ? darwinModules;

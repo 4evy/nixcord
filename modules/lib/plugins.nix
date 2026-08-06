@@ -159,12 +159,20 @@ let
         cfg.equicordConfig
         cfg.vesktopConfig
         cfg.equibopConfig
+        cfg.goofcordConfig
       ];
       wrongEquicordPlugins = collectEnabledEquicordOnlyPlugins allPlugins;
       wrongVencordPlugins = collectEnabledVencordOnlyPlugins allPlugins;
-      hasVencordClient = cfg.discord.vencord.enable || cfg.vesktop.enable || cfg.legcord.vencord.enable;
+      hasVencordClient =
+        cfg.discord.vencord.enable
+        || cfg.vesktop.enable
+        || cfg.legcord.vencord.enable
+        || (cfg.goofcord.enable && cfg.goofcord.clientMod == "vencord");
       hasEquicordClient =
-        cfg.discord.equicord.enable || cfg.equibop.enable || cfg.legcord.equicord.enable;
+        cfg.discord.equicord.enable
+        || cfg.equibop.enable
+        || cfg.legcord.equicord.enable
+        || (cfg.goofcord.enable && cfg.goofcord.clientMod == "equicord");
     in
     [
       {
@@ -174,6 +182,25 @@ let
       {
         assertion = !(cfg.legcord.vencord.enable && cfg.legcord.equicord.enable);
         message = "programs.nixcord.legcord.vencord.enable and programs.nixcord.legcord.equicord.enable cannot both be enabled at the same time. They are mutually exclusive.";
+      }
+      {
+        assertion = !cfg.goofcord.enable || cfg.goofcord.package != null;
+        message = "programs.nixcord.goofcord.enable requires programs.nixcord.goofcord.package to be non-null.";
+      }
+      {
+        assertion =
+          !cfg.goofcord.enable
+          || !(cfg.goofcord.settings ? assets)
+          || builtins.isAttrs cfg.goofcord.settings.assets;
+        message = "programs.nixcord.goofcord.settings.assets must be an attribute set. Use programs.nixcord.goofcord.extraAssets for additional asset paths or URLs.";
+      }
+      {
+        assertion =
+          !cfg.goofcord.enable
+          || !(cfg.goofcord.settings ? assets)
+          || !builtins.isAttrs cfg.goofcord.settings.assets
+          || builtins.all builtins.isString (builtins.attrValues cfg.goofcord.settings.assets);
+        message = "programs.nixcord.goofcord.settings.assets values must be strings containing local paths or URLs.";
       }
       {
         assertion = !(hasVencordClient && !hasEquicordClient) || wrongEquicordPlugins == [ ];

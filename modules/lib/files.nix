@@ -14,12 +14,15 @@ let
         dorionConfig
         legcordSettings
         legcordWeb
+        goofcordSettings
+        goofcordSupport
         ;
       inherit (cfg)
         configDir
         discord
         dorion
         equibop
+        goofcord
         legcord
         vesktop
         ;
@@ -151,6 +154,54 @@ let
           ]
       ) legcordWebMods;
 
+      goofcordAssetSpecs =
+        let
+          enabled = goofcord.enable && goofcordSupport != null;
+          supportPath = path: if goofcordSupport != null then "${goofcordSupport}/${path}" else null;
+        in
+        map
+          (
+            asset:
+            copy {
+              enable = enabled;
+              name = "goofcord-${asset.name}";
+              src = asset.src;
+              dest = "${goofcord.configDir}/assets/${asset.dest}";
+            }
+          )
+          [
+            {
+              name = "pre-vencord";
+              src = supportPath "preVencord.js";
+              dest = "NixcordPreVencord.js";
+            }
+            {
+              name = "post-vencord";
+              src = supportPath "postVencord.js";
+              dest = "NixcordPostVencord.js";
+            }
+            {
+              name = "client-mod-js";
+              src = supportPath "clientMod.js";
+              dest = "NixcordClientMod.js";
+            }
+            {
+              name = "client-mod-css";
+              src = supportPath "clientMod.css";
+              dest = "NixcordClientModStyles.css";
+            }
+            {
+              name = "quick-css";
+              src = supportPath "quickCss.css";
+              dest = "NixcordQuickCSS.css";
+            }
+            {
+              name = "themes";
+              src = supportPath "themes.css";
+              dest = "NixcordThemes.css";
+            }
+          ];
+
       themeClients = [
         {
           name = "vesktop";
@@ -204,6 +255,13 @@ let
           dest = "${legcord.configDir}/storage/settings.json";
           writable = true;
         })
+        (copy {
+          name = "goofcord-settings";
+          enable = goofcord.enable && goofcordSettings != null;
+          src = goofcordSettings;
+          dest = "${goofcord.configDir}/settings.json";
+          writable = true;
+        })
       ];
 
       fileSpecs =
@@ -211,6 +269,7 @@ let
         ++ discordModSettingsSpecs
         ++ lib.concatMap mkSettingsSpecs desktopClients
         ++ legcordWebSpecs
+        ++ goofcordAssetSpecs
         ++ themeSpecs;
     in
     lib.pipe fileSpecs [
@@ -234,6 +293,7 @@ let
         discord
         dorion
         equibop
+        goofcord
         legcord
         vesktop
         ;
@@ -251,6 +311,10 @@ let
         {
           enable = equibop.enable && finalPackages.equibop != null && equibop.installPackage;
           package = finalPackages.equibop;
+        }
+        {
+          enable = goofcord.enable && finalPackages.goofcord != null && goofcord.installPackage;
+          package = finalPackages.goofcord;
         }
         {
           enable = dorion.enable && dorion.installPackage;

@@ -2,12 +2,14 @@
 {
   inputs,
   lib,
+  pkgs,
   scenario,
   ...
 }@args:
 let
   pluginRoot = args.pluginRoot or ../../../plugins;
   matrix = import ./scenarios.nix { inherit lib pluginRoot; };
+  goofcordPackage = pkgs.runCommandLocal "nixcord-regression-goofcord" { } "mkdir $out";
 in
 {
   imports = [
@@ -22,7 +24,10 @@ in
     home = "/Users/demo";
   };
 
-  programs.nixcord.user = "demo";
+  programs.nixcord = {
+    user = "demo";
+    goofcord.package = lib.mkIf matrix.scenarios.${scenario}.expected.goofcord goofcordPackage;
+  };
 
   system.stateVersion = 6;
 }

@@ -8,6 +8,7 @@
 
     # Or these
     vesktop.enable = true;
+    # goofcord.enable = true;
     # dorion.enable = true;
     # legcord.enable = true;
 

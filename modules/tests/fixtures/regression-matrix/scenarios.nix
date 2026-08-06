@@ -33,10 +33,12 @@ let
       hasVencordClient =
         expected.discordMod == "vencord"
         || expected.vesktop
+        || expected.goofcordMod == "vencord"
         || builtins.elem "vencord" expected.legcordBundles;
       hasEquicordClient =
         expected.discordMod == "equicord"
         || expected.equibop
+        || expected.goofcordMod == "equicord"
         || builtins.elem "equicord" expected.legcordBundles;
     in
     unique (
@@ -145,6 +147,15 @@ let
       };
     };
 
+    goofcord = {
+      installPackage = false;
+      autoscroll.enable = true;
+      settings = {
+        minimizeToTray = true;
+        hardwareAcceleration = true;
+      };
+    };
+
     legcord = {
       installPackage = false;
       settings = {
@@ -197,6 +208,7 @@ let
     equicordConfig.useQuickCss = true;
     vesktopConfig.useQuickCss = true;
     equibopConfig.useQuickCss = true;
+    goofcordConfig.useQuickCss = true;
   };
 
   discordModes = [
@@ -309,14 +321,48 @@ let
         [ "equicord" ]
       ];
 
+  goofcordModes = [
+    {
+      name = "goofcord-off";
+      config.goofcord.enable = false;
+      expected = {
+        goofcord = false;
+        goofcordMod = null;
+      };
+    }
+    {
+      name = "goofcord-vencord";
+      config.goofcord = {
+        enable = true;
+        clientMod = "vencord";
+      };
+      expected = {
+        goofcord = true;
+        goofcordMod = "vencord";
+      };
+    }
+    {
+      name = "goofcord-equicord";
+      config.goofcord = {
+        enable = true;
+        clientMod = "equicord";
+      };
+      expected = {
+        goofcord = true;
+        goofcordMod = "equicord";
+      };
+    }
+  ];
+
   mkScenario =
-    discord: desktop: legcord:
+    discord: desktop: legcord: goofcord:
     let
-      name = "${discord.name}__${desktop.name}__${legcord.name}";
+      name = "${discord.name}__${desktop.name}__${legcord.name}__${goofcord.name}";
       expected = mergeMany [
         discord.expected
         desktop.expected
         legcord.expected
+        goofcord.expected
       ];
       pluginNames = mkPluginNames expected;
       config = mergeMany [
@@ -324,6 +370,7 @@ let
         discord.config
         desktop.config
         legcord.config
+        goofcord.config
         { config.plugins = mkPluginSet pluginNames; }
       ];
     in
@@ -336,12 +383,22 @@ let
       };
     };
 
-  scenarios = builtins.listToAttrs (
+  # Keep the existing client cross-product and cover each GoofCord mod in focused scenarios.
+  baseScenarios = concatMap (
+    discord:
     concatMap (
-      discord:
-      concatMap (desktop: map (legcord: mkScenario discord desktop legcord) legcordModes) desktopCombos
-    ) discordModes
-  );
+      desktop:
+      map (legcord: mkScenario discord desktop legcord (builtins.head goofcordModes)) legcordModes
+    ) desktopCombos
+  ) discordModes;
+
+  goofcordOnlyScenarios = map (
+    goofcord:
+    mkScenario (builtins.head discordModes) (builtins.head desktopCombos) (builtins.head legcordModes)
+      goofcord
+  ) (builtins.tail goofcordModes);
+
+  scenarios = builtins.listToAttrs (baseScenarios ++ goofcordOnlyScenarios);
 in
 {
   inherit scenarios;

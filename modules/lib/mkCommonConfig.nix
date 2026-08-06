@@ -36,6 +36,7 @@ let
     equicordFullConfig
     vesktopFullConfig
     equibopFullConfig
+    goofcordFullConfig
     ;
 
   vencord = applyPostPatch {
@@ -120,9 +121,125 @@ let
     else
       null;
 
+  goofcordCanUseSystemMod = cfg.goofcord.enable && cfg.goofcord.package != null;
+
+  goofcordBrowserBuild =
+    if goofcordCanUseSystemMod then
+      mkBrowserBuild {
+        inherit cfg;
+        pkg =
+          if cfg.goofcord.clientMod == "vencord" then
+            cfg.discord.vencord.package
+          else
+            cfg.discord.equicord.package;
+        browserJsPath =
+          if cfg.goofcord.clientMod == "vencord" then "dist/browser.js" else "dist/browser/browser.js";
+        browserCssPath =
+          if cfg.goofcord.clientMod == "vencord" then "dist/browser.css" else "dist/browser/browser.css";
+      }
+    else
+      null;
+
+  goofcordModSettings = builtins.toJSON (mkVencordCfg goofcordFullConfig);
+
+  goofcordSettingsBootstrapText = ''
+    ;localStorage.setItem(
+      ${
+        builtins.toJSON (
+          if cfg.goofcord.clientMod == "vencord" then "VencordSettings" else "EquicordSettings"
+        )
+      },
+      ${builtins.toJSON goofcordModSettings}
+    );
+  '';
+
+  goofcordSettingsBootstrap = pkgs.writeText "nixcord-goofcord-settings-bootstrap.js" goofcordSettingsBootstrapText;
+
+  enabledGoofcordThemePaths = lib.pipe (goofcordFullConfig.enabledThemes or [ ]) [
+    (map (lib.removeSuffix ".css"))
+    (lib.filter (name: builtins.hasAttr name themes))
+    (map (name: themes.${name}))
+  ];
+
+  goofcordThemeSeparator = pkgs.writeText "nixcord-goofcord-theme-separator" "\n";
+
+  goofcordThemes =
+    if enabledGoofcordThemePaths == [ ] then
+      pkgs.writeText "nixcord-goofcord-themes.css" ""
+    else
+      pkgs.concatText "nixcord-goofcord-themes.css" (
+        lib.intersperse goofcordThemeSeparator enabledGoofcordThemePaths
+      );
+
+  goofcordQuickCss =
+    if isQuickCssUsed cfg.goofcordConfig then
+      quickCss
+    else
+      pkgs.writeText "nixcord-goofcord-quickcss.css" "";
+
   finalPackages = mkFinalPackages {
-    inherit cfg vencord equicord;
+    inherit
+      cfg
+      vencord
+      equicord
+      goofcordBrowserBuild
+      goofcordSettingsBootstrap
+      goofcordQuickCss
+      goofcordThemes
+      ;
   };
+
+  goofcordSupport =
+    if goofcordCanUseSystemMod then "${finalPackages.goofcord}/share/nixcord/goofcord" else null;
+
+  goofcordManagedFiles = [
+    # Assets managed by this module.
+    "NixcordPreVencord.js"
+    "NixcordPostVencord.js"
+    "NixcordClientMod.js"
+    "NixcordClientModStyles.css"
+    "NixcordQuickCSS.css"
+    "NixcordThemes.css"
+
+    # GoofCord's default asset names. Seeding these into managedFiles lets its
+    # asset manager remove stale downloads when adopting an existing profile.
+    "PreVencord.js"
+    "PostVencord.js"
+    "Vencord.js"
+    "VencordStyles.css"
+    "Equicord.js"
+    "EquicordStyles.css"
+  ];
+
+  goofcordSettingsAssets =
+    if builtins.isAttrs (cfg.goofcord.settings.assets or { }) then
+      cfg.goofcord.settings.assets or { }
+    else
+      { };
+
+  goofcordAttrs =
+    cfg.goofcord.settings
+    // lib.optionalAttrs cfg.goofcord.autoscroll.enable { autoscroll = true; }
+    // {
+      assets =
+        goofcordSettingsAssets
+        // cfg.goofcord.extraAssets
+        // lib.optionalAttrs (goofcordSupport != null) {
+          NixcordPreVencord = "${goofcordSupport}/preVencord.js";
+          NixcordPostVencord = "${goofcordSupport}/postVencord.js";
+          NixcordClientMod = "${goofcordSupport}/clientMod.js";
+          NixcordClientModStyles = "${goofcordSupport}/clientMod.css";
+          NixcordQuickCSS = "${goofcordSupport}/quickCss.css";
+          NixcordThemes = "${goofcordSupport}/themes.css";
+        };
+      managedFiles = goofcordManagedFiles;
+    };
+
+  goofcordSettings =
+    if goofcordSupport != null then
+      jsonFormat.generate "nixcord-goofcord-settings.json" goofcordAttrs
+    else
+      null;
 
   packages = {
     inherit vencord equicord;
@@ -131,7 +248,13 @@ let
   };
 
   configs = fullConfigs // {
-    inherit dorionAttrs legcordAttrs;
+    inherit
+      dorionAttrs
+      legcordAttrs
+      goofcordAttrs
+      goofcordModSettings
+      goofcordSettingsBootstrapText
+      ;
   };
 
   files = {
@@ -142,6 +265,10 @@ let
       dorionConfig
       legcordSettings
       legcordWeb
+      goofcordSettings
+      goofcordSupport
+      goofcordQuickCss
+      goofcordThemes
       ;
   };
 

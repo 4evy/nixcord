@@ -189,6 +189,7 @@ supports:
 
 ```sh
 nix-build -A vencord
+nix-build -A goofcord
 nix-build -A docs
 nix-shell
 ```
@@ -205,7 +206,7 @@ pkgsWithNixcord.nixcord.vencord
 
 ## Configuration
 
-You can configure Vencord, Equicord, Vesktop, Dorion, or Legcord
+You can configure Vencord, Equicord, Vesktop, GoofCord, Dorion, or Legcord
 
 **Tip:** Launch your client once manually to look through the plugins list so you know what you
 actually want to enable
@@ -221,6 +222,7 @@ actually want to enable
 
     # Or these
     vesktop.enable = true;
+    # goofcord.enable = true;
     # dorion.enable = true;
     # legcord.enable = true;
 
@@ -279,6 +281,31 @@ Already have Vencord or Equicord configured? The docs include a browser-side
   };
 }
 ```
+
+## GoofCord
+
+[GoofCord](https://github.com/Milkshiift/GoofCord) loads client mods through its asset
+loader. Nixcord overrides the GoofCord package with version-matched
+PreVencord/PostVencord assets, a local Vencord or Equicord browser build, and the
+generated plugin settings:
+
+```nix
+{
+  programs.nixcord.goofcord = {
+    enable = true;
+
+    # Defaults to Vencord; use "equicord" for Equicord's larger plugin set.
+    clientMod = "vencord";
+
+    settings = {
+      minimizeToTray = true;
+      hardwareAcceleration = true;
+    };
+  };
+}
+```
+
+Nixcord also extends the nixpkgs GoofCord package with Apple silicon macOS support
 
 ## Third-Party User Plugins
 

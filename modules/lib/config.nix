@@ -39,6 +39,7 @@ let
     }";
     vesktop.configDir = lib.mkDefault "${basePath}/vesktop";
     equibop.configDir = lib.mkDefault "${basePath}/equibop";
+    goofcord.configDir = lib.mkDefault "${basePath}/goofcord/GoofCord";
     dorion.configDir = lib.mkDefault "${basePath}/dorion";
     legcord.configDir = lib.mkDefault "${basePath}/legcord";
   };
@@ -69,6 +70,12 @@ let
           baseConfig = cfg.config;
           clientConfig = cfg.equibopConfig;
           client = "equicord";
+        };
+        goofcordFullConfig = {
+          inherit (cfg) extraConfig;
+          baseConfig = cfg.config;
+          clientConfig = cfg.goofcordConfig;
+          client = cfg.goofcord.clientMod;
         };
       };
     in

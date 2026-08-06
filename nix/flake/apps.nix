@@ -1,6 +1,7 @@
 {
   perSystem =
     {
+      config,
       pkgs,
       ...
     }:
@@ -24,6 +25,12 @@
           }
         );
         meta.description = "Regenerate nixcord plugin option files";
+      };
+
+      apps.update-goofcord = {
+        type = "app";
+        program = pkgs.lib.getExe config.packages.goofcord.passthru.updateScript;
+        meta.description = "Refresh GoofCord's aarch64-darwin dependency snapshot";
       };
     };
 }

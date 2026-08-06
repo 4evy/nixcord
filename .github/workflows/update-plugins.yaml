@@ -15,6 +15,10 @@ on:
       - "pkgs/generate-options.nix"
       - "pkgs/generate-options/**"
       - "pkgs/scripts/update-fixed-output-hash.sh"
+      - "pkgs/scripts/update-goofcord-darwin-deps.sh"
+      - "pkgs/goofcord.nix"
+      - "modules/lib/core.nix"
+      - "nix/flake/apps.nix"
       - "docs/site.nix"
   schedule:
     - cron: "0 */8 * * *" # Every 8 hours
@@ -135,8 +139,10 @@ jobs:
 
           equicord_version=$(nix eval --raw .#equicord.version)
           vencord_version=$(nix eval --raw .#vencord.version)
-          printf 'Equicord: %s\nVencord: %s\n' \
-            "$equicord_version" "$vencord_version" > plugin-update/commit-body.txt
+          goofcord_version=$(nix eval --raw .#goofcord.version)
+          printf 'Equicord: %s\nVencord: %s\nGoofCord: %s\n' \
+            "$equicord_version" "$vencord_version" "$goofcord_version" \
+            > plugin-update/commit-body.txt
           echo "base-sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
           if [[ ! -s plugin-update/changes.patch ]]; then
@@ -242,6 +248,10 @@ jobs:
             "
           fi
 
+          if [[ "$EXPECTED_SYSTEM" == "aarch64-darwin" ]]; then
+            nix --option system "$EXPECTED_SYSTEM" run .#update-goofcord
+          fi
+
       - name: Build packages and run checks
         env:
           EXPECTED_SYSTEM: ${{ matrix.system }}
@@ -280,6 +290,17 @@ jobs:
             --raw ".#packages.$EXPECTED_SYSTEM.docs.drvPath" >/dev/null 2>&1; then
             docs_hash=$("$hash_updater" get docs/site.nix "$EXPECTED_SYSTEM")
             printf 'docs %s %s\n' "$EXPECTED_SYSTEM" "$docs_hash" >> "$hashes_file"
+          fi
+
+          if [[ "$EXPECTED_SYSTEM" == "aarch64-darwin" ]]; then
+            goofcord_version=$(pkgs/scripts/update-goofcord-darwin-deps.sh get-version)
+            goofcord_hash=$(
+              "$hash_updater" get pkgs/goofcord.nix "$EXPECTED_SYSTEM"
+            )
+            printf 'goofcord_version %s %s\n' \
+              "$EXPECTED_SYSTEM" "$goofcord_version" >> "$hashes_file"
+            printf 'goofcord_hash %s %s\n' \
+              "$EXPECTED_SYSTEM" "$goofcord_hash" >> "$hashes_file"
           fi
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -340,6 +361,13 @@ jobs:
                 docs)
                   target=docs/site.nix
                   ;;
+                goofcord_version)
+                  pkgs/scripts/update-goofcord-darwin-deps.sh set-version "$hash"
+                  continue
+                  ;;
+                goofcord_hash)
+                  target=pkgs/goofcord.nix
+                  ;;
                 *)
                   echo "::error::Unknown dependency hash kind: $kind"
                   exit 1
@@ -362,6 +390,7 @@ jobs:
             pkgs/generate-options.nix
             pkgs/generate-options
             docs/site.nix
+            pkgs/goofcord.nix
             package.json
             bun.lock
             modules/plugins

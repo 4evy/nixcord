@@ -28,9 +28,13 @@ let
   docsPackages = lib.optionalAttrs (builtins.elem pkgs.stdenv.hostPlatform.system docsSystems) {
     docs = docsArtifacts.html;
   };
+  goofcordPackages = lib.optionalAttrs (pkgs ? goofcord) {
+    goofcord = pkgs.callPackage ../pkgs/goofcord.nix { };
+  };
 in
 discordPackages
 // docsPackages
+// goofcordPackages
 // {
   inherit openasar;
 

@@ -4,6 +4,7 @@ import {
   configurationExample,
   darwinExample,
   flakeExample,
+  goofcordExample,
   homeManagerExample,
   introductionToc,
   legcordExample,
@@ -19,7 +20,7 @@ import TitlePage from './TitlePage.svelte';
   <TitlePage id="sec-introduction" title="Introduction" level={2} />
   <TableOfContents items={introductionToc} />
 
-  <p class={paragraphClass}>Nixcord lets you manage <a class={`link ${linkClass}`} href="https://github.com/Vendicated/Vencord">Vencord</a>, <a class={`link ${linkClass}`} href="https://github.com/Equicord/Equicord">Equicord</a>, and clients like <a class={`link ${linkClass}`} href="https://github.com/Vencord/Vesktop">Vesktop</a>, <a class={`link ${linkClass}`} href="https://github.com/SpikeHD/Dorion">Dorion</a>, and <a class={`link ${linkClass}`} href="https://github.com/Legcord/Legcord">Legcord</a> declaratively</p>
+  <p class={paragraphClass}>Nixcord lets you manage <a class={`link ${linkClass}`} href="https://github.com/Vendicated/Vencord">Vencord</a>, <a class={`link ${linkClass}`} href="https://github.com/Equicord/Equicord">Equicord</a>, and clients like <a class={`link ${linkClass}`} href="https://github.com/Vencord/Vesktop">Vesktop</a>, <a class={`link ${linkClass}`} href="https://github.com/Milkshiift/GoofCord">GoofCord</a>, <a class={`link ${linkClass}`} href="https://github.com/SpikeHD/Dorion">Dorion</a>, and <a class={`link ${linkClass}`} href="https://github.com/Legcord/Legcord">Legcord</a> declaratively</p>
   <p class={paragraphClass}>Instead of configuring your plugins via the UI (and losing them when you reinstall), you define everything in Nix. It handles patching the client, injecting the config, and keeping your setup reproducible</p>
 
   <aside class="callout my-4 rounded-r-sm border-l-4 border-[#167cb9] bg-sky-50 px-4 py-3 text-neutral-900 dark:bg-[#142633] dark:text-neutral-100" aria-label="Heads up">
@@ -30,6 +31,7 @@ import TitlePage from './TitlePage.svelte';
   <ul class="my-3 ml-8 list-disc">
     <li class="my-1"><p class={paragraphClass}><strong>Standard Discord</strong> (Stable, PTB, Canary, Dev), with Vencord or Equicord</p></li>
     <li class="my-1"><p class={paragraphClass}><strong>Vesktop</strong> &amp; <strong>Equibop</strong></p></li>
+    <li class="my-1"><p class={paragraphClass}><strong>GoofCord</strong></p></li>
     <li class="my-1"><p class={paragraphClass}><strong>Dorion</strong></p></li>
     <li class="my-1"><p class={paragraphClass}><strong>Legcord</strong></p></li>
   </ul>
@@ -60,6 +62,15 @@ import TitlePage from './TitlePage.svelte';
     <TitlePage id="sec-legcord" title="Legcord" level={3} />
     <p class={paragraphClass}><a class={`link ${linkClass}`} href="https://github.com/Legcord/Legcord">Legcord</a> is a lightweight Discord client. Enable it with:</p>
     <CodeBlock code={legcordExample} />
+  </section>
+
+  <section class={sectionClass} aria-labelledby="sec-goofcord">
+    <TitlePage id="sec-goofcord" title="GoofCord" level={3} />
+    <p class={paragraphClass}><a class={`link ${linkClass}`} href="https://github.com/Milkshiift/GoofCord">GoofCord</a> loads client mods through its asset loader. Nixcord overrides the GoofCord package with version-matched PreVencord and PostVencord assets, a local Vencord or Equicord browser build, and declarative plugin settings:</p>
+    <CodeBlock code={goofcordExample} />
+    <aside class="callout my-4 rounded-r-sm border-l-4 border-neutral-400 bg-neutral-50 px-4 py-3 text-neutral-900 dark:border-neutral-500 dark:bg-[#171d24] dark:text-neutral-100" aria-label="GoofCord platform note">
+      <p class="m-0 max-w-[72ch]">Nixcord extends the nixpkgs GoofCord package with Apple silicon macOS support.</p>
+    </aside>
   </section>
 
   <section class={sectionClass} aria-labelledby="sec-user-plugins">

@@ -64,13 +64,21 @@ let
             "/srv/config/testuser/discord"
           else
             "/srv/home/testuser/Library/Application Support/discord"
+        )
+      &&
+        hm.goofcord.configDir == (
+          if pkgs.stdenvNoCC.isLinux then
+            "/srv/config/testuser/goofcord/GoofCord"
+          else
+            "/srv/home/testuser/Library/Application Support/goofcord/GoofCord"
         );
   }
   // lib.optionalAttrs pkgs.stdenvNoCC.isLinux {
     "NixOS paths come from the configured user home" =
       nixos.homeDirectory == "/srv/home/testuser"
       && nixos.xdgConfigHome == "/srv/home/testuser/.config"
-      && nixos.discord.configDir == "/srv/home/testuser/.config/discord";
+      && nixos.discord.configDir == "/srv/home/testuser/.config/discord"
+      && nixos.goofcord.configDir == "/srv/home/testuser/.config/goofcord/GoofCord";
 
     "NixOS keeps supporting existing unmanaged users" =
       nixosUnmanaged.homeDirectory == "/home/existing-user"
@@ -80,7 +88,10 @@ let
     "nix-darwin paths come from the configured user home" =
       darwin.homeDirectory == "/Volumes/Users/testuser"
       && darwin.xdgConfigHome == "/Volumes/Users/testuser/.config"
-      && darwin.discord.configDir == "/Volumes/Users/testuser/Library/Application Support/discord";
+      && darwin.discord.configDir == "/Volumes/Users/testuser/Library/Application Support/discord"
+      &&
+        darwin.goofcord.configDir
+        == "/Volumes/Users/testuser/Library/Application Support/goofcord/GoofCord";
 
     "nix-darwin keeps supporting existing unmanaged users" =
       darwinUnmanaged.homeDirectory == "/Users/existing-user"

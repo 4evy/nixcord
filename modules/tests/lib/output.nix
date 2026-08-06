@@ -54,6 +54,8 @@ let
       builtins.unsafeDiscardStringContext (builtins.toJSON configs.dorionAttrs)
     else if spec.name == "legcord-settings" then
       builtins.toJSON configs.legcordAttrs
+    else if spec.name == "goofcord-settings" then
+      builtins.unsafeDiscardStringContext (builtins.toJSON configs.goofcordAttrs)
     else if lib.hasSuffix "quick-css" spec.name then
       cfg.quickCss
     else if lib.hasPrefix "vesktop-theme-" spec.name || lib.hasPrefix "equibop-theme-" spec.name then

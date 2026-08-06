@@ -107,6 +107,7 @@ let
       postFixup = "";
     }
   ) { };
+  stubGoofcordPackage = pkgs.runCommandLocal "nixcord-goofcord-stub" { } "mkdir $out";
 in
 {
   "vencord is disabled by default" =
@@ -325,6 +326,109 @@ in
     assert config.programs.nixcord.finalPackage.equibop.passthru.nixcordWithMiddleClickScroll;
     true;
 
+  "goofcord uses local system mod assets and injects declarative settings" =
+    let
+      config = testLib.eval.hm {
+        enable = true;
+        discord.enable = false;
+        quickCss = "body { color: purple; }";
+        config = {
+          useQuickCss = true;
+          enabledThemes = [ "regression.css" ];
+          themes.regression = "body { background: black; }";
+          plugins.alwaysAnimate.enable = true;
+        };
+        goofcord = {
+          enable = true;
+          installPackage = false;
+          package = stubGoofcordPackage;
+          autoscroll.enable = true;
+          settings = {
+            minimizeToTray = true;
+            assets = {
+              FromSettings = "https://example.invalid/from-settings.js";
+              Precedence = "https://example.invalid/from-settings-precedence.js";
+              NixcordClientMod = "https://example.invalid/attempted-override.js";
+            };
+          };
+          extraAssets = {
+            Custom = "https://example.invalid/custom.js";
+            Precedence = "https://example.invalid/from-extra-assets.js";
+          };
+        };
+      };
+      cfg = config.programs.nixcord;
+      goofcordJson = testLib.output.homeActivationInstallJSON config "nixcord-goofcord-settings";
+      modSettings = builtins.fromJSON config._nixcordTest.common.configs.goofcordModSettings;
+      bootstrap = config._nixcordTest.common.configs.goofcordSettingsBootstrapText;
+      fileNames = map (spec: spec.name) config._nixcordTest.common.fileSpecs;
+    in
+    assert toString cfg.finalPackage.goofcord != toString stubGoofcordPackage;
+    assert goofcordJson.minimizeToTray == true;
+    assert goofcordJson.autoscroll == true;
+    assert goofcordJson.assets.Custom == "https://example.invalid/custom.js";
+    assert goofcordJson.assets.FromSettings == "https://example.invalid/from-settings.js";
+    assert goofcordJson.assets.Precedence == "https://example.invalid/from-extra-assets.js";
+    assert lib.hasPrefix "/nix/store/" goofcordJson.assets.NixcordPreVencord;
+    assert lib.hasSuffix "/clientMod.js" goofcordJson.assets.NixcordClientMod;
+    assert builtins.all (file: builtins.elem file goofcordJson.managedFiles) [
+      "NixcordPreVencord.js"
+      "NixcordPostVencord.js"
+      "NixcordClientMod.js"
+      "NixcordClientModStyles.css"
+      "NixcordQuickCSS.css"
+      "NixcordThemes.css"
+      "PreVencord.js"
+      "PostVencord.js"
+      "Vencord.js"
+      "VencordStyles.css"
+      "Equicord.js"
+      "EquicordStyles.css"
+    ];
+    assert modSettings.plugins.AlwaysAnimate.enabled == true;
+    assert lib.hasInfix "VencordSettings" bootstrap;
+    assert builtins.all (name: builtins.elem name fileNames) [
+      "goofcord-settings"
+      "goofcord-pre-vencord"
+      "goofcord-post-vencord"
+      "goofcord-client-mod-js"
+      "goofcord-client-mod-css"
+      "goofcord-quick-css"
+      "goofcord-themes"
+    ];
+    true;
+
+  "goofcord can use Equicord and filters incompatible plugins" =
+    let
+      inherit (testLib.fixtures.plugins) firstEquicordOnly firstVencordOnly;
+      config = testLib.eval.hm {
+        enable = true;
+        discord.enable = false;
+        goofcord = {
+          enable = true;
+          installPackage = false;
+          package = stubGoofcordPackage;
+          clientMod = "equicord";
+        };
+        config.plugins = {
+          ${firstEquicordOnly}.enable = true;
+          ${firstVencordOnly}.enable = true;
+        };
+      };
+      common = config._nixcordTest.common;
+      modSettings = builtins.fromJSON common.configs.goofcordModSettings;
+      equicordPluginKey = builtins.head (
+        builtins.attrNames (common.mkVencordCfg { plugins.${firstEquicordOnly}.enable = true; }).plugins
+      );
+      vencordPluginKey = builtins.head (
+        builtins.attrNames (common.mkVencordCfg { plugins.${firstVencordOnly}.enable = true; }).plugins
+      );
+    in
+    assert modSettings.plugins.${equicordPluginKey}.enabled == true;
+    assert !(builtins.hasAttr vencordPluginKey modSettings.plugins);
+    assert lib.hasInfix "EquicordSettings" common.configs.goofcordSettingsBootstrapText;
+    true;
+
   "dorion defaults to nixpkgs package" =
     let
       config = testLib.eval.hm {
@@ -334,5 +438,23 @@ in
       };
     in
     assert toString config.programs.nixcord.dorion.package == toString pkgs.dorion;
+    true;
+
+  "goofcord defaults to the Nixcord package" =
+    let
+      config = testLib.eval.hm {
+        enable = true;
+        discord.enable = false;
+        goofcord = {
+          enable = true;
+          installPackage = false;
+        };
+      };
+      cfg = config.programs.nixcord;
+    in
+    assert cfg.goofcord.package.pname == pkgs.goofcord.pname;
+    assert cfg.goofcord.package.version == pkgs.goofcord.version;
+    assert cfg.goofcord.package.passthru.updateScript.name == "update-goofcord";
+    assert builtins.elem pkgs.stdenv.hostPlatform.system cfg.finalPackage.goofcord.meta.platforms;
     true;
 }

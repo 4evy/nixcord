@@ -54,6 +54,15 @@ let
           "legcord-${bundle}-css"
         ]) expected.legcordBundles
       )
+      ++ lib.optionals expected.goofcord [
+        "goofcord-settings"
+        "goofcord-pre-vencord"
+        "goofcord-post-vencord"
+        "goofcord-client-mod-js"
+        "goofcord-client-mod-css"
+        "goofcord-quick-css"
+        "goofcord-themes"
+      ]
     );
 
   expectedConfigDir =

@@ -38,6 +38,7 @@ let
         runHook postInstall
       '';
     });
+
 in
 {
   inherit applyPostPatch mkBrowserBuild;

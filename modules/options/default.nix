@@ -7,6 +7,7 @@ in
     ./discord.nix
     ./vesktop.nix
     ./equibop.nix
+    ./goofcord.nix
     ./dorion.nix
     ./legcord.nix
     ./vencord-config.nix
@@ -66,6 +67,12 @@ in
         type = types.nullOr types.package;
         readOnly = true;
         description = "The final Equibop package, or null if unavailable (read-only).";
+      };
+
+      goofcord = mkOption {
+        type = types.nullOr types.package;
+        readOnly = true;
+        description = "The final GoofCord package, or null if unavailable (read-only).";
       };
 
       dorion = mkOption {

@@ -1,6 +1,7 @@
 import configurationExample from './examples/configuration.nix?raw';
 import darwinExample from './examples/darwin.nix?raw';
 import flakeExample from './examples/flake.nix?raw';
+import goofcordExample from './examples/goofcord.nix?raw';
 import homeManagerExample from './examples/home-manager.nix?raw';
 import legcordExample from './examples/legcord.nix?raw';
 import nixosExample from './examples/nixos.nix?raw';
@@ -27,6 +28,7 @@ export const introductionToc = [
   { href: '#getting-started', label: 'Getting Started' },
   { href: '#sec-configuration', label: 'Configuration' },
   { href: '#sec-legcord', label: 'Legcord' },
+  { href: '#sec-goofcord', label: 'GoofCord' },
   { href: '#sec-user-plugins', label: 'Third-Party User Plugins' },
   { href: '#sec-dorion', label: 'A Note on Dorion' },
 ];
@@ -35,6 +37,7 @@ export {
   configurationExample,
   darwinExample,
   flakeExample,
+  goofcordExample,
   homeManagerExample,
   legcordExample,
   nixosExample,

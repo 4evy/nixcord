@@ -43,6 +43,61 @@ in
     ) messages;
     true;
 
+  "goofcord requires an available package" =
+    let
+      messages = hmMessages {
+        enable = true;
+        discord.enable = false;
+        goofcord = {
+          enable = true;
+          package = null;
+        };
+      };
+    in
+    assert builtins.any (
+      message: lib.hasInfix "goofcord.package" message && lib.hasInfix "non-null" message
+    ) messages;
+    true;
+
+  "goofcord settings assets must be an attribute set" =
+    let
+      messages = hmMessages {
+        enable = true;
+        discord.enable = false;
+        goofcord = {
+          enable = true;
+          package = testLib.pkgs.runCommandLocal "nixcord-goofcord-assets-stub" { } "mkdir $out" // {
+            src = testLib.pkgs.emptyDirectory;
+          };
+          settings.assets = [ "https://example.invalid/not-an-attribute-set.js" ];
+        };
+      };
+    in
+    assert builtins.any (
+      message: lib.hasInfix "goofcord.settings.assets" message && lib.hasInfix "attribute set" message
+    ) messages;
+    true;
+
+  "goofcord settings asset values must be strings" =
+    let
+      messages = hmMessages {
+        enable = true;
+        discord.enable = false;
+        goofcord = {
+          enable = true;
+          package = testLib.pkgs.runCommandLocal "nixcord-goofcord-asset-value-stub" { } "mkdir $out" // {
+            src = testLib.pkgs.emptyDirectory;
+          };
+          settings.assets.Invalid = 42;
+        };
+      };
+    in
+    assert builtins.any (
+      message:
+      lib.hasInfix "goofcord.settings.assets values" message && lib.hasInfix "paths or URLs" message
+    ) messages;
+    true;
+
   "discord warns when vencord and equicord are both disabled" =
     let
       warnings = hmWarnings {

@@ -73,7 +73,7 @@ jobs:
           set -euo pipefail
           available=$(nix --option system "$EXPECTED_SYSTEM" eval \
             --json ".#packages.$EXPECTED_SYSTEM" --apply builtins.attrNames)
-          packages=(equicord vencord docs-json generate)
+          packages=(equicord vencord goofcord docs-json generate)
           for package in docs discord discord-ptb discord-canary discord-development; do
             if jq -e --arg package "$package" 'index($package) != null' <<< "$available" >/dev/null; then
               packages+=("$package")
