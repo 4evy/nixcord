@@ -33,7 +33,7 @@
     "@typescript/native": "npm:typescript@7.0.2",
     "equicord": "github:Equicord/Equicord#12ae66762149bb7e6e50e0bbaebb60ca7673b66b",
     "fallow": "3.13.0",
-    "renovate": "44.11.0",
+    "renovate": "44.11.1",
     "typescript": "npm:@typescript/typescript6@6.0.2",
     "vencord": "github:Vendicated/Vencord#1a8c3b71bbfaeb195a7f402458b6b68b0ccea7ef",
     "vite": "8.2.0",
