@@ -8,9 +8,9 @@
 }:
 let
   hashes = {
-    x86_64-linux = "sha256-Uodn7rW/WFUEPVn9gcEn2urFxGzuqa5EB5YsRk805qs=";
-    aarch64-linux = "sha256-kJSXOvDPpDSIRwIt/i5FPB8+sjepdI2W1Nqtis5S72I=";
-    aarch64-darwin = "sha256-8DV8gYeSqCbYmNQ60KqP2jLKQZOrvez/7tshE8tRRXU=";
+    x86_64-linux = "sha256-8rpBgAaGJAjX1vIG/BQZoN6cw9Q9qO/OZ7ay7mdFVQs=";
+    aarch64-linux = "sha256-46/LkCSKHqeei6iL/AZ/IUAKsxxq2w54ZSPJcKrDUZA=";
+    aarch64-darwin = "sha256-bZDvAcgS2s7/ILmYCWfwQBuhodKnk2n6Wi8SA2Gz1j0=";
   };
   hash =
     hashes.${stdenvNoCC.hostPlatform.system}
