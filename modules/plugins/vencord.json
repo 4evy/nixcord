@@ -102,10 +102,6 @@
       }
     }
   },
-  "betterGifPicker": {
-    "description": "Makes the gif picker open the favourite category by default (Vencord-only)",
-    "settings": {}
-  },
   "blurNsfw": {
     "description": "Blur attachments in NSFW channels until hovered (Vencord-only)",
     "settings": {
@@ -127,6 +123,118 @@
         ],
         "default": "stopwatch",
         "description": "The timer format. This can be any valid moment.js format"
+      }
+    }
+  },
+  "customRpc": {
+    "description": "Add a fully customisable Rich Presence (Game status) to your Discord profile (Vencord-only)",
+    "settings": {
+      "appId": {
+        "type": "types.nullOr types.str",
+        "default": null
+      },
+      "appName": {
+        "type": "types.nullOr types.str",
+        "default": null
+      },
+      "details": {
+        "type": "types.nullOr types.str",
+        "default": null
+      },
+      "detailsUrl": {
+        "type": "types.nullOr types.str",
+        "default": null
+      },
+      "state": {
+        "type": "types.nullOr types.str",
+        "default": null
+      },
+      "stateUrl": {
+        "type": "types.nullOr types.str",
+        "default": null
+      },
+      "type": {
+        "type": "types.enum",
+        "enumValues": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "default": 0
+      },
+      "streamLink": {
+        "type": "types.nullOr types.str",
+        "default": null
+      },
+      "timestampMode": {
+        "type": "types.enum",
+        "enumValues": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "default": 0
+      },
+      "startTime": {
+        "type": "types.int",
+        "default": 0
+      },
+      "endTime": {
+        "type": "types.int",
+        "default": 0
+      },
+      "imageBig": {
+        "type": "types.nullOr types.str",
+        "default": null
+      },
+      "imageBigUrl": {
+        "type": "types.nullOr types.str",
+        "default": null
+      },
+      "imageBigTooltip": {
+        "type": "types.nullOr types.str",
+        "default": null
+      },
+      "imageSmall": {
+        "type": "types.nullOr types.str",
+        "default": null
+      },
+      "imageSmallUrl": {
+        "type": "types.nullOr types.str",
+        "default": null
+      },
+      "imageSmallTooltip": {
+        "type": "types.nullOr types.str",
+        "default": null
+      },
+      "buttonOneText": {
+        "type": "types.nullOr types.str",
+        "default": null
+      },
+      "buttonOneUrl": {
+        "type": "types.nullOr types.str",
+        "default": null
+      },
+      "buttonTwoText": {
+        "type": "types.nullOr types.str",
+        "default": null
+      },
+      "buttonTwoUrl": {
+        "type": "types.nullOr types.str",
+        "default": null
+      },
+      "partySize": {
+        "type": "types.int",
+        "default": 0
+      },
+      "partyMaxSize": {
+        "type": "types.int",
+        "default": 0
       }
     }
   },
@@ -490,43 +598,6 @@
         "type": "types.bool",
         "default": true,
         "description": "Whether to make the mobile indicator match the color of the user status. (restart required)"
-      }
-    }
-  },
-  "replaceGoogleSearch": {
-    "description": "Replaces the Google search with different Engine(s) (Vencord-only)",
-    "settings": {
-      "customEngineName": {
-        "type": "types.nullOr types.str",
-        "default": null,
-        "description": "Name of the custom search engine",
-        "example": "Google"
-      },
-      "customEngineUrl": {
-        "type": "types.nullOr types.str",
-        "default": null,
-        "description": "The URL of your Engine",
-        "example": "https://google.com/search?q="
-      },
-      "replacementEngine": {
-        "type": "types.enum",
-        "enumValues": [
-          "off",
-          "custom",
-          "Google",
-          "DuckDuckGo",
-          "Brave",
-          "Bing",
-          "Yahoo",
-          "Yandex",
-          "GitHub",
-          "Reddit",
-          "Wikipedia",
-          "Startpage",
-          "Kagi"
-        ],
-        "default": "off",
-        "description": "Replace with a specific search engine instead of adding a menu"
       }
     }
   },

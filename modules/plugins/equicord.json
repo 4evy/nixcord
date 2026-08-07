@@ -181,6 +181,16 @@
     "description": "Mention someone randomly (Equicord-only)",
     "settings": {}
   },
+  "autoJumpToMessage": {
+    "description": "Automatically opens the channel from new messages. (Equicord-only)",
+    "settings": {
+      "onlyWhenUnfocused": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Only automatically jump to messages when Discord's window is unfocused."
+      }
+    }
+  },
   "autoZipper": {
     "description": "Automatically zips specified file types and folders before uploading to Discord (Equicord-only)",
     "settings": {
@@ -407,16 +417,6 @@
         "type": "types.bool",
         "default": false,
         "description": "Show the current channel in the forward list popup. (restart required)"
-      }
-    }
-  },
-  "betterGifPicker": {
-    "description": "Makes the gif picker open the favourite category by default (Equicord-only)",
-    "settings": {
-      "keepOpen": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Keeps the gif picker open after selecting a gif"
       }
     }
   },
@@ -1333,6 +1333,10 @@
       }
     }
   },
+  "customRpc": {
+    "description": "Add a fully customisable Rich Presence (Game status) to your Discord profile (Equicord-only)",
+    "settings": {}
+  },
   "customSounds": {
     "description": "Customize Discord's sounds. (Equicord-only)",
     "settings": {
@@ -1691,7 +1695,7 @@
       "removeAvatarDecoration": {
         "type": "types.bool",
         "default": false,
-        "description": "Remove avatar decorations. (restart required)"
+        "description": "Remove avatar decorations. This is/will be disabled if Decor is enabled. (restart required)"
       },
       "removeNameplate": {
         "type": "types.bool",
@@ -5450,42 +5454,6 @@
   "repeatMessages": {
     "description": "Allows you to repeat messages quickly. If you hold shift while clicking the Repeat option, it will reply to the message. (Equicord-only)",
     "settings": {}
-  },
-  "replaceGoogleSearch": {
-    "description": "Replaces the Google search with different Engine(s) (Equicord-only)",
-    "settings": {
-      "customEngineName": {
-        "type": "types.nullOr types.str",
-        "default": null,
-        "description": "Name of the custom search engine",
-        "example": "Google"
-      },
-      "customEngineUrl": {
-        "type": "types.nullOr types.str",
-        "default": null,
-        "description": "The URL of your Engine",
-        "example": "https://google.com/search?q="
-      },
-      "replacementEngine": {
-        "type": "types.enum",
-        "enumValues": [
-          "off",
-          "custom",
-          "Google",
-          "DuckDuckGo",
-          "Brave",
-          "Bing",
-          "Yahoo",
-          "Yandex",
-          "GitHub",
-          "Reddit",
-          "Wikipedia",
-          "Startpage"
-        ],
-        "default": "off",
-        "description": "Replace with a specific search engine instead of adding a menu"
-      }
-    }
   },
   "replyPingControl": {
     "description": "Control whether to always or never get pinged on message replies, with whitelist and blacklist features (Equicord-only)",
