@@ -41,11 +41,11 @@ type NormalizedPlugin = {
   value: JsonObject;
 };
 
-const pluginMetadata: PluginMetadata = {
-  ...(sharedPlugins as PluginMetadata),
-  ...(vencordPlugins as PluginMetadata),
-  ...(equicordPlugins as PluginMetadata),
-};
+const pluginMetadata = mergePluginMetadata(
+  sharedPlugins as PluginMetadata,
+  vencordPlugins as PluginMetadata,
+  equicordPlugins as PluginMetadata
+);
 
 const internalPluginNames = new Set(
   [
@@ -88,6 +88,23 @@ const WORD_PATTERN = /[0-9]+[a-z]+|[A-Z]+(?=[A-Z][a-z]|[0-9]|$)|[A-Z]?[a-z]+|[0-
 const PLUS_PATTERN = /\+/g;
 
 const pluginNameLookup = buildPluginNameLookup();
+
+function mergePluginMetadata(...sources: PluginMetadata[]): PluginMetadata {
+  const merged: PluginMetadata = {};
+
+  for (const source of sources) {
+    for (const [pluginName, schema] of Object.entries(source)) {
+      merged[pluginName] = {
+        settings: {
+          ...merged[pluginName]?.settings,
+          ...schema.settings,
+        },
+      };
+    }
+  }
+
+  return merged;
+}
 
 export function convertSettingsJsonToNix(input: string): ConverterResult {
   const parsed = parseSettingsJson(input);
