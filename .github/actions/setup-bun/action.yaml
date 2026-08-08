@@ -1,6 +1,12 @@
 name: Set up Bun
 description: Install the pinned Node and Bun versions and restore workspace dependencies
 
+inputs:
+  working-directory:
+    description: Directory containing the package manifest and Bun lockfile
+    required: false
+    default: "."
+
 runs:
   using: composite
   steps:
@@ -16,4 +22,5 @@ runs:
 
     - name: Install workspace dependencies
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: bun install --frozen-lockfile

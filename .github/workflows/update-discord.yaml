@@ -2,7 +2,7 @@ name: Update Discord
 
 on:
   schedule:
-    - cron: "0 */8 * * *" # Every 8 hours
+    - cron: "0 4 * * *" # Daily at 04:00 UTC
   workflow_dispatch:
 
 concurrency:

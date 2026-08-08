@@ -33,6 +33,10 @@ jobs:
 
       - uses: ./.github/actions/setup-bun
 
+      - name: Install Renovate dependencies
+        working-directory: .github/renovate
+        run: bun install --frozen-lockfile
+
       - name: Lint and security-audit GitHub Actions
         run: >-
           nix shell nixpkgs#yamllint nixpkgs#actionlint nixpkgs#zizmor nixpkgs#shellcheck
@@ -53,7 +57,7 @@ jobs:
 
       - name: Validate Renovate configuration
         run: >-
-          node node_modules/renovate/dist/config-validator.js
+          node .github/renovate/node_modules/renovate/dist/config-validator.js
           --strict --no-global .github/renovate.json
 
       - name: Verify non-flake pins

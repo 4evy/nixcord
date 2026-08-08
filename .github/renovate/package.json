@@ -1,0 +1,6 @@
+{
+  "private": true,
+  "devDependencies": {
+    "renovate": "44.11.6"
+  }
+}

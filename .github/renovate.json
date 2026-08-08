@@ -38,6 +38,18 @@
   ],
   "packageRules": [
     {
+      "description": "Group non-major dependency updates into one weekly commit",
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "pin",
+        "pinDigest",
+        "digest",
+        "lockFileMaintenance"
+      ],
+      "groupName": "all non-major dependencies"
+    },
+    {
       "description": "Keep GitHub Actions immutable and merge pin updates directly",
       "matchManagers": ["github-actions"],
       "pinDigests": true,
