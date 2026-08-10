@@ -82,14 +82,14 @@ stdenvNoCC.mkDerivation (finalAttrs: {
     cp modules/plugins/deprecated.json "$out/plugins/deprecated.json"
     cp modules/plugins/migrations.nix "$out/plugins/migrations.nix"
 
-    ${lib.getExe nodejs} packages/cli/dist/index.js \
+    ${lib.meta.getExe nodejs} packages/cli/dist/index.js \
       --vencord "${vencordSource}" \
       --vencord-plugins src/plugins \
       --equicord "${equicordSource}" \
       --equicord-plugins src/equicordplugins \
       --output "$out/dummy.nix" \
       --overrides modules/plugins/overrides.json \
-      ${lib.optionalString skipGitMigrations "--skip-git-migrations"} \
+      ${lib.strings.optionalString skipGitMigrations "--skip-git-migrations"} \
       --verbose
 
     runHook postInstall
@@ -112,7 +112,7 @@ stdenvNoCC.mkDerivation (finalAttrs: {
     done
 
     for jsonFile in "$out/plugins"/*.json; do
-      ${lib.getExe nodejs} -e \
+      ${lib.meta.getExe nodejs} -e \
         'JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8"))' \
         "$jsonFile"
     done

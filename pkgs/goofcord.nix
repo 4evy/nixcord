@@ -105,10 +105,13 @@ goofcord.overrideAttrs (
       inherit updateScript;
     };
   }
-  // lib.optionalAttrs stdenv.hostPlatform.isDarwin (
+  // lib.attrsets.optionalAttrs stdenv.hostPlatform.isDarwin (
     {
       nativeBuildInputs =
-        lib.remove copyDesktopItems (lib.remove makeShellWrapper (old.nativeBuildInputs or [ ]))
+        lib.lists.subtractLists [
+          copyDesktopItems
+          makeShellWrapper
+        ] (old.nativeBuildInputs or [ ])
         ++ [
           makeBinaryWrapper
           rcodesign
@@ -117,7 +120,7 @@ goofcord.overrideAttrs (
       desktopItems = [ ];
 
       env =
-        lib.removeAttrs (old.env or { }) [
+        lib.attrsets.removeAttrs (old.env or { }) [
           "GOOFCORD_PATCHCORD_PATH"
           "GOOFCORD_VENBIND_PATH"
         ]
@@ -146,7 +149,7 @@ goofcord.overrideAttrs (
       # Seal the complete Electron app after fixup so nested frameworks and
       # resources form one valid ad-hoc-signed bundle.
       postFixup = (old.postFixup or "") + ''
-        ${lib.getExe rcodesign} sign \
+        ${lib.meta.getExe rcodesign} sign \
           --code-signature-flags runtime \
           --entitlements-xml-file ${goofcord.src}/build/entitlements.mac.plist \
           --code-signature-flags 'Contents/Frameworks/GoofCord Helper.app:runtime' \
@@ -160,7 +163,7 @@ goofcord.overrideAttrs (
           "$out/Applications/GoofCord.app"
       '';
     }
-    // lib.optionalAttrs (old ? node-modules) {
+    // lib.attrsets.optionalAttrs (old ? node-modules) {
       node-modules = nodeModules;
     }
   )

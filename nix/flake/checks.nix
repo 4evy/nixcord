@@ -8,7 +8,7 @@
     let
       inherit (config) packages;
       discordAvailable = pkgs.lib.meta.availableOn pkgs.stdenv.hostPlatform pkgs.discord;
-      discordIntegrationChecks = pkgs.lib.optionalAttrs discordAvailable {
+      discordIntegrationChecks = pkgs.lib.attrsets.optionalAttrs discordAvailable {
         discord-with-vencord = pkgs.callPackage ../../pkgs/discord {
           withVencord = true;
           inherit (packages) vencord;
@@ -47,7 +47,7 @@
           };
       };
       nonFlake = import ../.. { inherit pkgs; };
-      nonFlakeNixos = import (pkgs.path + "/nixos/lib/eval-config.nix") {
+      nonFlakeNixos = import (pkgs.lib.path.append pkgs.path "nixos/lib/eval-config.nix") {
         system = "x86_64-linux";
         modules = [ nonFlake.nixosModules.nixcord ];
       };

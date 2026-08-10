@@ -8,7 +8,7 @@
     {
       apps.generate = {
         type = "app";
-        program = pkgs.lib.getExe (
+        program = pkgs.lib.meta.getExe (
           pkgs.writeShellApplication {
             name = "generate-plugin-options";
             runtimeInputs = [
@@ -29,7 +29,7 @@
 
       apps.update-goofcord = {
         type = "app";
-        program = pkgs.lib.getExe config.packages.goofcord.passthru.updateScript;
+        program = pkgs.lib.meta.getExe config.packages.goofcord.passthru.updateScript;
         meta.description = "Refresh GoofCord's aarch64-darwin dependency snapshot";
       };
     };

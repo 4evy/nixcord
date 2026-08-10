@@ -6,7 +6,7 @@
   withKrisp,
 }:
 let
-  sources = lib.importJSON ../data/sources.json;
+  sources = lib.trivial.importJSON ../data/sources.json;
 
   platformName = if stdenvNoCC.hostPlatform.isLinux then "linux" else "osx";
   variantKey = "${platformName}-${branch}";
@@ -16,9 +16,9 @@ let
 
   src = fetchurl { inherit (source.distro) url hash; };
 
-  moduleSrcs = lib.mapAttrs (_: mod: fetchurl { inherit (mod) url hash; }) source.modules;
+  moduleSrcs = lib.attrsets.mapAttrs (_: mod: fetchurl { inherit (mod) url hash; }) source.modules;
 
-  moduleVersions = lib.mapAttrs (_: mod: mod.version) source.modules;
+  moduleVersions = lib.attrsets.mapAttrs (_: mod: mod.version) source.modules;
 
   krispSourceMeta = source.modules.discord_krisp or null;
 

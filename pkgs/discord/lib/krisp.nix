@@ -34,9 +34,9 @@ let
       runCommand "discord-krisp-module"
         (
           {
-            nativeBuildInputs = [ brotli ] ++ lib.optional supportsKrisp krispPython;
+            nativeBuildInputs = [ brotli ] ++ lib.lists.optional supportsKrisp krispPython;
           }
-          // lib.optionalAttrs stdenvNoCC.isDarwin { DARWIN_SIGNING_UTILS = darwin.signingUtils; }
+          // lib.attrsets.optionalAttrs stdenvNoCC.isDarwin { DARWIN_SIGNING_UTILS = darwin.signingUtils; }
         )
         ''
           bash ${patchKrispModuleScript} \
@@ -59,7 +59,7 @@ let
           pythonInterpreter = "${python3.withPackages (ps: [ ps.watchdog ])}/bin/python3";
           krispPath = "${krispModule}";
           discordVersion = version;
-          configDirName = lib.toLower binaryName;
+          configDirName = lib.strings.toLower binaryName;
           meta.mainProgram = "deploy-krisp.py";
         }
         ''

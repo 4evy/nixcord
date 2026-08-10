@@ -56,7 +56,7 @@ let
   };
 
   basePackage = variantPackages.${branch} or null;
-  enabledDiscordModsCount = lib.count lib.id [
+  enabledDiscordModsCount = lib.lists.count lib.trivial.id [
     withVencord
     withEquicord
   ];
@@ -81,9 +81,9 @@ let
 
   configDirName =
     if stdenvNoCC.isDarwin then
-      lib.replaceStrings [ " " ] [ "" ] (lib.toLower binaryName)
+      lib.strings.replaceString " " "" (lib.strings.toLower binaryName)
     else
-      lib.toLower binaryName;
+      lib.strings.toLower binaryName;
 
   resourcesDir =
     if stdenvNoCC.isLinux then
@@ -147,7 +147,7 @@ let
   hasKrispModule = withKrisp && krispModule != null;
   hasDeployKrisp = withKrisp && deployKrisp != null;
 
-  stagedModuleVersions = lib.removeAttrs moduleVersions [ "discord_krisp" ];
+  stagedModuleVersions = lib.attrsets.removeAttrs moduleVersions [ "discord_krisp" ];
 
   disabledUpdateSettingsJson = builtins.toJSON {
     SKIP_HOST_UPDATE = true;
@@ -169,7 +169,10 @@ let
   };
 
   commandLineArgsString =
-    if builtins.isList commandLineArgs then lib.escapeShellArgs commandLineArgs else commandLineArgs;
+    if builtins.isList commandLineArgs then
+      lib.strings.escapeShellArgs commandLineArgs
+    else
+      commandLineArgs;
   commandLineArgsList = if builtins.isList commandLineArgs then commandLineArgs else [ ];
 
   indexedCommandLineArgs = lib.lists.imap0 (index: arg: {
@@ -201,9 +204,9 @@ let
       ;
     commandLineArgs = if stdenvNoCC.isDarwin then "" else commandLineArgsString;
   }
-  // lib.optionalAttrs (vencord != null) { inherit vencord; }
-  // lib.optionalAttrs (equicord != null) { inherit equicord; }
-  // lib.optionalAttrs (openasar != null) { inherit openasar; };
+  // lib.attrsets.optionalAttrs (vencord != null) { inherit vencord; }
+  // lib.attrsets.optionalAttrs (equicord != null) { inherit equicord; }
+  // lib.attrsets.optionalAttrs (openasar != null) { inherit openasar; };
 
   package = basePackage.override overrideArgs;
 
@@ -217,10 +220,10 @@ let
     }
   );
 in
-assert lib.assertMsg (
+assert lib.asserts.assertMsg (
   basePackage != null
 ) "nixcord Discord: branch '${branch}' is unavailable on this platform";
-assert lib.assertMsg (
+assert lib.asserts.assertMsg (
   enabledDiscordModsCount <= 1
 ) "nixcord Discord: Vencord and Equicord cannot both be enabled";
 package.overrideAttrs (
@@ -243,16 +246,16 @@ package.overrideAttrs (
 
     env =
       oldEnv
-      // lib.optionalAttrs (stdenvNoCC.isDarwin || oldEnvHasNixCFlags) {
-        NIX_CFLAGS_COMPILE = lib.concatStringsSep " " (
-          lib.optional oldEnvHasNixCFlags (toString oldEnv.NIX_CFLAGS_COMPILE)
-          ++ lib.optionals stdenvNoCC.isDarwin launcherCFlags
+      // lib.attrsets.optionalAttrs (stdenvNoCC.isDarwin || oldEnvHasNixCFlags) {
+        NIX_CFLAGS_COMPILE = lib.strings.concatStringsSep " " (
+          lib.lists.optional oldEnvHasNixCFlags (toString oldEnv.NIX_CFLAGS_COMPILE)
+          ++ lib.lists.optionals stdenvNoCC.isDarwin launcherCFlags
         );
       };
 
     postInstall =
       (oldAttrs.postInstall or "")
-      + lib.optionalString hasKrispModule ''
+      + lib.strings.optionalString hasKrispModule ''
         rm -rf "${modulesDir}/discord_krisp"
         mkdir -p "${modulesDir}/discord_krisp"
         cp -R "${krispModule}/." "${modulesDir}/discord_krisp/"
@@ -260,23 +263,23 @@ package.overrideAttrs (
 
         ${python3.interpreter} ${patchVoiceKrispPy} \
           "${modulesDir}/discord_voice/index.js" \
-          ${lib.escapeShellArg krispRuntimePath}
+          ${lib.strings.escapeShellArg krispRuntimePath}
       '';
 
     postFixup =
       (oldAttrs.postFixup or "")
-      + lib.optionalString (stdenvNoCC.isLinux && hasDeployKrisp) ''
+      + lib.strings.optionalString (stdenvNoCC.isLinux && hasDeployKrisp) ''
         wrapProgramShell "$out/opt/${binaryName}/${binaryName}" \
-          --run ${lib.escapeShellArg (lib.getExe deployKrisp)}
+          --run ${lib.strings.escapeShellArg (lib.meta.getExe deployKrisp)}
       ''
-      + lib.optionalString stdenvNoCC.isDarwin ''
+      + lib.strings.optionalString stdenvNoCC.isDarwin ''
         source ${./scripts/install-darwin-launcher.sh} \
           ${lib.strings.escapeShellArg binaryName} \
           ${./src/discord-launcher.c} \
-          ${lib.getExe oldPassthru.disableBreakingUpdates} \
-          ${lib.getExe stageModules} \
+          ${lib.meta.getExe oldPassthru.disableBreakingUpdates} \
+          ${lib.meta.getExe stageModules} \
           "${modulesDir}" \
-          ${lib.escapeShellArg (lib.optionalString hasDeployKrisp (lib.getExe deployKrisp))} \
+          ${lib.strings.escapeShellArg (lib.strings.optionalString hasDeployKrisp (lib.meta.getExe deployKrisp))} \
           "$out/Applications/${binaryName}.app/Contents/MacOS/${binaryName}.unwrapped" \
           ${if hasDeployKrisp then "1" else "0"} \
           ${lib.strings.escapeShellArg commandLineArgDeclarations} \
@@ -287,7 +290,7 @@ package.overrideAttrs (
           ${darwinEntitlements}
       '';
   }
-  // lib.optionalAttrs stdenvNoCC.isLinux {
+  // lib.attrsets.optionalAttrs stdenvNoCC.isLinux {
     nixcordStageModules = stageModules;
   }
 )

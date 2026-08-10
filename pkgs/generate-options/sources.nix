@@ -8,16 +8,16 @@ let
     "node_modules"
   ];
   packageSources = lib.fileset.fromSource (
-    lib.cleanSourceWith {
+    lib.sources.cleanSourceWith {
       src = ../../packages;
       filter =
         path: type:
         let
           name = baseNameOf path;
         in
-        lib.cleanSourceFilter path type
+        lib.sources.cleanSourceFilter path type
         && !(type == "directory" && builtins.elem name generatedPackageDirectories)
-        && !(lib.hasSuffix ".tsbuildinfo" name);
+        && !(lib.strings.hasSuffix ".tsbuildinfo" name);
     }
   );
   # Bun validates every declared workspace path before applying install

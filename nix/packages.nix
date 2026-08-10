@@ -13,8 +13,8 @@ let
     discord-development.branch = "development";
   };
   openasar = pkgs.openasar;
-  discordPackages = lib.optionalAttrs discordAvailable (
-    lib.mapAttrs (
+  discordPackages = lib.attrsets.optionalAttrs discordAvailable (
+    lib.attrsets.mapAttrs (
       _name: args: pkgs.callPackage ../pkgs/discord ({ inherit openasar; } // args)
     ) discordVariants
   );
@@ -25,10 +25,12 @@ let
     "x86_64-linux"
     "aarch64-darwin"
   ];
-  docsPackages = lib.optionalAttrs (builtins.elem pkgs.stdenv.hostPlatform.system docsSystems) {
-    docs = docsArtifacts.html;
-  };
-  goofcordPackages = lib.optionalAttrs (pkgs ? goofcord) {
+  docsPackages =
+    lib.attrsets.optionalAttrs (builtins.elem pkgs.stdenv.hostPlatform.system docsSystems)
+      {
+        docs = docsArtifacts.html;
+      };
+  goofcordPackages = lib.attrsets.optionalAttrs (pkgs ? goofcord) {
     goofcord = pkgs.callPackage ../pkgs/goofcord.nix { };
   };
 in
