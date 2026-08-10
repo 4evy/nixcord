@@ -14,9 +14,9 @@
   replaceVars,
 }:
 let
-  version = "1.15.0.4-2026-08-07";
-  rev = "94f6709f266113a924345d8e4b733ec1c9a47dba";
-  hash = "sha256-MlLkrNQROWML3RfOWuWNTNsEcdaMCGzi6uf8ENzLl7I=";
+  version = "1.15.1.0-2026-08-10";
+  rev = "94c0ac8e16b293e1fb715eac3aedabe2bb96fead";
+  hash = "sha256-2xzutQoO79CRO+iS3K5Bj5d1/b+Wt5sX+Dpd7NCfbNw=";
   pnpmDepsHash = "sha256-uGGHln3IRSZIBotzpC6muCpZdCD9M7DaOqN1Y60OtFo=";
   inherit (equicord.src) owner repo;
   src = fetchFromGitHub {
