@@ -1,7 +1,4 @@
 { lib, ... }:
-let
-  inherit (lib) mkEnableOption mkOption types;
-in
 {
   imports = [
     ./discord.nix
@@ -16,79 +13,82 @@ in
   ];
 
   options.programs.nixcord = {
-    user = mkOption {
-      type = types.nonEmptyStr;
+    user = lib.options.mkOption {
+      type = lib.types.nonEmptyStr;
       description = "Target username for file ownership.";
     };
 
-    homeDirectory = mkOption {
-      type = types.path;
+    homeDirectory = lib.options.mkOption {
+      type = lib.types.path;
       description = "Home directory for the target user.";
     };
 
-    xdgConfigHome = mkOption {
-      type = types.path;
+    xdgConfigHome = lib.options.mkOption {
+      type = lib.types.path;
       description = "XDG config home directory.";
     };
 
-    enable = mkEnableOption "nixcord (Discord with Vencord/Equicord)";
+    enable = lib.options.mkEnableOption "nixcord (Discord with Vencord/Equicord)";
 
-    useGlobalPkgs = mkOption {
-      type = types.bool;
-      default = false;
-      example = true;
+    useGlobalPkgs = lib.options.mkOption {
+      type = lib.types.bool;
+      default = true;
+      example = false;
       description = ''
         Whether to build Nixcord-provided packages with the package set passed
-        to the module instead of Nixcord's pinned package set. This may reduce
-        evaluation overhead, but uses a package combination that Nixcord does
-        not test.
+        to the module instead of Nixcord's pinned package set.
+
+        Keeping this enabled reuses the package set that Home Manager, NixOS,
+        or nix-darwin has already evaluated. Disabling it evaluates Nixcord's
+        pinned package set as an additional Nixpkgs instance, which is more
+        isolated but substantially increases evaluation time and memory use.
       '';
     };
 
-    configDir = mkOption {
-      type = types.path;
+    configDir = lib.options.mkOption {
+      type = lib.types.path;
       description = "Config directory for the selected client (Vencord or Equicord).";
     };
 
     finalPackage = {
-      discord = mkOption {
-        type = types.package;
+      discord = lib.options.mkOption {
+        type = lib.types.package;
         readOnly = true;
         description = "The final Discord package for the first configured branch (read-only).";
       };
 
-      discordBranches = mkOption {
-        type = types.attrsOf types.package;
+      discordBranches = lib.options.mkOption {
+        type = lib.types.attrsOf lib.types.package;
         readOnly = true;
         description = "The final Discord packages keyed by configured branch (read-only).";
       };
 
-      vesktop = mkOption {
-        type = types.package;
+      vesktop = lib.options.mkOption {
+        type = lib.types.package;
         readOnly = true;
         description = "The final Vesktop package (read-only).";
       };
 
-      equibop = mkOption {
-        type = types.nullOr types.package;
+      equibop = lib.options.mkOption {
+        type = lib.types.nullOr lib.types.package;
         readOnly = true;
         description = "The final Equibop package, or null if unavailable (read-only).";
       };
 
-      goofcord = mkOption {
-        type = types.nullOr types.package;
+      goofcord = lib.options.mkOption {
+        type = lib.types.nullOr lib.types.package;
         readOnly = true;
         description = "The final GoofCord package, or null if unavailable (read-only).";
       };
 
-      dorion = mkOption {
-        type = types.package;
+      dorion = lib.options.mkOption {
+        type = lib.types.package;
         readOnly = true;
         description = "The final Dorion package (read-only).";
       };
 
-      legcord = mkOption {
-        type = types.package;
+      legcord = lib.options.mkOption {
+        type = lib.types.package;
         readOnly = true;
         description = "The final Legcord package (read-only).";
       };

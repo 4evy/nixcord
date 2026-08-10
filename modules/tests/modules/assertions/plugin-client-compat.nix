@@ -19,7 +19,7 @@ in
         config.plugins.${firstEquicordOnly}.enable = true;
       };
     in
-    assert builtins.any (message: lib.hasInfix firstEquicordOnly message) messages;
+    assert builtins.any (message: lib.strings.hasInfix firstEquicordOnly message) messages;
     true;
 
   "vencord-only plugin fails with equicord-only client" =

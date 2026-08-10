@@ -6,7 +6,7 @@ let
 
   evalPlatform =
     module: stub: platformConfig:
-    (lib.evalModules {
+    (lib.modules.evalModules {
       modules = [
         stub
         (import module)
@@ -54,6 +54,14 @@ let
   darwinUnmanaged = evalPlatform ../darwin/default.nix stubs.darwin {
     programs.nixcord.user = "existing-user";
   };
+
+  darwinNullHome = evalPlatform ../darwin/default.nix stubs.darwin {
+    programs.nixcord.user = "testuser";
+    users.users.testuser = {
+      name = "testuser";
+      home = null;
+    };
+  };
   tests = {
     "Home Manager paths come from home and XDG options" =
       hm.homeDirectory == "/srv/home/testuser"
@@ -73,7 +81,7 @@ let
             "/srv/home/testuser/Library/Application Support/goofcord/GoofCord"
         );
   }
-  // lib.optionalAttrs pkgs.stdenvNoCC.isLinux {
+  // lib.attrsets.optionalAttrs pkgs.stdenvNoCC.isLinux {
     "NixOS paths come from the configured user home" =
       nixos.homeDirectory == "/srv/home/testuser"
       && nixos.xdgConfigHome == "/srv/home/testuser/.config"
@@ -84,7 +92,7 @@ let
       nixosUnmanaged.homeDirectory == "/home/existing-user"
       && nixosUnmanaged.xdgConfigHome == "/home/existing-user/.config";
   }
-  // lib.optionalAttrs pkgs.stdenvNoCC.isDarwin {
+  // lib.attrsets.optionalAttrs pkgs.stdenvNoCC.isDarwin {
     "nix-darwin paths come from the configured user home" =
       darwin.homeDirectory == "/Volumes/Users/testuser"
       && darwin.xdgConfigHome == "/Volumes/Users/testuser/.config"
@@ -96,6 +104,10 @@ let
     "nix-darwin keeps supporting existing unmanaged users" =
       darwinUnmanaged.homeDirectory == "/Users/existing-user"
       && darwinUnmanaged.xdgConfigHome == "/Users/existing-user/.config";
+
+    "nix-darwin falls back when the configured user home is null" =
+      darwinNullHome.homeDirectory == "/Users/testuser"
+      && darwinNullHome.xdgConfigHome == "/Users/testuser/.config";
   };
 in
 testLib.run.tests "platform-paths-test" tests

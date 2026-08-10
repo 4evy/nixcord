@@ -4,26 +4,22 @@
 }:
 
 let
-  inherit (lib)
-    concatMap
-    concatStringsSep
-    filter
-    foldl'
-    nameValuePair
-    optionalString
-    optionals
-    unique
-    ;
 
-  mergeMany = foldl' lib.recursiveUpdate { };
+  mergeMany = lib.lists.foldl' lib.attrsets.recursiveUpdate { };
 
-  sharedPluginNames = builtins.attrNames (lib.importJSON (pluginRoot + "/shared.json"));
-  vencordPluginNames = builtins.attrNames (lib.importJSON (pluginRoot + "/vencord.json"));
-  equicordPluginNames = builtins.attrNames (lib.importJSON (pluginRoot + "/equicord.json"));
+  sharedPluginNames = builtins.attrNames (
+    lib.trivial.importJSON (lib.path.append pluginRoot "shared.json")
+  );
+  vencordPluginNames = builtins.attrNames (
+    lib.trivial.importJSON (lib.path.append pluginRoot "vencord.json")
+  );
+  equicordPluginNames = builtins.attrNames (
+    lib.trivial.importJSON (lib.path.append pluginRoot "equicord.json")
+  );
 
   mkPluginSet =
     pluginNames:
-    lib.genAttrs pluginNames (_: {
+    lib.attrsets.genAttrs pluginNames (_: {
       enable = true;
     });
 
@@ -41,10 +37,10 @@ let
         || expected.goofcordMod == "equicord"
         || builtins.elem "equicord" expected.legcordBundles;
     in
-    unique (
+    lib.lists.unique (
       sharedPluginNames
-      ++ optionals hasVencordClient vencordPluginNames
-      ++ optionals hasEquicordClient equicordPluginNames
+      ++ lib.lists.optionals hasVencordClient vencordPluginNames
+      ++ lib.lists.optionals hasEquicordClient equicordPluginNames
     );
 
   baseConfig = {
@@ -259,31 +255,34 @@ let
         true
       ];
     in
-    concatMap (
-      vesktop:
-      concatMap (
-        equibop:
-        map (
-          dorion:
-          let
-            enabled = filter (name: name != "") [
-              (optionalString vesktop "vesktop")
-              (optionalString equibop "equibop")
-              (optionalString dorion "dorion")
-            ];
-          in
-          {
-            name = "clients-${if enabled == [ ] then "none" else concatStringsSep "-" enabled}";
-            config = {
-              vesktop.enable = vesktop;
-              equibop.enable = equibop;
-              dorion.enable = dorion;
-            };
-            expected = { inherit vesktop equibop dorion; };
-          }
-        ) bools
-      ) bools
-    ) bools;
+    lib.attrsets.mapCartesianProduct
+      (
+        {
+          vesktop,
+          equibop,
+          dorion,
+        }:
+        let
+          enabled =
+            lib.lists.optional vesktop "vesktop"
+            ++ lib.lists.optional equibop "equibop"
+            ++ lib.lists.optional dorion "dorion";
+        in
+        {
+          name = "clients-${if enabled == [ ] then "none" else lib.strings.concatStringsSep "-" enabled}";
+          config = {
+            vesktop.enable = vesktop;
+            equibop.enable = equibop;
+            dorion.enable = dorion;
+          };
+          expected = { inherit vesktop equibop dorion; };
+        }
+      )
+      {
+        vesktop = bools;
+        equibop = bools;
+        dorion = bools;
+      };
 
   legcordModes = [
     {
@@ -300,7 +299,7 @@ let
       (
         bundles:
         let
-          bundleName = if bundles == [ ] then "none" else concatStringsSep "-" bundles;
+          bundleName = if bundles == [ ] then "none" else lib.strings.concatStringsSep "-" bundles;
         in
         {
           name = "legcord-${bundleName}";
@@ -374,7 +373,7 @@ let
         { config.plugins = mkPluginSet pluginNames; }
       ];
     in
-    nameValuePair name {
+    lib.attrsets.nameValuePair name {
       module = {
         programs.nixcord = config;
       };
@@ -385,13 +384,13 @@ let
 
   # Cover every Discord/desktop pair and rotate Legcord modes so every other
   # pair of independent client axes is covered without a full Cartesian product.
-  pairwiseScenarios = lib.concatLists (
-    lib.imap0 (
+  pairwiseScenarios = lib.lists.concatLists (
+    lib.lists.imap0 (
       discordIndex: discord:
-      lib.imap0 (
+      lib.lists.imap0 (
         desktopIndex: desktop:
         mkScenario discord desktop (builtins.elemAt legcordModes (
-          lib.mod (discordIndex + desktopIndex) (builtins.length legcordModes)
+          lib.trivial.mod (discordIndex + desktopIndex) (builtins.length legcordModes)
         )) (builtins.head goofcordModes)
       ) desktopCombos
     ) discordModes

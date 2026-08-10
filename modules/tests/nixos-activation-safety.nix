@@ -15,18 +15,18 @@ let
     "nixcord-fixDiscordModules"
     "nixcord-writeFiles"
   ];
-  activationsRunAfterUsers = lib.all (
+  activationsRunAfterUsers = lib.lists.all (
     name: builtins.elem "users" config.system.activationScripts.${name}.deps
   ) nixcordActivationNames;
   harmlessScript =
     builtins.replaceStrings
       [
-        (lib.getExe' pkgs.coreutils "id")
-        (lib.getExe' pkgs.coreutils "install")
+        (lib.meta.getExe' pkgs.coreutils "id")
+        (lib.meta.getExe' pkgs.coreutils "install")
       ]
       [
-        (lib.getExe' pkgs.coreutils "true")
-        (lib.getExe' pkgs.coreutils "true")
+        (lib.meta.getExe' pkgs.coreutils "true")
+        (lib.meta.getExe' pkgs.coreutils "true")
       ]
       generatedScript;
 in

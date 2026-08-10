@@ -12,7 +12,7 @@
   discord-launcher-c = import ./c/discord-launcher.nix { inherit pkgs; };
   goofcord-support = import ./goofcord-support.nix { inherit pkgs; };
 }
-// pkgs.lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
+// pkgs.lib.attrsets.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
   nixos-activation-safety = import ./nixos-activation-safety.nix { inherit pkgs; };
   discord-linux-scripts = import ./discord-linux-scripts.nix { inherit pkgs; };
   discord-update-sources = import ./discord-update-sources.nix { inherit pkgs; };

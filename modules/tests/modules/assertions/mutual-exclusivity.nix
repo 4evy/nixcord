@@ -12,7 +12,7 @@ in
         discord.equicord.enable = true;
       };
     in
-    assert builtins.any (message: lib.hasInfix "mutually exclusive" message) messages;
+    assert builtins.any (message: lib.strings.hasInfix "mutually exclusive" message) messages;
     true;
 
   "legcord cannot bundle vencord and equicord together" =
@@ -28,7 +28,9 @@ in
       };
     in
     assert builtins.any (
-      message: lib.hasInfix "legcord.vencord.enable" message && lib.hasInfix "mutually exclusive" message
+      message:
+      lib.strings.hasInfix "legcord.vencord.enable" message
+      && lib.strings.hasInfix "mutually exclusive" message
     ) messages;
     true;
 
@@ -44,7 +46,7 @@ in
       };
     in
     assert builtins.any (
-      message: lib.hasInfix "goofcord.package" message && lib.hasInfix "non-null" message
+      message: lib.strings.hasInfix "goofcord.package" message && lib.strings.hasInfix "non-null" message
     ) messages;
     true;
 
@@ -63,7 +65,9 @@ in
       };
     in
     assert builtins.any (
-      message: lib.hasInfix "goofcord.settings.assets" message && lib.hasInfix "attribute set" message
+      message:
+      lib.strings.hasInfix "goofcord.settings.assets" message
+      && lib.strings.hasInfix "attribute set" message
     ) messages;
     true;
 
@@ -83,7 +87,8 @@ in
     in
     assert builtins.any (
       message:
-      lib.hasInfix "goofcord.settings.assets values" message && lib.hasInfix "paths or URLs" message
+      lib.strings.hasInfix "goofcord.settings.assets values" message
+      && lib.strings.hasInfix "paths or URLs" message
     ) messages;
     true;
 
@@ -93,9 +98,9 @@ in
         enable = true;
       };
     in
-    assert builtins.any (message: lib.hasInfix "both disabled" message) warnings;
-    assert builtins.any (message: lib.hasInfix "without Vencord or Equicord" message) warnings;
-    assert builtins.any (message: lib.hasInfix "silenceNoModClientWarning" message) warnings;
+    assert builtins.any (message: lib.strings.hasInfix "both disabled" message) warnings;
+    assert builtins.any (message: lib.strings.hasInfix "without Vencord or Equicord" message) warnings;
+    assert builtins.any (message: lib.strings.hasInfix "silenceNoModClientWarning" message) warnings;
     true;
 
   "discord mod disabled warning can be acknowledged" =
@@ -105,8 +110,9 @@ in
         discord.silenceNoModClientWarning = true;
       };
     in
-    assert !(builtins.any (message: lib.hasInfix "both disabled" message) warnings);
-    assert !(builtins.any (message: lib.hasInfix "without Vencord or Equicord" message) warnings);
+    assert !(builtins.any (message: lib.strings.hasInfix "both disabled" message) warnings);
+    assert
+      !(builtins.any (message: lib.strings.hasInfix "without Vencord or Equicord" message) warnings);
     true;
 
   "discord mod disabled warning is skipped when discord is disabled" =
@@ -117,7 +123,7 @@ in
         vesktop.enable = true;
       };
     in
-    assert !(builtins.any (message: lib.hasInfix "both disabled" message) warnings);
+    assert !(builtins.any (message: lib.strings.hasInfix "both disabled" message) warnings);
     true;
 
   "multiple Discord branches require distinct config directories" =
@@ -135,8 +141,8 @@ in
     in
     assert builtins.any (
       message:
-      lib.hasInfix "multiple branches to the same Discord config directory" message
-      && lib.hasInfix "/home/testuser/.config/discord" message
+      lib.strings.hasInfix "multiple branches to the same Discord config directory" message
+      && lib.strings.hasInfix "/home/testuser/.config/discord" message
     ) messages;
     true;
 }

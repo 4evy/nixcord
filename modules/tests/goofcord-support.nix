@@ -37,7 +37,7 @@ let
 in
 pkgs.runCommand "goofcord-support-test" { nativeBuildInputs = [ pkgs.jq ]; } ''
   test -x ${vencordPackage}/bin/goofcord
-  ${testLib.lib.optionalString pkgs.stdenvNoCC.isDarwin ''
+  ${testLib.lib.strings.optionalString pkgs.stdenvNoCC.isDarwin ''
     test -x ${vencordPackage}/Applications/GoofCord.app/Contents/MacOS/GoofCord
   ''}
 

@@ -1,37 +1,36 @@
 { lib, pkgs, ... }:
 let
-  inherit (lib) mkOption types;
   jsonFormat = pkgs.formats.json { };
-  jsonAttrs = types.attrsOf jsonFormat.type;
+  jsonAttrs = lib.types.attrsOf jsonFormat.type;
 in
 {
   options.programs.nixcord = {
-    vesktopConfig = mkOption {
+    vesktopConfig = lib.options.mkOption {
       type = jsonAttrs;
       default = { };
       description = "Additional config merged into `programs.nixcord.config` for Vesktop only.";
     };
-    equibopConfig = mkOption {
+    equibopConfig = lib.options.mkOption {
       type = jsonAttrs;
       default = { };
       description = "Additional config merged into `programs.nixcord.config` for Equibop only.";
     };
-    goofcordConfig = mkOption {
+    goofcordConfig = lib.options.mkOption {
       type = jsonAttrs;
       default = { };
       description = "Additional config merged into `programs.nixcord.config` for GoofCord only.";
     };
-    vencordConfig = mkOption {
+    vencordConfig = lib.options.mkOption {
       type = jsonAttrs;
       default = { };
       description = "Additional config merged into `programs.nixcord.config` for Vencord (Discord) only.";
     };
-    equicordConfig = mkOption {
+    equicordConfig = lib.options.mkOption {
       type = jsonAttrs;
       default = { };
       description = "Additional config merged into `programs.nixcord.config` for Equicord (Discord) only.";
     };
-    extraConfig = mkOption {
+    extraConfig = lib.options.mkOption {
       type = jsonAttrs;
       default = { };
       description = "Additional config merged into `programs.nixcord.config` for all clients.";
@@ -49,13 +48,13 @@ in
               url = "https://github.com/${builtins.elemAt githubMatches 0}/${builtins.elemAt githubMatches 1}";
               rev = builtins.elemAt githubMatches 2;
             }
-          else if lib.hasPrefix "/" value then
+          else if lib.strings.hasPrefix "/" value then
             /. + value
           else
             throw "programs.nixcord.userPlugins: '${value}' is not a valid github: URL (github:owner/repo/commitHash) or absolute local path (must start with /)";
       in
-      mkOption {
-        type = types.attrsOf (types.coercedTo types.str coerce types.path);
+      lib.options.mkOption {
+        type = lib.types.attrsOf (lib.types.coercedTo lib.types.str coerce lib.types.path);
         description = ''
           User plugins to fetch and install. Any required JSON config must be enabled in `extraConfig`.
 
@@ -72,24 +71,24 @@ in
         };
       };
     parseRules = {
-      upperNames = mkOption {
-        type = types.listOf types.str;
+      upperNames = lib.options.mkOption {
+        type = lib.types.listOf lib.types.str;
         description = "Option names that should be converted to UPPER_SNAKE_CASE in generated JSON.";
         default = [ ];
       };
-      lowerPluginTitles = mkOption {
-        type = types.listOf types.str;
+      lowerPluginTitles = lib.options.mkOption {
+        type = lib.types.listOf lib.types.str;
         description = "Plugin names that should remain lowercase in generated JSON.";
         default = [ ];
         example = [ "petpet" ];
       };
-      pluginRenames = mkOption {
-        type = types.attrsOf types.str;
+      pluginRenames = lib.options.mkOption {
+        type = lib.types.attrsOf lib.types.str;
         description = "Plugin option names to rename while generating JSON.";
         default = { };
       };
-      settingRenames = mkOption {
-        type = types.attrsOf (types.attrsOf types.str);
+      settingRenames = lib.options.mkOption {
+        type = lib.types.attrsOf (lib.types.attrsOf lib.types.str);
         description = "Setting names to rename while generating JSON.";
         default = { };
       };

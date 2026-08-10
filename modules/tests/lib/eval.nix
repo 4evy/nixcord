@@ -8,7 +8,7 @@
   hm =
     nixcordConfig:
     let
-      evaluated = lib.evalModules {
+      evaluated = lib.modules.evalModules {
         modules = [
           stubs.hm
           (import ../../hm/default.nix)
@@ -23,14 +23,14 @@
     evaluated.config
     // {
       _nixcordTest.common = import ../../lib/mkCommonConfig.nix {
-        inherit (evaluated) config;
+        inherit (evaluated) config options;
         inherit lib pkgs;
       };
     };
 
   nixos =
     nixcordConfig:
-    (lib.evalModules {
+    (lib.modules.evalModules {
       modules = [
         stubs.nixos
         (import ../../nixos/default.nix)
@@ -55,7 +55,7 @@
 
   darwin =
     nixcordConfig:
-    (lib.evalModules {
+    (lib.modules.evalModules {
       modules = [
         stubs.darwin
         (import ../../darwin/default.nix)

@@ -15,16 +15,16 @@ pkgs.runCommand "discord-linux-scripts-check"
   ''
     set -euo pipefail
 
-    ${pkgs.lib.optionalString discordAvailable ''
+    ${pkgs.lib.strings.optionalString discordAvailable ''
       # nixpkgs' Discord wrapper interpolates its `stageModules` attribute as an
       # executable path.  Keep Nixcord's richer staging helper under a distinct
       # attribute so overriding the package cannot turn that path into a
       # derivation directory.
       test -x ${nixcordDiscord.stageModules}
       test ! -d ${nixcordDiscord.stageModules}
-      grep -F -- ${pkgs.lib.escapeShellArg "${nixcordDiscord.stageModules} ${nixcordDiscord}/opt/Discord/modules"} \
+      grep -F -- ${pkgs.lib.strings.escapeShellArg "${nixcordDiscord.stageModules} ${nixcordDiscord}/opt/Discord/modules"} \
         ${nixcordDiscord}/opt/Discord/Discord
-      test -x ${pkgs.lib.getExe nixcordDiscord.nixcordStageModules}
+      test -x ${pkgs.lib.meta.getExe nixcordDiscord.nixcordStageModules}
     ''}
 
     wrapper_dir="$PWD/wrapper"

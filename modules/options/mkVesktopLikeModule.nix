@@ -11,62 +11,54 @@
   ...
 }:
 let
-  inherit (lib)
-    literalExpression
-    mkEnableOption
-    mkOption
-    mkPackageOption
-    optionalAttrs
-    types
-    ;
 
   jsonFormat = pkgs.formats.json { };
 
   packageOption =
-    mkPackageOption pkgs displayName {
+    lib.options.mkPackageOption pkgs displayName {
       default = moduleName;
       nullable = nullPackageOnDarwin;
     }
-    // optionalAttrs nullPackageOnDarwin {
+    // lib.attrsets.optionalAttrs nullPackageOnDarwin {
       default = if pkgs.stdenvNoCC.isDarwin then null else pkgs.${moduleName} or null;
-      defaultText = literalExpression "if pkgs.stdenvNoCC.isDarwin then null else pkgs.${moduleName} or null";
+      defaultText = lib.options.literalExpression "if pkgs.stdenvNoCC.isDarwin then null else pkgs.${moduleName} or null";
     };
 in
 {
   options.programs.nixcord.${moduleName} = {
-    enable = mkEnableOption displayName;
+    enable = lib.options.mkEnableOption displayName;
 
-    installPackage = mkOption {
-      type = types.bool;
+    installPackage = lib.options.mkOption {
+      type = lib.types.bool;
       default = true;
       description = "Whether to install the final ${displayName} package.";
     };
 
     package = packageOption;
 
-    ${useSystemOption} = mkOption {
-      type = types.bool;
+    ${useSystemOption} = lib.options.mkOption {
+      type = lib.types.bool;
       default = true;
       description = "Whether to use the system ${modName} package instead of the bundled one.";
     };
 
-    configDir = mkOption {
-      type = types.path;
+    configDir = lib.options.mkOption {
+      type = lib.types.path;
       description = "Config directory for ${displayName}.";
     };
 
-    settings = mkOption {
-      type = types.attrsOf jsonFormat.type;
+    settings = lib.options.mkOption {
+      type = lib.types.attrsOf jsonFormat.type;
       default = { };
       description = "Settings to be placed in ${displayName}'s settings.json.";
     };
 
-    state = mkOption {
-      type = types.attrsOf jsonFormat.type;
+    state = lib.options.mkOption {
+      type = lib.types.attrsOf jsonFormat.type;
       default = { };
       description = "State to be placed in ${displayName}'s state.json.";
     };
 
-    autoscroll.enable = mkEnableOption "middle-click autoscrolling for ${displayName}";
+    autoscroll.enable = lib.options.mkEnableOption "middle-click autoscrolling for ${displayName}";
   };
 }

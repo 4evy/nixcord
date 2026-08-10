@@ -67,7 +67,7 @@ let
         --replace-fail "@command_line_args_count@" "${toString commandLineArgsCount}"
 
         cc ${lib.strings.escapeShellArgs strictCFlags} -o ${name} ${name}.c
-        ${lib.optionalString runStaticAnalysis ''
+        ${lib.strings.optionalString runStaticAnalysis ''
           cppcheck \
             --std=c23 \
             --enable=warning,style,performance,portability \

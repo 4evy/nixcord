@@ -20,41 +20,41 @@ let
     };
   };
 
-  sort = lib.sort builtins.lessThan;
+  sort = lib.lists.sort builtins.lessThan;
 
   expectedFileNames =
     expected:
     sort (
-      lib.optionals expected.discord (
+      lib.lists.optionals expected.discord (
         [
           "discord-quick-css"
           "discord-settings"
         ]
-        ++ lib.optional (expected.discordMod != null) "${expected.discordMod}-settings"
+        ++ lib.lists.optional (expected.discordMod != null) "${expected.discordMod}-settings"
       )
-      ++ lib.optionals expected.vesktop [
+      ++ lib.lists.optionals expected.vesktop [
         "vesktop-settings"
         "vesktop-client-settings"
         "vesktop-state"
         "vesktop-quick-css"
         "vesktop-theme-regression"
       ]
-      ++ lib.optionals expected.equibop [
+      ++ lib.lists.optionals expected.equibop [
         "equibop-settings"
         "equibop-client-settings"
         "equibop-state"
         "equibop-quick-css"
         "equibop-theme-regression"
       ]
-      ++ lib.optional expected.dorion "dorion-config"
-      ++ lib.optionals expected.legcord (
+      ++ lib.lists.optional expected.dorion "dorion-config"
+      ++ lib.lists.optionals expected.legcord (
         [ "legcord-settings" ]
-        ++ lib.concatMap (bundle: [
+        ++ lib.lists.concatMap (bundle: [
           "legcord-${bundle}-js"
           "legcord-${bundle}-css"
         ]) expected.legcordBundles
       )
-      ++ lib.optionals expected.goofcord [
+      ++ lib.lists.optionals expected.goofcord [
         "goofcord-settings"
         "goofcord-pre-vencord"
         "goofcord-post-vencord"
@@ -83,13 +83,13 @@ let
       module = ../fixtures/regression-matrix/home-manager.nix;
     };
   }
-  // lib.optionalAttrs pkgs.stdenvNoCC.isLinux {
+  // lib.attrsets.optionalAttrs pkgs.stdenvNoCC.isLinux {
     nixos = {
       stub = stubs.nixos;
       module = ../fixtures/regression-matrix/nixos.nix;
     };
   }
-  // lib.optionalAttrs pkgs.stdenvNoCC.isDarwin {
+  // lib.attrsets.optionalAttrs pkgs.stdenvNoCC.isDarwin {
     nix-darwin = {
       stub = stubs.darwin;
       module = ../fixtures/regression-matrix/nix-darwin.nix;
@@ -100,7 +100,7 @@ let
     moduleSystem: moduleSpec: scenarioName:
     let
       scenario = matrix.scenarios.${scenarioName};
-      evaluated = lib.evalModules {
+      evaluated = lib.modules.evalModules {
         modules = [
           moduleSpec.stub
           moduleSpec.module
@@ -110,17 +110,24 @@ let
           scenario = scenarioName;
         };
       };
-      inherit (evaluated) config;
+      inherit (evaluated) config options;
       cfg = config.programs.nixcord;
-      common = import ../../lib/mkCommonConfig.nix { inherit config lib pkgs; };
+      common = import ../../lib/mkCommonConfig.nix {
+        inherit
+          config
+          lib
+          options
+          pkgs
+          ;
+      };
       actualFiles = sort (map (spec: spec.name) common.fileSpecs);
       expectedFiles = expectedFileNames scenario.expected;
-      missing = lib.filter (name: !(builtins.elem name actualFiles)) expectedFiles;
-      unexpected = lib.filter (name: !(builtins.elem name expectedFiles)) actualFiles;
-      missingPlugins = lib.filter (
+      missing = lib.lists.subtractLists actualFiles expectedFiles;
+      unexpected = lib.lists.subtractLists expectedFiles actualFiles;
+      missingPlugins = lib.lists.filter (
         pluginName: !(cfg.config.plugins.${pluginName}.enable or false)
       ) scenario.expected.pluginNames;
-      assertionsPassed = lib.all (assertion: assertion.assertion or true) config.assertions;
+      assertionsPassed = lib.lists.all (assertion: assertion.assertion or true) config.assertions;
       caseName = "${moduleSystem}:${scenarioName}";
     in
     if !cfg.enable then
@@ -140,7 +147,7 @@ let
     else
       true;
 
-  results = lib.mapAttrs (
+  results = lib.attrsets.mapAttrs (
     moduleSystem: moduleSpec: map (evalCase moduleSystem moduleSpec) scenarioNames
   ) moduleSystems;
 

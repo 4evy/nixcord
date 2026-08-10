@@ -26,7 +26,7 @@ in
 
   programs.nixcord = {
     user = "demo";
-    goofcord.package = lib.mkIf matrix.scenarios.${scenario}.expected.goofcord goofcordPackage;
+    goofcord.package = lib.modules.mkIf matrix.scenarios.${scenario}.expected.goofcord goofcordPackage;
   };
 
   system.stateVersion = 6;

@@ -3,7 +3,7 @@
 let
   inherit (testLib) lib pkgs;
 
-  stubDiscordPackage = lib.makeOverridable (
+  stubDiscordPackage = lib.customisation.makeOverridable (
     {
       branch ? "stable",
       commandLineArgs ? [ ],
@@ -72,7 +72,7 @@ in
         "stable"
       ];
     assert cfg.finalPackage.discord == packages.stable;
-    assert lib.all (
+    assert lib.lists.all (
       branch:
       let
         args = packages.${branch}.passthru.nixcordOverrideArgs;
@@ -93,7 +93,7 @@ in
     true;
 
   "multiple Discord branches each receive managed host settings" =
-    assert lib.all (
+    assert lib.lists.all (
       branch:
       let
         settings = testLib.output.homeFileJSON config "${configDirs.${branch}}/settings.json";

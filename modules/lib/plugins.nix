@@ -1,27 +1,30 @@
 { lib, ... }:
 let
+  isPluginEnabled =
+    pluginConfig: builtins.isAttrs pluginConfig && pluginConfig ? enable && pluginConfig.enable;
+
   mkPluginKit =
     cfg:
     let
-      sharedPluginNames = builtins.attrNames (lib.importJSON ../plugins/shared.json);
-      vencordPluginNames = builtins.attrNames (lib.importJSON ../plugins/vencord.json);
-      equicordPluginNames = builtins.attrNames (lib.importJSON ../plugins/equicord.json);
+      sharedPluginNames = builtins.attrNames (lib.trivial.importJSON ../plugins/shared.json);
+      vencordPluginNames = builtins.attrNames (lib.trivial.importJSON ../plugins/vencord.json);
+      equicordPluginNames = builtins.attrNames (lib.trivial.importJSON ../plugins/equicord.json);
 
-      deprecated = lib.importJSON ../plugins/deprecated.json;
-      migrations = lib.importJSON ../plugins/migrations.json;
+      deprecated = lib.trivial.importJSON ../plugins/deprecated.json;
+      migrations = lib.trivial.importJSON ../plugins/migrations.json;
 
       activePluginNames = sharedPluginNames ++ vencordPluginNames ++ equicordPluginNames;
-      activePluginNamesByLowercase = lib.genAttrs' activePluginNames (
-        name: lib.nameValuePair (lib.toLower name) name
+      activePluginNamesByLowercase = lib.attrsets.genAttrs' activePluginNames (
+        name: lib.attrsets.nameValuePair (lib.strings.toLower name) name
       );
 
-      deprecatedPluginNameMigrations = lib.filterAttrs (oldName: newName: oldName != newName) (
-        lib.mapAttrs (
-          _: value: activePluginNamesByLowercase.${lib.toLower value.to} or value.to
+      deprecatedPluginNameMigrations = lib.attrsets.filterAttrs (oldName: newName: oldName != newName) (
+        lib.attrsets.mapAttrs (
+          _: value: activePluginNamesByLowercase.${lib.strings.toLower value.to} or value.to
         ) deprecated.renames
       );
-      generatedPluginNameMigrations = lib.pipe migrations.renames [
-        (lib.filter (
+      generatedPluginNameMigrations = lib.trivial.pipe migrations.renames [
+        (lib.lists.filter (
           migration:
           builtins.length migration.from == 2
           && builtins.elemAt migration.from 1 == "enable"
@@ -29,8 +32,9 @@ let
         ))
         (
           migrations:
-          lib.genAttrs' migrations (
-            migration: lib.nameValuePair (builtins.elemAt migration.from 0) (builtins.elemAt migration.to 0)
+          lib.attrsets.genAttrs' migrations (
+            migration:
+            lib.attrsets.nameValuePair (builtins.elemAt migration.from 0) (builtins.elemAt migration.to 0)
           )
         )
       ];
@@ -39,51 +43,45 @@ let
 
       mergePlugins =
         configs:
-        lib.pipe configs [
+        lib.trivial.pipe configs [
           (map pluginsOf)
-          (lib.foldl' lib.recursiveUpdate { })
+          (lib.lists.foldl' lib.attrsets.recursiveUpdate { })
         ];
 
       pluginNameMigrations = deprecatedPluginNameMigrations // generatedPluginNameMigrations;
-
-      isPluginEnabled =
-        pluginConfig: builtins.isAttrs pluginConfig && pluginConfig ? enable && pluginConfig.enable;
 
       collectDeprecatedPlugins =
         configAttrs:
         let
           plugins = pluginsOf configAttrs;
         in
-        lib.pipe pluginNameMigrations [
-          (lib.filterAttrs (
+        lib.trivial.pipe pluginNameMigrations [
+          (lib.attrsets.filterAttrs (
             oldName: _:
             let
               plugin = plugins.${oldName} or null;
             in
             plugin != null && isPluginEnabled plugin
           ))
-          lib.attrNames
+          lib.attrsets.attrNames
         ];
 
-      sharedMask = lib.genAttrs sharedPluginNames (_: null);
-      vencordMask = lib.genAttrs vencordPluginNames (_: null);
-      equicordMask = lib.genAttrs equicordPluginNames (_: null);
+      sharedMask = lib.attrsets.genAttrs sharedPluginNames (_: null);
+      vencordMask = lib.attrsets.genAttrs vencordPluginNames (_: null);
+      equicordMask = lib.attrsets.genAttrs equicordPluginNames (_: null);
+
+      vencordOnlyMask = lib.attrsets.removeAttrs vencordMask (sharedPluginNames ++ equicordPluginNames);
+      equicordOnlyMask = lib.attrsets.removeAttrs equicordMask (sharedPluginNames ++ vencordPluginNames);
 
       collectEnabledExclusivePlugins =
-        targetSet: otherMask: configAttrs:
-        lib.pipe (pluginsOf configAttrs) [
-          (lib.filterAttrs (
-            name: value:
-            builtins.hasAttr name targetSet
-            && !(builtins.hasAttr name sharedMask)
-            && !(builtins.hasAttr name otherMask)
-            && isPluginEnabled value
-          ))
+        exclusiveMask: configAttrs:
+        lib.trivial.pipe (builtins.intersectAttrs exclusiveMask (pluginsOf configAttrs)) [
+          (lib.attrsets.filterAttrs (_: isPluginEnabled))
           builtins.attrNames
         ];
 
-      collectEnabledEquicordOnlyPlugins = collectEnabledExclusivePlugins equicordMask vencordMask;
-      collectEnabledVencordOnlyPlugins = collectEnabledExclusivePlugins vencordMask equicordMask;
+      collectEnabledEquicordOnlyPlugins = collectEnabledExclusivePlugins equicordOnlyMask;
+      collectEnabledVencordOnlyPlugins = collectEnabledExclusivePlugins vencordOnlyMask;
 
       filterPluginsFor =
         client: configAttrs:
@@ -123,16 +121,17 @@ let
                   "none"
               ) baseConfig;
         in
-        lib.pipe
+        lib.trivial.pipe
           [
             filteredBaseConfig
             extraConfig
             clientConfig
           ]
-          [ (lib.foldl' lib.recursiveUpdate { }) ];
+          [ (lib.lists.foldl' lib.attrsets.recursiveUpdate { }) ];
     in
     {
       inherit
+        isPluginEnabled
         pluginsOf
         mergePlugins
         pluginNameMigrations
@@ -204,14 +203,14 @@ let
       }
       {
         assertion = !(hasVencordClient && !hasEquicordClient) || wrongEquicordPlugins == [ ];
-        message = "The following Equicord-only plugins are enabled but only Vencord-based clients are active: ${lib.concatStringsSep ", " wrongEquicordPlugins}. These plugins are not available in Vencord.";
+        message = "The following Equicord-only plugins are enabled but only Vencord-based clients are active: ${lib.strings.concatStringsSep ", " wrongEquicordPlugins}. These plugins are not available in Vencord.";
       }
       {
         assertion = !(hasEquicordClient && !hasVencordClient) || wrongVencordPlugins == [ ];
-        message = "The following Vencord-only plugins are enabled but only Equicord-based clients are active: ${lib.concatStringsSep ", " wrongVencordPlugins}. These plugins are not available in Equicord.";
+        message = "The following Vencord-only plugins are enabled but only Equicord-based clients are active: ${lib.strings.concatStringsSep ", " wrongVencordPlugins}. These plugins are not available in Equicord.";
       }
     ];
 in
 {
-  inherit mkPluginKit mkAssertions;
+  inherit isPluginEnabled mkPluginKit mkAssertions;
 }

@@ -1,6 +1,6 @@
 { lib, ... }:
 let
-  data = lib.importJSON ./migrations.json;
+  data = lib.trivial.importJSON ./migrations.json;
 
   base = [
     "programs"
@@ -9,7 +9,8 @@ let
     "plugins"
   ];
 
-  mkRemovedPluginModule = import ../lib/mkRemovedPluginModule.nix { inherit lib; };
+  mkRemovedPluginModule =
+    pluginName: lib.modules.importApply ../lib/mkRemovedPluginModule.nix { inherit pluginName; };
 
   mkRenameModule =
     migration:
@@ -18,7 +19,7 @@ let
       to = base ++ migration.to;
       visible = false;
       inherit (migration) warn;
-      use = lib.id;
+      use = lib.trivial.id;
       condition = migration.condition or true;
     };
 in

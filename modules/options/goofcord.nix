@@ -6,13 +6,6 @@
   ...
 }:
 let
-  inherit (lib)
-    literalExpression
-    mkEnableOption
-    mkOption
-    mkPackageOption
-    types
-    ;
 
   jsonFormat = pkgs.formats.json { };
   goofcordPackage = if pkgs ? goofcord then pkgs.callPackage ../../pkgs/goofcord.nix { } else null;
@@ -20,30 +13,30 @@ let
 in
 {
   options.programs.nixcord.goofcord = {
-    enable = mkEnableOption "GoofCord";
+    enable = lib.options.mkEnableOption "GoofCord";
 
-    installPackage = mkOption {
-      type = types.bool;
+    installPackage = lib.options.mkOption {
+      type = lib.types.bool;
       default = true;
       description = "Whether to install the GoofCord package.";
     };
 
     package =
-      mkPackageOption pkgs "goofcord" {
+      lib.options.mkPackageOption pkgs "goofcord" {
         nullable = true;
       }
       // {
         default = selectedNixcordPkgs.goofcord or goofcordPackage;
-        defaultText = literalExpression "pkgs.callPackage ../../pkgs/goofcord.nix { }";
+        defaultText = lib.options.literalExpression "pkgs.callPackage ../../pkgs/goofcord.nix { }";
       };
 
-    configDir = mkOption {
-      type = types.path;
+    configDir = lib.options.mkOption {
+      type = lib.types.path;
       description = "Directory containing GoofCord's settings.json and assets directory.";
     };
 
-    clientMod = mkOption {
-      type = types.enum [
+    clientMod = lib.options.mkOption {
+      type = lib.types.enum [
         "vencord"
         "equicord"
       ];
@@ -51,8 +44,8 @@ in
       description = "Vencord-based client mod to bundle with GoofCord.";
     };
 
-    settings = mkOption {
-      type = types.attrsOf jsonFormat.type;
+    settings = lib.options.mkOption {
+      type = lib.types.attrsOf jsonFormat.type;
       default = { };
       description = ''
         Settings to be written to GoofCord's settings.json. Entries in `settings.assets` are
@@ -62,8 +55,8 @@ in
       '';
     };
 
-    extraAssets = mkOption {
-      type = types.attrsOf (types.coercedTo types.path toString types.str);
+    extraAssets = lib.options.mkOption {
+      type = lib.types.attrsOf (lib.types.coercedTo lib.types.path toString lib.types.str);
       default = { };
       description = ''
         Additional local paths or URLs to load through GoofCord's asset loader.
@@ -71,6 +64,6 @@ in
       '';
     };
 
-    autoscroll.enable = mkEnableOption "middle-click autoscrolling for GoofCord";
+    autoscroll.enable = lib.options.mkEnableOption "middle-click autoscrolling for GoofCord";
   };
 }

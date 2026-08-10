@@ -4,12 +4,6 @@
   pkgs,
   ...
 }:
-let
-  inherit (lib)
-    mkIf
-    mkMerge
-    ;
-in
 {
   _class = "darwin";
 
@@ -19,9 +13,15 @@ in
     ../warnings.nix
   ];
 
-  config = mkIf config.programs.nixcord.enable (
+  config = lib.modules.mkIf config.programs.nixcord.enable (
     let
-      common = import ../lib/mkCommonConfig.nix { inherit config lib pkgs; };
+      common = import ../lib/mkCommonConfig.nix {
+        inherit
+          config
+          lib
+          pkgs
+          ;
+      };
 
       inherit (common)
         cfg
@@ -33,24 +33,35 @@ in
 
       inherit (import ../lib/discord.nix { inherit lib; }) getDiscordConfigDirs;
 
-      configuredHome = lib.attrByPath [ cfg.user "home" ] null config.users.users;
-      homeDir = if configuredHome != null then configuredHome else "/Users/${cfg.user}";
+      homeDir = lib.trivial.defaultTo "/Users/${cfg.user}" (
+        lib.attrsets.attrByPath [ cfg.user "home" ] null config.users.users
+      );
       basePath = "${homeDir}/Library/Application Support";
 
+      managedConfigDirs = [
+        cfg.configDir
+      ]
+      ++ lib.lists.optionals cfg.discord.enable (getDiscordConfigDirs cfg)
+      ++ lib.lists.optional cfg.vesktop.enable cfg.vesktop.configDir
+      ++ lib.lists.optional cfg.equibop.enable cfg.equibop.configDir
+      ++ lib.lists.optional cfg.goofcord.enable cfg.goofcord.configDir
+      ++ lib.lists.optional cfg.dorion.enable cfg.dorion.configDir
+      ++ lib.lists.optional cfg.legcord.enable cfg.legcord.configDir;
+
       activationScripts = common.mkActivationScripts (script: ''
-        sudo --user=${lib.escapeShellArg cfg.user} -- ${pkgs.runtimeShell} -c ${lib.escapeShellArg script}
+        sudo --user=${lib.strings.escapeShellArg cfg.user} -- ${pkgs.runtimeShell} -c ${lib.strings.escapeShellArg script}
       '');
 
-      install = lib.getExe' pkgs.coreutils "install";
+      install = lib.meta.getExe' pkgs.coreutils "install";
 
     in
-    mkMerge [
+    lib.modules.mkMerge [
       {
         programs.nixcord = (mkConfigDirs cfg basePath) // {
-          homeDirectory = lib.mkDefault homeDir;
-          xdgConfigHome = lib.mkDefault "${homeDir}/.config";
+          homeDirectory = lib.modules.mkDefault homeDir;
+          xdgConfigHome = lib.modules.mkDefault "${homeDir}/.config";
           # Darwin dorion uses ~/.config instead of ~/Library/Application Support
-          dorion.configDir = lib.mkDefault "${homeDir}/.config/dorion";
+          dorion.configDir = lib.modules.mkDefault "${homeDir}/.config/dorion";
         };
       }
       {
@@ -58,40 +69,34 @@ in
 
         environment.systemPackages = packages.installed;
       }
-      (mkIf cfg.discord.enable {
+      (lib.modules.mkIf cfg.discord.enable {
         # nix-darwin executes a fixed set of activation stages; custom
         # activation attribute names are not included in the final script.
-        system.activationScripts.applications.text = lib.mkAfter ''
+        system.activationScripts.applications.text = lib.modules.mkAfter ''
           ${activationScripts.disableDiscordUpdates}
           ${activationScripts.fixDiscordModules}
         '';
       })
-      (mkIf (fileSpecs != [ ]) {
-        system.activationScripts.applications.text = lib.mkAfter (
+      (lib.modules.mkIf (fileSpecs != [ ]) {
+        system.activationScripts.applications.text = lib.modules.mkAfter (
           let
-            mkDir = dir: "${install} -d -o ${lib.escapeShellArg cfg.user} -g staff ${lib.escapeShellArg dir}";
+            mkDir =
+              dir:
+              "${install} -d -o ${lib.strings.escapeShellArg cfg.user} -g staff ${lib.strings.escapeShellArg dir}";
           in
           ''
-            ${mkDir cfg.configDir}
-            ${lib.optionalString cfg.discord.enable (
-              lib.concatMapStringsSep "\n" mkDir (getDiscordConfigDirs cfg)
-            )}
-            ${lib.optionalString cfg.vesktop.enable (mkDir cfg.vesktop.configDir)}
-            ${lib.optionalString cfg.equibop.enable (mkDir cfg.equibop.configDir)}
-            ${lib.optionalString cfg.goofcord.enable (mkDir cfg.goofcord.configDir)}
-            ${lib.optionalString cfg.dorion.enable (mkDir cfg.dorion.configDir)}
-            ${lib.optionalString cfg.legcord.enable (mkDir cfg.legcord.configDir)}
+            ${lib.strings.concatMapStringsSep "\n" mkDir managedConfigDirs}
 
             copy_file() {
-              sudo --user=${lib.escapeShellArg cfg.user} -- ${install} -D -m "$3" "$1" "$2"
+              sudo --user=${lib.strings.escapeShellArg cfg.user} -- ${install} -D -m "$3" "$1" "$2"
             }
 
             ${fileCopyCommands}
           ''
         );
       })
-      (mkIf cfg.dorion.enable {
-        system.activationScripts.applications.text = lib.mkAfter activationScripts.setupDorionVencordSettings;
+      (lib.modules.mkIf cfg.dorion.enable {
+        system.activationScripts.applications.text = lib.modules.mkAfter activationScripts.setupDorionVencordSettings;
       })
     ]
   );

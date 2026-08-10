@@ -4,12 +4,6 @@
   pkgs,
   ...
 }:
-let
-  inherit (lib)
-    mkIf
-    mkMerge
-    ;
-in
 {
   _class = "homeManager";
 
@@ -19,9 +13,15 @@ in
     ../warnings.nix
   ];
 
-  config = mkIf config.programs.nixcord.enable (
+  config = lib.modules.mkIf config.programs.nixcord.enable (
     let
-      common = import ../lib/mkCommonConfig.nix { inherit config lib pkgs; };
+      common = import ../lib/mkCommonConfig.nix {
+        inherit
+          config
+          lib
+          pkgs
+          ;
+      };
 
       inherit (common)
         cfg
@@ -30,20 +30,22 @@ in
         fileSpecs
         ;
 
-      install = lib.getExe' pkgs.coreutils "install";
+      install = lib.meta.getExe' pkgs.coreutils "install";
 
-      homeFiles = lib.genAttrs' (lib.filter (spec: !spec.writable) fileSpecs) (
+      fileSpecsByWritable = lib.lists.partition (spec: spec.writable) fileSpecs;
+
+      homeFiles = lib.attrsets.genAttrs' fileSpecsByWritable.wrong (
         spec:
-        lib.nameValuePair spec.dest {
+        lib.attrsets.nameValuePair spec.dest {
           source = spec.src;
         }
       );
-      writableHomeActivations = lib.genAttrs' (lib.filter (spec: spec.writable) fileSpecs) (
+      writableHomeActivations = lib.attrsets.genAttrs' fileSpecsByWritable.right (
         spec:
-        lib.nameValuePair "nixcord-${spec.name}" (
+        lib.attrsets.nameValuePair "nixcord-${spec.name}" (
           lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-            dest=${lib.escapeShellArg spec.dest}
-            src=${lib.escapeShellArg spec.src}
+            dest=${lib.strings.escapeShellArg spec.dest}
+            src=${lib.strings.escapeShellArg spec.src}
             if [ -L "$dest" ]; then
               rm "$dest"
             elif [ -e "$dest" ]; then
@@ -59,12 +61,12 @@ in
       );
 
     in
-    mkMerge [
+    lib.modules.mkMerge [
       {
         programs.nixcord = {
-          user = lib.mkDefault config.home.username;
-          homeDirectory = lib.mkDefault config.home.homeDirectory;
-          xdgConfigHome = lib.mkDefault config.xdg.configHome;
+          user = lib.modules.mkDefault config.home.username;
+          homeDirectory = lib.modules.mkDefault config.home.homeDirectory;
+          xdgConfigHome = lib.modules.mkDefault config.xdg.configHome;
         }
         // mkConfigDirs cfg (
           if pkgs.stdenvNoCC.isLinux then
@@ -82,11 +84,11 @@ in
           activation = writableHomeActivations;
         };
       }
-      (mkIf cfg.discord.enable {
+      (lib.modules.mkIf cfg.discord.enable {
         home.activation.disableDiscordUpdates = activationScripts.disableDiscordUpdates;
         home.activation.fixDiscordModules = activationScripts.fixDiscordModules;
       })
-      (mkIf cfg.dorion.enable {
+      (lib.modules.mkIf cfg.dorion.enable {
         home.activation.setupDorionVencordSettings = activationScripts.setupDorionVencordSettings;
       })
     ]

@@ -12,12 +12,12 @@ let
 in
 testLib.run.tests "darwin-activation-stage-test" {
   "Discord activation runs in nix-darwin's applications stage" =
-    testLib.lib.hasInfix "SKIP_HOST_UPDATE" applications
-    && testLib.lib.hasInfix "discorddevelopment" applications
-    && testLib.lib.hasInfix "sudo --user=testuser" applications;
+    testLib.lib.strings.hasInfix "SKIP_HOST_UPDATE" applications
+    && testLib.lib.strings.hasInfix "discorddevelopment" applications
+    && testLib.lib.strings.hasInfix "sudo --user=testuser" applications;
 
   "Dorion activation runs in nix-darwin's applications stage" =
-    testLib.lib.hasInfix "VencordSettings" applications;
+    testLib.lib.strings.hasInfix "VencordSettings" applications;
 
   "Nixcord does not create activation stages ignored by nix-darwin" =
     !(activationScripts ? nixcord-disableDiscordUpdates)

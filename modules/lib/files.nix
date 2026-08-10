@@ -1,6 +1,7 @@
 { lib, ... }:
 let
   inherit (import ./discord.nix { inherit lib; })
+    disabledUpdateSettings
     getDiscordBranches
     getDiscordConfigDir
     ;
@@ -80,7 +81,7 @@ let
       quickCssOnDiscord =
         cfg.discord.enable
         && quickCssEnabled
-        && lib.any isQuickCssUsed [
+        && lib.lists.any isQuickCssUsed [
           cfg.vencordConfig
           cfg.equicordConfig
         ];
@@ -141,7 +142,7 @@ let
         }
       ];
 
-      legcordWebSpecs = lib.concatMap (
+      legcordWebSpecs = lib.lists.concatMap (
         mod:
         map
           (
@@ -218,10 +219,10 @@ let
         }
       ];
 
-      themeSpecs = lib.concatMap (
+      themeSpecs = lib.lists.concatMap (
         themeClient:
-        lib.optionals themeClient.client.enable (
-          lib.mapAttrsToList (
+        lib.lists.optionals themeClient.client.enable (
+          lib.attrsets.mapAttrsToList (
             themeName: path:
             copy {
               name = "${themeClient.name}-theme-${themeName}";
@@ -282,29 +283,33 @@ let
         oneOffSpecs
         ++ discordSettingsSpecs
         ++ discordModSettingsSpecs
-        ++ lib.concatMap mkSettingsSpecs desktopClients
+        ++ lib.lists.concatMap mkSettingsSpecs desktopClients
         ++ legcordWebSpecs
         ++ goofcordAssetSpecs
         ++ themeSpecs;
     in
-    lib.pipe fileSpecs [
-      (lib.filter (spec: spec.enable))
-      (map (spec: lib.removeAttrs spec [ "enable" ]))
+    lib.trivial.pipe fileSpecs [
+      (lib.lists.filter (spec: spec.enable))
+      (map (spec: lib.attrsets.removeAttrs spec [ "enable" ]))
     ];
 
   mkCopyCommands =
-    args:
+    # Keep this function on the already-filtered specs.  Reconstructing the
+    # specs here creates a second copy of the same option-dependent traversal
+    # during NixOS evaluation; Nix only memoizes values, not equivalent calls.
+    fileSpecs:
     let
-      mkCopy = spec: "copy_file ${lib.escapeShellArg spec.src} ${lib.escapeShellArg spec.dest} 0644";
+      mkCopy =
+        spec:
+        "copy_file ${lib.strings.escapeShellArg spec.src} ${lib.strings.escapeShellArg spec.dest} 0644";
     in
-    lib.pipe (mkFileSpecs args) [
-      (lib.concatMapStringsSep "\n" mkCopy)
+    lib.trivial.pipe fileSpecs [
+      (lib.strings.concatMapStringsSep "\n" mkCopy)
     ];
 
   mkInstalledPackages =
     cfg: finalPackages:
     let
-      inherit (import ./discord.nix { inherit lib; }) getDiscordBranches;
       inherit (cfg)
         discord
         dorion
@@ -314,39 +319,18 @@ let
         vesktop
         ;
     in
-    lib.pipe
-      (
-        map (branch: {
-          enable = discord.enable && discord.installPackage;
-          package = finalPackages.discordBranches.${branch};
-        }) (getDiscordBranches cfg)
-        ++ [
-          {
-            enable = vesktop.enable && vesktop.installPackage;
-            package = finalPackages.vesktop;
-          }
-          {
-            enable = equibop.enable && finalPackages.equibop != null && equibop.installPackage;
-            package = finalPackages.equibop;
-          }
-          {
-            enable = goofcord.enable && finalPackages.goofcord != null && goofcord.installPackage;
-            package = finalPackages.goofcord;
-          }
-          {
-            enable = dorion.enable && dorion.installPackage;
-            package = finalPackages.dorion;
-          }
-          {
-            enable = legcord.enable && legcord.installPackage;
-            package = finalPackages.legcord;
-          }
-        ]
-      )
-      [
-        (lib.filter (entry: entry.enable))
-        (map (entry: entry.package))
-      ];
+    lib.lists.optionals (discord.enable && discord.installPackage) (
+      map (branch: finalPackages.discordBranches.${branch}) (getDiscordBranches cfg)
+    )
+    ++ lib.lists.optional (vesktop.enable && vesktop.installPackage) finalPackages.vesktop
+    ++ lib.lists.optional (
+      equibop.enable && finalPackages.equibop != null && equibop.installPackage
+    ) finalPackages.equibop
+    ++ lib.lists.optional (
+      goofcord.enable && finalPackages.goofcord != null && goofcord.installPackage
+    ) finalPackages.goofcord
+    ++ lib.lists.optional (dorion.enable && dorion.installPackage) finalPackages.dorion
+    ++ lib.lists.optional (legcord.enable && legcord.installPackage) finalPackages.legcord;
 
   mkSettingsFiles =
     {
@@ -360,11 +344,6 @@ let
     }:
     let
       jsonFormat = pkgs.formats.json { };
-      disabledUpdateSettings = {
-        SKIP_HOST_UPDATE = true;
-        SKIP_MODULE_UPDATE = true;
-        USE_NEW_UPDATER = false;
-      };
       discordSettings = cfg.discord.settings // disabledUpdateSettings;
 
       settingSpecs = {
@@ -415,7 +394,7 @@ let
         };
       };
     in
-    lib.mapAttrs (
+    lib.attrsets.mapAttrs (
       _: spec:
       if spec.enable then
         jsonFormat.generate "nixcord-${spec.name}.json" (mkVencordCfg spec.value)
@@ -426,7 +405,7 @@ let
   mkThemeFile =
     { pkgs }:
     name: value:
-    if builtins.isPath value || lib.isStorePath value then
+    if builtins.isPath value || lib.strings.isStorePath value then
       value
     else
       pkgs.writeText "nixcord-theme-${name}.css" value;

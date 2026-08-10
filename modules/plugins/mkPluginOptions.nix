@@ -1,29 +1,29 @@
-# Builds NixOS module options from a plugin JSON schema.
+# Builds NixOS module options from a plugin schema.
 # Each plugin gets an `enable` option plus any declared settings.
-{ lib, file, ... }:
+{
+  lib,
+  file ? null,
+  schema ? lib.trivial.importJSON file,
+  ...
+}:
 let
-  inherit (lib)
-    types
-    mkEnableOption
-    mkOption
-    mapAttrs
-    ;
+  jsonAttrs = lib.types.attrsOf lib.types.json;
 
   # Map type strings from the JSON schema to actual Nix types.
   typeMap = {
-    "types.bool" = types.bool;
-    "types.str" = types.str;
-    "types.int" = types.int;
-    "types.float" = types.float;
-    "types.attrs" = types.attrs;
-    "types.nullOr types.str" = types.nullOr types.str;
-    "types.nullOr types.attrs" = types.nullOr types.attrs;
-    "types.nullOr (types.listOf types.str)" = types.nullOr (types.listOf types.str);
-    "types.listOf types.str" = types.listOf types.str;
-    "types.listOf types.number" = types.listOf types.number;
-    "types.listOf types.bool" = types.listOf types.bool;
-    "types.listOf types.attrs" = types.listOf types.attrs;
-    "types.listOf types.anything" = types.listOf types.anything;
+    "types.bool" = lib.types.bool;
+    "types.str" = lib.types.str;
+    "types.int" = lib.types.int;
+    "types.float" = lib.types.float;
+    "types.attrs" = jsonAttrs;
+    "types.nullOr types.str" = lib.types.nullOr lib.types.str;
+    "types.nullOr types.attrs" = lib.types.nullOr jsonAttrs;
+    "types.nullOr (types.listOf types.str)" = lib.types.nullOr (lib.types.listOf lib.types.str);
+    "types.listOf types.str" = lib.types.listOf lib.types.str;
+    "types.listOf types.number" = lib.types.listOf lib.types.number;
+    "types.listOf types.bool" = lib.types.listOf lib.types.bool;
+    "types.listOf types.attrs" = lib.types.listOf jsonAttrs;
+    "types.listOf types.anything" = lib.types.listOf lib.types.anything;
   };
 
   normalizeSetting =
@@ -37,9 +37,9 @@ let
       }
       // setting;
     in
-    normalized // { settings = mapAttrs (_: normalizeSetting) normalized.settings; };
+    normalized // { settings = lib.attrsets.mapAttrs (_: normalizeSetting) normalized.settings; };
 
-  data = mapAttrs (_: normalizeSetting) (lib.importJSON file);
+  data = lib.attrsets.mapAttrs (_: normalizeSetting) schema;
 
   resolveDefault =
     type: value:
@@ -66,23 +66,23 @@ let
         commonAttrs = {
           inherit (setting) description;
         }
-        // lib.optionalAttrs (setting ? default) {
+        // lib.attrsets.optionalAttrs (setting ? default) {
           default = resolveDefault setting.type setting.default;
         }
-        // lib.optionalAttrs (setting.example != null) { inherit (setting) example; };
+        // lib.attrsets.optionalAttrs (setting.example != null) { inherit (setting) example; };
         typeAttr =
           if setting.type == "types.enum" then
-            { type = types.enum (setting.enumValues or [ ]); }
+            { type = lib.types.enum (setting.enumValues or [ ]); }
           else
             { type = typeMap.${setting.type}; };
       in
-      mkOption (typeAttr // commonAttrs);
+      lib.options.mkOption (typeAttr // commonAttrs);
 
   mkPlugin =
     _name: plugin:
     {
-      enable = mkEnableOption plugin.description;
+      enable = lib.options.mkEnableOption plugin.description;
     }
-    // mapAttrs mkSettingOption plugin.settings;
+    // lib.attrsets.mapAttrs mkSettingOption plugin.settings;
 in
-mapAttrs mkPlugin data
+lib.attrsets.mapAttrs mkPlugin data

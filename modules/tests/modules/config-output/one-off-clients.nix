@@ -106,7 +106,7 @@ in
       cfg = config.programs.nixcord;
       overrideArgs = cfg.finalPackage.discord.passthru.nixcordOverrideArgs;
     in
-    assert lib.hasSuffix "/discorddevelopment" (toString cfg.discord.configDir);
+    assert lib.strings.hasSuffix "/discorddevelopment" (toString cfg.discord.configDir);
     assert overrideArgs.branch == "development";
     assert overrideArgs.withOpenASAR == true;
     assert overrideArgs.withVencord == true;

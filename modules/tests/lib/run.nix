@@ -4,12 +4,24 @@
   tests =
     name: tests:
     let
-      results = builtins.attrValues tests;
-      count = builtins.length results;
-      passed = lib.all lib.id results;
+      testNames = builtins.attrNames tests;
+      failures = lib.debug.runTests (
+        {
+          tests = testNames;
+        }
+        // lib.attrsets.mapAttrs (_: result: {
+          expr = result;
+          expected = true;
+        }) tests
+      );
     in
+    assert
+      lib.debug.throwTestFailures {
+        inherit failures;
+        description = name;
+      } == null;
     pkgs.runCommand name { } ''
-      ${if passed then "echo '${toString count} ${name} tests passed'" else "exit 1"}
+      echo '${toString (builtins.length testNames)} ${name} tests passed'
       touch $out
     '';
 }

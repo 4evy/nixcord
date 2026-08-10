@@ -1,17 +1,16 @@
 { lib, ... }:
 let
-  inherit (lib) mkEnableOption mkOption types;
 
   uiElementOptions =
     { name, ... }:
     {
-      options.enable = mkEnableOption "the ${name} plugin UI element";
+      options.enable = lib.options.mkEnableOption "the ${name} plugin UI element";
     };
 
   uiElementsOption =
     description:
-    mkOption {
-      type = types.attrsOf (types.submodule uiElementOptions);
+    lib.options.mkOption {
+      type = lib.types.attrsOf (lib.types.submodule uiElementOptions);
       default = { };
       description = "Plugin UI elements to configure for ${description}.";
       example = {
@@ -21,27 +20,27 @@ let
 in
 {
   options.programs.nixcord = {
-    quickCss = mkOption {
-      type = types.str;
+    quickCss = lib.options.mkOption {
+      type = lib.types.str;
       default = "";
       description = "Quick CSS to inject into the client.";
     };
     config = {
-      notifyAboutUpdates = mkEnableOption "update notifications";
-      autoUpdate = mkEnableOption "automatic Vencord updates";
-      autoUpdateNotification = mkEnableOption "auto-update notifications";
-      useQuickCss = mkEnableOption "the quick CSS file";
-      themeLinks = mkOption {
-        type = types.listOf types.str;
+      notifyAboutUpdates = lib.options.mkEnableOption "update notifications";
+      autoUpdate = lib.options.mkEnableOption "automatic Vencord updates";
+      autoUpdateNotification = lib.options.mkEnableOption "auto-update notifications";
+      useQuickCss = lib.options.mkEnableOption "the quick CSS file";
+      themeLinks = lib.options.mkOption {
+        type = lib.types.listOf lib.types.str;
         default = [ ];
         description = "A list of URLs to online Vencord themes.";
         example = [ "https://raw.githubusercontent.com/rose-pine/discord/main/rose-pine.theme.css" ];
       };
-      themes = mkOption {
-        type = types.attrsOf (
-          types.oneOf [
-            types.lines
-            types.path
+      themes = lib.options.mkOption {
+        type = lib.types.attrsOf (
+          lib.types.oneOf [
+            lib.types.lines
+            lib.types.path
           ]
         );
         default = { };
@@ -50,27 +49,27 @@ in
           `programs.nixcord.config.enabledThemes` to `[ "THEME_NAME.css" ]`.
         '';
       };
-      enabledThemes = mkOption {
-        type = types.listOf types.str;
+      enabledThemes = lib.options.mkOption {
+        type = lib.types.listOf lib.types.str;
         default = [ ];
         description = "A list of themes to enable from the themes directory.";
         example = [ "my-theme.css" ];
       };
-      enabledThemeLinks = mkOption {
-        type = types.listOf types.str;
+      enabledThemeLinks = lib.options.mkOption {
+        type = lib.types.listOf lib.types.str;
         default = [ ];
         description = "A list of online Vencord theme URLs to enable.";
         example = [ "https://raw.githubusercontent.com/rose-pine/discord/main/rose-pine.theme.css" ];
       };
-      enableReactDevtools = mkEnableOption "React developer tools";
-      frameless = mkEnableOption "frameless client window";
-      transparent = mkEnableOption "client transparency";
-      disableMinSize = mkEnableOption "disabling the minimum window size";
+      enableReactDevtools = lib.options.mkEnableOption "React developer tools";
+      frameless = lib.options.mkEnableOption "frameless client window";
+      transparent = lib.options.mkEnableOption "client transparency";
+      disableMinSize = lib.options.mkEnableOption "disabling the minimum window size";
       uiElements = {
         chatBarButtons = uiElementsOption "chat bar buttons";
         messagePopoverButtons = uiElementsOption "message popover buttons";
       };
-      plugins = lib.foldl' lib.recursiveUpdate { } [
+      plugins = lib.lists.foldl' lib.attrsets.recursiveUpdate { } [
         (import ../plugins/mkPluginOptions.nix {
           inherit lib;
           file = ../plugins/shared.json;

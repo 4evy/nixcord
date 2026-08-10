@@ -1,6 +1,9 @@
 { testLib }:
+let
+  recursiveUpdate = testLib.lib.attrsets.recursiveUpdate;
+in
 {
-  inherit (testLib.lib) recursiveUpdate;
+  inherit recursiveUpdate;
 
   baseConfig = {
     enable = true;

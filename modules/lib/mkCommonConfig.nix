@@ -67,7 +67,7 @@ let
       ;
   };
 
-  themes = lib.mapAttrs (mkThemeFile { inherit pkgs; }) cfg.config.themes;
+  themes = lib.attrsets.mapAttrs (mkThemeFile { inherit pkgs; }) cfg.config.themes;
 
   dorionAttrs = mkDorionConfigAttrs cfg;
 
@@ -103,14 +103,15 @@ let
     let
       inherit (cfg) legcord;
       bundledMods =
-        lib.optional legcord.vencord.enable "vencord" ++ lib.optional legcord.equicord.enable "equicord";
+        lib.lists.optional legcord.vencord.enable "vencord"
+        ++ lib.lists.optional legcord.equicord.enable "equicord";
       listSettings = {
         mods = legcord.settings.mods or [ ];
         noBundleUpdates = legcord.settings.noBundleUpdates or [ ];
       };
-      autoSettings = lib.optionalAttrs (bundledMods != [ ]) {
-        mods = lib.unique (listSettings.mods ++ bundledMods);
-        noBundleUpdates = lib.unique (listSettings.noBundleUpdates ++ bundledMods);
+      autoSettings = lib.attrsets.optionalAttrs (bundledMods != [ ]) {
+        mods = lib.lists.unique (listSettings.mods ++ bundledMods);
+        noBundleUpdates = lib.lists.unique (listSettings.noBundleUpdates ++ bundledMods);
       };
     in
     legcord.settings // autoSettings // { doneSetup = true; };
@@ -155,9 +156,9 @@ let
 
   goofcordSettingsBootstrap = pkgs.writeText "nixcord-goofcord-settings-bootstrap.js" goofcordSettingsBootstrapText;
 
-  enabledGoofcordThemePaths = lib.pipe (goofcordFullConfig.enabledThemes or [ ]) [
-    (map (lib.removeSuffix ".css"))
-    (lib.filter (name: builtins.hasAttr name themes))
+  enabledGoofcordThemePaths = lib.trivial.pipe (goofcordFullConfig.enabledThemes or [ ]) [
+    (map (lib.strings.removeSuffix ".css"))
+    (lib.lists.filter (name: builtins.hasAttr name themes))
     (map (name: themes.${name}))
   ];
 
@@ -168,7 +169,7 @@ let
       pkgs.writeText "nixcord-goofcord-themes.css" ""
     else
       pkgs.concatText "nixcord-goofcord-themes.css" (
-        lib.intersperse goofcordThemeSeparator enabledGoofcordThemePaths
+        lib.strings.intersperse goofcordThemeSeparator enabledGoofcordThemePaths
       );
 
   goofcordQuickCss =
@@ -219,12 +220,12 @@ let
 
   goofcordAttrs =
     cfg.goofcord.settings
-    // lib.optionalAttrs cfg.goofcord.autoscroll.enable { autoscroll = true; }
+    // lib.attrsets.optionalAttrs cfg.goofcord.autoscroll.enable { autoscroll = true; }
     // {
       assets =
         goofcordSettingsAssets
         // cfg.goofcord.extraAssets
-        // lib.optionalAttrs (goofcordSupport != null) {
+        // lib.attrsets.optionalAttrs (goofcordSupport != null) {
           NixcordPreVencord = "${goofcordSupport}/preVencord.js";
           NixcordPostVencord = "${goofcordSupport}/postVencord.js";
           NixcordClientMod = "${goofcordSupport}/clientMod.js";
@@ -294,7 +295,7 @@ let
 
   fileSpecs = mkFileSpecs fileSpecArgs;
 
-  fileCopyCommands = mkCopyCommands fileSpecArgs;
+  fileCopyCommands = mkCopyCommands fileSpecs;
 in
 {
   inherit

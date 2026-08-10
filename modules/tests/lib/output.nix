@@ -4,7 +4,7 @@ let
   fileSpecBy =
     config: predicate: description:
     let
-      matches = lib.filter predicate config._nixcordTest.common.fileSpecs;
+      matches = lib.lists.filter predicate config._nixcordTest.common.fileSpecs;
     in
     if matches == [ ] then
       throw "missing generated file spec for ${description}"
@@ -26,9 +26,9 @@ let
         SKIP_MODULE_UPDATE = true;
         USE_NEW_UPDATER = false;
       };
-      themeName = lib.pipe spec.name [
-        (lib.removePrefix "vesktop-theme-")
-        (lib.removePrefix "equibop-theme-")
+      themeName = lib.trivial.pipe spec.name [
+        (lib.strings.removePrefix "vesktop-theme-")
+        (lib.strings.removePrefix "equibop-theme-")
       ];
       theme = cfg.config.themes.${themeName};
     in
@@ -38,7 +38,7 @@ let
       toVencordJSON configs.equicordFullConfig
     else if
       spec.name == "discord-settings"
-      || lib.hasPrefix "discord-" spec.name && lib.hasSuffix "-settings" spec.name
+      || lib.strings.hasPrefix "discord-" spec.name && lib.strings.hasSuffix "-settings" spec.name
     then
       toVencordJSON (cfg.discord.settings // disabledUpdateSettings)
     else if spec.name == "vesktop-settings" then
@@ -59,10 +59,12 @@ let
       builtins.toJSON configs.legcordAttrs
     else if spec.name == "goofcord-settings" then
       builtins.unsafeDiscardStringContext (builtins.toJSON configs.goofcordAttrs)
-    else if lib.hasSuffix "quick-css" spec.name then
+    else if lib.strings.hasSuffix "quick-css" spec.name then
       cfg.quickCss
-    else if lib.hasPrefix "vesktop-theme-" spec.name || lib.hasPrefix "equibop-theme-" spec.name then
-      if builtins.isPath theme || lib.isStorePath theme then builtins.readFile theme else theme
+    else if
+      lib.strings.hasPrefix "vesktop-theme-" spec.name || lib.strings.hasPrefix "equibop-theme-" spec.name
+    then
+      if builtins.isPath theme || lib.strings.isStorePath theme then builtins.readFile theme else theme
     else
       throw "generated file spec ${spec.name} is not text-backed in tests";
 
@@ -79,7 +81,7 @@ in
     builtins.fromJSON (
       generatedFileText config (
         fileSpecBy config (
-          spec: spec.name == lib.removePrefix "nixcord-" activationName
+          spec: spec.name == lib.strings.removePrefix "nixcord-" activationName
         ) "activation ${activationName}"
       )
     );

@@ -4,9 +4,6 @@
   pkgs,
   ...
 }:
-let
-  inherit (lib) mkIf mkMerge;
-in
 {
   _class = "nixos";
 
@@ -16,9 +13,15 @@ in
     ../warnings.nix
   ];
 
-  config = mkIf config.programs.nixcord.enable (
+  config = lib.modules.mkIf config.programs.nixcord.enable (
     let
-      common = import ../lib/mkCommonConfig.nix { inherit config lib pkgs; };
+      common = import ../lib/mkCommonConfig.nix {
+        inherit
+          config
+          lib
+          pkgs
+          ;
+      };
 
       inherit (common)
         cfg
@@ -28,22 +31,25 @@ in
         fileCopyCommands
         ;
 
-      configuredHome = lib.attrByPath [ cfg.user "home" ] null config.users.users;
-      homeDir = if configuredHome != null then configuredHome else "/home/${cfg.user}";
+      homeDir = lib.attrsets.attrByPath [ cfg.user "home" ] "/home/${cfg.user}" config.users.users;
 
       activationScripts = common.mkActivationScripts (script: ''
-        ${lib.getExe' pkgs.util-linux "runuser"} -u ${lib.escapeShellArg cfg.user} -- ${pkgs.runtimeShell} -c ${lib.escapeShellArg script}
+        # NixOS puts util-linux in the activation script PATH.  Keeping
+        # runuser unqualified avoids forcing that large package solely while
+        # evaluating this module; the system activation script already owns
+        # and guarantees the dependency.
+        runuser -u ${lib.strings.escapeShellArg cfg.user} -- ${pkgs.runtimeShell} -c ${lib.strings.escapeShellArg script}
       '');
 
       writeFilesScript =
         let
-          install = lib.getExe' pkgs.coreutils "install";
-          idBin = lib.getExe' pkgs.coreutils "id";
+          install = lib.meta.getExe' pkgs.coreutils "install";
+          idBin = lib.meta.getExe' pkgs.coreutils "id";
         in
         ''
           set -euo pipefail
 
-          target_user=${lib.escapeShellArg cfg.user}
+          target_user=${lib.strings.escapeShellArg cfg.user}
           target_group="$(${idBin} -gn "$target_user")"
 
           copy_file() {
@@ -56,18 +62,18 @@ in
           ${fileCopyCommands}
         '';
     in
-    mkMerge [
+    lib.modules.mkMerge [
       {
         programs.nixcord = {
-          homeDirectory = lib.mkDefault homeDir;
-          xdgConfigHome = lib.mkDefault "${cfg.homeDirectory}/.config";
+          homeDirectory = lib.modules.mkDefault homeDir;
+          xdgConfigHome = lib.modules.mkDefault "${cfg.homeDirectory}/.config";
           finalPackage = packages.final;
         }
         // mkConfigDirs cfg cfg.xdgConfigHome;
 
         environment.systemPackages = packages.installed;
       }
-      (mkIf cfg.discord.enable {
+      (lib.modules.mkIf cfg.discord.enable {
         system.activationScripts.nixcord-disableDiscordUpdates = {
           deps = [ "users" ];
           text = activationScripts.disableDiscordUpdates;
@@ -79,14 +85,14 @@ in
           supportsDryActivation = false;
         };
       })
-      (mkIf cfg.dorion.enable {
+      (lib.modules.mkIf cfg.dorion.enable {
         system.activationScripts.nixcord-setupDorionVencordSettings = {
           deps = [ "users" ];
           text = activationScripts.setupDorionVencordSettings;
           supportsDryActivation = false;
         };
       })
-      (mkIf (fileSpecs != [ ]) {
+      (lib.modules.mkIf (fileSpecs != [ ]) {
         system.activationScripts.nixcord-writeFiles = {
           deps = [ "users" ];
           # NixOS concatenates activation snippets in one shell, so keep this

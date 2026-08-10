@@ -1,14 +1,12 @@
 {
   config,
   lib,
-  options,
   pkgs,
   nixcordPkgs ? { },
   ...
 }:
 let
-  inherit (lib) mkEnableOption mkOption types;
-  branchType = types.enum [
+  branchType = lib.types.enum [
     "stable"
     "ptb"
     "canary"
@@ -20,49 +18,38 @@ let
   openasarPackage = pkgs.openasar;
   selectedNixcordPkgs = if config.programs.nixcord.useGlobalPkgs then { } else nixcordPkgs;
 
-  branchOption = options.programs.nixcord.discord.branch;
-  branchWasDefined = lib.any (
-    file: !(builtins.elem file branchOption.declarations)
-  ) branchOption.files;
 in
 {
   options.programs.nixcord.discord = {
-    enable = mkOption {
-      type = types.bool;
+    enable = lib.options.mkOption {
+      type = lib.types.bool;
       default = true;
       description = "Whether to enable Discord. Disable to only install Vesktop.";
       example = false;
     };
-    installPackage = mkOption {
-      type = types.bool;
+    installPackage = lib.options.mkOption {
+      type = lib.types.bool;
       default = true;
       description = "Whether to install the final Discord package.";
     };
-    package = mkOption {
-      type = types.package;
+    package = lib.options.mkPackageOption pkgs "Discord" { default = "discord"; } // {
       default = pkgs.callPackage ../../pkgs/discord (
         {
           openasar = selectedNixcordPkgs.openasar or openasarPackage;
         }
-        // lib.optionalAttrs (pkgs.stdenvNoCC.isLinux && lib.versionOlder lib.version "25") {
-          libgbm = pkgs.mesa;
-        }
+        //
+          lib.attrsets.optionalAttrs
+            (pkgs.stdenvNoCC.isLinux && lib.strings.versionOlder lib.trivial.version "25")
+            {
+              libgbm = pkgs.mesa;
+            }
       );
-      defaultText = lib.literalExpression "pkgs.callPackage ../../pkgs/discord { }";
-      description = "The Discord package to use.";
+      defaultText = lib.options.literalExpression "pkgs.callPackage ../../pkgs/discord { }";
     };
-    # TODO: Remove programs.nixcord.discord.branch no earlier than 2026-08-20.
-    branch = mkOption {
-      type = branchType;
-      default = "stable";
-      visible = false;
-      description = "Deprecated compatibility shim for `programs.nixcord.discord.branches`.";
-      example = "canary";
-    };
-    branches = mkOption {
-      type = types.nonEmptyListOf branchType;
+    branches = lib.options.mkOption {
+      type = lib.types.nonEmptyListOf branchType;
       default = [ "stable" ];
-      apply = lib.unique;
+      apply = lib.lists.unique;
       description = ''
         The Discord branches to install and manage simultaneously. All selected
         branches use the same Vencord or Equicord configuration and Discord
@@ -75,34 +62,26 @@ in
         "canary"
       ];
     };
-    configDir = mkOption {
-      type = types.path;
+    configDir = lib.options.mkOption {
+      type = lib.types.path;
       description = "Config directory for Discord.";
     };
     vencord = {
-      enable = mkOption {
-        type = types.bool;
-        default = false;
-        description = "Whether to enable Vencord for Discord (non-Vesktop).";
-      };
-      package = mkOption {
-        type = types.package;
+      enable = lib.options.mkEnableOption "Vencord for Discord (non-Vesktop)";
+      package = lib.options.mkPackageOption pkgs "Vencord" { default = "vencord"; } // {
         default = selectedNixcordPkgs.vencord or vencordPackage;
-        defaultText = lib.literalExpression "pkgs.callPackage ../../pkgs/vencord.nix { }";
-        description = "The Vencord package to use.";
+        defaultText = lib.options.literalExpression "pkgs.callPackage ../../pkgs/vencord.nix { }";
       };
     };
     equicord = {
-      enable = mkEnableOption "Equicord (alternative to Vencord)";
-      package = mkOption {
-        type = types.package;
+      enable = lib.options.mkEnableOption "Equicord (alternative to Vencord)";
+      package = lib.options.mkPackageOption pkgs "Equicord" { default = "equicord"; } // {
         default = selectedNixcordPkgs.equicord or equicordPackage;
-        defaultText = lib.literalExpression "pkgs.callPackage ../../pkgs/equicord.nix { }";
-        description = "The Equicord package to use.";
+        defaultText = lib.options.literalExpression "pkgs.callPackage ../../pkgs/equicord.nix { }";
       };
     };
-    silenceNoModClientWarning = mkOption {
-      type = types.bool;
+    silenceNoModClientWarning = lib.options.mkOption {
+      type = lib.types.bool;
       default = false;
       example = true;
       description = ''
@@ -110,22 +89,12 @@ in
         enabled without Vencord or Equicord.
       '';
     };
-    openASAR.enable = mkOption {
-      type = types.bool;
+    openASAR.enable = lib.options.mkEnableOption "OpenASAR for Discord (non-Vesktop)" // {
       default = true;
-      description = "Whether to enable OpenASAR for Discord (non-Vesktop).";
     };
-    krisp.enable = mkEnableOption "Krisp noise cancellation";
-    # TODO: Remove programs.nixcord.discord.autoscroll.enable after the
-    # deprecation window; use programs.nixcord.discord.commandLineArgs instead.
-    autoscroll.enable = mkOption {
-      type = types.bool;
-      default = false;
-      visible = false;
-      description = "Deprecated shim for adding the MiddleClickAutoscroll command line argument.";
-    };
-    commandLineArgs = mkOption {
-      type = types.listOf types.str;
+    krisp.enable = lib.options.mkEnableOption "Krisp noise cancellation";
+    commandLineArgs = lib.options.mkOption {
+      type = lib.types.listOf lib.types.str;
       default = [ ];
       description = "Additional command line arguments to pass to Discord.";
       example = [
@@ -134,8 +103,8 @@ in
         "--enable-wayland-ime"
       ];
     };
-    settings = mkOption {
-      type = types.attrsOf jsonFormat.type;
+    settings = lib.options.mkOption {
+      type = lib.types.attrsOf jsonFormat.type;
       default = { };
       description = "Settings to be placed in Discord's settings.json. Set atomically; the entire attrset replaces any previous definition.";
       example = {
@@ -144,7 +113,4 @@ in
     };
   };
 
-  config.programs.nixcord.discord.branches = lib.mkIf branchWasDefined (
-    lib.mkDefault [ config.programs.nixcord.discord.branch ]
-  );
 }

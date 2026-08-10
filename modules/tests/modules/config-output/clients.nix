@@ -11,7 +11,7 @@ let
   stubDiscordPackage = pkgs.runCommand "nixcord-discord-stub" { } "mkdir $out" // {
     passthru.nixcordCommandLineArgsList = true;
     override =
-      lib.setFunctionArgs
+      lib.trivial.setFunctionArgs
         (
           args:
           pkgs.runCommand "nixcord-discord-final-stub" { } "mkdir $out"
@@ -35,7 +35,7 @@ let
     // {
       passthru.nixcordCommandLineArgsList = true;
       override =
-        lib.setFunctionArgs
+        lib.trivial.setFunctionArgs
           (
             args:
             assert !(args ? withKrisp);
@@ -58,7 +58,7 @@ let
     pkgs.runCommand "nixcord-discord-string-args-stub" { } "mkdir $out"
     // {
       override =
-        lib.setFunctionArgs
+        lib.trivial.setFunctionArgs
           (
             args:
             pkgs.runCommand "nixcord-discord-string-args-final-stub" { } "mkdir $out"
@@ -95,7 +95,7 @@ let
       in
       pkgs.runCommand "nixcord-equicord-final-stub" { } "mkdir -p $out/equibop" // attrs;
   };
-  stubEquibopPackage = lib.makeOverridable (
+  stubEquibopPackage = lib.customisation.makeOverridable (
     {
       withMiddleClickScroll ? false,
     }:
@@ -136,7 +136,7 @@ in
     assert !config.programs.nixcord.discord.vencord.enable;
     assert !overrideArgs.withVencord;
     assert overrideArgs.withEquicord == true;
-    assert lib.hasSuffix "Equicord" (toString config.programs.nixcord.configDir);
+    assert lib.strings.hasSuffix "Equicord" (toString config.programs.nixcord.configDir);
     true;
 
   "configDir defaults to Vencord when vencord is enabled" =
@@ -146,7 +146,7 @@ in
         discord.vencord.enable = true;
       };
     in
-    assert lib.hasSuffix "Vencord" (toString config.programs.nixcord.configDir);
+    assert lib.strings.hasSuffix "Vencord" (toString config.programs.nixcord.configDir);
     true;
 
   "discord settings are generated when non-empty" =
@@ -206,7 +206,7 @@ in
       );
       overrideArgs = config.programs.nixcord.finalPackage.discord.passthru.nixcordOverrideArgs;
     in
-    assert overrideArgs.commandLineArgs == lib.escapeShellArgs commandLineArgs;
+    assert overrideArgs.commandLineArgs == lib.strings.escapeShellArgs commandLineArgs;
     true;
 
   "discord custom package does not receive disabled krisp override" =
@@ -288,9 +288,9 @@ in
       postPatch = builtins.unsafeDiscardStringContext equibop.postPatch;
       equicordAsar = builtins.unsafeDiscardStringContext "${equicord}/equibop.asar";
     in
-    assert lib.hasInfix "src/main/vencordDir.ts src/main/constants.ts" postPatch;
-    assert lib.hasInfix "could not find Equibop Equicord asar path to patch" postPatch;
-    assert lib.hasInfix equicordAsar postPatch;
+    assert lib.strings.hasInfix "src/main/vencordDir.ts src/main/constants.ts" postPatch;
+    assert lib.strings.hasInfix "could not find Equibop Equicord asar path to patch" postPatch;
+    assert lib.strings.hasInfix equicordAsar postPatch;
     true;
 
   "equibop can keep bundled Equicord" =
@@ -307,7 +307,7 @@ in
       inherit (config.programs.nixcord.finalPackage) equibop;
       postPatch = builtins.unsafeDiscardStringContext equibop.postPatch;
     in
-    assert !(lib.hasInfix "equicordPatchTarget" postPatch);
+    assert !(lib.strings.hasInfix "equicordPatchTarget" postPatch);
     true;
 
   "equibop autoscroll reaches its package override" =
@@ -369,8 +369,8 @@ in
     assert goofcordJson.assets.Custom == "https://example.invalid/custom.js";
     assert goofcordJson.assets.FromSettings == "https://example.invalid/from-settings.js";
     assert goofcordJson.assets.Precedence == "https://example.invalid/from-extra-assets.js";
-    assert lib.hasPrefix "/nix/store/" goofcordJson.assets.NixcordPreVencord;
-    assert lib.hasSuffix "/clientMod.js" goofcordJson.assets.NixcordClientMod;
+    assert lib.strings.hasPrefix "/nix/store/" goofcordJson.assets.NixcordPreVencord;
+    assert lib.strings.hasSuffix "/clientMod.js" goofcordJson.assets.NixcordClientMod;
     assert builtins.all (file: builtins.elem file goofcordJson.managedFiles) [
       "NixcordPreVencord.js"
       "NixcordPostVencord.js"
@@ -386,7 +386,7 @@ in
       "EquicordStyles.css"
     ];
     assert modSettings.plugins.AlwaysAnimate.enabled == true;
-    assert lib.hasInfix "VencordSettings" bootstrap;
+    assert lib.strings.hasInfix "VencordSettings" bootstrap;
     assert builtins.all (name: builtins.elem name fileNames) [
       "goofcord-settings"
       "goofcord-pre-vencord"
@@ -426,7 +426,7 @@ in
     in
     assert modSettings.plugins.${equicordPluginKey}.enabled == true;
     assert !(builtins.hasAttr vencordPluginKey modSettings.plugins);
-    assert lib.hasInfix "EquicordSettings" common.configs.goofcordSettingsBootstrapText;
+    assert lib.strings.hasInfix "EquicordSettings" common.configs.goofcordSettingsBootstrapText;
     true;
 
   "dorion defaults to nixpkgs package" =

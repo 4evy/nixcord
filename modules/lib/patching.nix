@@ -5,10 +5,11 @@ let
     pkg.overrideAttrs (o: {
       postPatch =
         (o.postPatch or "")
-        + lib.optionalString (cfg.userPlugins != { }) ''
+        + lib.strings.optionalString (cfg.userPlugins != { }) ''
           mkdir -p src/userplugins
-          ${lib.concatMapAttrsStringSep "\n" (
-            name: path: "cp -r ${lib.escapeShellArg "${path}"} src/userplugins/${lib.escapeShellArg name}"
+          ${lib.strings.concatMapAttrsStringSep "\n" (
+            name: path:
+            "cp -r ${lib.strings.escapeShellArg "${path}"} src/userplugins/${lib.strings.escapeShellArg name}"
           ) cfg.userPlugins}
         '';
 

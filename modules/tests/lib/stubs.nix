@@ -4,40 +4,40 @@
     {
       options = {
         home = {
-          homeDirectory = lib.mkOption {
+          homeDirectory = lib.options.mkOption {
             type = lib.types.path;
             default = "/home/testuser";
           };
-          stateVersion = lib.mkOption {
+          stateVersion = lib.options.mkOption {
             type = lib.types.str;
             default = "26.05";
           };
-          username = lib.mkOption {
+          username = lib.options.mkOption {
             type = lib.types.str;
             default = "testuser";
           };
-          packages = lib.mkOption {
+          packages = lib.options.mkOption {
             type = lib.types.listOf lib.types.package;
             default = [ ];
           };
-          file = lib.mkOption {
+          file = lib.options.mkOption {
             type = lib.types.attrsOf lib.types.anything;
             default = { };
           };
-          activation = lib.mkOption {
+          activation = lib.options.mkOption {
             type = lib.types.attrsOf lib.types.anything;
             default = { };
           };
         };
-        xdg.configHome = lib.mkOption {
+        xdg.configHome = lib.options.mkOption {
           type = lib.types.path;
           default = "/home/testuser/.config";
         };
-        warnings = lib.mkOption {
+        warnings = lib.options.mkOption {
           type = lib.types.listOf lib.types.str;
           default = [ ];
         };
-        assertions = lib.mkOption {
+        assertions = lib.options.mkOption {
           type = lib.types.listOf lib.types.anything;
           default = [ ];
         };
@@ -48,16 +48,16 @@
     { lib, ... }:
     {
       options = {
-        users.users = lib.mkOption {
+        users.users = lib.options.mkOption {
           type = lib.types.attrsOf (
             lib.types.submodule {
               options = {
-                name = lib.mkOption { type = lib.types.str; };
-                home = lib.mkOption {
+                name = lib.options.mkOption { type = lib.types.str; };
+                home = lib.options.mkOption {
                   type = lib.types.path;
                   default = "/home/user";
                 };
-                isNormalUser = lib.mkOption {
+                isNormalUser = lib.options.mkOption {
                   type = lib.types.bool;
                   default = false;
                 };
@@ -66,39 +66,39 @@
           );
           default = { };
         };
-        boot.loader.grub.devices = lib.mkOption {
+        boot.loader.grub.devices = lib.options.mkOption {
           type = lib.types.listOf lib.types.str;
           default = [ ];
         };
-        fileSystems = lib.mkOption {
+        fileSystems = lib.options.mkOption {
           type = lib.types.attrsOf lib.types.anything;
           default = { };
         };
-        system.stateVersion = lib.mkOption {
+        system.stateVersion = lib.options.mkOption {
           type = lib.types.str;
           default = "26.05";
         };
-        nixpkgs.config.allowUnfree = lib.mkOption {
+        nixpkgs.config.allowUnfree = lib.options.mkOption {
           type = lib.types.bool;
           default = false;
         };
-        nixpkgs.hostPlatform = lib.mkOption {
+        nixpkgs.hostPlatform = lib.options.mkOption {
           type = lib.types.anything;
           default = null;
         };
-        environment.systemPackages = lib.mkOption {
+        environment.systemPackages = lib.options.mkOption {
           type = lib.types.listOf lib.types.package;
           default = [ ];
         };
-        system.activationScripts = lib.mkOption {
+        system.activationScripts = lib.options.mkOption {
           type = lib.types.attrsOf lib.types.anything;
           default = { };
         };
-        warnings = lib.mkOption {
+        warnings = lib.options.mkOption {
           type = lib.types.listOf lib.types.str;
           default = [ ];
         };
-        assertions = lib.mkOption {
+        assertions = lib.options.mkOption {
           type = lib.types.listOf lib.types.anything;
           default = [ ];
         };
@@ -109,40 +109,40 @@
     { lib, ... }:
     {
       options = {
-        users.users = lib.mkOption {
+        users.users = lib.options.mkOption {
           type = lib.types.attrsOf (
             lib.types.submodule {
               options = {
-                name = lib.mkOption { type = lib.types.str; };
-                home = lib.mkOption {
-                  type = lib.types.path;
-                  default = "/Users/user";
+                name = lib.options.mkOption { type = lib.types.str; };
+                home = lib.options.mkOption {
+                  type = lib.types.nullOr lib.types.path;
+                  default = null;
                 };
               };
             }
           );
           default = { };
         };
-        environment.systemPackages = lib.mkOption {
+        environment.systemPackages = lib.options.mkOption {
           type = lib.types.listOf lib.types.package;
           default = [ ];
         };
-        nixpkgs.config.allowUnfree = lib.mkOption {
+        nixpkgs.config.allowUnfree = lib.options.mkOption {
           type = lib.types.bool;
           default = false;
         };
-        nixpkgs.hostPlatform = lib.mkOption {
+        nixpkgs.hostPlatform = lib.options.mkOption {
           type = lib.types.anything;
           default = null;
         };
-        system.stateVersion = lib.mkOption {
+        system.stateVersion = lib.options.mkOption {
           type = lib.types.anything;
           default = 6;
         };
-        system.activationScripts = lib.mkOption {
+        system.activationScripts = lib.options.mkOption {
           type = lib.types.attrsOf (
             lib.types.submodule {
-              options.text = lib.mkOption {
+              options.text = lib.options.mkOption {
                 type = lib.types.lines;
                 default = "";
               };
@@ -150,11 +150,11 @@
           );
           default = { };
         };
-        warnings = lib.mkOption {
+        warnings = lib.options.mkOption {
           type = lib.types.listOf lib.types.str;
           default = [ ];
         };
-        assertions = lib.mkOption {
+        assertions = lib.options.mkOption {
           type = lib.types.listOf lib.types.anything;
           default = [ ];
         };

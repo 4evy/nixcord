@@ -8,7 +8,7 @@ let
     name: functionArgs:
     let
       package = pkgs.runCommand "nixcord-${name}-discord-stub" { } "mkdir $out" // {
-        override = lib.setFunctionArgs (_args: package) functionArgs;
+        override = lib.trivial.setFunctionArgs (_args: package) functionArgs;
       };
     in
     package;
@@ -23,7 +23,7 @@ let
     withVencord = true;
   };
 
-  krispWarning = message: lib.hasInfix "does not expose nixcord's withKrisp" message;
+  krispWarning = message: lib.strings.hasInfix "does not expose nixcord's withKrisp" message;
 in
 {
   "krisp warns when a custom Discord package cannot apply it" =

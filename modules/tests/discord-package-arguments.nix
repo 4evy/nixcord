@@ -19,7 +19,7 @@ let
 in
 pkgs.runCommand "discord-package-arguments-test" { } ''
   ${
-    if !discordAvailable || pkgs.lib.all pkgs.lib.id (builtins.attrValues tests) then
+    if !discordAvailable || pkgs.lib.lists.all pkgs.lib.trivial.id (builtins.attrValues tests) then
       "echo '2 discord package argument tests passed'"
     else
       "exit 1"

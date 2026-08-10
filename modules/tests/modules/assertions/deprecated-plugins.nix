@@ -44,9 +44,8 @@ in
         discord.autoscroll.enable = true;
       };
     in
-    assert builtins.any (
-      message: lib.strings.hasInfix "discord.autoscroll.enable is deprecated" message
-    ) warnings;
+    assert builtins.any (message: lib.strings.hasInfix "discord.autoscroll.enable" message) warnings;
+    assert builtins.any (message: lib.strings.hasInfix "has been changed to" message) warnings;
     assert builtins.any (message: lib.strings.hasInfix "discord.commandLineArgs" message) warnings;
     true;
 
@@ -58,12 +57,10 @@ in
         discord.autoscroll.enable = false;
       };
     in
-    assert builtins.any (
-      message: lib.strings.hasInfix "discord.autoscroll.enable is deprecated" message
-    ) warnings;
+    assert builtins.any (message: lib.strings.hasInfix "discord.autoscroll.enable" message) warnings;
     true;
 
-  "deprecated discord branch option warns with list replacement and removal date" =
+  "deprecated discord branch option warns with its replacement" =
     let
       warnings = hmWarnings {
         enable = true;
@@ -73,9 +70,9 @@ in
         };
       };
     in
-    assert builtins.any (message: lib.hasInfix "discord.branch is deprecated" message) warnings;
-    assert builtins.any (message: lib.hasInfix ''discord.branches = [ "canary" ];'' message) warnings;
-    assert builtins.any (message: lib.hasInfix "no earlier than 2026-08-20" message) warnings;
+    assert builtins.any (message: lib.strings.hasInfix "discord.branch" message) warnings;
+    assert builtins.any (message: lib.strings.hasInfix "has been changed to" message) warnings;
+    assert builtins.any (message: lib.strings.hasInfix "discord.branches" message) warnings;
     true;
 
   "canonical discord branches option does not emit branch deprecation warning" =
@@ -88,7 +85,7 @@ in
         };
       };
     in
-    assert !(builtins.any (message: lib.hasInfix "discord.branch is deprecated" message) warnings);
+    assert !(builtins.any (message: lib.strings.hasInfix "discord.branch" message) warnings);
     true;
 
   "deprecated typed plugin name warns with replacement" =
@@ -99,8 +96,8 @@ in
         config.plugins.PronounDB.enable = true;
       };
     in
-    assert builtins.any (message: lib.hasInfix "PronounDB" message) warnings;
-    assert builtins.any (message: lib.hasInfix "userMessagesPronouns" message) warnings;
+    assert builtins.any (message: lib.strings.hasInfix "PronounDB" message) warnings;
+    assert builtins.any (message: lib.strings.hasInfix "userMessagesPronouns" message) warnings;
     true;
 
   "deprecated normalized plugin name warns with replacement" =
@@ -111,8 +108,8 @@ in
         config.plugins.oneko.enable = true;
       };
     in
-    assert builtins.any (message: lib.hasInfix "oneko" message) warnings;
-    assert builtins.any (message: lib.hasInfix "cursorBuddy" message) warnings;
+    assert builtins.any (message: lib.strings.hasInfix "oneko" message) warnings;
+    assert builtins.any (message: lib.strings.hasInfix "cursorBuddy" message) warnings;
     true;
 
   "legacy acronym typed plugin name warns with replacement" =
@@ -124,8 +121,8 @@ in
       };
     in
     assert builtins.length warnings == 1;
-    assert builtins.any (message: lib.hasInfix "ClearURLs" message) warnings;
-    assert builtins.any (message: lib.hasInfix "clearUrls" message) warnings;
+    assert builtins.any (message: lib.strings.hasInfix "ClearURLs" message) warnings;
+    assert builtins.any (message: lib.strings.hasInfix "clearUrls" message) warnings;
     true;
 
   "canonical acronym typed plugin name does not warn" =
@@ -147,7 +144,18 @@ in
         extraConfig.plugins.PronounDB.enable = true;
       };
     in
-    assert builtins.any (message: lib.hasInfix "PronounDB" message) warnings;
+    assert builtins.any (message: lib.strings.hasInfix "PronounDB" message) warnings;
+    true;
+
+  "non-attribute freeform plugin values are ignored safely" =
+    let
+      warnings = hmWarnings {
+        enable = true;
+        discord.vencord.enable = true;
+        extraConfig.plugins.PronounDB = true;
+      };
+    in
+    assert warnings == [ ];
     true;
 
   "deprecated freeform upstream plugin name warns with normalized replacement" =
@@ -158,8 +166,8 @@ in
         extraConfig.plugins.Oneko.enable = true;
       };
     in
-    assert builtins.any (message: lib.hasInfix "Oneko" message) warnings;
-    assert builtins.any (message: lib.hasInfix "cursorBuddy" message) warnings;
+    assert builtins.any (message: lib.strings.hasInfix "Oneko" message) warnings;
+    assert builtins.any (message: lib.strings.hasInfix "cursorBuddy" message) warnings;
     true;
 
   "client-specific settings do not hide a deprecated global enable" =
@@ -171,7 +179,7 @@ in
         vencordConfig.plugins.PronounDB.regressionSetting = true;
       };
     in
-    assert builtins.any (message: lib.hasInfix "PronounDB" message) warnings;
+    assert builtins.any (message: lib.strings.hasInfix "PronounDB" message) warnings;
     true;
 
 }

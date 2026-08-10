@@ -11,32 +11,34 @@ let
 
   toSnakeCase =
     str:
-    lib.pipe str [
+    lib.trivial.pipe str [
       (lib.strings.splitStringBy (_prev: curr: builtins.match "[A-Z]" curr != null) true)
-      (lib.filter (part: part != ""))
-      (map lib.toLower)
-      (lib.concatStringsSep "_")
+      (lib.lists.filter (part: part != ""))
+      (map lib.strings.toLower)
+      (lib.strings.concatStringsSep "_")
     ];
 
   mkDorionConfigAttrs =
     cfg:
-    lib.pipe cfg.dorion [
-      (attrs: lib.removeAttrs attrs [ "extraSettings" ])
-      (lib.mapAttrs' (name: value: lib.nameValuePair (toSnakeCase name) value))
+    lib.trivial.pipe cfg.dorion [
+      (attrs: lib.attrsets.removeAttrs attrs [ "extraSettings" ])
+      (lib.attrsets.mapAttrs' (name: value: lib.attrsets.nameValuePair (toSnakeCase name) value))
       (attrs: { autoupdate = false; } // attrs)
       (attrs: attrs // cfg.dorion.extraSettings)
     ];
 
   mkConfigDirs = cfg: basePath: {
-    discord.configDir = lib.mkDefault "${basePath}/${branchDirName.${getPrimaryDiscordBranch cfg}}";
-    configDir = lib.mkDefault "${basePath}/${
+    discord.configDir = lib.modules.mkDefault "${basePath}/${
+      branchDirName.${getPrimaryDiscordBranch cfg}
+    }";
+    configDir = lib.modules.mkDefault "${basePath}/${
       if cfg.discord.equicord.enable then "Equicord" else "Vencord"
     }";
-    vesktop.configDir = lib.mkDefault "${basePath}/vesktop";
-    equibop.configDir = lib.mkDefault "${basePath}/equibop";
-    goofcord.configDir = lib.mkDefault "${basePath}/goofcord/GoofCord";
-    dorion.configDir = lib.mkDefault "${basePath}/dorion";
-    legcord.configDir = lib.mkDefault "${basePath}/legcord";
+    vesktop.configDir = lib.modules.mkDefault "${basePath}/vesktop";
+    equibop.configDir = lib.modules.mkDefault "${basePath}/equibop";
+    goofcord.configDir = lib.modules.mkDefault "${basePath}/goofcord/GoofCord";
+    dorion.configDir = lib.modules.mkDefault "${basePath}/dorion";
+    legcord.configDir = lib.modules.mkDefault "${basePath}/legcord";
   };
 
   mkAllFullConfigs =
@@ -74,7 +76,7 @@ let
         };
       };
     in
-    lib.mapAttrs (_name: mkFullConfig) configSpecs;
+    lib.attrsets.mapAttrs (_name: mkFullConfig) configSpecs;
 in
 {
   inherit

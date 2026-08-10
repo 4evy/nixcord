@@ -26,6 +26,6 @@ in
   xdg.configHome = "/home/demo/.config";
 
   programs.nixcord.goofcord.package =
-    lib.mkIf matrix.scenarios.${scenario}.expected.goofcord
+    lib.modules.mkIf matrix.scenarios.${scenario}.expected.goofcord
       goofcordPackage;
 }

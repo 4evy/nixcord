@@ -1,5 +1,5 @@
 { lib, ... }:
-lib.pipe
+lib.trivial.pipe
   [
     ./patching.nix
     ./plugins.nix
@@ -9,5 +9,5 @@ lib.pipe
   ]
   [
     (map (path: import path { inherit lib; }))
-    (lib.foldl' lib.attrsets.unionOfDisjoint { })
+    (lib.lists.foldl' lib.attrsets.unionOfDisjoint { })
   ]

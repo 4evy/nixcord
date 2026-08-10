@@ -6,25 +6,23 @@
   wrapScript,
 }:
 let
-  inherit (import ./discord.nix { inherit lib; }) getDiscordConfigDirs;
+  inherit (import ./discord.nix { inherit lib; })
+    disabledUpdateSettings
+    getDiscordConfigDirs
+    ;
 
   inherit (cfg) homeDirectory xdgConfigHome;
-  disabledUpdateSettings = {
-    SKIP_HOST_UPDATE = true;
-    SKIP_MODULE_UPDATE = true;
-    USE_NEW_UPDATER = false;
-  };
   disabledUpdateSettingsJson = builtins.toJSON disabledUpdateSettings;
-  disabledUpdateSettingsJq = lib.escapeShellArg ". + ${disabledUpdateSettingsJson}";
+  disabledUpdateSettingsJq = lib.strings.escapeShellArg ". + ${disabledUpdateSettingsJson}";
 in
 {
   disableDiscordUpdates = wrapScript ''
     set -euo pipefail
-    ${lib.getExe' pkgs.coreutils "install"} -d -o ${lib.escapeShellArg cfg.user} ${lib.optionalString pkgs.stdenvNoCC.isDarwin "-g staff"} ${lib.escapeShellArg cfg.configDir}
-    for config_dir in ${lib.escapeShellArgs (getDiscordConfigDirs cfg)}; do
-      ${lib.getExe' pkgs.coreutils "install"} -d -o ${lib.escapeShellArg cfg.user} ${lib.optionalString pkgs.stdenvNoCC.isDarwin "-g staff"} "$config_dir"
+    ${lib.meta.getExe' pkgs.coreutils "install"} -d -o ${lib.strings.escapeShellArg cfg.user} ${lib.strings.optionalString pkgs.stdenvNoCC.isDarwin "-g staff"} ${lib.strings.escapeShellArg cfg.configDir}
+    for config_dir in ${lib.strings.escapeShellArgs (getDiscordConfigDirs cfg)}; do
+      ${lib.meta.getExe' pkgs.coreutils "install"} -d -o ${lib.strings.escapeShellArg cfg.user} ${lib.strings.optionalString pkgs.stdenvNoCC.isDarwin "-g staff"} "$config_dir"
       if [ -f "$config_dir/settings.json" ]; then
-        ${lib.getExe' pkgs.jq "jq"} ${disabledUpdateSettingsJq} "$config_dir/settings.json" > "$config_dir/settings.json.tmp" && mv "$config_dir/settings.json.tmp" "$config_dir/settings.json"
+        ${lib.meta.getExe' pkgs.jq "jq"} ${disabledUpdateSettingsJq} "$config_dir/settings.json" > "$config_dir/settings.json.tmp" && mv "$config_dir/settings.json.tmp" "$config_dir/settings.json"
       else
         echo '${disabledUpdateSettingsJson}' > "$config_dir/settings.json"
       fi
@@ -35,7 +33,7 @@ in
     set -euo pipefail
 
     config_base=${
-      lib.escapeShellArg (
+      lib.strings.escapeShellArg (
         if pkgs.stdenvNoCC.isDarwin then "${homeDirectory}/Library/Application Support" else xdgConfigHome
       )
     }
@@ -68,7 +66,7 @@ in
     set -euo pipefail
 
     webkit_base_dir=${
-      lib.escapeShellArg (
+      lib.strings.escapeShellArg (
         if pkgs.stdenvNoCC.isDarwin then
           "${homeDirectory}/Library/WebKit/com.spikehd.dorion/WebsiteData/Default"
         else
@@ -78,14 +76,14 @@ in
 
     encode_utf16le() {
       local input="$1"
-      echo -n "$input" | ${lib.getExe' pkgs.iconv "iconv"} -f UTF-8 -t UTF-16LE | ${lib.getExe pkgs.xxd} -p | tr -d '\n' | tr '[:lower:]' '[:upper:]'
+      echo -n "$input" | ${lib.meta.getExe' pkgs.iconv "iconv"} -f UTF-8 -t UTF-16LE | ${lib.meta.getExe pkgs.xxd} -p | tr -d '\n' | tr '[:lower:]' '[:upper:]'
     }
 
-    vencord_settings=${lib.escapeShellArg (builtins.toJSON (mkVencordCfg (lib.recursiveUpdate cfg.config cfg.extraConfig)))}
+    vencord_settings=${lib.strings.escapeShellArg (builtins.toJSON (mkVencordCfg (lib.attrsets.recursiveUpdate cfg.config cfg.extraConfig)))}
 
     sqlite_paths=()
     while IFS= read -r -d ''' sqlite_file; do
-      if ${lib.getExe pkgs.sqlite} "$sqlite_file" "SELECT COUNT(*) FROM ItemTable WHERE key = 'VencordSettings';" 2>/dev/null | grep -q "1"; then
+      if ${lib.meta.getExe pkgs.sqlite} "$sqlite_file" "SELECT COUNT(*) FROM ItemTable WHERE key = 'VencordSettings';" 2>/dev/null | grep -q "1"; then
         sqlite_paths+=("$sqlite_file")
       fi
     done < <(find "$webkit_base_dir" \( -name "*.sqlite3" -o -name "*.localstorage" \) -type f -print0 2>/dev/null)
@@ -97,7 +95,7 @@ in
     printf "INSERT OR REPLACE INTO ItemTable (key, value) VALUES ('VencordSettings', X'%s');\n" "$encoded_settings" > "$sql_file"
 
     for sqlite_path in "''${sqlite_paths[@]}"; do
-      ${lib.getExe pkgs.sqlite} "$sqlite_path" < "$sql_file"
+      ${lib.meta.getExe pkgs.sqlite} "$sqlite_path" < "$sql_file"
     done
   '';
 }

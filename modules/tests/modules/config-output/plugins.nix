@@ -206,7 +206,26 @@ in
       postPatch = builtins.unsafeDiscardStringContext config._nixcordTest.common.packages.equicord.postPatch;
       storePlugin = builtins.unsafeDiscardStringContext "${localPlugin}";
     in
-    assert lib.hasInfix "cp -r ${storePlugin} src/userplugins/BetterAudioDefaults" postPatch;
-    assert !(lib.hasInfix (toString localPlugin) postPatch);
+    assert lib.strings.hasInfix "cp -r ${storePlugin} src/userplugins/BetterAudioDefaults" postPatch;
+    assert !(lib.strings.hasInfix (toString localPlugin) postPatch);
+    true;
+
+  "package userPlugins are accepted as documented" =
+    let
+      pluginPackage = pkgs.writeTextDir "index.ts" "export default {};";
+      config = testLib.eval.hm (
+        recursiveUpdate baseConfig {
+          discord.vencord.enable = false;
+          discord.equicord = {
+            enable = true;
+            package = stubEquicordPackage;
+          };
+          userPlugins.packagedPlugin = pluginPackage;
+        }
+      );
+      postPatch = builtins.unsafeDiscardStringContext config._nixcordTest.common.packages.equicord.postPatch;
+      packagePath = builtins.unsafeDiscardStringContext "${pluginPackage}";
+    in
+    assert lib.strings.hasInfix "cp -r ${packagePath} src/userplugins/packagedPlugin" postPatch;
     true;
 }
