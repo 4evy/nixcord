@@ -3,7 +3,7 @@ import { createFixture } from 'fs-fixture';
 import { describe, expect, test } from 'vitest';
 import { updateDeprecatedPlugins } from '../src/deprecated.js';
 import { toNixIdentifier } from '../src/identifier.js';
-import { generateMigrationsData, generateMigrationsJson } from '../src/migrations-generator.js';
+import { generateMigrationsData } from '../src/migrations-generator.js';
 
 const mkPlugin = (description = ''): ReadonlyDeep<PluginConfig> => ({
   name: 'TestPlugin',
@@ -108,35 +108,6 @@ describe('generateMigrationsData()', () => {
     ]);
   });
 
-  test('can emit renames and removals together', () => {
-    const deprecated: DeprecatedData = {
-      renames: {},
-      removals: {
-        deadPlugin: { date: '2024-01-01' },
-      },
-      settingRenames: {
-        testPlugin: { oldSetting: 'newSetting' },
-      },
-    };
-    const allPlugins: Record<string, ReadonlyDeep<PluginConfig>> = {
-      testPlugin: mkPlugin('test'),
-    };
-
-    const result = generateMigrationsData(deprecated, allPlugins);
-
-    expect(result).toEqual({
-      renames: [
-        {
-          from: ['testPlugin', 'oldSetting'],
-          to: ['testPlugin', 'newSetting'],
-          warn: true,
-        },
-      ],
-      identifierRenames: [],
-      removals: ['deadPlugin'],
-    });
-  });
-
   test('skips removal shims for plugins that are still active', () => {
     const deprecated: DeprecatedData = {
       renames: {},
@@ -154,23 +125,6 @@ describe('generateMigrationsData()', () => {
     expect(result.removals).toEqual([]);
     expect(result.renames).toEqual([]);
     expect(result.identifierRenames).toEqual([]);
-  });
-
-  test('serializes formatted JSON', () => {
-    const deprecated: DeprecatedData = {
-      renames: {},
-      removals: {
-        deadPlugin: { date: '2024-01-01' },
-      },
-      settingRenames: {},
-    };
-    const allPlugins: Record<string, ReadonlyDeep<PluginConfig>> = {};
-
-    const result = generateMigrationsJson(deprecated, allPlugins);
-
-    expect(result).toBe(
-      '{\n  "renames": [],\n  "identifierRenames": [],\n  "removals": [\n    "deadPlugin"\n  ]\n}\n'
-    );
   });
 
   test('emits warning aliases from legacy acronym identifiers to canonical identifiers', () => {

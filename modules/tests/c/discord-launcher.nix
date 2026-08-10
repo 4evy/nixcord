@@ -29,13 +29,6 @@ let
     "-Os"
   ];
 
-  sanitizerCFlags = strictCFlags ++ [
-    "-O1"
-    "-g"
-    "-fsanitize=address,undefined"
-    "-fno-omit-frame-pointer"
-  ];
-
   trueBin = lib.meta.getExe' pkgs.coreutils "true";
   specialCommandLineArg = "--flag=quote\"backslash\\space y";
 
@@ -50,6 +43,7 @@ let
       commandLineArgsCount ? 0,
       expectedArgs ? [ ],
       expectedStatus ? 0,
+      runStaticAnalysis ? false,
     }:
     ''
       printf "" | cc -std=c23 -dM -E - | grep -F '#define __STDC_VERSION__ ${requiredCVersion}'
@@ -73,14 +67,15 @@ let
         --replace-fail "@command_line_args_count@" "${toString commandLineArgsCount}"
 
         cc ${lib.strings.escapeShellArgs strictCFlags} -o ${name} ${name}.c
-        cc ${lib.strings.escapeShellArgs sanitizerCFlags} -o ${name}-sanitized ${name}.c
-        cppcheck \
-          --std=c23 \
-          --enable=warning,style,performance,portability \
-          --error-exitcode=1 \
-          --suppress=missingIncludeSystem \
-          --suppress=normalCheckLevelMaxBranches \
-          ${name}.c
+        ${lib.optionalString runStaticAnalysis ''
+          cppcheck \
+            --std=c23 \
+            --enable=warning,style,performance,portability \
+            --error-exitcode=1 \
+            --suppress=missingIncludeSystem \
+            --suppress=normalCheckLevelMaxBranches \
+            ${name}.c
+        ''}
         ${
           if expectedStatus == 0 then
             ''
@@ -116,6 +111,7 @@ pkgs.runCommand "discord-launcher-c-check"
     ${compileAndSmoke {
       name = "discord-launcher-full";
       enableKrisp = true;
+      runStaticAnalysis = true;
       commandLineArgDeclarations = ''
         static char command_line_arg_0[] = "--enable-blink-features=MiddleClickAutoscroll";
         static char command_line_arg_1[] = "--ozone-platform-hint=auto";

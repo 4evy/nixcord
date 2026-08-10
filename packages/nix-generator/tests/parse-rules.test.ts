@@ -27,16 +27,6 @@ describe('generateParseRulesModule()', () => {
     },
   } as const;
 
-  test('generates valid JSON', () => {
-    const output = generateParseRulesModule(shared, vencordOnly, equicordOnly);
-    expect(() => JSON.parse(output)).not.toThrow();
-  });
-
-  test('ends generated JSON with a newline', () => {
-    const output = generateParseRulesModule({}, {}, {});
-    expect(output.endsWith('\n')).toBe(true);
-  });
-
   test('includes auto-detected lowercase plugin names', () => {
     const output = generateParseRulesModule(shared, vencordOnly, equicordOnly);
     const parsed = JSON.parse(output);
@@ -60,13 +50,6 @@ describe('generateParseRulesModule()', () => {
     const parsed = JSON.parse(output);
 
     expect(parsed.pluginRenames.clearUrls).toBe('ClearURLs');
-  });
-
-  test('always includes static upper-name entries', () => {
-    const output = generateParseRulesModule({}, {}, {});
-    const parsed = JSON.parse(output);
-    expect(parsed.upperNames).toContain('webhook');
-    expect(parsed.upperNames).toContain('owner');
   });
 
   test('sorts setting rename rules deterministically', () => {

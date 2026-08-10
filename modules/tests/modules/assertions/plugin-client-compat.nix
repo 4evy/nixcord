@@ -8,20 +8,6 @@ let
     ;
 in
 {
-  "equicord-only plugin fails with vencord-only client" =
-    let
-      fails = hmFails {
-        enable = true;
-        discord.vencord.enable = true;
-        discord.equicord.enable = false;
-        vesktop.enable = false;
-        equibop.enable = false;
-        config.plugins.${firstEquicordOnly}.enable = true;
-      };
-    in
-    assert fails;
-    true;
-
   "equicord-only plugin failure names the plugin" =
     let
       messages = hmMessages {

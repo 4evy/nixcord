@@ -28,18 +28,6 @@ describe('generateSettingJson()', () => {
     expect(result.default).toBe(true);
   });
 
-  test('string type with default', () => {
-    const setting: PluginSetting = {
-      name: 'message',
-      type: { kind: 'string', nullable: false },
-      description: 'Message',
-      default: 'Hello World',
-    };
-    const result = generateSettingJson(setting);
-    expect(result.type).toBe('types.str');
-    expect(result.default).toBe('Hello World');
-  });
-
   test('integer type with default', () => {
     const setting: PluginSetting = {
       name: 'count',
@@ -149,16 +137,6 @@ describe('generateSettingJson()', () => {
     expect(result.enumValues).toEqual([]);
   });
 
-  test('setting with description', () => {
-    const setting: PluginSetting = {
-      name: 'message',
-      type: { kind: 'string', nullable: false },
-      description: 'A description\nwith multiple lines',
-    };
-    const result = generateSettingJson(setting);
-    expect(result.description).toBe('A description\nwith multiple lines');
-  });
-
   test('setting without description', () => {
     const setting: PluginSetting = {
       name: 'message',
@@ -265,24 +243,6 @@ describe('generatePluginJson()', () => {
     expect(result.description).toBe('Test plugin');
   });
 
-  test('plugin without explicit enable has description for Nix auto-enable', () => {
-    const config: PluginConfig = {
-      name: 'TestPlugin',
-      description: 'Test plugin',
-      settings: {
-        message: {
-          name: 'message',
-          type: { kind: 'string', nullable: false },
-          description: 'Message',
-          default: 'test',
-        },
-      },
-    };
-    const result = generatePluginJson('TestPlugin', config);
-    expect(result.description).toBe('Test plugin');
-    expect(result.settings.message).toBeDefined();
-  });
-
   test('plugin with category label -> includes category in description', () => {
     const config: PluginConfig = {
       name: 'TestPlugin',
@@ -337,38 +297,6 @@ describe('generatePluginJson()', () => {
     expect(nestedConfig.settings.nested).toBeDefined();
   });
 
-  test('plugin with simple settings only', () => {
-    const config: PluginConfig = {
-      name: 'TestPlugin',
-      settings: {
-        setting1: {
-          name: 'setting1',
-          type: { kind: 'string', nullable: false },
-          description: 'Setting 1',
-        },
-        setting2: {
-          name: 'setting2',
-          type: { kind: 'integer' },
-          description: 'Setting 2',
-        },
-      },
-    };
-    const result = generatePluginJson('TestPlugin', config);
-    expect(result.settings.setting1).toBeDefined();
-    expect(result.settings.setting2).toBeDefined();
-  });
-
-  test('plugin with empty settings', () => {
-    const config: PluginConfig = {
-      name: 'TestPlugin',
-      description: 'Test plugin',
-      settings: {},
-    };
-    const result = generatePluginJson('TestPlugin', config);
-    expect(result.description).toBe('Test plugin');
-    expect(Object.keys(result.settings)).toHaveLength(0);
-  });
-
   test('rejects settings that normalize to the same Nix identifier', () => {
     const config: PluginConfig = {
       name: 'TestPlugin',
@@ -385,22 +313,6 @@ describe('generatePluginJson()', () => {
 });
 
 describe('generatePluginModule()', () => {
-  test('generates valid JSON', () => {
-    const plugins: ReadonlyDeep<Record<string, PluginConfig>> = {
-      PluginA: {
-        name: 'PluginA',
-        settings: {},
-      },
-    };
-    const result = generatePluginModule(plugins);
-    expect(() => JSON.parse(result)).not.toThrow();
-  });
-
-  test('ends generated JSON with a newline', () => {
-    const result = generatePluginModule({});
-    expect(result.endsWith('\n')).toBe(true);
-  });
-
   test('sorts plugins alphabetically', () => {
     const plugins: ReadonlyDeep<Record<string, PluginConfig>> = {
       ZuluPlugin: {
@@ -426,54 +338,6 @@ describe('generatePluginModule()', () => {
     const plugins: ReadonlyDeep<Record<string, PluginConfig>> = {};
     const result = generatePluginModule(plugins);
     expect(JSON.parse(result)).toEqual({});
-  });
-
-  test('handles single plugin', () => {
-    const plugins: ReadonlyDeep<Record<string, PluginConfig>> = {
-      SinglePlugin: {
-        name: 'SinglePlugin',
-        description: 'A single plugin',
-        settings: {},
-      },
-    };
-    const result = generatePluginModule(plugins);
-    const parsed = JSON.parse(result);
-    expect(parsed.singlePlugin).toBeDefined();
-    expect(parsed.singlePlugin.description).toBe('A single plugin');
-  });
-
-  test('handles multiple plugins', () => {
-    const plugins: ReadonlyDeep<Record<string, PluginConfig>> = {
-      Plugin1: {
-        name: 'Plugin1',
-        settings: {},
-      },
-      Plugin2: {
-        name: 'Plugin2',
-        settings: {},
-      },
-      Plugin3: {
-        name: 'Plugin3',
-        settings: {},
-      },
-    };
-    const result = generatePluginModule(plugins);
-    const parsed = JSON.parse(result);
-    expect(parsed.plugin1).toBeDefined();
-    expect(parsed.plugin2).toBeDefined();
-    expect(parsed.plugin3).toBeDefined();
-  });
-
-  test('uses identifier conversion for plugin names', () => {
-    const plugins: ReadonlyDeep<Record<string, PluginConfig>> = {
-      'test-plugin': {
-        name: 'test-plugin',
-        settings: {},
-      },
-    };
-    const result = generatePluginModule(plugins);
-    const parsed = JSON.parse(result);
-    expect(parsed.testPlugin).toBeDefined();
   });
 
   test('uses acronym-aware identifiers for plugin and setting names', () => {

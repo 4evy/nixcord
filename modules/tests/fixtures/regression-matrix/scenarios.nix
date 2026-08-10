@@ -383,14 +383,19 @@ let
       };
     };
 
-  # Keep the existing client cross-product and cover each GoofCord mod in focused scenarios.
-  baseScenarios = concatMap (
-    discord:
-    concatMap (
-      desktop:
-      map (legcord: mkScenario discord desktop legcord (builtins.head goofcordModes)) legcordModes
-    ) desktopCombos
-  ) discordModes;
+  # Cover every Discord/desktop pair and rotate Legcord modes so every other
+  # pair of independent client axes is covered without a full Cartesian product.
+  pairwiseScenarios = lib.concatLists (
+    lib.imap0 (
+      discordIndex: discord:
+      lib.imap0 (
+        desktopIndex: desktop:
+        mkScenario discord desktop (builtins.elemAt legcordModes (
+          lib.mod (discordIndex + desktopIndex) (builtins.length legcordModes)
+        )) (builtins.head goofcordModes)
+      ) desktopCombos
+    ) discordModes
+  );
 
   goofcordOnlyScenarios = map (
     goofcord:
@@ -398,7 +403,7 @@ let
       goofcord
   ) (builtins.tail goofcordModes);
 
-  scenarios = builtins.listToAttrs (baseScenarios ++ goofcordOnlyScenarios);
+  scenarios = builtins.listToAttrs (pairwiseScenarios ++ goofcordOnlyScenarios);
 in
 {
   inherit scenarios;

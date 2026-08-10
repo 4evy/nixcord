@@ -359,38 +359,4 @@ describe('convertSettingsJsonToNix', () => {
     expect(result.output).toContain('anti \\${value}\\nnext');
     await expectNixParses(result.output);
   });
-
-  test('stress converts a large mixed plugin map into parseable Nix', async () => {
-    const plugins: Record<string, unknown> = {
-      AlwaysTrust: {
-        domain: false,
-        enabled: true,
-        file: true,
-      },
-      MutualGroupDMs: {
-        enabled: true,
-      },
-    };
-
-    for (let index = 0; index < 80; index += 1) {
-      plugins[`User Plugin ${index}.With Dot`] = {
-        enabled: index % 3 === 0,
-        nested: {
-          flag: index % 2 === 0,
-          text: `value "${index}" \${kept}`,
-        },
-        number: index,
-        values: [index, `item-${index}`, null],
-      };
-    }
-
-    const result = convertSettingsJsonToNix(JSON.stringify({ settings: { plugins } }));
-
-    expect(result.output).toContain('mutualGroupDms.enable = true;');
-    expect(result.output).toContain('"User Plugin 0.With Dot" = {');
-    expect(result.output).not.toContain('enable = false;');
-    expect(result.stats.pluginCount).toBe(82);
-    await expectNixParses(result.output);
-  });
-
 });

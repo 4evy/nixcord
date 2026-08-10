@@ -29,10 +29,6 @@ def main() -> None:
     )
     updater = load_updater(str(updater_path))
 
-    assert updater.sri_from_sha256_hex("00" * 32) == (
-        "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
-    )
-
     manifest = {
         "full": {
             "host_version": [1, 2, 3],

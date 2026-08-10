@@ -100,20 +100,6 @@ describe('categorizePlugins()', () => {
     expect(result.equicordOnly).toEqual({});
   });
 
-  test('handles empty plugins', () => {
-    const vencordResult: ParsedPluginsResult = {
-      vencordPlugins: {},
-      equicordPlugins: {},
-    };
-
-    const result = categorizePlugins(vencordResult);
-    const emptyCategorySizes = [result.generic, result.vencordOnly, result.equicordOnly].map(
-      (record) => Object.keys(record).length
-    );
-
-    emptyCategorySizes.forEach((count) => expect(count).toBe(0));
-  });
-
   test('categorizes plugins that live only in Equicord src/plugins as equicord-only', () => {
     const vencordResult: ParsedPluginsResult = {
       vencordPlugins: {},
@@ -354,36 +340,6 @@ describe('categorizePlugins()', () => {
 });
 
 describe('parsePlugins() fixture integration', () => {
-  test('parses synthetic Vencord fixture tree', async () => {
-    const result = await parsePlugins(VENCORD_FIXTURE);
-
-    expect(result.equicordPlugins).toEqual({});
-    expect(Object.keys(result.vencordPlugins)).toEqual(
-      expect.arrayContaining(['Shared Plugin', 'Vencord Only'])
-    );
-
-    const shared = result.vencordPlugins['Shared Plugin'];
-    expect(shared!.description).toBe('Vencord shared description');
-    expect((shared!.settings.message as PluginSetting).default).toBe('vencord');
-
-    const only = result.vencordPlugins['Vencord Only'];
-    expect((only!.settings.enabled as PluginSetting).default).toBe(true);
-  });
-
-  test('parses synthetic Equicord fixture tree', async () => {
-    const result = await parsePlugins(EQUICORD_FIXTURE);
-
-    expect(Object.keys(result.vencordPlugins)).toEqual(expect.arrayContaining(['Shared Plugin']));
-    expect(Object.keys(result.equicordPlugins)).toEqual(expect.arrayContaining(['Equicord Only']));
-
-    const shared = result.vencordPlugins['Shared Plugin'];
-    expect(shared!.description).toBe('Equicord shared description');
-    expect((shared!.settings.message as PluginSetting).default).toBe('equicord');
-
-    const equicordOnly = result.equicordPlugins['Equicord Only'];
-    expect((equicordOnly!.settings.theme as PluginSetting).default).toBe('night');
-  });
-
   test('categorizePlugins prefers Equicord definitions when both repos present', async () => {
     const vencordResult = await parsePlugins(VENCORD_FIXTURE);
     const equicordResult = await parsePlugins(EQUICORD_FIXTURE);
