@@ -9,7 +9,7 @@
         "@types/fs-extra": "11.0.4",
         "@types/node": "26.1.2",
         "@typescript/native": "npm:typescript@7.0.2",
-        "equicord": "github:Equicord/Equicord#12ae66762149bb7e6e50e0bbaebb60ca7673b66b",
+        "equicord": "github:Equicord/Equicord#94f6709f266113a924345d8e4b733ec1c9a47dba",
         "fallow": "3.14.0",
         "typescript": "npm:@typescript/typescript6@6.0.2",
         "vencord": "github:Vendicated/Vencord#1a8c3b71bbfaeb195a7f402458b6b68b0ccea7ef",
@@ -396,7 +396,7 @@
 
     "enhanced-resolve": ["enhanced-resolve@5.24.5", "", { "dependencies": { "graceful-fs": "^4.2.4", "tapable": "^2.3.3" } }, "sha512-L1l8TNvomm6UVW5B253AGxQagSQr+vGwhMlrrfRS2qmhx46AMpMVJKQYLvWYbysTMY8VoicOvzHzoHMbyzB+4A=="],
 
-    "equicord": ["equicord@github:Equicord/Equicord#12ae667", { "dependencies": { "@ffmpeg/ffmpeg": "^0.12.10", "@ffmpeg/util": "^0.12.1", "@intrnl/xxhash64": "^0.1.2", "@song-spotlight/api": "^2.2.0", "@streamparser/json": "^0.0.22", "@vap/core": "0.0.12", "@vap/shiki": "0.10.5", "fflate": "^0.8.3", "gifenc": "github:mattdesl/gifenc#64842fca317b112a8590f8fef2bf3825da8f6fe3", "gifuct-js": "^2.1.2", "idb": "8.0.3", "jsqr": "1.4.0", "monaco-editor": "^0.55.1", "nanoid": "^5.1.16", "native-file-system-adapter": "^3.0.1", "virtual-merge": "^1.0.1", "yaml-js": "^0.3.1" } }, "Equicord-Equicord-12ae667", "sha512-6H+qXfEnneidAJo0KqmjssEVw9RywVNokkyk8uFtpzGeek9kfgviSJelqlQqBq4/ptMbqM+s4f+P6Fv2dZfsxw=="],
+    "equicord": ["equicord@github:Equicord/Equicord#94f6709", { "dependencies": { "@ffmpeg/ffmpeg": "^0.12.10", "@ffmpeg/util": "^0.12.1", "@intrnl/xxhash64": "^0.1.2", "@song-spotlight/api": "^2.2.0", "@streamparser/json": "^0.0.22", "@vap/core": "0.0.12", "@vap/shiki": "0.10.5", "fflate": "^0.8.3", "gifenc": "github:mattdesl/gifenc#64842fca317b112a8590f8fef2bf3825da8f6fe3", "gifuct-js": "^2.1.2", "idb": "8.0.3", "jsqr": "1.4.0", "monaco-editor": "^0.55.1", "nanoid": "^5.1.16", "native-file-system-adapter": "^3.0.1", "virtual-merge": "^1.0.1", "yaml-js": "^0.3.1" } }, "Equicord-Equicord-94f6709", "sha512-WNDIMPOuFQonWkP7gjzrqmSbmZ+bvOFYH6oqBqQ5VLOU3EGntPKLsclECG87W6CGRjY/b1jpNnZqcndpuX6adw=="],
 
     "es-module-lexer": ["es-module-lexer@2.3.1", "", {}, "sha512-shc1dbU90Yl/xq1QrC7QRtfcwURZuVRfPhZbDoldJ1cn1gzDvBaBWlv0eFolj5+0znnPJz5TXLxsN77X/12KTA=="],
 
@@ -651,6 +651,8 @@
     "postcss/nanoid": ["nanoid@3.3.16", "", { "bin": { "nanoid": "bin/nanoid.cjs" } }, "sha512-bzlKTyNJ7+LdGIIwy8ijFpIqEQIvafahV7eYykJ8Cvh42EdJeODoJ6gUJXpQJvej1BddH8OqTXZNE/KfbWAu8Q=="],
 
     "svelte-toolbelt/runed": ["runed@0.23.4", "", { "dependencies": { "esm-env": "^1.0.0" }, "peerDependencies": { "svelte": "^5.7.0" } }, "sha512-9q8oUiBYeXIDLWNK5DfCWlkL0EW3oGbk845VdKlPeia28l751VpfesaB/+7pI6rnbx1I6rqoZ2fZxptOJLxILA=="],
+
+    "vencord/gifenc": ["gifenc@github:mattdesl/gifenc#64842fc", {}, "mattdesl-gifenc-64842fc", "sha512-gtl76gG6LhrCAhMjKuTkJW2LyCr/7V3BySJhA4CfBgmSAPspSrxmfFrRAvlW7fszHIThRTgv/3HYeJHkReK5oA=="],
 
     "@tailwindcss/node/lightningcss/lightningcss-android-arm64": ["lightningcss-android-arm64@1.32.0", "", { "os": "android", "cpu": "arm64" }, "sha512-YK7/ClTt4kAK0vo6w3X+Pnm0D2cf2vPHbhOXdoNti1Ga0al1P4TBZhwjATvjNwLEBCnKvjJc2jQgHXH0NEwlAg=="],
 

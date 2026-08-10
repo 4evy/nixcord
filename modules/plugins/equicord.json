@@ -4857,6 +4857,11 @@
         "default": 1,
         "description": "The current migration version of the settings."
       },
+      "acknowledgedNotices": {
+        "type": "types.attrs",
+        "default": {},
+        "description": "One-time notices that the user has acknowledged."
+      },
       "disableQuestsEverything": {
         "type": "types.bool",
         "default": false,
@@ -4921,6 +4926,11 @@
         "type": "types.bool",
         "default": false,
         "description": "Use Discord's progress leeway and elapsed enrollment time for Video Quest auto-completion. (restart required)"
+      },
+      "preventVideoQuestsPausing": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Prevent pausing the video when the Quest modal loses focus. (restart required)"
       },
       "autoCompleteQuestTypes": {
         "type": "types.attrs",
