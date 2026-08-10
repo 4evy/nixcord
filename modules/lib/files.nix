@@ -1,5 +1,10 @@
 { lib, ... }:
 let
+  inherit (import ./discord.nix { inherit lib; })
+    getDiscordBranches
+    getDiscordConfigDir
+    ;
+
   mkFileSpecs =
     {
       cfg,
@@ -236,13 +241,6 @@ let
           dest = "${configDir}/settings/quickCss.css";
         })
         (copy {
-          name = "discord-settings";
-          enable = discord.enable && discord.settings != { };
-          src = settings.discordSettingsFile;
-          dest = "${discord.configDir}/settings.json";
-          writable = true;
-        })
-        (copy {
           name = "dorion-config";
           enable = dorion.enable && dorionConfig != null;
           src = dorionConfig;
@@ -264,8 +262,25 @@ let
         })
       ];
 
+      discordSettingsSpecs =
+        let
+          branches = getDiscordBranches cfg;
+          multipleBranches = builtins.length branches > 1;
+        in
+        map (
+          branch:
+          copy {
+            name = if multipleBranches then "discord-${branch}-settings" else "discord-settings";
+            enable = discord.enable && discord.settings != { };
+            src = settings.discordSettingsFile;
+            dest = "${getDiscordConfigDir cfg branch}/settings.json";
+            writable = true;
+          }
+        ) branches;
+
       fileSpecs =
         oneOffSpecs
+        ++ discordSettingsSpecs
         ++ discordModSettingsSpecs
         ++ lib.concatMap mkSettingsSpecs desktopClients
         ++ legcordWebSpecs
@@ -289,6 +304,7 @@ let
   mkInstalledPackages =
     cfg: finalPackages:
     let
+      inherit (import ./discord.nix { inherit lib; }) getDiscordBranches;
       inherit (cfg)
         discord
         dorion
@@ -299,32 +315,34 @@ let
         ;
     in
     lib.pipe
-      [
-        {
+      (
+        map (branch: {
           enable = discord.enable && discord.installPackage;
-          package = finalPackages.discord;
-        }
-        {
-          enable = vesktop.enable && vesktop.installPackage;
-          package = finalPackages.vesktop;
-        }
-        {
-          enable = equibop.enable && finalPackages.equibop != null && equibop.installPackage;
-          package = finalPackages.equibop;
-        }
-        {
-          enable = goofcord.enable && finalPackages.goofcord != null && goofcord.installPackage;
-          package = finalPackages.goofcord;
-        }
-        {
-          enable = dorion.enable && dorion.installPackage;
-          package = finalPackages.dorion;
-        }
-        {
-          enable = legcord.enable && legcord.installPackage;
-          package = finalPackages.legcord;
-        }
-      ]
+          package = finalPackages.discordBranches.${branch};
+        }) (getDiscordBranches cfg)
+        ++ [
+          {
+            enable = vesktop.enable && vesktop.installPackage;
+            package = finalPackages.vesktop;
+          }
+          {
+            enable = equibop.enable && finalPackages.equibop != null && equibop.installPackage;
+            package = finalPackages.equibop;
+          }
+          {
+            enable = goofcord.enable && finalPackages.goofcord != null && goofcord.installPackage;
+            package = finalPackages.goofcord;
+          }
+          {
+            enable = dorion.enable && dorion.installPackage;
+            package = finalPackages.dorion;
+          }
+          {
+            enable = legcord.enable && legcord.installPackage;
+            package = finalPackages.legcord;
+          }
+        ]
+      )
       [
         (lib.filter (entry: entry.enable))
         (map (entry: entry.package))

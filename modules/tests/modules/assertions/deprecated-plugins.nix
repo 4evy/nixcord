@@ -63,6 +63,34 @@ in
     ) warnings;
     true;
 
+  "deprecated discord branch option warns with list replacement and removal date" =
+    let
+      warnings = hmWarnings {
+        enable = true;
+        discord = {
+          branch = "canary";
+          vencord.enable = true;
+        };
+      };
+    in
+    assert builtins.any (message: lib.hasInfix "discord.branch is deprecated" message) warnings;
+    assert builtins.any (message: lib.hasInfix ''discord.branches = [ "canary" ];'' message) warnings;
+    assert builtins.any (message: lib.hasInfix "no earlier than 2026-08-20" message) warnings;
+    true;
+
+  "canonical discord branches option does not emit branch deprecation warning" =
+    let
+      warnings = hmWarnings {
+        enable = true;
+        discord = {
+          branches = [ "canary" ];
+          vencord.enable = true;
+        };
+      };
+    in
+    assert !(builtins.any (message: lib.hasInfix "discord.branch is deprecated" message) warnings);
+    true;
+
   "deprecated typed plugin name warns with replacement" =
     let
       warnings = hmWarnings {

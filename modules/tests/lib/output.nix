@@ -36,7 +36,10 @@ let
       toVencordJSON configs.vencordFullConfig
     else if spec.name == "equicord-settings" then
       toVencordJSON configs.equicordFullConfig
-    else if spec.name == "discord-settings" then
+    else if
+      spec.name == "discord-settings"
+      || lib.hasPrefix "discord-" spec.name && lib.hasSuffix "-settings" spec.name
+    then
       toVencordJSON (cfg.discord.settings // disabledUpdateSettings)
     else if spec.name == "vesktop-settings" then
       toVencordJSON configs.vesktopFullConfig

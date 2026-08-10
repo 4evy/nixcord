@@ -252,6 +252,26 @@ actually want to enable
 
 Check the [online docs](https://4evy.github.io/nixcord/) for the full list of options
 
+### Multiple Discord branches
+
+Stable, PTB, Canary, and Development can be installed at the same time. Every selected
+branch uses the same Vencord or Equicord configuration and Discord package options,
+including Krisp and OpenASAR:
+
+```nix
+programs.nixcord = {
+  enable = true;
+  discord = {
+    branches = [ "stable" "ptb" "canary" ];
+    equicord.enable = true;
+    krisp.enable = true;
+  };
+};
+```
+
+The first configured branch is exposed through `finalPackage.discord`; all resulting
+packages are available by branch through `finalPackage.discordBranches`.
+
 ## Settings Converter
 
 Already have Vencord or Equicord configured? The docs include a browser-side

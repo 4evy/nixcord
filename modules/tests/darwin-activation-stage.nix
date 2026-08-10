@@ -13,7 +13,7 @@ in
 testLib.run.tests "darwin-activation-stage-test" {
   "Discord activation runs in nix-darwin's applications stage" =
     testLib.lib.hasInfix "SKIP_HOST_UPDATE" applications
-    && testLib.lib.hasInfix "discord-development" applications
+    && testLib.lib.hasInfix "discorddevelopment" applications
     && testLib.lib.hasInfix "sudo --user=testuser" applications;
 
   "Dorion activation runs in nix-darwin's applications stage" =

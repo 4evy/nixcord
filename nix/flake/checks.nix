@@ -25,6 +25,26 @@
         discord-with-krisp = pkgs.callPackage ../../pkgs/discord {
           withKrisp = true;
         };
+        discord-multiple-branches-with-equicord-krisp =
+          let
+            branches = [
+              "stable"
+              "ptb"
+              "canary"
+            ];
+          in
+          pkgs.buildEnv {
+            name = "nixcord-discord-multiple-branches-with-equicord-krisp";
+            paths = map (
+              branch:
+              (pkgs.callPackage ../../pkgs/discord {
+                inherit branch;
+                withEquicord = true;
+                withKrisp = true;
+                inherit (packages) equicord;
+              })
+            ) branches;
+          };
       };
       nonFlake = import ../.. { inherit pkgs; };
       nonFlakeNixos = import (pkgs.path + "/nixos/lib/eval-config.nix") {

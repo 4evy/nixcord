@@ -1,17 +1,29 @@
 {
   config,
   lib,
+  options,
   pkgs,
   nixcordPkgs ? { },
   ...
 }:
 let
   inherit (lib) mkEnableOption mkOption types;
+  branchType = types.enum [
+    "stable"
+    "ptb"
+    "canary"
+    "development"
+  ];
   jsonFormat = pkgs.formats.json { };
   vencordPackage = pkgs.callPackage ../../pkgs/vencord.nix { };
   equicordPackage = pkgs.callPackage ../../pkgs/equicord.nix { };
   openasarPackage = pkgs.openasar;
   selectedNixcordPkgs = if config.programs.nixcord.useGlobalPkgs then { } else nixcordPkgs;
+
+  branchOption = options.programs.nixcord.discord.branch;
+  branchWasDefined = lib.any (
+    file: !(builtins.elem file branchOption.declarations)
+  ) branchOption.files;
 in
 {
   options.programs.nixcord.discord = {
@@ -39,16 +51,29 @@ in
       defaultText = lib.literalExpression "pkgs.callPackage ../../pkgs/discord { }";
       description = "The Discord package to use.";
     };
+    # TODO: Remove programs.nixcord.discord.branch no earlier than 2026-08-20.
     branch = mkOption {
-      type = types.enum [
+      type = branchType;
+      default = "stable";
+      visible = false;
+      description = "Deprecated compatibility shim for `programs.nixcord.discord.branches`.";
+      example = "canary";
+    };
+    branches = mkOption {
+      type = types.nonEmptyListOf branchType;
+      default = [ "stable" ];
+      apply = lib.unique;
+      description = ''
+        The Discord branches to install and manage simultaneously. All selected
+        branches use the same Vencord or Equicord configuration and Discord
+        package options. The first branch is exposed as `finalPackage.discord`
+        and determines the default value of `discord.configDir`.
+      '';
+      example = [
         "stable"
         "ptb"
         "canary"
-        "development"
       ];
-      default = "stable";
-      description = "The Discord branch to use.";
-      example = "canary";
     };
     configDir = mkOption {
       type = types.path;
@@ -118,4 +143,8 @@ in
       };
     };
   };
+
+  config.programs.nixcord.discord.branches = lib.mkIf branchWasDefined (
+    lib.mkDefault [ config.programs.nixcord.discord.branch ]
+  );
 }

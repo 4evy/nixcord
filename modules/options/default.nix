@@ -54,7 +54,13 @@ in
       discord = mkOption {
         type = types.package;
         readOnly = true;
-        description = "The final Discord package (read-only).";
+        description = "The final Discord package for the first configured branch (read-only).";
+      };
+
+      discordBranches = mkOption {
+        type = types.attrsOf types.package;
+        readOnly = true;
+        description = "The final Discord packages keyed by configured branch (read-only).";
       };
 
       vesktop = mkOption {

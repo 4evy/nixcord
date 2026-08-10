@@ -12,6 +12,7 @@ let
     ./themes.nix
     ./equicord-content-warning.nix
     ./plugin-option-schema.nix
+    ./multiple-discord-branches.nix
   ];
 in
 testLib.run.tests "config-output-test" tests

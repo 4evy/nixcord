@@ -31,6 +31,8 @@ in
         fileCopyCommands
         ;
 
+      inherit (import ../lib/discord.nix { inherit lib; }) getDiscordConfigDirs;
+
       configuredHome = lib.attrByPath [ cfg.user "home" ] null config.users.users;
       homeDir = if configuredHome != null then configuredHome else "/Users/${cfg.user}";
       basePath = "${homeDir}/Library/Application Support";
@@ -71,7 +73,9 @@ in
           in
           ''
             ${mkDir cfg.configDir}
-            ${lib.optionalString cfg.discord.enable (mkDir cfg.discord.configDir)}
+            ${lib.optionalString cfg.discord.enable (
+              lib.concatMapStringsSep "\n" mkDir (getDiscordConfigDirs cfg)
+            )}
             ${lib.optionalString cfg.vesktop.enable (mkDir cfg.vesktop.configDir)}
             ${lib.optionalString cfg.equibop.enable (mkDir cfg.equibop.configDir)}
             ${lib.optionalString cfg.goofcord.enable (mkDir cfg.goofcord.configDir)}

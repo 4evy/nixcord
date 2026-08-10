@@ -6,6 +6,8 @@
   wrapScript,
 }:
 let
+  inherit (import ./discord.nix { inherit lib; }) getDiscordConfigDirs;
+
   inherit (cfg) homeDirectory xdgConfigHome;
   disabledUpdateSettings = {
     SKIP_HOST_UPDATE = true;
@@ -18,14 +20,15 @@ in
 {
   disableDiscordUpdates = wrapScript ''
     set -euo pipefail
-    ${lib.getExe' pkgs.coreutils "install"} -d -o ${lib.escapeShellArg cfg.user} ${lib.optionalString pkgs.stdenvNoCC.isDarwin "-g staff"} ${lib.escapeShellArg cfg.discord.configDir}
     ${lib.getExe' pkgs.coreutils "install"} -d -o ${lib.escapeShellArg cfg.user} ${lib.optionalString pkgs.stdenvNoCC.isDarwin "-g staff"} ${lib.escapeShellArg cfg.configDir}
-    config_dir=${lib.escapeShellArg cfg.discord.configDir}
-    if [ -f "$config_dir/settings.json" ]; then
-      ${lib.getExe' pkgs.jq "jq"} ${disabledUpdateSettingsJq} "$config_dir/settings.json" > "$config_dir/settings.json.tmp" && mv "$config_dir/settings.json.tmp" "$config_dir/settings.json"
-    else
-      echo '${disabledUpdateSettingsJson}' > "$config_dir/settings.json"
-    fi
+    for config_dir in ${lib.escapeShellArgs (getDiscordConfigDirs cfg)}; do
+      ${lib.getExe' pkgs.coreutils "install"} -d -o ${lib.escapeShellArg cfg.user} ${lib.optionalString pkgs.stdenvNoCC.isDarwin "-g staff"} "$config_dir"
+      if [ -f "$config_dir/settings.json" ]; then
+        ${lib.getExe' pkgs.jq "jq"} ${disabledUpdateSettingsJq} "$config_dir/settings.json" > "$config_dir/settings.json.tmp" && mv "$config_dir/settings.json.tmp" "$config_dir/settings.json"
+      else
+        echo '${disabledUpdateSettingsJson}' > "$config_dir/settings.json"
+      fi
+    done
   '';
 
   fixDiscordModules = wrapScript ''
@@ -37,7 +40,7 @@ in
       )
     }
 
-    for branch in discord discord-ptb discord-canary discord-development; do
+    for branch in discord discordptb discordcanary discorddevelopment; do
       config_dir="$config_base/$branch"
       [ ! -d "$config_dir" ] && continue
       (

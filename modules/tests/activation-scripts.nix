@@ -9,7 +9,14 @@ let
     xdgConfigHome =
       if pkgs.stdenvNoCC.isDarwin then "/Users/testuser/.config" else "/home/testuser/.config";
     configDir = "${testRoot}/Vencord";
-    discord.configDir = "${testRoot}/discord-settings";
+    discord = {
+      branches = [
+        "stable"
+        "ptb"
+        "canary"
+      ];
+      configDir = "${testRoot}/discord";
+    };
     config.regressionValue = "base";
     extraConfig = {
       regressionValue = "override";
@@ -55,8 +62,9 @@ pkgs.runCommand "activation-scripts-test"
   }
   ''
     rm -rf ${lib.escapeShellArg testRoot}
-    mkdir -p ${lib.escapeShellArg "${testRoot}/discord-settings"} ${lib.escapeShellArg "${testRoot}/Vencord"}
-    printf '%s\n' '{"KEEP":true,"USE_NEW_UPDATER":true}' > ${lib.escapeShellArg "${testRoot}/discord-settings/settings.json"}
+    mkdir -p ${lib.escapeShellArg "${testRoot}/discord"} ${lib.escapeShellArg "${testRoot}/discordptb"} ${lib.escapeShellArg "${testRoot}/discordcanary"} ${lib.escapeShellArg "${testRoot}/Vencord"}
+    printf '%s\n' '{"KEEP":true,"USE_NEW_UPDATER":true}' > ${lib.escapeShellArg "${testRoot}/discord/settings.json"}
+    printf '%s\n' '{"PTB":true}' > ${lib.escapeShellArg "${testRoot}/discordptb/settings.json"}
 
     ${disableDiscordUpdates}
 
@@ -65,16 +73,30 @@ pkgs.runCommand "activation-scripts-test"
       and .SKIP_HOST_UPDATE == true
       and .SKIP_MODULE_UPDATE == true
       and .USE_NEW_UPDATER == false
-    ' ${lib.escapeShellArg "${testRoot}/discord-settings/settings.json"}
+    ' ${lib.escapeShellArg "${testRoot}/discord/settings.json"}
 
-    rm ${lib.escapeShellArg "${testRoot}/discord-settings/settings.json"}
+    jq -e '
+      .PTB == true
+      and .SKIP_HOST_UPDATE == true
+      and .SKIP_MODULE_UPDATE == true
+      and .USE_NEW_UPDATER == false
+    ' ${lib.escapeShellArg "${testRoot}/discordptb/settings.json"}
+
+    jq -e '
+      .SKIP_HOST_UPDATE == true
+      and .SKIP_MODULE_UPDATE == true
+      and .USE_NEW_UPDATER == false
+      and length == 3
+    ' ${lib.escapeShellArg "${testRoot}/discordcanary/settings.json"}
+
+    rm ${lib.escapeShellArg "${testRoot}/discord/settings.json"}
     ${disableDiscordUpdates}
     jq -e '
       .SKIP_HOST_UPDATE == true
       and .SKIP_MODULE_UPDATE == true
       and .USE_NEW_UPDATER == false
       and length == 3
-    ' ${lib.escapeShellArg "${testRoot}/discord-settings/settings.json"}
+    ' ${lib.escapeShellArg "${testRoot}/discord/settings.json"}
 
     previous=${lib.escapeShellArg "${testRoot}/discord-configs/discord/1.0.0/modules"}
     current=${lib.escapeShellArg "${testRoot}/discord-configs/discord/2.0.0/modules"}
@@ -87,6 +109,13 @@ pkgs.runCommand "activation-scripts-test"
     test "$PWD" = "$original_pwd"
     grep -Fx previous "$current/discord_desktop_core"
     test ! -e "$current/pending"
+
+    ptb_previous=${lib.escapeShellArg "${testRoot}/discord-configs/discordptb/1.0.0/modules"}
+    ptb_current=${lib.escapeShellArg "${testRoot}/discord-configs/discordptb/2.0.0/modules"}
+    mkdir -p "$ptb_previous" "$ptb_current/pending"
+    printf 'previous ptb\n' > "$ptb_previous/discord_desktop_core"
+    ${fixDiscordModules}
+    grep -Fx 'previous ptb' "$ptb_current/discord_desktop_core"
 
     printf 'current\n' > "$current/discord_desktop_core"
     printf 'changed previous\n' > "$previous/discord_desktop_core"

@@ -5,6 +5,7 @@ lib.pipe
     ./plugins.nix
     ./files.nix
     ./config.nix
+    ./discord.nix
   ]
   [
     (map (path: import path { inherit lib; }))

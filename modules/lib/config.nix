@@ -1,5 +1,7 @@
 { lib, ... }:
 let
+  inherit (import ./discord.nix { inherit lib; }) branchDirName getPrimaryDiscordBranch;
+
   mkIsQuickCssUsed =
     cfg: appConfig:
     let
@@ -25,15 +27,8 @@ let
       (attrs: attrs // cfg.dorion.extraSettings)
     ];
 
-  branchDirName = {
-    stable = "discord";
-    ptb = "discordptb";
-    canary = "discordcanary";
-    development = "discorddevelopment";
-  };
-
   mkConfigDirs = cfg: basePath: {
-    discord.configDir = lib.mkDefault "${basePath}/${branchDirName.${cfg.discord.branch}}";
+    discord.configDir = lib.mkDefault "${basePath}/${branchDirName.${getPrimaryDiscordBranch cfg}}";
     configDir = lib.mkDefault "${basePath}/${
       if cfg.discord.equicord.enable then "Equicord" else "Vencord"
     }";

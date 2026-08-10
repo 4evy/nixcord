@@ -69,6 +69,11 @@ let
     file: !(builtins.elem file autoscrollEnableOption.declarations)
   ) autoscrollEnableOption.files;
 
+  discordBranchOption = options.programs.nixcord.discord.branch;
+  discordBranchWasDefined = lib.lists.any (
+    file: !(builtins.elem file discordBranchOption.declarations)
+  ) discordBranchOption.files;
+
   discordHasNoModClient =
     cfg.discord.enable
     && !cfg.discord.vencord.enable
@@ -85,6 +90,11 @@ let
   discordKrispUnsupported =
     cfg.discord.enable && cfg.discord.krisp.enable && !(discordPackageSupports "withKrisp");
 
+  inherit (import ./lib/discord.nix { inherit lib; }) getDiscordConfigDirs;
+  discordConfigDirs = getDiscordConfigDirs cfg;
+  discordConfigDirsAreUnique =
+    builtins.length discordConfigDirs == builtins.length (lib.unique discordConfigDirs);
+
   generateMigrationWarning =
     oldName:
     let
@@ -99,6 +109,9 @@ in
       ++ lib.lists.optional autoscrollEnableWasDefined ''
         programs.nixcord.discord.autoscroll.enable is deprecated and will be removed in the future. Use `programs.nixcord.discord.commandLineArgs = [ "--enable-blink-features=MiddleClickAutoscroll" ];` instead.
       ''
+      ++ lib.lists.optional discordBranchWasDefined ''
+        programs.nixcord.discord.branch is deprecated and will be removed no earlier than 2026-08-20. Use `programs.nixcord.discord.branches = [ "${cfg.discord.branch}" ];` instead.
+      ''
       ++ lib.lists.optional discordHasNoModClient ''
         programs.nixcord.discord.vencord.enable and programs.nixcord.discord.equicord.enable are both disabled. Discord will be installed without Vencord or Equicord.
         To acknowledge and silence this warning, set programs.nixcord.discord.silenceNoModClientWarning to true.
@@ -107,13 +120,22 @@ in
         programs.nixcord.discord.krisp.enable is enabled, but the selected Discord package does not expose nixcord's withKrisp patch override. Krisp patching will be skipped for this package.
       '';
 
-    assertions = mkAssertions {
-      inherit
-        cfg
-        mergePlugins
-        collectEnabledEquicordOnlyPlugins
-        collectEnabledVencordOnlyPlugins
-        ;
-    };
+    assertions =
+      mkAssertions {
+        inherit
+          cfg
+          mergePlugins
+          collectEnabledEquicordOnlyPlugins
+          collectEnabledVencordOnlyPlugins
+          ;
+      }
+      ++ [
+        {
+          assertion = !cfg.discord.enable || discordConfigDirsAreUnique;
+          message = ''
+            programs.nixcord.discord.branches resolve multiple branches to the same Discord config directory: ${lib.concatStringsSep ", " discordConfigDirs}. Set programs.nixcord.discord.configDir to a directory for the first branch that does not overlap another branch's standard directory.
+          '';
+        }
+      ];
   };
 }

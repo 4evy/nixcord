@@ -130,4 +130,24 @@ in
     in
     assert !(builtins.any (message: lib.hasInfix "both disabled" message) warnings);
     true;
+
+  "multiple Discord branches require distinct config directories" =
+    let
+      messages = hmMessages {
+        enable = true;
+        discord = {
+          branches = [
+            "canary"
+            "stable"
+          ];
+          configDir = "/home/testuser/.config/discord";
+        };
+      };
+    in
+    assert builtins.any (
+      message:
+      lib.hasInfix "multiple branches to the same Discord config directory" message
+      && lib.hasInfix "/home/testuser/.config/discord" message
+    ) messages;
+    true;
 }
