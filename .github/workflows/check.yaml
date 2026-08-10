@@ -42,7 +42,11 @@ jobs:
           nix shell nixpkgs#yamllint nixpkgs#actionlint nixpkgs#zizmor nixpkgs#shellcheck
           --command bash -c
           'yamllint . && actionlint && zizmor --pedantic .
-          && shellcheck .github/scripts/*.sh'
+          && shellcheck .github/scripts/*.sh nix/benchmark-eval.sh nix/tests/benchmark-eval.sh
+          pkgs/discord/scripts/*.sh pkgs/scripts/*.sh'
+
+      - name: Test evaluation benchmark CLI
+        run: bash nix/tests/benchmark-eval.sh
 
       - name: Enforce GitHub-signed workflow commits
         run: |

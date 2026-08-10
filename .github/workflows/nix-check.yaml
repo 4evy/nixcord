@@ -64,6 +64,7 @@ jobs:
             nix_args+=(--max-jobs 1 --cores 2)
           fi
           nix --option system "$EXPECTED_SYSTEM" flake check \
+            --option allow-import-from-derivation false \
             "${nix_args[@]}" --print-build-logs
 
       - name: Build every package
@@ -72,6 +73,7 @@ jobs:
         run: |
           set -euo pipefail
           available=$(nix --option system "$EXPECTED_SYSTEM" eval \
+            --option allow-import-from-derivation false \
             --json ".#packages.$EXPECTED_SYSTEM" --apply builtins.attrNames)
           packages=(equicord vencord goofcord docs-json generate)
           for package in docs discord discord-ptb discord-canary discord-development; do
@@ -88,6 +90,7 @@ jobs:
             nix_args+=(--max-jobs 1 --cores 2)
           fi
           nix --option system "$EXPECTED_SYSTEM" build \
+            --option allow-import-from-derivation false \
             "${nix_args[@]}" --no-link --print-build-logs "${installables[@]}"
 
       - name: Check generated plugin metadata
@@ -97,6 +100,7 @@ jobs:
         run: |
           set -euo pipefail
           generated=$(nix --option system "$EXPECTED_SYSTEM" build \
+            --option allow-import-from-derivation false \
             .#generate --no-link --print-out-paths)
           for generated_file in "$generated"/plugins/*; do
             committed_file="modules/plugins/$(basename "$generated_file")"
