@@ -6,36 +6,13 @@
 let
   inherit (builtins)
     baseNameOf
-    fromJSON
     isPath
     readFile
     ;
-  inherit (lib.attrsets)
-    attrNames
-    hasAttr
-    listToAttrs
-    nameValuePair
-    removeAttrs
-    ;
-  inherit (lib.lists)
-    concatMap
-    elemAt
-    findFirst
-    imap0
-    length
-    take
-    ;
-  inherit (lib.modules) evalModules mkDefault;
-  inherit (lib.strings)
-    hasPrefix
-    optionalString
-    removePrefix
-    splitString
-    ;
-  inherit (lib.trivial) pipe;
 
   pathHasPrefix = lib.path.hasPrefix;
   pathRemovePrefix = lib.path.removePrefix;
+  listHasPrefix = lib.lists.hasPrefix;
 
   nixcordRoot = ./..;
   nixcordRootString = toString nixcordRoot;
@@ -45,31 +22,28 @@ let
   baseHomeManagerModule =
     { lib, ... }:
     let
-      inherit (lib.options) mkOption;
-      inherit (lib.types) path;
-
       visible = false;
     in
     {
       options = {
-        home.homeDirectory = mkOption {
+        home.homeDirectory = lib.options.mkOption {
           inherit visible;
-          type = path;
+          type = lib.types.path;
           default = "/home/user";
           description = "User's home directory";
         };
 
-        xdg.configHome = mkOption {
+        xdg.configHome = lib.options.mkOption {
           inherit visible;
-          type = path;
+          type = lib.types.path;
           default = "/home/user/.config";
           description = "XDG config directory";
         };
       };
 
       config = {
-        home.homeDirectory = mkDefault "/home/user";
-        xdg.configHome = mkDefault "/home/user/.config";
+        home.homeDirectory = lib.modules.mkDefault "/home/user";
+        xdg.configHome = lib.modules.mkDefault "/home/user/.config";
       };
     };
 
@@ -82,7 +56,7 @@ let
   mkGitHubDeclaration = subpath: line: {
     url =
       "https://github.com/4evy/nixcord/blob/${revision}/${subpath}"
-      + optionalString (line != null) "#L${toString line}";
+      + lib.strings.optionalString (line != null) "#L${toString line}";
     name = "<nixcord/${subpath}>";
   };
 
@@ -92,22 +66,22 @@ let
       declStr = toString decl;
     in
     if isPath decl && pathHasPrefix nixcordRoot decl then
-      mkGitHubDeclaration (removePrefix "./" (pathRemovePrefix nixcordRoot decl)) null
-    else if hasPrefix nixcordRootPrefix declStr then
-      mkGitHubDeclaration (removePrefix nixcordRootPrefix declStr) null
+      mkGitHubDeclaration (lib.strings.removePrefix "./" (pathRemovePrefix nixcordRoot decl)) null
+    else if lib.strings.hasPrefix nixcordRootPrefix declStr then
+      mkGitHubDeclaration (lib.strings.removePrefix nixcordRootPrefix declStr) null
     else
       decl;
 
   linesWithNumbers =
     file:
-    imap0 (index: text: {
+    lib.lists.imap1 (line: text: {
       inherit text;
-      line = index + 1;
-    }) (splitString "\n" (readFile file));
+      inherit line;
+    }) (lib.strings.splitString "\n" (readFile file));
 
   findLine =
     entries: predicate: fallback:
-    (findFirst predicate { line = fallback; } entries).line;
+    (lib.lists.findFirst predicate { line = fallback; } entries).line;
 
   pluginLine =
     source: pluginName: findLine source.lines (entry: entry.text == "  \"${pluginName}\": {") 1;
@@ -126,7 +100,7 @@ let
       (path: {
         inherit path;
         subpath = "modules/plugins/${baseNameOf (toString path)}";
-        plugins = attrNames (fromJSON (readFile path));
+        plugins = lib.attrsets.attrNames (lib.trivial.importJSON path);
         lines = linesWithNumbers path;
       })
       [
@@ -135,36 +109,33 @@ let
         ../modules/plugins/equicord.json
       ];
 
-  pluginSourceByName = pipe pluginSources [
-    (concatMap (source: map (pluginName: nameValuePair pluginName source) source.plugins))
-    listToAttrs
-  ];
+  pluginSourceByName = lib.attrsets.mergeAttrsList (
+    map (source: lib.attrsets.genAttrs source.plugins (_: source)) pluginSources
+  );
 
-  isNixcordOption =
-    opt:
-    take 2 opt.loc == [
-      "programs"
-      "nixcord"
-    ];
+  isNixcordOption = opt: listHasPrefix [ "programs" "nixcord" ] opt.loc;
 
   isPluginOption =
     opt:
-    isNixcordOption opt
-    && length opt.loc >= 5
-    && elemAt opt.loc 2 == "config"
-    && elemAt opt.loc 3 == "plugins";
+    listHasPrefix [
+      "programs"
+      "nixcord"
+      "config"
+      "plugins"
+    ] opt.loc
+    && lib.lists.length opt.loc >= 5;
 
   pluginDeclaration =
     opt:
     let
-      pluginName = elemAt opt.loc 4;
-      source = if hasAttr pluginName pluginSourceByName then pluginSourceByName.${pluginName} else null;
+      pluginName = lib.lists.elemAt opt.loc 4;
+      source = pluginSourceByName.${pluginName} or null;
       sourceSubpath = if source == null then "modules/plugins" else source.subpath;
       line =
         if source == null then
           1
-        else if length opt.loc >= 6 then
-          pluginSettingLine source pluginName (elemAt opt.loc 5)
+        else if lib.lists.length opt.loc >= 6 then
+          pluginSettingLine source pluginName (lib.lists.elemAt opt.loc 5)
         else
           pluginLine source pluginName;
     in
@@ -183,14 +154,14 @@ let
           map declarationToGitHub opt.declarations;
     };
 
-  evaluatedModules = evalModules {
+  evaluatedModules = lib.modules.evalModules {
     modules = docsModules;
     class = "homeManager";
     specialArgs = { inherit pkgs; };
   };
 in
 pkgs.buildPackages.nixosOptionsDoc {
-  options = removeAttrs evaluatedModules.options [ "_module" ];
+  options = lib.attrsets.removeAttrs evaluatedModules.options [ "_module" ];
   transformOptions = transformOption;
   warningsAreErrors = false;
 }

@@ -5,9 +5,19 @@
   nodejs,
   revision,
   stdenvNoCC,
+  writableTmpDirAsHomeHook,
   ...
 }:
 let
+  siteSources = lib.fileset.difference ./site (
+    lib.fileset.unions (
+      map lib.fileset.maybeMissing [
+        ./site/dist
+        ./site/node_modules
+      ]
+    )
+  );
+
   src = lib.fileset.toSource {
     root = ./..;
     fileset = lib.fileset.unions [
@@ -17,7 +27,7 @@ let
       ../modules/plugins/parse-rules.json
       ../modules/plugins/shared.json
       ../modules/plugins/vencord.json
-      ./site
+      siteSources
     ];
   };
 
@@ -48,17 +58,17 @@ let
     version = "latest";
 
     src = depsSrc;
-    nativeBuildInputs = [ bun ];
+    nativeBuildInputs = [
+      bun
+      writableTmpDirAsHomeHook
+    ];
 
     dontConfigure = true;
     dontFixup = true;
 
     buildPhase = ''
       runHook preBuild
-      set -a
-      HOME="$TMPDIR"
-      BUN_INSTALL_CACHE_DIR="$TMPDIR/bun-cache"
-      set +a
+      export BUN_INSTALL_CACHE_DIR="$TMPDIR/bun-cache"
       bun install --filter nixcord-docs --frozen-lockfile --no-progress
       runHook postBuild
     '';
@@ -87,6 +97,7 @@ stdenvNoCC.mkDerivation {
   nativeBuildInputs = [
     bun
     nodejs
+    writableTmpDirAsHomeHook
   ];
 
   configurePhase = ''
@@ -102,8 +113,7 @@ stdenvNoCC.mkDerivation {
   buildPhase = ''
     runHook preBuild
     set -a
-    HOME="$TMPDIR"
-    ${lib.toShellVars {
+    ${lib.strings.toShellVars {
       NIXCORD_REVISION = revision;
     }}
     set +a
