@@ -169,26 +169,6 @@ in
     assert settingsJson.USE_NEW_UPDATER == false;
     true;
 
-  "discord autoscroll shim appends commandLineArgs" =
-    let
-      config = testLib.eval.hm (
-        recursiveUpdate baseConfig {
-          discord = {
-            package = stubDiscordPackage;
-            autoscroll.enable = true;
-            commandLineArgs = [ "--ozone-platform-hint=auto" ];
-          };
-        }
-      );
-      overrideArgs = config.programs.nixcord.finalPackage.discord.passthru.nixcordOverrideArgs;
-    in
-    assert
-      overrideArgs.commandLineArgs == [
-        "--ozone-platform-hint=auto"
-        "--enable-blink-features=MiddleClickAutoscroll"
-      ];
-    true;
-
   "Discord packages without list support receive shell-escaped commandLineArgs" =
     let
       commandLineArgs = [

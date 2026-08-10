@@ -36,30 +36,6 @@ in
     assert warnings == [ ];
     true;
 
-  "deprecated discord autoscroll option warns" =
-    let
-      warnings = hmWarnings {
-        enable = true;
-        discord.vencord.enable = true;
-        discord.autoscroll.enable = true;
-      };
-    in
-    assert builtins.any (message: lib.strings.hasInfix "discord.autoscroll.enable" message) warnings;
-    assert builtins.any (message: lib.strings.hasInfix "has been changed to" message) warnings;
-    assert builtins.any (message: lib.strings.hasInfix "discord.commandLineArgs" message) warnings;
-    true;
-
-  "deprecated discord autoscroll false option warns" =
-    let
-      warnings = hmWarnings {
-        enable = true;
-        discord.vencord.enable = true;
-        discord.autoscroll.enable = false;
-      };
-    in
-    assert builtins.any (message: lib.strings.hasInfix "discord.autoscroll.enable" message) warnings;
-    true;
-
   "deprecated discord branch option warns with its replacement" =
     let
       warnings = hmWarnings {

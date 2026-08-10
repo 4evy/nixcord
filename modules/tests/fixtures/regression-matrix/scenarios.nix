@@ -55,7 +55,6 @@ let
       installPackage = false;
       branch = "canary";
       commandLineArgs = [ "--ozone-platform-hint=auto" ];
-      autoscroll.enable = true;
       openASAR.enable = true;
       settings = {
         IS_MAXIMIZED = false;

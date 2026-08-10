@@ -22,15 +22,5 @@
       [ "programs" "nixcord" "discord" "branches" ]
       (config: lib.modules.mkDefault [ config.programs.nixcord.discord.branch ])
     )
-    (lib.modules.mkChangedOptionModule
-      [ "programs" "nixcord" "discord" "autoscroll" "enable" ]
-      [ "programs" "nixcord" "discord" "commandLineArgs" ]
-      (
-        config:
-        lib.modules.mkAfter (
-          lib.lists.optional config.programs.nixcord.discord.autoscroll.enable "--enable-blink-features=MiddleClickAutoscroll"
-        )
-      )
-    )
   ];
 }
