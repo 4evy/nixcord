@@ -191,7 +191,7 @@ in
     assert settingsJson.uiElements.messagePopoverButtons.Translate.enabled == true;
     true;
 
-  "local userPlugins are copied through the Nix store" =
+  "absolute string userPlugins are coerced and copied through the Nix store" =
     let
       config = testLib.eval.hm (
         recursiveUpdate baseConfig {
@@ -200,7 +200,7 @@ in
             enable = true;
             package = stubEquicordPackage;
           };
-          userPlugins.BetterAudioDefaults = localPlugin;
+          userPlugins.BetterAudioDefaults = builtins.unsafeDiscardStringContext (toString localPlugin);
         }
       );
       postPatch = builtins.unsafeDiscardStringContext config._nixcordTest.common.packages.equicord.postPatch;

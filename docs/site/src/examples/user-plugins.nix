@@ -1,8 +1,12 @@
 {
   programs.nixcord = {
-    # GitHub repo at a specific commit
+    # Popular forges have short aliases
     userPlugins = {
-      someCoolPlugin = "github:someUser/someCoolPlugin/abc123def456...";
+      githubPlugin = "github:someUser/githubPlugin/abc123def456...";
+      codebergPlugin = "codeberg:someUser/codebergPlugin/abc123def456...";
+
+      # Every other or self-hosted forge uses a generic Git URL
+      selfHostedPlugin = "git+https://git.example.org/someUser/selfHostedPlugin.git?rev=abc123def456...";
 
       # Local path (requires --impure with flakes)
       myLocalPlugin = "/home/user/projects/myPlugin";
@@ -12,7 +16,9 @@
     };
 
     extraConfig.plugins = {
-      someCoolPlugin.enable = true;
+      githubPlugin.enable = true;
+      codebergPlugin.enable = true;
+      selfHostedPlugin.enable = true;
       myLocalPlugin.enable = true;
       anotherPlugin.enable = true;
     };

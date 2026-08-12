@@ -11,6 +11,7 @@
   discord-package-arguments = import ./discord-package-arguments.nix { inherit pkgs; };
   discord-launcher-c = import ./c/discord-launcher.nix { inherit pkgs; };
   goofcord-support = import ./goofcord-support.nix { inherit pkgs; };
+  user-plugins = import ./user-plugins.nix { inherit pkgs; };
 }
 // pkgs.lib.attrsets.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
   nixos-activation-safety = import ./nixos-activation-safety.nix { inherit pkgs; };
