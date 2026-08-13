@@ -39,7 +39,7 @@ in
         }
         //
           lib.attrsets.optionalAttrs
-            (pkgs.stdenvNoCC.isLinux && lib.strings.versionOlder lib.trivial.version "25")
+            (pkgs.stdenvNoCC.hostPlatform.isLinux && lib.strings.versionOlder lib.trivial.version "25")
             {
               libgbm = pkgs.mesa;
             }

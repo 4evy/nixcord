@@ -20,8 +20,8 @@ let
       nullable = nullPackageOnDarwin;
     }
     // lib.attrsets.optionalAttrs nullPackageOnDarwin {
-      default = if pkgs.stdenvNoCC.isDarwin then null else pkgs.${moduleName} or null;
-      defaultText = lib.options.literalExpression "if pkgs.stdenvNoCC.isDarwin then null else pkgs.${moduleName} or null";
+      default = if pkgs.stdenvNoCC.hostPlatform.isDarwin then null else pkgs.${moduleName} or null;
+      defaultText = lib.options.literalExpression "if pkgs.stdenvNoCC.hostPlatform.isDarwin then null else pkgs.${moduleName} or null";
     };
 in
 {

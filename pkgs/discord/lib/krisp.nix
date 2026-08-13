@@ -14,8 +14,8 @@
 }:
 let
   hasKrispSrc = withKrisp && krispSrc != null;
-  supportsKrisp = stdenvNoCC.isLinux || stdenvNoCC.isDarwin;
-  krispPlatform = if stdenvNoCC.isDarwin then "darwin" else "linux";
+  supportsKrisp = stdenvNoCC.hostPlatform.isLinux || stdenvNoCC.hostPlatform.isDarwin;
+  krispPlatform = if stdenvNoCC.hostPlatform.isDarwin then "darwin" else "linux";
   krispPython = python3.withPackages (ps: [
     ps.lief
     ps.capstone
@@ -36,7 +36,9 @@ let
           {
             nativeBuildInputs = [ brotli ] ++ lib.lists.optional supportsKrisp krispPython;
           }
-          // lib.attrsets.optionalAttrs stdenvNoCC.isDarwin { DARWIN_SIGNING_UTILS = darwin.signingUtils; }
+          // lib.attrsets.optionalAttrs stdenvNoCC.hostPlatform.isDarwin {
+            DARWIN_SIGNING_UTILS = darwin.signingUtils;
+          }
         )
         ''
           bash ${patchKrispModuleScript} \

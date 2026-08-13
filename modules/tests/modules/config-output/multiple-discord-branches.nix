@@ -53,7 +53,7 @@ let
   cfg = config.programs.nixcord;
   packages = cfg.finalPackage.discordBranches;
   configBase =
-    if pkgs.stdenvNoCC.isDarwin then
+    if pkgs.stdenvNoCC.hostPlatform.isDarwin then
       "/home/testuser/Library/Application Support"
     else
       "/home/testuser/.config";

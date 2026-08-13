@@ -62,7 +62,7 @@ let
   ];
 
   binaryName =
-    if stdenvNoCC.isLinux then
+    if stdenvNoCC.hostPlatform.isLinux then
       {
         stable = "Discord";
         ptb = "DiscordPTB";
@@ -80,19 +80,22 @@ let
       .${branch};
 
   configDirName =
-    if stdenvNoCC.isDarwin then
+    if stdenvNoCC.hostPlatform.isDarwin then
       lib.strings.replaceString " " "" (lib.strings.toLower binaryName)
     else
       lib.strings.toLower binaryName;
 
   resourcesDir =
-    if stdenvNoCC.isLinux then
+    if stdenvNoCC.hostPlatform.isLinux then
       "$out/opt/${binaryName}/resources"
     else
       "$out/Applications/${binaryName}.app/Contents/Resources";
 
   modulesDir =
-    if stdenvNoCC.isLinux then "$out/opt/${binaryName}/modules" else "${resourcesDir}/modules";
+    if stdenvNoCC.hostPlatform.isLinux then
+      "$out/opt/${binaryName}/modules"
+    else
+      "${resourcesDir}/modules";
 
   sourceSet = import ./lib/sources.nix {
     inherit
@@ -190,7 +193,7 @@ let
   ) "${commandLineArgPointers},";
 
   krispRuntimePath =
-    if stdenvNoCC.isLinux then
+    if stdenvNoCC.hostPlatform.isLinux then
       "require('path').join(process.env.XDG_CONFIG_HOME || require('path').join(require('os').homedir(), '.config'), '${configDirName}', '${version}', 'modules', 'discord_krisp')"
     else
       "require('path').join(require('os').userInfo().homedir, 'Library', 'Application Support', '${configDirName}', '${version}', 'modules', 'discord_krisp')";
@@ -202,7 +205,7 @@ let
       withEquicord
       withOpenASAR
       ;
-    commandLineArgs = if stdenvNoCC.isDarwin then "" else commandLineArgsString;
+    commandLineArgs = if stdenvNoCC.hostPlatform.isDarwin then "" else commandLineArgsString;
   }
   // lib.attrsets.optionalAttrs (vencord != null) { inherit vencord; }
   // lib.attrsets.optionalAttrs (equicord != null) { inherit equicord; }
@@ -246,10 +249,10 @@ package.overrideAttrs (
 
     env =
       oldEnv
-      // lib.attrsets.optionalAttrs (stdenvNoCC.isDarwin || oldEnvHasNixCFlags) {
+      // lib.attrsets.optionalAttrs (stdenvNoCC.hostPlatform.isDarwin || oldEnvHasNixCFlags) {
         NIX_CFLAGS_COMPILE = lib.strings.concatStringsSep " " (
           lib.lists.optional oldEnvHasNixCFlags (toString oldEnv.NIX_CFLAGS_COMPILE)
-          ++ lib.lists.optionals stdenvNoCC.isDarwin launcherCFlags
+          ++ lib.lists.optionals stdenvNoCC.hostPlatform.isDarwin launcherCFlags
         );
       };
 
@@ -268,11 +271,11 @@ package.overrideAttrs (
 
     postFixup =
       (oldAttrs.postFixup or "")
-      + lib.strings.optionalString (stdenvNoCC.isLinux && hasDeployKrisp) ''
+      + lib.strings.optionalString (stdenvNoCC.hostPlatform.isLinux && hasDeployKrisp) ''
         wrapProgramShell "$out/opt/${binaryName}/${binaryName}" \
           --run ${lib.strings.escapeShellArg (lib.meta.getExe deployKrisp)}
       ''
-      + lib.strings.optionalString stdenvNoCC.isDarwin ''
+      + lib.strings.optionalString stdenvNoCC.hostPlatform.isDarwin ''
         source ${./scripts/install-darwin-launcher.sh} \
           ${lib.strings.escapeShellArg binaryName} \
           ${./src/discord-launcher.c} \
@@ -290,7 +293,7 @@ package.overrideAttrs (
           ${darwinEntitlements}
       '';
   }
-  // lib.attrsets.optionalAttrs stdenvNoCC.isLinux {
+  // lib.attrsets.optionalAttrs stdenvNoCC.hostPlatform.isLinux {
     nixcordStageModules = stageModules;
   }
 )

@@ -5,9 +5,13 @@ let
   testRoot = "/tmp/nixcord-activation-scripts-test";
   cfg = {
     user = "testuser";
-    homeDirectory = if pkgs.stdenvNoCC.isDarwin then "/Users/testuser" else "/home/testuser";
+    homeDirectory =
+      if pkgs.stdenvNoCC.hostPlatform.isDarwin then "/Users/testuser" else "/home/testuser";
     xdgConfigHome =
-      if pkgs.stdenvNoCC.isDarwin then "/Users/testuser/.config" else "/home/testuser/.config";
+      if pkgs.stdenvNoCC.hostPlatform.isDarwin then
+        "/Users/testuser/.config"
+      else
+        "/home/testuser/.config";
     configDir = "${testRoot}/Vencord";
     discord = {
       branches = [
@@ -36,12 +40,12 @@ let
   };
   install = lib.meta.getExe' pkgs.coreutils "install";
   discordConfigBase =
-    if pkgs.stdenvNoCC.isDarwin then
+    if pkgs.stdenvNoCC.hostPlatform.isDarwin then
       "/Users/testuser/Library/Application Support"
     else
       "/home/testuser/.config";
   dorionStorage =
-    if pkgs.stdenvNoCC.isDarwin then
+    if pkgs.stdenvNoCC.hostPlatform.isDarwin then
       "/Users/testuser/Library/WebKit/com.spikehd.dorion/WebsiteData/Default"
     else
       "/home/testuser/.local/share/dorion/profiles/default/webdata/localstorage";

@@ -72,7 +72,7 @@ let
     in
     if moduleSystem == "nix-darwin" then
       "/Users/demo/Library/Application Support/${suffix}"
-    else if moduleSystem == "home-manager" && !pkgs.stdenvNoCC.isLinux then
+    else if moduleSystem == "home-manager" && !pkgs.stdenvNoCC.hostPlatform.isLinux then
       "/home/demo/Library/Application Support/${suffix}"
     else
       "/home/demo/.config/${suffix}";
@@ -83,13 +83,13 @@ let
       module = ../fixtures/regression-matrix/home-manager.nix;
     };
   }
-  // lib.attrsets.optionalAttrs pkgs.stdenvNoCC.isLinux {
+  // lib.attrsets.optionalAttrs pkgs.stdenvNoCC.hostPlatform.isLinux {
     nixos = {
       stub = stubs.nixos;
       module = ../fixtures/regression-matrix/nixos.nix;
     };
   }
-  // lib.attrsets.optionalAttrs pkgs.stdenvNoCC.isDarwin {
+  // lib.attrsets.optionalAttrs pkgs.stdenvNoCC.hostPlatform.isDarwin {
     nix-darwin = {
       stub = stubs.darwin;
       module = ../fixtures/regression-matrix/nix-darwin.nix;

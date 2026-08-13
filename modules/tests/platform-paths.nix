@@ -68,20 +68,20 @@ let
       && hm.xdgConfigHome == "/srv/config/testuser"
       &&
         hm.discord.configDir == (
-          if pkgs.stdenvNoCC.isLinux then
+          if pkgs.stdenvNoCC.hostPlatform.isLinux then
             "/srv/config/testuser/discord"
           else
             "/srv/home/testuser/Library/Application Support/discord"
         )
       &&
         hm.goofcord.configDir == (
-          if pkgs.stdenvNoCC.isLinux then
+          if pkgs.stdenvNoCC.hostPlatform.isLinux then
             "/srv/config/testuser/goofcord/GoofCord"
           else
             "/srv/home/testuser/Library/Application Support/goofcord/GoofCord"
         );
   }
-  // lib.attrsets.optionalAttrs pkgs.stdenvNoCC.isLinux {
+  // lib.attrsets.optionalAttrs pkgs.stdenvNoCC.hostPlatform.isLinux {
     "NixOS paths come from the configured user home" =
       nixos.homeDirectory == "/srv/home/testuser"
       && nixos.xdgConfigHome == "/srv/home/testuser/.config"
@@ -92,7 +92,7 @@ let
       nixosUnmanaged.homeDirectory == "/home/existing-user"
       && nixosUnmanaged.xdgConfigHome == "/home/existing-user/.config";
   }
-  // lib.attrsets.optionalAttrs pkgs.stdenvNoCC.isDarwin {
+  // lib.attrsets.optionalAttrs pkgs.stdenvNoCC.hostPlatform.isDarwin {
     "nix-darwin paths come from the configured user home" =
       darwin.homeDirectory == "/Volumes/Users/testuser"
       && darwin.xdgConfigHome == "/Volumes/Users/testuser/.config"

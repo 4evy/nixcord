@@ -18,9 +18,9 @@ in
 {
   disableDiscordUpdates = wrapScript ''
     set -euo pipefail
-    ${lib.meta.getExe' pkgs.coreutils "install"} -d -o ${lib.strings.escapeShellArg cfg.user} ${lib.strings.optionalString pkgs.stdenvNoCC.isDarwin "-g staff"} ${lib.strings.escapeShellArg cfg.configDir}
+    ${lib.meta.getExe' pkgs.coreutils "install"} -d -o ${lib.strings.escapeShellArg cfg.user} ${lib.strings.optionalString pkgs.stdenvNoCC.hostPlatform.isDarwin "-g staff"} ${lib.strings.escapeShellArg cfg.configDir}
     for config_dir in ${lib.strings.escapeShellArgs (getDiscordConfigDirs cfg)}; do
-      ${lib.meta.getExe' pkgs.coreutils "install"} -d -o ${lib.strings.escapeShellArg cfg.user} ${lib.strings.optionalString pkgs.stdenvNoCC.isDarwin "-g staff"} "$config_dir"
+      ${lib.meta.getExe' pkgs.coreutils "install"} -d -o ${lib.strings.escapeShellArg cfg.user} ${lib.strings.optionalString pkgs.stdenvNoCC.hostPlatform.isDarwin "-g staff"} "$config_dir"
       if [ -f "$config_dir/settings.json" ]; then
         ${lib.meta.getExe' pkgs.jq "jq"} ${disabledUpdateSettingsJq} "$config_dir/settings.json" > "$config_dir/settings.json.tmp" && mv "$config_dir/settings.json.tmp" "$config_dir/settings.json"
       else
@@ -34,7 +34,10 @@ in
 
     config_base=${
       lib.strings.escapeShellArg (
-        if pkgs.stdenvNoCC.isDarwin then "${homeDirectory}/Library/Application Support" else xdgConfigHome
+        if pkgs.stdenvNoCC.hostPlatform.isDarwin then
+          "${homeDirectory}/Library/Application Support"
+        else
+          xdgConfigHome
       )
     }
 
@@ -67,7 +70,7 @@ in
 
     webkit_base_dir=${
       lib.strings.escapeShellArg (
-        if pkgs.stdenvNoCC.isDarwin then
+        if pkgs.stdenvNoCC.hostPlatform.isDarwin then
           "${homeDirectory}/Library/WebKit/com.spikehd.dorion/WebsiteData/Default"
         else
           "${homeDirectory}/.local/share/dorion/profiles/default/webdata/localstorage"

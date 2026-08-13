@@ -19,7 +19,7 @@ writeShellApplication {
   '';
   text = ''
     ${lib.strings.toShellVars {
-      DISCORD_STAGE_PLATFORM = if stdenvNoCC.isDarwin then "darwin" else "linux";
+      DISCORD_STAGE_PLATFORM = if stdenvNoCC.hostPlatform.isDarwin then "darwin" else "linux";
       DISCORD_CONFIG_DIR_NAME = configDirName;
       DISCORD_VERSION = version;
       DISCORD_STAGED_MODULES = lib.strings.concatStringsSep " " (

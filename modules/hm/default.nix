@@ -69,7 +69,7 @@
           xdgConfigHome = lib.modules.mkDefault config.xdg.configHome;
         }
         // mkConfigDirs cfg (
-          if pkgs.stdenvNoCC.isLinux then
+          if pkgs.stdenvNoCC.hostPlatform.isLinux then
             config.xdg.configHome
           else
             "${config.home.homeDirectory}/Library/Application Support"
