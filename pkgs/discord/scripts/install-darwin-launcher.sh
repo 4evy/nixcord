@@ -20,6 +20,26 @@ cc=${12}
 rcodesign=${13}
 entitlements=${14}
 
+launcher_cflags=(
+  -std=c23
+  -Wall
+  -Wextra
+  -Wpedantic
+  -Wconversion
+  -Wsign-conversion
+  -Wcast-qual
+  -Wwrite-strings
+  -Wformat=2
+  -Wshadow
+  -Wstrict-prototypes
+  -Wmissing-prototypes
+  -Wold-style-definition
+  -Wundef
+  -Wvla
+  -Walloca
+  -Werror
+)
+
 app_executable="$out/Applications/$binary_name.app/Contents/MacOS/$binary_name"
 app_executable_unwrapped="$app_executable.unwrapped"
 mv "$app_executable" "$app_executable_unwrapped"
@@ -36,7 +56,7 @@ substituteInPlace nixcord-discord-launcher.c \
   --replace-fail "@command_line_args@" "$command_line_args" \
   --replace-fail "@command_line_args_count@" "$command_line_args_count"
 
-"$cc" -Os -o "$app_executable" nixcord-discord-launcher.c
+"$cc" "${launcher_cflags[@]}" -Os -o "$app_executable" nixcord-discord-launcher.c
 chmod +x "$app_executable"
 
 "$rcodesign" sign \

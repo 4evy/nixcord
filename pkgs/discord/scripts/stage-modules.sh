@@ -7,10 +7,12 @@ fi
 store_modules=$1
 
 if [[ "${DISCORD_STAGE_PLATFORM:?}" = darwin ]]; then
-  config_dir="$HOME/Library/Application Support/${DISCORD_CONFIG_DIR_NAME:?}"
+  config_base=${DISCORD_USER_DATA_DIR:-$HOME/Library/Application Support}
+  config_dir="$config_base/${DISCORD_CONFIG_DIR_NAME:?}"
   module_data_dir="$config_dir/module_data"
 else
-  config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/${DISCORD_CONFIG_DIR_NAME:?}"
+  config_base=${DISCORD_USER_DATA_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}}
+  config_dir="$config_base/${DISCORD_CONFIG_DIR_NAME:?}"
 fi
 
 modules_dir="$config_dir/${DISCORD_VERSION:?}/modules"

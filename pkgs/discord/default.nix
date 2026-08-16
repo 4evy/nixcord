@@ -28,26 +28,6 @@
   withKrisp ? false,
 }:
 let
-  launcherCFlags = [
-    "-std=c23"
-    "-Wall"
-    "-Wextra"
-    "-Wpedantic"
-    "-Wconversion"
-    "-Wsign-conversion"
-    "-Wcast-qual"
-    "-Wwrite-strings"
-    "-Wformat=2"
-    "-Wshadow"
-    "-Wstrict-prototypes"
-    "-Wmissing-prototypes"
-    "-Wold-style-definition"
-    "-Wundef"
-    "-Wvla"
-    "-Walloca"
-    "-Werror"
-  ];
-
   variantPackages = {
     stable = discord;
     ptb = discord-ptb;
@@ -56,6 +36,15 @@ let
   };
 
   basePackage = variantPackages.${branch} or null;
+  basePackageOverride = if basePackage != null then basePackage.override or null else null;
+  basePackageOverrideArgs =
+    if builtins.isAttrs basePackageOverride then
+      basePackageOverride.__functionArgs or { }
+    else if lib.trivial.isFunction basePackageOverride then
+      lib.trivial.functionArgs basePackageOverride
+    else
+      { };
+  basePackageSupportsFHSEnv = basePackageOverrideArgs ? useFHSEnv;
   enabledDiscordModsCount = lib.lists.count lib.trivial.id [
     withVencord
     withEquicord
@@ -85,17 +74,11 @@ let
     else
       lib.strings.toLower binaryName;
 
-  resourcesDir =
-    if stdenvNoCC.hostPlatform.isLinux then
-      "$out/opt/${binaryName}/resources"
-    else
-      "$out/Applications/${binaryName}.app/Contents/Resources";
-
   modulesDir =
     if stdenvNoCC.hostPlatform.isLinux then
       "$out/opt/${binaryName}/modules"
     else
-      "${resourcesDir}/modules";
+      "$out/Applications/${binaryName}.app/Contents/Resources/modules";
 
   sourceSet = import ./lib/sources.nix {
     inherit
@@ -150,7 +133,11 @@ let
   hasKrispModule = withKrisp && krispModule != null;
   hasDeployKrisp = withKrisp && deployKrisp != null;
 
-  stagedModuleVersions = lib.attrsets.removeAttrs moduleVersions [ "discord_krisp" ];
+  stagedModuleVersions =
+    if hasKrispModule then
+      moduleVersions
+    else
+      lib.attrsets.removeAttrs moduleVersions [ "discord_krisp" ];
 
   disabledUpdateSettingsJson = builtins.toJSON {
     SKIP_HOST_UPDATE = true;
@@ -194,9 +181,9 @@ let
 
   krispRuntimePath =
     if stdenvNoCC.hostPlatform.isLinux then
-      "require('path').join(process.env.XDG_CONFIG_HOME || require('path').join(require('os').homedir(), '.config'), '${configDirName}', '${version}', 'modules', 'discord_krisp')"
+      "require('path').join(process.env.DISCORD_USER_DATA_DIR || process.env.XDG_CONFIG_HOME || require('path').join(require('os').homedir(), '.config'), '${configDirName}', '${version}', 'modules', 'discord_krisp')"
     else
-      "require('path').join(require('os').userInfo().homedir, 'Library', 'Application Support', '${configDirName}', '${version}', 'modules', 'discord_krisp')";
+      "require('path').join(process.env.DISCORD_USER_DATA_DIR || require('path').join(require('os').userInfo().homedir, 'Library', 'Application Support'), '${configDirName}', '${version}', 'modules', 'discord_krisp')";
 
   overrideArgs = {
     inherit
@@ -209,7 +196,12 @@ let
   }
   // lib.attrsets.optionalAttrs (vencord != null) { inherit vencord; }
   // lib.attrsets.optionalAttrs (equicord != null) { inherit equicord; }
-  // lib.attrsets.optionalAttrs (openasar != null) { inherit openasar; };
+  // lib.attrsets.optionalAttrs (openasar != null) { inherit openasar; }
+  // lib.attrsets.optionalAttrs (stdenvNoCC.hostPlatform.isLinux && basePackageSupportsFHSEnv) {
+    # Keep nixcord's patched, non-FHS package even when nixpkgs defaults to an
+    # FHS wrapper for unmodified Krisp.
+    useFHSEnv = false;
+  };
 
   package = basePackage.override overrideArgs;
 
@@ -232,8 +224,6 @@ assert lib.asserts.assertMsg (
 package.overrideAttrs (
   oldAttrs:
   let
-    oldEnv = oldAttrs.env or { };
-    oldEnvHasNixCFlags = oldEnv ? NIX_CFLAGS_COMPILE;
     oldPassthru = oldAttrs.passthru or { };
   in
   {
@@ -245,16 +235,9 @@ package.overrideAttrs (
         moduleVersions
         ;
       nixcordCommandLineArgsList = true;
+      nixcordUsesFHSEnv = false;
+      nixcordKrispPatch = hasKrispModule;
     };
-
-    env =
-      oldEnv
-      // lib.attrsets.optionalAttrs (stdenvNoCC.hostPlatform.isDarwin || oldEnvHasNixCFlags) {
-        NIX_CFLAGS_COMPILE = lib.strings.concatStringsSep " " (
-          lib.lists.optional oldEnvHasNixCFlags (toString oldEnv.NIX_CFLAGS_COMPILE)
-          ++ lib.lists.optionals stdenvNoCC.hostPlatform.isDarwin launcherCFlags
-        );
-      };
 
     postInstall =
       (oldAttrs.postInstall or "")
@@ -294,6 +277,8 @@ package.overrideAttrs (
       '';
   }
   // lib.attrsets.optionalAttrs stdenvNoCC.hostPlatform.isLinux {
-    nixcordStageModules = stageModules;
+    # nixpkgs interpolates this attribute into its non-FHS launcher. Keep Krisp
+    # as the deployer's writable copy while staging the other pinned modules.
+    stageModules = lib.meta.getExe stageModules;
   }
 )

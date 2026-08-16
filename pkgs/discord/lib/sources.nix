@@ -14,8 +14,6 @@ let
 
   inherit (source) version;
 
-  src = fetchurl { inherit (source.distro) url hash; };
-
   moduleSrcs = lib.attrsets.mapAttrs (_: mod: fetchurl { inherit (mod) url hash; }) source.modules;
 
   moduleVersions = lib.attrsets.mapAttrs (_: mod: mod.version) source.modules;
@@ -35,7 +33,6 @@ in
     variantKey
     source
     version
-    src
     moduleSrcs
     moduleVersions
     krispSourceMeta

@@ -16,15 +16,12 @@ pkgs.runCommand "discord-linux-scripts-check"
     set -euo pipefail
 
     ${pkgs.lib.strings.optionalString discordAvailable ''
-      # nixpkgs' Discord wrapper interpolates its `stageModules` attribute as an
-      # executable path.  Keep Nixcord's richer staging helper under a distinct
-      # attribute so overriding the package cannot turn that path into a
-      # derivation directory.
+      # The non-FHS nixpkgs launcher runs nixcord's staging helper so the Krisp
+      # deployer keeps ownership of its writable module.
       test -x ${nixcordDiscord.stageModules}
       test ! -d ${nixcordDiscord.stageModules}
       grep -F -- ${pkgs.lib.strings.escapeShellArg "${nixcordDiscord.stageModules} ${nixcordDiscord}/opt/Discord/modules"} \
         ${nixcordDiscord}/opt/Discord/Discord
-      test -x ${pkgs.lib.meta.getExe nixcordDiscord.nixcordStageModules}
     ''}
 
     wrapper_dir="$PWD/wrapper"
@@ -55,9 +52,6 @@ pkgs.runCommand "discord-linux-scripts-check"
     grep -Fx -- "--flag-two" "$TARGET_ARGS_FILE"
 
     store="$PWD/store-modules"
-    config_home="$PWD/config-home"
-    export XDG_CONFIG_HOME="$config_home"
-    export DISCORD_STAGE_PLATFORM=linux
     export DISCORD_CONFIG_DIR_NAME=discord
     export DISCORD_VERSION=1.0.0
     export DISCORD_STAGED_MODULES="discord_desktop_core discord_krisp discord_voice"
@@ -69,30 +63,35 @@ pkgs.runCommand "discord-linux-scripts-check"
     printf 'store krisp\n' > "$store/discord_krisp/index.js"
     printf 'store voice\n' > "$store/discord_voice/index.js"
 
-    user_modules="$config_home/discord/1.0.0/modules"
-    mkdir -p "$user_modules/discord_old" "$user_modules/discord_krisp"
-    printf 'old\n' > "$user_modules/discord_old/index.js"
-    printf 'deployed krisp\n' > "$user_modules/discord_krisp/index.js"
-    printf 'hash\n' > "$user_modules/discord_krisp/.nix-krisp-hash"
-    printf '{"KEEP":true}\n' > "$config_home/discord/settings.json"
+    export DISCORD_STAGE_PLATFORM=linux
+    export DISCORD_USER_DATA_DIR="$PWD/linux-user-data"
+    linux_config="$DISCORD_USER_DATA_DIR/discord"
+    linux_modules="$linux_config/1.0.0/modules"
+    mkdir -p "$linux_modules/discord_old" "$linux_modules/discord_krisp"
+    printf 'old\n' > "$linux_modules/discord_old/index.js"
+    printf 'writable krisp\n' > "$linux_modules/discord_krisp/module.node"
+    printf 'hash\n' > "$linux_modules/discord_krisp/.nix-krisp-hash"
+    printf '{"KEEP":true}\n' > "$linux_config/settings.json"
 
     bash ${../../pkgs/discord/scripts/stage-modules.sh} "$store"
 
-    test -L "$user_modules/discord_desktop_core"
-    test "$(readlink "$user_modules/discord_desktop_core")" = "$store/discord_desktop_core"
-    test -L "$user_modules/discord_voice"
-    test "$(readlink "$user_modules/discord_voice")" = "$store/discord_voice"
-    test ! -e "$user_modules/discord_old"
-    test ! -L "$user_modules/discord_krisp"
-    grep -Fx 'deployed krisp' "$user_modules/discord_krisp/index.js"
-    grep -Fx 'hash' "$user_modules/discord_krisp/.nix-krisp-hash"
-    jq -e '.discord_krisp.installedVersion == 1' "$user_modules/installed.json"
-    jq -e '.KEEP == true and .SKIP_HOST_UPDATE == true and .SKIP_MODULE_UPDATE == true and .USE_NEW_UPDATER == false' "$config_home/discord/settings.json"
+    for module in discord_desktop_core discord_voice; do
+      test -L "$linux_modules/$module"
+      test "$(readlink "$linux_modules/$module")" = "$store/$module"
+    done
+    test ! -e "$linux_modules/discord_old"
+    test ! -L "$linux_modules/discord_krisp"
+    grep -Fx 'writable krisp' "$linux_modules/discord_krisp/module.node"
+    grep -Fx 'hash' "$linux_modules/discord_krisp/.nix-krisp-hash"
+    jq -e '.discord_voice.installedVersion == 1 and .discord_krisp.installedVersion == 1' \
+      "$linux_modules/installed.json"
+    jq -e '.KEEP == true and .SKIP_HOST_UPDATE == true and .SKIP_MODULE_UPDATE == true and .USE_NEW_UPDATER == false' \
+      "$linux_config/settings.json"
+    test ! -e "$linux_config/module_data"
 
-    darwin_home="$PWD/darwin-home"
-    export HOME="$darwin_home"
     export DISCORD_STAGE_PLATFORM=darwin
-    darwin_config="$darwin_home/Library/Application Support/discord"
+    export DISCORD_USER_DATA_DIR="$PWD/darwin-user-data"
+    darwin_config="$DISCORD_USER_DATA_DIR/discord"
     darwin_modules="$darwin_config/1.0.0/modules"
     darwin_module_data="$darwin_config/module_data"
     mkdir -p \
@@ -102,6 +101,7 @@ pkgs.runCommand "discord-linux-scripts-check"
       "$darwin_module_data/discord_krisp"
     printf 'writable krisp\n' > "$darwin_modules/discord_krisp/module.node"
     printf 'writable krisp data\n' > "$darwin_module_data/discord_krisp/module.node"
+    printf '{"KEEP":true}\n' > "$darwin_config/settings.json"
 
     bash ${../../pkgs/discord/scripts/stage-modules.sh} "$store"
 
@@ -118,7 +118,7 @@ pkgs.runCommand "discord-linux-scripts-check"
     grep -Fx 'writable krisp' "$darwin_modules/discord_krisp/module.node"
     grep -Fx 'writable krisp data' "$darwin_module_data/discord_krisp/module.node"
     jq -e '.discord_voice.installedVersion == 1' "$darwin_modules/installed.json"
-    jq -e '.SKIP_HOST_UPDATE == true and .SKIP_MODULE_UPDATE == true and .USE_NEW_UPDATER == false' \
+    jq -e '.KEEP == true and .SKIP_HOST_UPDATE == true and .SKIP_MODULE_UPDATE == true and .USE_NEW_UPDATER == false' \
       "$darwin_config/settings.json"
 
     touch "$out"

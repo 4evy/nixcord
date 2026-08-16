@@ -50,6 +50,9 @@ WATCHED_EVENTS = [
 
 
 def modules_dir() -> Path:
+    configured_base = os.environ.get("DISCORD_USER_DATA_DIR")
+    if configured_base is not None:
+        return Path(configured_base) / CONFIG_DIR.replace(" ", "") / VERSION / "modules"
     if sys.platform == "darwin":
         base = (
             Path(pwd.getpwuid(os.getuid()).pw_dir) / "Library" / "Application Support"
