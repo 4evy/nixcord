@@ -8,6 +8,13 @@
           "description": "Words to blur in messages (restart required)"
         }
       }
+    },
+    "webKeybinds": {
+      "settings": {
+        "overrideCommonKeybinds": {
+          "default": false
+        }
+      }
     }
   }
 }

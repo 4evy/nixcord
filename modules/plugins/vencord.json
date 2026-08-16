@@ -909,6 +909,10 @@
       }
     }
   },
+  "webKeybinds": {
+    "description": "Re-adds keybinds missing in the web version of Discord: ctrl+t, ctrl+shift+t, ctrl+tab, ctrl+shift+tab, ctrl+1-9, ctrl+,. Only works fully on Vesktop/Legcord, not inside your browser (Vencord-only)",
+    "settings": {}
+  },
   "whoReacted": {
     "description": "Renders the avatars of users who reacted to a message (Vencord-only)",
     "settings": {}

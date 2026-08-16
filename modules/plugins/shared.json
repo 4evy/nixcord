@@ -1823,10 +1823,6 @@
       }
     }
   },
-  "webKeybinds": {
-    "description": "Re-adds keybinds missing in the web version of Discord: ctrl+t, ctrl+shift+t, ctrl+tab, ctrl+shift+tab, ctrl+1-9, ctrl+,. Only works fully on Vesktop/Legcord, not inside your browser (Shared between Vencord and Equicord)",
-    "settings": {}
-  },
   "webRichPresence": {
     "description": "Client plugin for arRPC to enable RPC on Discord Web (experimental) (Shared between Vencord and Equicord)",
     "settings": {}

@@ -7698,6 +7698,21 @@
       }
     }
   },
+  "webKeybinds": {
+    "description": "Re-adds keybinds missing in the web version of Discord. Only works fully on Vesktop/Equibop/Legcord, not inside your browser (Equicord-only)",
+    "settings": {
+      "showNavigationButtons": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Show the back/forward navigation buttons in the title bar. (restart required)"
+      },
+      "overrideCommonKeybinds": {
+        "type": "types.bool",
+        "description": "Allows discord to override the most common tab navigation keybinds (ctrl+t, ctrl+shift+t, ctrl+tab, ctrl+shift+tab, ctrl+n). Only works in a few select browsers that allow website keybinds to take priority over native ones. (restart required)",
+        "default": false
+      }
+    }
+  },
   "webpackTarball": {
     "description": "Converts Discord's webpack sources into a tarball. (Equicord-only)",
     "settings": {
@@ -7707,6 +7722,10 @@
         "description": "Include patched modules (restart required)"
       }
     }
+  },
+  "webPwa": {
+    "description": "Makes Discord installable as an App (PWA). Enables notification badges, global key-binds and Discord's custom title bar. (Equicord-only)",
+    "settings": {}
   },
   "whitelistedEmojis": {
     "description": "Adds the ability to disable all message emojis except for a whitelisted set. (Equicord-only)",

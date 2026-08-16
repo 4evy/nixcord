@@ -5238,6 +5238,17 @@
     },
     {
       "from": [
+        "WebPWA",
+        "enable"
+      ],
+      "to": [
+        "webPwa",
+        "enable"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
         "XSOverlay",
         "botNotifications"
       ],

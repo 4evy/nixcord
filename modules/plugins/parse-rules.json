@@ -361,6 +361,7 @@
     "webContextMenus": "WebContextMenus",
     "webKeybinds": "WebKeybinds",
     "webpackTarball": "WebpackTarball",
+    "webPwa": "WebPWA",
     "webRichPresence": "WebRichPresence",
     "webScreenShareFixes": "WebScreenShareFixes",
     "whitelistedEmojis": "WhitelistedEmojis",
