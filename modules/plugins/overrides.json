@@ -1,4 +1,13 @@
 {
+  "all": {
+    "webKeybinds": {
+      "settings": {
+        "overrideCommonKeybinds": {
+          "default": false
+        }
+      }
+    }
+  },
   "equicord": {
     "contentWarning": {
       "settings": {
@@ -6,13 +15,6 @@
           "type": "types.nullOr (types.listOf types.str)",
           "default": null,
           "description": "Words to blur in messages (restart required)"
-        }
-      }
-    },
-    "webKeybinds": {
-      "settings": {
-        "overrideCommonKeybinds": {
-          "default": false
         }
       }
     }

@@ -47,6 +47,47 @@ describe('applyPluginOverrides', () => {
     });
   });
 
+  test('applies all overrides to whichever category contains the plugin', async () => {
+    await using fixture = await createFixture({
+      'overrides.json': JSON.stringify({
+        all: {
+          MovedPlugin: {
+            settings: {
+              dynamicDefault: { default: false },
+            },
+          },
+        },
+      }),
+      plugins: {
+        [CLI_CONFIG.filenames.shared]: JSON.stringify({
+          MovedPlugin: {
+            settings: {
+              dynamicDefault: { type: 'types.bool' },
+            },
+          },
+        }),
+        [CLI_CONFIG.filenames.vencord]: JSON.stringify({
+          MovedPlugin: { settings: {} },
+        }),
+        [CLI_CONFIG.filenames.equicord]: '{}',
+      },
+    });
+
+    await applyPluginOverrides(fixture.getPath('overrides.json'), fixture.getPath('plugins'));
+
+    await expect(fixture.readJson(`plugins/${CLI_CONFIG.filenames.shared}`)).resolves.toEqual({
+      MovedPlugin: {
+        settings: {
+          dynamicDefault: { type: 'types.bool', default: false },
+        },
+      },
+    });
+    await expect(fixture.readJson(`plugins/${CLI_CONFIG.filenames.vencord}`)).resolves.toEqual({
+      MovedPlugin: { settings: {} },
+    });
+    await expect(fixture.readJson(`plugins/${CLI_CONFIG.filenames.equicord}`)).resolves.toEqual({});
+  });
+
   test('rejects an overrides document that is not an object', async () => {
     await using fixture = await createFixture({
       'overrides.json': '[]',
@@ -69,6 +110,17 @@ describe('applyPluginOverrides', () => {
     await expect(
       applyPluginOverrides(fixture.getPath('overrides.json'), fixture.getPath('plugins'))
     ).rejects.toThrow('Plugin overrides category must be a JSON object: shared');
+  });
+
+  test('rejects a non-object all override', async () => {
+    await using fixture = await createFixture({
+      'overrides.json': JSON.stringify({ all: [] }),
+      plugins: {},
+    });
+
+    await expect(
+      applyPluginOverrides(fixture.getPath('overrides.json'), fixture.getPath('plugins'))
+    ).rejects.toThrow('Plugin overrides category must be a JSON object: all');
   });
 
   test('keeps prototype-shaped JSON keys as ordinary data', async () => {

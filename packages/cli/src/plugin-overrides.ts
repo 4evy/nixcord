@@ -27,6 +27,36 @@ const merge = (base: unknown, override: unknown): unknown => {
   return result;
 };
 
+const selectApplicableCommonPluginOverride = (
+  generatedPlugin: unknown,
+  pluginOverride: unknown
+): unknown => {
+  if (!isPlainObject(generatedPlugin) || !isPlainObject(pluginOverride)) return pluginOverride;
+
+  const overrideSettings = pluginOverride.settings;
+  if (!isPlainObject(overrideSettings)) return pluginOverride;
+
+  const generatedSettings = generatedPlugin.settings;
+  if (!isPlainObject(generatedSettings)) return undefined;
+
+  const applicableSettings: JsonObject = Object.create(null) as JsonObject;
+  for (const [settingName, settingOverride] of Object.entries(overrideSettings)) {
+    if (Object.hasOwn(generatedSettings, settingName)) {
+      defineJsonProperty(applicableSettings, settingName, settingOverride);
+    }
+  }
+
+  const result: JsonObject = Object.create(null) as JsonObject;
+  for (const [key, value] of Object.entries(pluginOverride)) {
+    if (key !== 'settings') defineJsonProperty(result, key, value);
+  }
+  if (Object.keys(applicableSettings).length > 0) {
+    defineJsonProperty(result, 'settings', applicableSettings);
+  }
+
+  return Object.keys(result).length > 0 ? result : undefined;
+};
+
 export const applyPluginOverrides = async (
   overridesPath: string,
   pluginsDir: string
@@ -34,6 +64,11 @@ export const applyPluginOverrides = async (
   const overrides = (await fse.readJson(overridesPath)) as unknown;
   if (!isPlainObject(overrides)) {
     throw new TypeError(`Plugin overrides must be a JSON object: ${overridesPath}`);
+  }
+
+  const commonOverride = overrides.all;
+  if (commonOverride !== undefined && !isPlainObject(commonOverride)) {
+    throw new TypeError('Plugin overrides category must be a JSON object: all');
   }
 
   const files = {
@@ -44,8 +79,8 @@ export const applyPluginOverrides = async (
 
   for (const [category, filename] of Object.entries(files)) {
     const override = overrides[category];
-    if (override === undefined) continue;
-    if (!isPlainObject(override)) {
+    if (override === undefined && commonOverride === undefined) continue;
+    if (override !== undefined && !isPlainObject(override)) {
       throw new TypeError(`Plugin overrides category must be a JSON object: ${category}`);
     }
 
@@ -54,7 +89,25 @@ export const applyPluginOverrides = async (
     if (!isPlainObject(generated)) {
       throw new TypeError(`Generated plugin metadata must be a JSON object: ${targetPath}`);
     }
-    const merged = merge(generated, override);
+
+    const applicableCommonOverride: JsonObject = Object.create(null) as JsonObject;
+    if (isPlainObject(commonOverride)) {
+      for (const [pluginName, pluginOverride] of Object.entries(commonOverride)) {
+        if (Object.hasOwn(generated, pluginName)) {
+          const applicablePluginOverride = selectApplicableCommonPluginOverride(
+            generated[pluginName],
+            pluginOverride
+          );
+          if (applicablePluginOverride !== undefined) {
+            defineJsonProperty(applicableCommonOverride, pluginName, applicablePluginOverride);
+          }
+        }
+      }
+    }
+
+    const withCommonOverride = merge(generated, applicableCommonOverride);
+    const merged =
+      override === undefined ? withCommonOverride : merge(withCommonOverride, override);
     await fse.writeFile(targetPath, `${JSON.stringify(merged, null, 2)}\n`);
   }
 };
