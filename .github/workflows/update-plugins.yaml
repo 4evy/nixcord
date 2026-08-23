@@ -18,6 +18,7 @@ on:
       - "pkgs/scripts/update-goofcord-darwin-deps.sh"
       - "pkgs/goofcord.nix"
       - "modules/lib/core.nix"
+      - "modules/plugins/overrides.json"
       - "nix/flake/apps.nix"
       - "docs/site.nix"
   schedule:
