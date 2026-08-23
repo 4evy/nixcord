@@ -6133,7 +6133,27 @@
       "memberList": {
         "type": "types.bool",
         "default": true,
-        "description": "Display the first available name listed in your custom name format in the members list, DMs list, and friends list."
+        "description": "Display the first available name listed in your custom name format in the members list, DMs list, friends list, and Active Now."
+      },
+      "styleDirectMessagesList": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Show display name effects on unselected entries without requiring hover. Selected and hovered entries are still styled when disabled."
+      },
+      "styleDirectMessagesMessages": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Show display name effects on message authors without requiring hover. Hovered names are still styled when disabled."
+      },
+      "styleFriendsList": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Show display name effects without requiring hover. Hovered entries are still styled when disabled."
+      },
+      "styleActiveNow": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Show display name effects without requiring hover. Hovered entries are still styled when disabled."
       },
       "profilePopout": {
         "type": "types.bool",
@@ -6175,15 +6195,25 @@
         "default": false,
         "description": "For the non-primary names, use Discord's default fonts regardless of the user's custom nitro font."
       },
-      "ignoreGradients": {
+      "ignoreEffects": {
         "type": "types.bool",
         "default": true,
-        "description": "For the non-primary names, if the role has a gradient and the color below is set to \"Role+-#\", use the primary color instead of the whole gradient, and if it has a nitro effect, ignore it entirely."
+        "description": "For non-primary names, use only the primary role color and omit display name effects."
       },
-      "animateGradients": {
+      "animateEffects": {
         "type": "types.bool",
         "default": false,
-        "description": "For the non-primary names, if the role has a gradient or nitro effect, animate it. This is disabled by \"Ignore Gradients\" and reduced motion."
+        "description": "Animate role gradients and display name effects on non-primary names. This is disabled by \"Ignore Effects\" and reduced motion."
+      },
+      "alwaysAnimateEffects": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Force display name effects to animate when they would already be visible, even without hover."
+      },
+      "gradientGlow": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Add a glow to animated user gradients the same way server role gradients glow."
       },
       "nameSeparator": {
         "type": "types.str",
@@ -6199,11 +6229,6 @@
         "type": "types.bool",
         "default": false,
         "description": "Only display custom names when in DMs, and not in servers."
-      },
-      "alwaysShowEffects": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Always show effects as if you were hovering."
       },
       "includedNames": {
         "type": "types.str",
@@ -7698,21 +7723,6 @@
       }
     }
   },
-  "webKeybinds": {
-    "description": "Re-adds keybinds missing in the web version of Discord. Only works fully on Vesktop/Equibop/Legcord, not inside your browser (Equicord-only)",
-    "settings": {
-      "showNavigationButtons": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Show the back/forward navigation buttons in the title bar. (restart required)"
-      },
-      "overrideCommonKeybinds": {
-        "type": "types.bool",
-        "description": "Allows discord to override the most common tab navigation keybinds (ctrl+t, ctrl+shift+t, ctrl+tab, ctrl+shift+tab, ctrl+n). Only works in a few select browsers that allow website keybinds to take priority over native ones. (restart required)",
-        "default": false
-      }
-    }
-  },
   "webpackTarball": {
     "description": "Converts Discord's webpack sources into a tarball. (Equicord-only)",
     "settings": {
@@ -7722,10 +7732,6 @@
         "description": "Include patched modules (restart required)"
       }
     }
-  },
-  "webPwa": {
-    "description": "Makes Discord installable as an App (PWA). Enables notification badges, global key-binds and Discord's custom title bar. (Equicord-only)",
-    "settings": {}
   },
   "whitelistedEmojis": {
     "description": "Adds the ability to disable all message emojis except for a whitelisted set. (Equicord-only)",

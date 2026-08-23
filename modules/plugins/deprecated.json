@@ -147,6 +147,11 @@
       "badges": "profiles",
       "profiles": "badges"
     },
+    "showMeYourName": {
+      "alwaysAnimateEffects": "alwaysShowEffects",
+      "animateEffects": "animateGradients",
+      "ignoreEffects": "ignoreGradients"
+    },
     "timezones": {
       "showOwnTimezone": "Show Own Timezone",
       "twentyFourHourFormat": "24h Time"

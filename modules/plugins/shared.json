@@ -1823,6 +1823,25 @@
       }
     }
   },
+  "webKeybinds": {
+    "description": "Re-adds keybinds missing in the web version of Discord. Only works fully on Vesktop/Equibop/Legcord, not inside your browser (Shared between Vencord and Equicord)",
+    "settings": {
+      "showNavigationButtons": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Show the back/forward navigation buttons in the title bar. (restart required)"
+      },
+      "overrideCommonKeybinds": {
+        "type": "types.bool",
+        "description": "Allows discord to override the most common tab navigation keybinds (ctrl+t, ctrl+shift+t, ctrl+tab, ctrl+shift+tab, ctrl+n). Only works in a few select browsers that allow website keybinds to take priority over native ones. (restart required)",
+        "default": false
+      }
+    }
+  },
+  "webPwa": {
+    "description": "Makes Discord installable as an App (PWA). Enables notification badges, global key-binds and Discord's custom title bar. (Shared between Vencord and Equicord)",
+    "settings": {}
+  },
   "webRichPresence": {
     "description": "Client plugin for arRPC to enable RPC on Discord Web (experimental) (Shared between Vencord and Equicord)",
     "settings": {}
