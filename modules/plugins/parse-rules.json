@@ -363,6 +363,7 @@
     "webpackTarball": "WebpackTarball",
     "webPwa": "WebPWA",
     "webRichPresence": "WebRichPresence",
+    "webScreenShare": "WebScreenShare",
     "webScreenShareFixes": "WebScreenShareFixes",
     "whitelistedEmojis": "WhitelistedEmojis",
     "whoReacted": "WhoReacted",

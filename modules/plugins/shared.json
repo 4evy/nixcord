@@ -1742,7 +1742,7 @@
           "jpg"
         ],
         "default": "webp",
-        "description": "Choose the image format to use for non animated images. Animated images will always use .gif"
+        "description": "Choose the image format to use for non-animated images. Animated images will always use .webp"
       },
       "imgSize": {
         "type": "types.enum",

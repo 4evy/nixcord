@@ -2261,7 +2261,13 @@
   },
   "favouriteAnything": {
     "description": "Favourite any image, video, or file attachment (Equicord-only)",
-    "settings": {}
+    "settings": {
+      "localThumbnails": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Generate file thumbnails locally instead of using an external service (placeholder.nin0.dev). Not compatible with mobile. Toggling this option will not affect existing favourites."
+      }
+    }
   },
   "fileUpload": {
     "description": "Upload files to hosting services like Zipline, Nest, S3, and WebDAV (Equicord-only)",
@@ -7651,6 +7657,16 @@
   "voiceMessageTranscriber": {
     "description": "On-device transcriptions for voice messages powered by Whisper v3 (Equicord-only)",
     "settings": {
+      "embed": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Display transcription directly in the voice message attachment instead of a modal."
+      },
+      "maintainHorizontal": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Maintain horizontal size for the embedded transcription box and expand vertically."
+      },
       "selectedModel": {
         "type": "types.enum",
         "enumValues": [
@@ -7660,12 +7676,12 @@
           "Xenova/whisper-medium"
         ],
         "default": "Xenova/whisper-base",
-        "description": "Model size"
+        "description": "Model size."
       },
       "quantized": {
         "type": "types.bool",
         "default": true,
-        "description": "Use quantized model (smaller size, slightly lower accuracy)"
+        "description": "Use quantized models (smaller size, slight quality loss)."
       }
     }
   },
@@ -7730,6 +7746,49 @@
         "type": "types.bool",
         "default": true,
         "description": "Include patched modules (restart required)"
+      }
+    }
+  },
+  "webScreenShare": {
+    "description": "Adds a screenshare options menu. Allows for changing resolution, framerate, encoding hints, and system audio settings. (Equicord-only)",
+    "settings": {
+      "resolution": {
+        "type": "types.enum",
+        "enumValues": [
+          "480",
+          "720",
+          "1080",
+          "1440",
+          "2160"
+        ],
+        "default": "1080",
+        "description": "Resolution"
+      },
+      "frameRate": {
+        "type": "types.enum",
+        "enumValues": [
+          "15",
+          "30",
+          "60",
+          "120"
+        ],
+        "default": "60",
+        "description": "Frame Rate"
+      },
+      "contentHint": {
+        "type": "types.enum",
+        "enumValues": [
+          "motion",
+          "detail",
+          ""
+        ],
+        "default": "motion",
+        "description": "Content Hint"
+      },
+      "systemAudio": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Mute system audio"
       }
     }
   },
