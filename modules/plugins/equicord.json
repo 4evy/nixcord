@@ -7749,49 +7749,6 @@
       }
     }
   },
-  "webScreenShare": {
-    "description": "Adds a screenshare options menu. Allows for changing resolution, framerate, encoding hints, and system audio settings. (Equicord-only)",
-    "settings": {
-      "resolution": {
-        "type": "types.enum",
-        "enumValues": [
-          "480",
-          "720",
-          "1080",
-          "1440",
-          "2160"
-        ],
-        "default": "1080",
-        "description": "Resolution"
-      },
-      "frameRate": {
-        "type": "types.enum",
-        "enumValues": [
-          "15",
-          "30",
-          "60",
-          "120"
-        ],
-        "default": "60",
-        "description": "Frame Rate"
-      },
-      "contentHint": {
-        "type": "types.enum",
-        "enumValues": [
-          "motion",
-          "detail",
-          ""
-        ],
-        "default": "motion",
-        "description": "Content Hint"
-      },
-      "systemAudio": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Mute system audio"
-      }
-    }
-  },
   "whitelistedEmojis": {
     "description": "Adds the ability to disable all message emojis except for a whitelisted set. (Equicord-only)",
     "settings": {

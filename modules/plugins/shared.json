@@ -1846,6 +1846,49 @@
     "description": "Client plugin for arRPC to enable RPC on Discord Web (experimental) (Shared between Vencord and Equicord)",
     "settings": {}
   },
+  "webScreenShare": {
+    "description": "Adds a screenshare options menu. Allows for changing resolution, framerate, encoding hints, and system audio settings. (Shared between Vencord and Equicord)",
+    "settings": {
+      "resolution": {
+        "type": "types.enum",
+        "enumValues": [
+          "480",
+          "720",
+          "1080",
+          "1440",
+          "2160"
+        ],
+        "default": "1080",
+        "description": "Resolution"
+      },
+      "frameRate": {
+        "type": "types.enum",
+        "enumValues": [
+          "15",
+          "30",
+          "60",
+          "120"
+        ],
+        "default": "60",
+        "description": "Frame Rate"
+      },
+      "contentHint": {
+        "type": "types.enum",
+        "enumValues": [
+          "motion",
+          "detail",
+          ""
+        ],
+        "default": "motion",
+        "description": "Content Hint"
+      },
+      "systemAudio": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Mute system audio"
+      }
+    }
+  },
   "webScreenShareFixes": {
     "description": "Removes 2500kbps bitrate cap on chromium and vesktop clients. (Shared between Vencord and Equicord)",
     "settings": {}
