@@ -31,7 +31,7 @@
     "@types/fs-extra": "11.0.4",
     "@types/node": "26.1.2",
     "@typescript/native": "npm:typescript@7.0.2",
-    "equicord": "github:Equicord/Equicord#328e2ce76216e27a2d8e78d4723014adef079803",
+    "equicord": "github:Equicord/Equicord#66b106302422b028517dbfe739b26f246acb97dd",
     "fallow": "3.14.0",
     "typescript": "npm:@typescript/typescript6@6.0.2",
     "vencord": "github:Vendicated/Vencord#ada5cfeb805e77853bde5b04ba4b248a338de66f",
