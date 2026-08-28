@@ -825,11 +825,6 @@
         "type": "types.attrs",
         "default": {}
       },
-      "noPomeloNames": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Use display names instead of usernames for DM's"
-      },
       "showStatusIndicators": {
         "type": "types.bool",
         "default": true,
@@ -3656,6 +3651,11 @@
         "default": true,
         "description": "Whether to log edited messages"
       },
+      "logDeletedAttachments": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Whether to log deleted attachments (restart required)"
+      },
       "inlineEdits": {
         "type": "types.bool",
         "default": true,
@@ -3663,7 +3663,7 @@
       },
       "ignoreBots": {
         "type": "types.bool",
-        "default": false,
+        "default": true,
         "description": "Whether to ignore messages by bots"
       },
       "ignoreSelf": {
@@ -6511,41 +6511,6 @@
           "__nixRaw": "5.0"
         },
         "description": "Snowflakes per second (higher = denser snowfall)"
-      }
-    }
-  },
-  "soggy": {
-    "description": "Adds a soggy button to the toolbox (Equicord-only)",
-    "settings": {
-      "songVolume": {
-        "type": "types.float",
-        "default": 0.25,
-        "description": "Volume of the song. 0 to disable"
-      },
-      "boopVolume": {
-        "type": "types.float",
-        "default": 0.2,
-        "description": "Volume of the boop sound"
-      },
-      "tooltipText": {
-        "type": "types.str",
-        "default": "the soggy",
-        "description": "The text shown when hovering over the button"
-      },
-      "imageLink": {
-        "type": "types.str",
-        "default": "https://equicord.org/assets/plugins/soggy/cat.png",
-        "description": "URL for the image (button and modal)"
-      },
-      "songLink": {
-        "type": "types.str",
-        "default": "https://github.com/Equicord/Equibored/raw/main/sounds/soggy/song.mp3?raw=true",
-        "description": "URL for the song to play"
-      },
-      "boopLink": {
-        "type": "types.str",
-        "default": "https://github.com/Equicord/Equibored/raw/main/sounds/soggy/honk.wav?raw=true",
-        "description": "URL for the boop sound"
       }
     }
   },

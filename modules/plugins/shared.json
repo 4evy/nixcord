@@ -1890,7 +1890,7 @@
     }
   },
   "webScreenShareFixes": {
-    "description": "Removes 2500kbps bitrate cap on chromium and vesktop clients. (Shared between Vencord and Equicord)",
+    "description": "Removes 2500kbps bitrate cap on chromium and vesktop clients and fixes CPU usage growing endlessly while screensharing. (Shared between Vencord and Equicord)",
     "settings": {}
   },
   "xsOverlay": {

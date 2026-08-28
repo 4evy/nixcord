@@ -414,6 +414,11 @@
         "default": true,
         "description": "Whether to log edited messages"
       },
+      "logDeletedAttachments": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Whether to log deleted attachments (restart required)"
+      },
       "inlineEdits": {
         "type": "types.bool",
         "default": true,
@@ -421,7 +426,7 @@
       },
       "ignoreBots": {
         "type": "types.bool",
-        "default": false,
+        "default": true,
         "description": "Whether to ignore messages by bots"
       },
       "ignoreSelf": {
