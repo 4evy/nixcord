@@ -54,6 +54,7 @@ let
 
       bun install \
         --frozen-lockfile \
+        --ignore-scripts \
         --linker=hoisted \
         --no-progress
 
