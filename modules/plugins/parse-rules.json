@@ -352,6 +352,7 @@
     "voiceDownload": "VoiceDownload",
     "voiceJoinMessages": "VoiceJoinMessages",
     "voiceMessages": "VoiceMessages",
+    "voiceMessagesInBackground": "Voice Messages In-Background",
     "voiceMessageTranscriber": "VoiceMessageTranscriber",
     "voiceRejoin": "VoiceRejoin",
     "voiceStats": "VoiceStats",

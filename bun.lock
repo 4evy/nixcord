@@ -9,7 +9,7 @@
         "@types/fs-extra": "11.0.4",
         "@types/node": "26.1.2",
         "@typescript/native": "npm:typescript@7.0.2",
-        "equicord": "github:Equicord/Equicord#0d27aec1ab604f1c0d7f7eb9114114e71da93573",
+        "equicord": "github:Equicord/Equicord#27f647a167a1f10af6ca535bd2072b13b650bb19",
         "fallow": "3.14.0",
         "typescript": "npm:@typescript/typescript6@6.0.2",
         "vencord": "github:Vendicated/Vencord#0e40e433d7aa9168f656aba733d01e761b7ca8ca",
@@ -396,7 +396,7 @@
 
     "enhanced-resolve": ["enhanced-resolve@5.24.5", "", { "dependencies": { "graceful-fs": "^4.2.4", "tapable": "^2.3.3" } }, "sha512-L1l8TNvomm6UVW5B253AGxQagSQr+vGwhMlrrfRS2qmhx46AMpMVJKQYLvWYbysTMY8VoicOvzHzoHMbyzB+4A=="],
 
-    "equicord": ["equicord@github:Equicord/Equicord#0d27aec", { "dependencies": { "@ffmpeg/ffmpeg": "^0.12.10", "@ffmpeg/util": "^0.12.1", "@intrnl/xxhash64": "^0.1.2", "@song-spotlight/api": "^2.2.0", "@streamparser/json": "^0.0.22", "@vap/core": "0.0.12", "@vap/shiki": "0.10.5", "fflate": "^0.8.3", "gifenc": "github:mattdesl/gifenc#64842fca317b112a8590f8fef2bf3825da8f6fe3", "gifuct-js": "^2.1.2", "idb": "8.0.3", "jsqr": "1.4.0", "monaco-editor": "^0.55.1", "nanoid": "^5.1.16", "native-file-system-adapter": "^3.0.1", "virtual-merge": "^1.0.1", "yaml-js": "^0.3.1" } }, "Equicord-Equicord-0d27aec", "sha512-tTEatHdSs3pLCZdztxGGq0k1Hvm0S5nY5HfrmO9Al4kRfIwjI8USWLN1suQSe4eEzZcEuMGnKNRv32T5Qe/Jxg=="],
+    "equicord": ["equicord@github:Equicord/Equicord#27f647a", { "dependencies": { "@ffmpeg/ffmpeg": "^0.12.10", "@ffmpeg/util": "^0.12.1", "@intrnl/xxhash64": "^0.1.2", "@song-spotlight/api": "^2.2.0", "@streamparser/json": "^0.0.22", "@vap/core": "0.0.12", "@vap/shiki": "0.10.5", "fflate": "^0.8.3", "gifenc": "github:mattdesl/gifenc#64842fca317b112a8590f8fef2bf3825da8f6fe3", "gifuct-js": "^2.1.2", "idb": "8.0.3", "jsqr": "1.4.0", "monaco-editor": "^0.55.1", "nanoid": "^5.1.16", "native-file-system-adapter": "^3.0.1", "virtual-merge": "^1.0.1", "yaml-js": "^0.3.1" } }, "Equicord-Equicord-27f647a", "sha512-x0yCStCkUXJcj7XvTP93j4+zAQJSZVeEZmQX+CdzkPNUmW1IBu2Q847+EeRb4TkHJ5m7yK3rB4c8FrPhDwQQVA=="],
 
     "es-module-lexer": ["es-module-lexer@2.3.1", "", {}, "sha512-shc1dbU90Yl/xq1QrC7QRtfcwURZuVRfPhZbDoldJ1cn1gzDvBaBWlv0eFolj5+0znnPJz5TXLxsN77X/12KTA=="],
 

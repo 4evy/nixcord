@@ -6141,6 +6141,26 @@
         "default": true,
         "description": "Display the first available name listed in your custom name format in the members list, DMs list, friends list, and Active Now."
       },
+      "searchAutocomplete": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Display the first available name listed in your custom name format in mention and search autocomplete."
+      },
+      "profilePopout": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Display the first available name listed in your custom name format in profile popouts."
+      },
+      "voiceChannels": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Display the first available name listed in your custom name format in voice channels."
+      },
+      "reactions": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Display the first available name listed in your custom name format in reaction tooltips, and the full name in reaction popouts."
+      },
       "styleDirectMessagesList": {
         "type": "types.bool",
         "default": true,
@@ -6160,21 +6180,6 @@
         "type": "types.bool",
         "default": true,
         "description": "Show display name effects without requiring hover. Hovered entries are still styled when disabled."
-      },
-      "profilePopout": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Display the first available name listed in your custom name format in profile popouts."
-      },
-      "voiceChannels": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Display the first available name listed in your custom name format in voice channels."
-      },
-      "reactions": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Display the first available name listed in your custom name format in reaction tooltips, and the full name in reaction popouts."
       },
       "discriminators": {
         "type": "types.bool",
@@ -7618,6 +7623,10 @@
         "description": "Do not send messages about blocked users joining/leaving/moving voice channels"
       }
     }
+  },
+  "voiceMessagesInBackground": {
+    "description": "Keeps voice messages playing across chats with a synchronized mini player. (Equicord-only)",
+    "settings": {}
   },
   "voiceMessageTranscriber": {
     "description": "On-device transcriptions for voice messages powered by Whisper v3 (Equicord-only)",
