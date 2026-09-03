@@ -6879,6 +6879,11 @@
     "description": "Reverses the message content before sending it. (Equicord-only)",
     "settings": {}
   },
+  "tenorGIFSearch": {
+    "type": "types.bool",
+    "default": true,
+    "description": "Change Discord's GIF search from Klipy back to Tenor"
+  },
   "textReplace": {
     "description": "Replace text in your messages. You can find pre-made rules in the #textreplace-rules channel in Vencord's Server (Equicord-only)",
     "settings": {
