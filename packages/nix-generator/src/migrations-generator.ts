@@ -8,10 +8,16 @@ export interface MigrationRenameJson {
   warn: boolean;
 }
 
+export interface ClientMigrationRenameJson extends MigrationRenameJson {
+  declare: boolean;
+}
+
 export interface MigrationsJson {
   renames: MigrationRenameJson[];
   identifierRenames: MigrationRenameJson[];
   removals: string[];
+  settingRemovals?: string[][];
+  clientRenames?: ClientMigrationRenameJson[];
 }
 
 interface SettingNamePair {
@@ -185,13 +191,26 @@ export function generateMigrationsData(
   const pluginsByNixName = new Map(
     Object.entries(allPlugins).map(([name, config]) => [toNixIdentifier(name), config])
   );
+  const sources = pluginSources ?? [allPlugins];
+  const activeOptionPathsBySource = sources.map((source) => collectActiveOptionPaths([source]));
+  const activeOptionPaths = new Set(activeOptionPathsBySource.flatMap((paths) => [...paths]));
 
-  // Pre-filter rename entries to the ones that still need compatibility aliases.
-  const renameEntries = sortedEntries(deprecated.renames).filter(([oldName, entry]) => {
-    const oldNixName = toNixIdentifier(oldName);
-    const newNixName = toNixIdentifier(entry.to);
-    return !activeNixNames.has(oldNixName) && activeNixNames.has(newNixName);
-  });
+  // Keep plugin renames whose target still exists. Renames whose old name is
+  // active in another client cannot alias `enable`, but can still expose any
+  // non-conflicting target settings for old client-specific configurations.
+  const renameEntries = [
+    ...new Map(
+      sortedEntries(deprecated.renames)
+        .filter(([oldName, entry]) => {
+          const newNixName = toNixIdentifier(entry.to);
+          return activeNixNames.has(newNixName) && toNixIdentifier(oldName) !== newNixName;
+        })
+        .map(
+          (entry) =>
+            [`${toNixIdentifier(entry[0])}->${toNixIdentifier(entry[1].to)}`, entry] as const
+        )
+    ).values(),
+  ];
 
   // Pre-compute removals while skipping plugin names that came back upstream.
   const removalEntries = sortedEntries(deprecated.removals).filter(
@@ -202,40 +221,54 @@ export function generateMigrationsData(
     identifierRenames: [],
     removals: removalEntries.map(([pluginName]) => toLegacyNixIdentifier(pluginName)),
   };
+  const clientRenames: ClientMigrationRenameJson[] = [];
 
   for (const [oldName, entry] of renameEntries) {
     const newName = entry.to;
+    const oldNixName = toNixIdentifier(oldName);
+    const newNixName = toNixIdentifier(newName);
+    const oldNameIsActive = activeNixNames.has(oldNixName);
+    const isClientSpecificRename =
+      oldNameIsActive &&
+      !sources.some((source) => {
+        const sourceNames = new Set(Object.keys(source).map(toNixIdentifier));
+        return sourceNames.has(oldNixName) && sourceNames.has(newNixName);
+      });
 
-    const targetPlugin = pluginsByNixName.get(toNixIdentifier(newName));
+    const targetPlugin = pluginsByNixName.get(newNixName);
 
     if (!targetPlugin) {
       // Target plugin not found in parsed data - just forward enable
-      migrations.renames.push(mkRenameEntry(oldName, newName, 'enable'));
+      if (!oldNameIsActive) {
+        migrations.renames.push(mkRenameEntry(oldName, newName, 'enable'));
+      }
     } else {
       const settingPairs = collectSettingNamePairs(targetPlugin).sort((a, b) =>
         a.current.localeCompare(b.current)
       );
       for (const setting of settingPairs) {
-        migrations.renames.push(
-          mkRenameEntry(
-            oldName,
-            newName,
-            setting.legacy,
-            setting.current,
-            false,
-            (name) => name,
-            (name) => name
-          )
+        const migration = mkRenameEntry(
+          oldName,
+          newName,
+          setting.legacy,
+          setting.current,
+          false,
+          (name) => name,
+          (name) => name
         );
+        const fromKey = optionPathKey(migration.from);
+        if (!oldNameIsActive) {
+          migrations.renames.push(migration);
+        } else if (isClientSpecificRename) {
+          clientRenames.push({ ...migration, declare: !activeOptionPaths.has(fromKey) });
+        }
       }
     }
   }
-
   // Build a lookup from nix identifier to ALL setting names across all plugin versions.
   // A plugin may exist in both vencord and equicord with different settings;
   // we need the union of all settings to detect conflicts correctly.
   const allSettingsByNixName = new Map<string, Set<string>>();
-  const sources = pluginSources ?? [allPlugins];
   migrations.identifierRenames = generateIdentifierRenames(sources);
   for (const source of sources) {
     for (const [name, config] of Object.entries(source)) {
@@ -248,13 +281,28 @@ export function generateMigrationsData(
     }
   }
 
+  const settingRemovals = sortedEntries(deprecated.settingRemovals ?? {}).flatMap(
+    ([pluginName, settings]) => {
+      const nixName = toNixIdentifier(pluginName);
+      if (!activeNixNames.has(nixName)) return [];
+      const activeSettingNames = allSettingsByNixName.get(nixName) ?? new Set<string>();
+      const renamedSettings = settingRenamesByNixName.get(nixName) ?? {};
+      return sortedEntries(settings).flatMap(([settingName]) => {
+        const normalizedSetting = normalizeSettingPath(settingName, toLegacyNixIdentifier);
+        if (activeSettingNames.has(normalizedSetting) || renamedSettings[settingName]) return [];
+        return [[nixName, ...normalizePathParts(normalizedSetting, (name) => name)]];
+      });
+    }
+  );
+  if (settingRemovals.length > 0) migrations.settingRemovals = settingRemovals;
+
   // Generate setting rename migrations
   for (const [nixName, settings] of settingRenameEntries) {
     // Filter out renames where the old setting name still exists on the active plugin,
     // as mkRenamedOptionModule would conflict with the existing option declaration.
     const activeSettingNames = allSettingsByNixName.get(nixName) ?? new Set<string>();
 
-    const validRenames = Object.entries(settings)
+    const normalizedRenames = Object.entries(settings)
       .map(
         ([oldSetting, newSetting]) =>
           [
@@ -262,25 +310,35 @@ export function generateMigrationsData(
             normalizeSettingPath(newSetting),
           ] as const
       )
-      .filter(([oldSetting]) => !activeSettingNames.has(oldSetting))
       .sort(([a], [b]) => a.localeCompare(b));
 
-    if (validRenames.length === 0) continue;
-
-    for (const [oldSetting, newSetting] of validRenames) {
-      migrations.renames.push(
-        mkRenameEntry(
-          nixName,
-          nixName,
-          oldSetting,
-          newSetting,
-          true,
-          (name) => name,
-          (name) => name
-        )
+    for (const [oldSetting, newSetting] of normalizedRenames) {
+      const migration = mkRenameEntry(
+        nixName,
+        nixName,
+        oldSetting,
+        newSetting,
+        true,
+        (name) => name,
+        (name) => name
       );
+      if (!activeSettingNames.has(oldSetting)) {
+        migrations.renames.push(migration);
+        continue;
+      }
+
+      const fromKey = optionPathKey(migration.from);
+      const toKey = optionPathKey(migration.to);
+      const coexistsInOneSource = activeOptionPathsBySource.some(
+        (paths) => paths.has(fromKey) && paths.has(toKey)
+      );
+      if (activeOptionPaths.has(toKey) && !coexistsInOneSource) {
+        clientRenames.push({ ...migration, warn: false, declare: false });
+      }
     }
   }
+
+  if (clientRenames.length > 0) migrations.clientRenames = clientRenames;
 
   return migrations;
 }

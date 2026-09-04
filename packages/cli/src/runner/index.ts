@@ -349,6 +349,10 @@ export const runGeneratePluginOptions = async (
           ...sourcePluginRenames,
         ],
         deletions: [...vencordMigrations.deletions, ...equicordMigrations.deletions],
+        settingRemovals: [
+          ...(vencordMigrations.settingRemovals ?? []),
+          ...(equicordMigrations.settingRemovals ?? []),
+        ],
       };
 
       // Collect setting renames from both parsed results
@@ -374,7 +378,8 @@ export const runGeneratePluginOptions = async (
         parsedParams.logger,
         allSettingRenames,
         activePluginNames,
-        toNixIdentifier
+        toNixIdentifier,
+        allPlugins
       );
       const migrationsJson = generateMigrationsJson(deprecated, allPlugins, [
         categorized.generic,

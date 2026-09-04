@@ -173,4 +173,5 @@ export type DeprecatedData = {
   renames: Record<string, DeprecatedRenameEntry>;
   removals: Record<string, DeprecatedRemovalEntry>;
   settingRenames: Record<string, Record<string, string>>;
+  settingRemovals?: Record<string, Record<string, DeprecatedRemovalEntry>>;
 };

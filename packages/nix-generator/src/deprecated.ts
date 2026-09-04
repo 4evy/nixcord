@@ -1,5 +1,12 @@
 import type { PluginMigrationInfo } from '@nixcord/git-analyzer';
-import type { DeprecatedData, DeprecatedRenameEntry, Logger, SettingRename } from '@nixcord/shared';
+import type {
+  DeprecatedData,
+  DeprecatedRenameEntry,
+  Logger,
+  PluginConfig,
+  ReadonlyDeep,
+  SettingRename,
+} from '@nixcord/shared';
 import { REMOVAL_EXPIRY_DAYS, RENAME_EXPIRY_DAYS, sortedEntries } from '@nixcord/shared';
 import fse from 'fs-extra';
 import { join } from 'pathe';
@@ -21,15 +28,26 @@ function isExpired(dateStr: string, expiryDays: number): boolean {
  * Read and parse deprecated.json.
  */
 async function readDeprecatedJson(filePath: string): Promise<DeprecatedData> {
-  const empty: DeprecatedData = { renames: {}, removals: {}, settingRenames: {} };
+  const empty: DeprecatedData = {
+    renames: {},
+    removals: {},
+    settingRenames: {},
+    settingRemovals: {},
+  };
   try {
     const raw = await fse.readFile(filePath, 'utf-8');
     const parsed = JSON.parse(raw) as {
       renames?: Record<string, unknown>;
       removals?: Record<string, unknown>;
       settingRenames?: Record<string, Record<string, string>>;
+      settingRemovals?: Record<string, Record<string, { date?: string }>>;
     };
-    const data: DeprecatedData = { renames: {}, removals: {}, settingRenames: {} };
+    const data: DeprecatedData = {
+      renames: {},
+      removals: {},
+      settingRenames: {},
+      settingRemovals: {},
+    };
 
     for (const [name, val] of Object.entries(parsed.renames ?? {})) {
       const v = val as { to?: string; date?: string };
@@ -48,6 +66,17 @@ async function readDeprecatedJson(filePath: string): Promise<DeprecatedData> {
         data.settingRenames[pluginName] = settings;
       }
     }
+    for (const [pluginName, settings] of Object.entries(parsed.settingRemovals ?? {})) {
+      if (!isValidPluginName(pluginName) || typeof settings !== 'object' || settings === null)
+        continue;
+      const validSettings = Object.fromEntries(
+        Object.entries(settings).filter((entry): entry is [string, { date: string }] => {
+          const value = entry[1];
+          return typeof value?.date === 'string';
+        })
+      );
+      if (Object.keys(validSettings).length > 0) data.settingRemovals![pluginName] = validSettings;
+    }
 
     return data;
   } catch {
@@ -60,10 +89,12 @@ export function generateDeprecatedJson(data: DeprecatedData): string {
     renames: Record<string, { to: string; date?: string }>;
     removals: Record<string, { date: string }>;
     settingRenames: Record<string, Record<string, string>>;
+    settingRemovals: Record<string, Record<string, { date: string }>>;
   } = {
     renames: {},
     removals: {},
     settingRenames: {},
+    settingRemovals: {},
   };
 
   // Renames: permanent first, then dated (sorted)
@@ -82,6 +113,11 @@ export function generateDeprecatedJson(data: DeprecatedData): string {
   // Setting renames (sorted)
   for (const [pluginName, settings] of sortedEntries(data.settingRenames)) {
     output.settingRenames[pluginName] = Object.fromEntries(sortedEntries(settings));
+  }
+
+  // Removed settings (sorted)
+  for (const [pluginName, settings] of sortedEntries(data.settingRemovals ?? {})) {
+    output.settingRemovals[pluginName] = Object.fromEntries(sortedEntries(settings));
   }
 
   return `${JSON.stringify(output, null, 2)}\n`;
@@ -117,6 +153,18 @@ function removeSelfRenames(
   }
 }
 
+function collectSettingNames(config: ReadonlyDeep<PluginConfig>, prefix = ''): Set<string> {
+  const names = new Set<string>();
+  for (const [key, setting] of Object.entries(config.settings)) {
+    const name = prefix ? `${prefix}.${key}` : key;
+    names.add(name);
+    if ('settings' in setting) {
+      for (const nestedName of collectSettingNames(setting, name)) names.add(nestedName);
+    }
+  }
+  return names;
+}
+
 export async function updateDeprecatedPlugins(
   migrations: PluginMigrationInfo,
   pluginsDir: string,
@@ -124,12 +172,13 @@ export async function updateDeprecatedPlugins(
   logger: Logger,
   settingRenames: SettingRename[] = [],
   activePluginNames?: Set<string>,
-  normalizePluginName?: (name: string) => string
+  normalizePluginName?: (name: string) => string,
+  activePlugins?: ReadonlyDeep<Record<string, PluginConfig>>
 ): Promise<DeprecatedData> {
   const deprecatedPath = join(pluginsDir, 'deprecated.json');
   const existing: DeprecatedData = (await fse.pathExists(deprecatedPath))
     ? await readDeprecatedJson(deprecatedPath)
-    : { renames: {}, removals: {}, settingRenames: {} };
+    : { renames: {}, removals: {}, settingRenames: {}, settingRemovals: {} };
   const normalize = normalizePluginName ?? ((n: string) => n);
 
   // Prune stale persisted entries before merging migrations discovered in the
@@ -145,6 +194,12 @@ export async function updateDeprecatedPlugins(
     if (isExpired(entry.date, REMOVAL_EXPIRY_DAYS)) {
       delete existing.removals[name];
     }
+  }
+  for (const [pluginName, settings] of Object.entries(existing.settingRemovals ?? {})) {
+    for (const [settingName, entry] of Object.entries(settings)) {
+      if (isExpired(entry.date, REMOVAL_EXPIRY_DAYS)) delete settings[settingName];
+    }
+    if (Object.keys(settings).length === 0) delete existing.settingRemovals![pluginName];
   }
 
   // Merge new renames (skip dot-named plugins, don't overwrite existing entries)
@@ -163,6 +218,15 @@ export async function updateDeprecatedPlugins(
     if (!existing.removals[deletion.pluginName]) {
       existing.removals[deletion.pluginName] = { date: dateStr };
     }
+  }
+
+  // Merge settings removed from active plugins.
+  for (const removal of migrations.settingRemovals ?? []) {
+    if (!isValidPluginName(removal.plugin) || !isValidPluginName(removal.setting)) continue;
+    const pluginName = normalize(removal.plugin);
+    const settings = (existing.settingRemovals ??= {})[pluginName] ?? {};
+    settings[removal.setting] ??= { date: removal.commitDate.split('T')[0] };
+    existing.settingRemovals[pluginName] = settings;
   }
 
   // Remove circular rename pairs (ping-pong renames that cancel each other out)
@@ -209,7 +273,13 @@ export async function updateDeprecatedPlugins(
     if (!existing.settingRenames[nixName]) {
       existing.settingRenames[nixName] = {};
     }
-    existing.settingRenames[nixName][rename.oldSetting] = rename.newSetting;
+    const renames = existing.settingRenames[nixName];
+    if (renames[rename.newSetting] === rename.oldSetting) delete renames[rename.newSetting];
+    renames[rename.oldSetting] = rename.newSetting;
+    delete existing.settingRemovals?.[nixName]?.[rename.oldSetting];
+    if (Object.keys(existing.settingRemovals?.[nixName] ?? {}).length === 0) {
+      delete existing.settingRemovals?.[nixName];
+    }
   }
 
   // Deduplicate settingRenames by normalized name (e.g. "PlatformIndicators" -> "platformIndicators")
@@ -223,6 +293,27 @@ export async function updateDeprecatedPlugins(
       Object.assign(deduped[nixKey], settings);
     }
     existing.settingRenames = deduped;
+  }
+
+  // Resolve stale circular pairs using the current schema. This cleans up
+  // pairs produced when older generators interpreted an upstream migration
+  // call in the wrong direction.
+  if (activePlugins) {
+    const activeSettingsByPlugin = new Map(
+      Object.entries(activePlugins).map(([name, config]) => [
+        normalize(name),
+        collectSettingNames(config),
+      ])
+    );
+    for (const [pluginName, renames] of Object.entries(existing.settingRenames)) {
+      const activeSettings = activeSettingsByPlugin.get(normalize(pluginName));
+      if (!activeSettings) continue;
+      for (const [from, to] of Object.entries(renames)) {
+        if (renames[to] !== from) continue;
+        if (activeSettings.has(to) && !activeSettings.has(from)) delete renames[to];
+        else if (activeSettings.has(from) && !activeSettings.has(to)) delete renames[from];
+      }
+    }
   }
 
   const json = generateDeprecatedJson(existing);
