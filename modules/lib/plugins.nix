@@ -6,9 +6,13 @@ let
   mkPluginKit =
     cfg:
     let
-      sharedPluginNames = builtins.attrNames (lib.trivial.importJSON ../plugins/shared.json);
-      vencordPluginNames = builtins.attrNames (lib.trivial.importJSON ../plugins/vencord.json);
-      equicordPluginNames = builtins.attrNames (lib.trivial.importJSON ../plugins/equicord.json);
+      sharedPlugins = lib.trivial.importJSON ../plugins/shared.json;
+      vencordPlugins = lib.trivial.importJSON ../plugins/vencord.json;
+      equicordPlugins = lib.trivial.importJSON ../plugins/equicord.json;
+
+      sharedPluginNames = builtins.attrNames sharedPlugins;
+      vencordPluginNames = builtins.attrNames vencordPlugins;
+      equicordPluginNames = builtins.attrNames equicordPlugins;
 
       deprecated = lib.trivial.importJSON ../plugins/deprecated.json;
       migrations = lib.trivial.importJSON ../plugins/migrations.json;
@@ -17,12 +21,12 @@ let
       activePluginNamesByLowercase = lib.attrsets.genAttrs' activePluginNames (
         name: lib.attrsets.nameValuePair (lib.strings.toLower name) name
       );
-
-      deprecatedPluginNameMigrations = lib.attrsets.filterAttrs (oldName: newName: oldName != newName) (
-        lib.attrsets.mapAttrs (
-          _: value: activePluginNamesByLowercase.${lib.strings.toLower value.to} or value.to
-        ) deprecated.renames
-      );
+      allDeprecatedPluginNameMigrations = lib.attrsets.mapAttrs (
+        _: value: activePluginNamesByLowercase.${lib.strings.toLower value.to} or value.to
+      ) deprecated.renames;
+      deprecatedPluginNameMigrations = lib.attrsets.filterAttrs (
+        oldName: newName: oldName != newName
+      ) allDeprecatedPluginNameMigrations;
       generatedPluginNameMigrations = lib.trivial.pipe migrations.renames [
         (lib.lists.filter (
           migration:
@@ -49,6 +53,144 @@ let
         ];
 
       pluginNameMigrations = deprecatedPluginNameMigrations // generatedPluginNameMigrations;
+
+      removeAttrByPath =
+        path: attrs:
+        let
+          name = builtins.head path;
+          rest = builtins.tail path;
+        in
+        if rest == [ ] then
+          lib.attrsets.removeAttrs attrs [ name ]
+        else if builtins.hasAttr name attrs && builtins.isAttrs attrs.${name} then
+          attrs // { ${name} = removeAttrByPath rest attrs.${name}; }
+        else
+          attrs;
+
+      schemaHasOptionPath =
+        schema: path:
+        let
+          pluginName = builtins.head path;
+          settingPath = builtins.tail path;
+          plugin = schema.${pluginName} or null;
+          hasSettingPath =
+            setting: remaining:
+            if remaining == [ ] then
+              true
+            else
+              let
+                child = lib.attrsets.attrByPath [ "settings" (builtins.head remaining) ] null setting;
+              in
+              child != null && hasSettingPath child (builtins.tail remaining);
+        in
+        plugin != null
+        && (settingPath == [ "enable" ] || (settingPath != [ ] && hasSettingPath plugin settingPath));
+
+      clientSchemasFor =
+        client:
+        [ sharedPlugins ]
+        ++ lib.lists.optional (client == "vencord") vencordPlugins
+        ++ lib.lists.optional (client == "equicord") equicordPlugins;
+
+      clientSchemaFor =
+        client: lib.lists.foldl' lib.attrsets.recursiveUpdate { } (clientSchemasFor client);
+
+      clientHasOptionPath =
+        client: path: lib.lists.any (schema: schemaHasOptionPath schema path) (clientSchemasFor client);
+
+      filterPluginAttrs =
+        schema: attrs:
+        let
+          settingSchemas = schema.settings or { };
+          allowedNames = [ "enable" ] ++ builtins.attrNames settingSchemas;
+          filtered = builtins.intersectAttrs (lib.attrsets.genAttrs allowedNames (_: null)) attrs;
+        in
+        lib.attrsets.mapAttrs (
+          name: value:
+          if
+            name != "enable"
+            && builtins.isAttrs value
+            && builtins.hasAttr name settingSchemas
+            && settingSchemas.${name} ? settings
+          then
+            filterPluginAttrs settingSchemas.${name} value
+          else
+            value
+        ) filtered;
+
+      migrateAttrByPath =
+        from: to: attrs:
+        let
+          oldValue = lib.attrsets.getAttrFromPath from attrs;
+          newValue = lib.attrsets.attrByPath to oldValue attrs;
+          mergedValue =
+            if builtins.isAttrs oldValue && builtins.isAttrs newValue then
+              lib.attrsets.recursiveUpdate oldValue newValue
+            else
+              newValue;
+        in
+        lib.attrsets.recursiveUpdate (removeAttrByPath from attrs) (
+          lib.attrsets.setAttrByPath to mergedValue
+        );
+
+      migrateDeprecatedPluginNamesFor =
+        clientPluginNames: configAttrs:
+        let
+          migratePlugin =
+            plugins: oldName:
+            let
+              newName = allDeprecatedPluginNameMigrations.${oldName};
+            in
+            if
+              builtins.elem oldName clientPluginNames
+              || !(builtins.elem newName clientPluginNames)
+              || !(builtins.hasAttr oldName plugins)
+            then
+              plugins
+            else
+              let
+                oldValue = plugins.${oldName};
+                newValue = plugins.${newName} or oldValue;
+                mergedValue =
+                  if builtins.isAttrs oldValue && builtins.isAttrs newValue then
+                    lib.attrsets.recursiveUpdate oldValue newValue
+                  else
+                    newValue;
+              in
+              lib.attrsets.removeAttrs (plugins // { ${newName} = mergedValue; }) [ oldName ];
+        in
+        configAttrs
+        // {
+          plugins = lib.lists.foldl' migratePlugin (pluginsOf configAttrs) (
+            builtins.attrNames allDeprecatedPluginNameMigrations
+          );
+        };
+
+      migrateFreeformConfigFor =
+        client: configAttrs:
+        let
+          clientPluginNames = builtins.attrNames (clientSchemaFor client);
+          migrateOption =
+            plugins: migration:
+            if
+              clientHasOptionPath client migration.from
+              || !(clientHasOptionPath client migration.to)
+              || !(lib.attrsets.hasAttrByPath migration.from plugins)
+            then
+              plugins
+            else
+              migrateAttrByPath migration.from migration.to plugins;
+          migratedConfig = migrateDeprecatedPluginNamesFor clientPluginNames configAttrs;
+          plugins = lib.trivial.pipe (pluginsOf migratedConfig) [
+            (
+              plugins:
+              lib.lists.foldl' migrateOption plugins (
+                migrations.renames ++ (migrations.identifierRenames or [ ]) ++ (migrations.clientRenames or [ ])
+              )
+            )
+          ];
+        in
+        migratedConfig // { inherit plugins; };
 
       collectDeprecatedPlugins =
         configAttrs:
@@ -86,19 +228,12 @@ let
       filterPluginsFor =
         client: configAttrs:
         let
-          mask =
-            sharedMask
-            // (
-              if client == "vencord" then
-                vencordMask
-              else if client == "equicord" then
-                equicordMask
-              else
-                { }
-            );
-          plugins = pluginsOf configAttrs;
+          schema = clientSchemaFor client;
+          plugins = lib.attrsets.mapAttrs (name: filterPluginAttrs schema.${name}) (
+            builtins.intersectAttrs schema (pluginsOf configAttrs)
+          );
         in
-        configAttrs // { plugins = builtins.intersectAttrs mask plugins; };
+        configAttrs // { inherit plugins; };
 
       mkFullConfig =
         {
@@ -108,24 +243,22 @@ let
           client ? null,
         }:
         let
-          filteredBaseConfig =
+          effectiveClient =
             if client != null then
-              filterPluginsFor client baseConfig
+              client
+            else if cfg.discord.vencord.enable then
+              "vencord"
+            else if cfg.discord.equicord.enable then
+              "equicord"
             else
-              filterPluginsFor (
-                if cfg.discord.vencord.enable then
-                  "vencord"
-                else if cfg.discord.equicord.enable then
-                  "equicord"
-                else
-                  "none"
-              ) baseConfig;
+              "none";
+          filteredBaseConfig = filterPluginsFor effectiveClient baseConfig;
         in
         lib.trivial.pipe
           [
             filteredBaseConfig
-            extraConfig
-            clientConfig
+            (migrateFreeformConfigFor effectiveClient extraConfig)
+            (migrateFreeformConfigFor effectiveClient clientConfig)
           ]
           [ (lib.lists.foldl' lib.attrsets.recursiveUpdate { }) ];
     in
