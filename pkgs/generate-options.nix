@@ -4,6 +4,7 @@
   callPackage,
   nodejs,
   bun,
+  git,
   writableTmpDirAsHomeHook,
   nix,
   vencordSource ? "node_modules/vencord",
@@ -31,7 +32,8 @@ stdenvNoCC.mkDerivation (finalAttrs: {
     bun
     nodejs
     writableTmpDirAsHomeHook
-  ];
+  ]
+  ++ lib.lists.optional (!skipGitMigrations) git;
 
   nativeInstallCheckInputs = [ nix ];
 
@@ -81,6 +83,11 @@ stdenvNoCC.mkDerivation (finalAttrs: {
     mkdir -p "$out/plugins"
     cp modules/plugins/deprecated.json "$out/plugins/deprecated.json"
     cp modules/plugins/migrations.nix "$out/plugins/migrations.nix"
+
+    ${lib.strings.optionalString (!skipGitMigrations) ''
+      git config --global --add safe.directory "${vencordSource}"
+      git config --global --add safe.directory "${equicordSource}"
+    ''}
 
     ${lib.meta.getExe nodejs} packages/cli/dist/index.js \
       --vencord "${vencordSource}" \
