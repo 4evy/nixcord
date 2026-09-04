@@ -113,48 +113,68 @@
       "date": "2026-08-03"
     }
   },
-  "removals": {},
+  "removals": {
+    "favGifSearch": {
+      "date": "2026-07-29"
+    },
+    "soggy": {
+      "date": "2026-08-27"
+    },
+    "spotifyActivityToggle": {
+      "date": "2026-07-27"
+    }
+  },
   "settingRenames": {
     "declutter": {
-      "removeQuestsAboveDms": "removeQuestsAboveDM",
-      "removeShopAboveDms": "removeShopAboveDM"
+      "removeQuestsAboveDM": "removeQuestsAboveDms",
+      "removeShopAboveDM": "removeShopAboveDms"
     },
     "fontLoader": {
-      "applyOnClodeBlocks": "applyOnCodeBlocks",
-      "applyOnCodeBlocks": "applyOnClodeBlocks"
+      "applyOnClodeBlocks": "applyOnCodeBlocks"
     },
     "globalBadges": {
-      "showRa1ncord": "showRaincord",
-      "showRaincord": "showRa1ncord"
+      "showRa1ncord": "showRaincord"
     },
     "hideChatButtons": {
-      "color": "Color",
       "Color": "color",
-      "open": "Open",
       "Open": "open"
     },
     "musicRichPresence": {
       "showLastFmLogo": "showLogo"
     },
     "noBlockedMessages": {
-      "alsoHideIgnoredUsers": "applyToIgnoredUsers",
       "applyToIgnoredUsers": "alsoHideIgnoredUsers",
-      "disableNotifications": "ignoreMessages",
       "ignoreBlockedMessages": "ignoreMessages",
       "ignoreMessages": "disableNotifications"
     },
     "platformIndicators": {
-      "badges": "profiles",
-      "profiles": "badges"
+      "badges": "profiles"
     },
     "showMeYourName": {
-      "alwaysAnimateEffects": "alwaysShowEffects",
-      "animateEffects": "animateGradients",
-      "ignoreEffects": "ignoreGradients"
+      "alwaysShowEffects": "alwaysAnimateEffects",
+      "animateGradients": "animateEffects",
+      "ignoreGradients": "ignoreEffects"
     },
     "timezones": {
-      "showOwnTimezone": "Show Own Timezone",
-      "twentyFourHourFormat": "24h Time"
+      "24h Time": "twentyFourHourFormat",
+      "Show Own Timezone": "showOwnTimezone"
+    }
+  },
+  "settingRemovals": {
+    "betterGifPicker": {
+      "keepOpen": {
+        "date": "2026-08-06"
+      }
+    },
+    "channelTabs": {
+      "noPomeloNames": {
+        "date": "2026-08-26"
+      }
+    },
+    "voiceMessageTranscriber": {
+      "delete": {
+        "date": "2026-08-23"
+      }
     }
   }
 }

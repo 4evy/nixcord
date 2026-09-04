@@ -3588,6 +3588,28 @@
     },
     {
       "from": [
+        "declutter",
+        "removeQuestsAboveDM"
+      ],
+      "to": [
+        "declutter",
+        "removeQuestsAboveDms"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "declutter",
+        "removeShopAboveDM"
+      ],
+      "to": [
+        "declutter",
+        "removeShopAboveDms"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
         "fontLoader",
         "applyOnClodeBlocks"
       ],
@@ -3627,6 +3649,50 @@
       "to": [
         "noBlockedMessages",
         "ignoreMessages"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "showMeYourName",
+        "alwaysShowEffects"
+      ],
+      "to": [
+        "showMeYourName",
+        "alwaysAnimateEffects"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "showMeYourName",
+        "animateGradients"
+      ],
+      "to": [
+        "showMeYourName",
+        "animateEffects"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "showMeYourName",
+        "ignoreGradients"
+      ],
+      "to": [
+        "showMeYourName",
+        "ignoreEffects"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "timezones",
+        "_24hTime"
+      ],
+      "to": [
+        "timezones",
+        "twentyFourHourFormat"
       ],
       "warn": true
     }
@@ -5413,5 +5479,229 @@
       "warn": true
     }
   ],
-  "removals": []
+  "removals": [
+    "favGifSearch",
+    "soggy",
+    "spotifyActivityToggle"
+  ],
+  "settingRemovals": [
+    [
+      "betterGifPicker",
+      "keepOpen"
+    ],
+    [
+      "channelTabs",
+      "noPomeloNames"
+    ],
+    [
+      "voiceMessageTranscriber",
+      "delete"
+    ]
+  ],
+  "clientRenames": [
+    {
+      "from": [
+        "oneko",
+        "buddy"
+      ],
+      "to": [
+        "cursorBuddy",
+        "buddy"
+      ],
+      "warn": false,
+      "declare": true
+    },
+    {
+      "from": [
+        "oneko",
+        "enable"
+      ],
+      "to": [
+        "cursorBuddy",
+        "enable"
+      ],
+      "warn": false,
+      "declare": false
+    },
+    {
+      "from": [
+        "oneko",
+        "fade"
+      ],
+      "to": [
+        "cursorBuddy",
+        "fade"
+      ],
+      "warn": false,
+      "declare": true
+    },
+    {
+      "from": [
+        "oneko",
+        "fps"
+      ],
+      "to": [
+        "cursorBuddy",
+        "fps"
+      ],
+      "warn": false,
+      "declare": true
+    },
+    {
+      "from": [
+        "oneko",
+        "freeroam"
+      ],
+      "to": [
+        "cursorBuddy",
+        "freeroam"
+      ],
+      "warn": false,
+      "declare": true
+    },
+    {
+      "from": [
+        "oneko",
+        "furColor"
+      ],
+      "to": [
+        "cursorBuddy",
+        "furColor"
+      ],
+      "warn": false,
+      "declare": true
+    },
+    {
+      "from": [
+        "oneko",
+        "outlineColor"
+      ],
+      "to": [
+        "cursorBuddy",
+        "outlineColor"
+      ],
+      "warn": false,
+      "declare": true
+    },
+    {
+      "from": [
+        "oneko",
+        "shake"
+      ],
+      "to": [
+        "cursorBuddy",
+        "shake"
+      ],
+      "warn": false,
+      "declare": true
+    },
+    {
+      "from": [
+        "oneko",
+        "size"
+      ],
+      "to": [
+        "cursorBuddy",
+        "size"
+      ],
+      "warn": false,
+      "declare": true
+    },
+    {
+      "from": [
+        "oneko",
+        "speed"
+      ],
+      "to": [
+        "cursorBuddy",
+        "speed"
+      ],
+      "warn": false,
+      "declare": true
+    },
+    {
+      "from": [
+        "sortFriendRequests",
+        "enable"
+      ],
+      "to": [
+        "sortFriends",
+        "enable"
+      ],
+      "warn": false,
+      "declare": false
+    },
+    {
+      "from": [
+        "sortFriendRequests",
+        "showDates"
+      ],
+      "to": [
+        "sortFriends",
+        "showDates"
+      ],
+      "warn": false,
+      "declare": false
+    },
+    {
+      "from": [
+        "vencordToolbox",
+        "enable"
+      ],
+      "to": [
+        "equicordToolbox",
+        "enable"
+      ],
+      "warn": false,
+      "declare": false
+    },
+    {
+      "from": [
+        "vencordToolbox",
+        "showPluginMenu"
+      ],
+      "to": [
+        "equicordToolbox",
+        "showPluginMenu"
+      ],
+      "warn": false,
+      "declare": false
+    },
+    {
+      "from": [
+        "noBlockedMessages",
+        "applyToIgnoredUsers"
+      ],
+      "to": [
+        "noBlockedMessages",
+        "alsoHideIgnoredUsers"
+      ],
+      "warn": false,
+      "declare": false
+    },
+    {
+      "from": [
+        "noBlockedMessages",
+        "ignoreMessages"
+      ],
+      "to": [
+        "noBlockedMessages",
+        "disableNotifications"
+      ],
+      "warn": false,
+      "declare": false
+    },
+    {
+      "from": [
+        "platformIndicators",
+        "badges"
+      ],
+      "to": [
+        "platformIndicators",
+        "profiles"
+      ],
+      "warn": false,
+      "declare": false
+    }
+  ]
 }
