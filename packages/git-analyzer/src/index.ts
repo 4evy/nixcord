@@ -1,12 +1,13 @@
 import { REMOVAL_EXPIRY_DAYS, RENAME_EXPIRY_DAYS } from '@nixcord/shared';
-import { exec } from 'child_process';
+import { execFile } from 'child_process';
+import { realpath } from 'fs/promises';
 import { promisify } from 'util';
 
-const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
-const DAYS_TO_CHECK = 18;
 const COMMIT_PREFIX = 'COMMIT:';
-const PLUGIN_FILE_PATTERN = /index\.(ts|tsx)$/;
+const TYPESCRIPT_FILE_PATTERN = /\.(ts|tsx)$/;
+const SETTING_DECLARATION_PATTERN = /^(\s*)(?:["']([\w$]+)["']|([A-Za-z_$][\w$]*))\s*:\s*\{/;
 
 type GitCommit = {
   hash: string;
@@ -37,40 +38,20 @@ export type PluginDeletion = {
 export type PluginMigrationInfo = {
   renames: PluginRename[];
   deletions: PluginDeletion[];
+  settingRemovals?: DeprecationInfo[];
 };
 
 const hasGit = async (path: string): Promise<boolean> => {
   try {
-    await execAsync('git rev-parse --git-dir', { cwd: path });
-    return true;
+    const result = await execFileAsync('git', ['rev-parse', '--show-toplevel'], { cwd: path });
+    const [requestedRoot, gitRoot] = await Promise.all([
+      realpath(path),
+      realpath(result.stdout.trim()),
+    ]);
+    return requestedRoot === gitRoot;
   } catch {
     return false;
   }
-};
-
-const getRecentCommits = async (
-  repoPath: string,
-  days: number = DAYS_TO_CHECK
-): Promise<Array<{ hash: string; date: string }>> => {
-  const logResult = await execAsync(`git log --since="${days} days ago" --pretty=format:"%H|%cI"`, {
-    cwd: repoPath,
-  });
-  if (!logResult.stdout.trim()) return [];
-
-  return logResult.stdout
-    .trim()
-    .split('\n')
-    .map((line) => {
-      const parts = line.split('|');
-      return { hash: parts[0], date: parts[1] };
-    });
-};
-
-const getCommitFiles = async (repoPath: string, commitHash: string): Promise<string[]> => {
-  const diffResult = await execAsync(`git diff-tree --name-only -r ${commitHash}`, {
-    cwd: repoPath,
-  });
-  return diffResult.stdout.trim().split('\n').filter(Boolean);
 };
 
 const getRemovedSettings = async (
@@ -80,17 +61,47 @@ const getRemovedSettings = async (
   newHash: string
 ): Promise<string[]> => {
   try {
-    const diffResult = await execAsync(`git diff ${oldHash}..${newHash} -- "${filePath}"`, {
-      cwd: repoPath,
-    });
-    return diffResult.stdout
-      .split('\n')
-      .filter((line) => line.startsWith('-') && !line.startsWith('---'))
-      .map((line) => line.match(/["'](\w+)["']\s*:/)?.[1])
-      .filter((match): match is string => match !== undefined);
+    const [oldFile, newFile] = await Promise.all([
+      execFileAsync('git', ['show', `${oldHash}:${filePath}`], { cwd: repoPath }),
+      execFileAsync('git', ['show', `${newHash}:${filePath}`], { cwd: repoPath }).catch(() => ({
+        stdout: '',
+      })),
+    ]);
+    const oldSettings = extractDeclaredSettings(oldFile.stdout);
+    const newSettings = extractDeclaredSettings(newFile.stdout);
+    return [...oldSettings].filter((setting) => !newSettings.has(setting));
   } catch {
     return [];
   }
+};
+
+const extractDeclaredSettings = (source: string): Set<string> => {
+  const settings = new Set<string>();
+  const lines = source.split('\n');
+
+  for (let index = 0; index < lines.length; index++) {
+    const callLine = lines[index];
+    if (!callLine.includes('definePluginSettings({')) continue;
+    const callIndentation = callLine.match(/^\s*/)?.[0].length ?? 0;
+    const candidates: Array<{ indentation: number; name: string }> = [];
+
+    for (index += 1; index < lines.length; index++) {
+      const line = lines[index];
+      const indentation = line.match(/^\s*/)?.[0].length ?? 0;
+      if (indentation <= callIndentation && /^\s*}\)/.test(line)) break;
+      const match = line.match(SETTING_DECLARATION_PATTERN);
+      const name = match?.[2] ?? match?.[3];
+      if (match && name) candidates.push({ indentation: match[1].length, name });
+    }
+
+    if (candidates.length === 0) continue;
+    const settingIndentation = Math.min(...candidates.map(({ indentation }) => indentation));
+    for (const candidate of candidates) {
+      if (candidate.indentation === settingIndentation) settings.add(candidate.name);
+    }
+  }
+
+  return settings;
 };
 
 /**
@@ -100,11 +111,11 @@ const getRemovedSettings = async (
 const extractPluginDirName = (filePath: string, pluginsDirs: string[]): string | null => {
   for (const dir of pluginsDirs) {
     const prefix = dir.endsWith('/') ? dir : `${dir}/`;
-    if (filePath.startsWith(prefix) && PLUGIN_FILE_PATTERN.test(filePath)) {
+    if (filePath.startsWith(prefix)) {
       const rest = filePath.slice(prefix.length);
       const parts = rest.split('/');
-      if (parts.length === 2) {
-        return parts[0];
+      if (parts.length >= 2) {
+        return parts[0].replace(/\.(?:desktop|web)$/, '');
       }
     }
   }
@@ -114,8 +125,8 @@ const extractPluginDirName = (filePath: string, pluginsDirs: string[]): string |
 /**
  * Build glob patterns for git commands targeting plugin index files.
  */
-const buildPluginGlobs = (pluginsDirs: string[]): string => {
-  return pluginsDirs.flatMap((dir) => [`"${dir}/*/index.ts"`, `"${dir}/*/index.tsx"`]).join(' ');
+const buildPluginGlobs = (pluginsDirs: string[]): string[] => {
+  return pluginsDirs.flatMap((dir) => [`:(glob)${dir}/*/index.ts`, `:(glob)${dir}/*/index.tsx`]);
 };
 
 const parseCommitHeader = (line: string): GitCommit | null => {
@@ -154,8 +165,18 @@ export const extractPluginRenames = async (
 
   const globs = buildPluginGlobs(pluginsDirs);
   try {
-    const renameResult = await execAsync(
-      `git log --since="${days} days ago" -M --diff-filter=R --name-status --pretty=format:"COMMIT:%H|%cI" -- ${globs}`,
+    const renameResult = await execFileAsync(
+      'git',
+      [
+        'log',
+        `--since=${days} days ago`,
+        '-M',
+        '--diff-filter=R',
+        '--name-status',
+        '--pretty=format:COMMIT:%H|%cI',
+        '--',
+        ...globs,
+      ],
       { cwd: repoPath, maxBuffer: 10 * 1024 * 1024 }
     );
     if (!renameResult.stdout.trim()) return [];
@@ -208,8 +229,17 @@ export const extractPluginDeletions = async (
 
   const globs = buildPluginGlobs(pluginsDirs);
   try {
-    const deleteResult = await execAsync(
-      `git log --since="${days} days ago" --diff-filter=D --name-status --pretty=format:"COMMIT:%H|%cI" -- ${globs}`,
+    const deleteResult = await execFileAsync(
+      'git',
+      [
+        'log',
+        `--since=${days} days ago`,
+        '--diff-filter=D',
+        '--name-status',
+        '--pretty=format:COMMIT:%H|%cI',
+        '--',
+        ...globs,
+      ],
       { cwd: repoPath, maxBuffer: 10 * 1024 * 1024 }
     );
     if (!deleteResult.stdout.trim()) return [];
@@ -253,12 +283,13 @@ export const extractPluginMigrations = async (
   repoPath: string,
   pluginsDirs: string[]
 ): Promise<PluginMigrationInfo> => {
-  const [renames, deletions] = await Promise.all([
+  const [renames, deletions, settingRemovals] = await Promise.all([
     extractPluginRenames(repoPath, pluginsDirs, RENAME_EXPIRY_DAYS),
     extractPluginDeletions(repoPath, pluginsDirs, REMOVAL_EXPIRY_DAYS),
+    extractDeprecationsFromGit(repoPath, pluginsDirs),
   ]);
 
-  return { renames, deletions };
+  return { renames, deletions, settingRemovals };
 };
 
 export const extractDeprecationsFromGit = async (
@@ -268,14 +299,51 @@ export const extractDeprecationsFromGit = async (
   if (!(await hasGit(repoPath))) return [];
 
   const dirs = pluginsDirs ?? ['src/plugins'];
-  const commits = await getRecentCommits(repoPath);
+  const declarationPattern =
+    '^[[:space:]]*([A-Za-z_$][A-Za-z0-9_$]*|["\'][A-Za-z0-9_$]+["\'])[[:space:]]*:[[:space:]]*\\{';
+  const pathspecs = dirs.flatMap((dir) => [
+    `:(glob)${dir}/*.ts`,
+    `:(glob)${dir}/*.tsx`,
+    `:(glob)${dir}/**/*.ts`,
+    `:(glob)${dir}/**/*.tsx`,
+  ]);
+
+  let logOutput: string;
+  try {
+    const logResult = await execFileAsync(
+      'git',
+      [
+        'log',
+        `--since=${REMOVAL_EXPIRY_DAYS} days ago`,
+        '--diff-filter=M',
+        `-G${declarationPattern}`,
+        '--name-only',
+        '--pretty=format:COMMIT:%H|%cI',
+        '--',
+        ...pathspecs,
+      ],
+      { cwd: repoPath, maxBuffer: 10 * 1024 * 1024 }
+    );
+    logOutput = logResult.stdout;
+  } catch {
+    return [];
+  }
+
+  const commits = new Map<string, { date: string; files: Set<string> }>();
+  forEachCommitEntry(logOutput, (file, commit) => {
+    if (!TYPESCRIPT_FILE_PATTERN.test(file)) return;
+    const current = commits.get(commit.hash) ?? { date: commit.date, files: new Set<string>() };
+    current.files.add(file);
+    commits.set(commit.hash, current);
+  });
 
   const results = await Promise.all(
-    commits.map(async ({ hash, date }) => {
-      const files = await getCommitFiles(repoPath, hash);
-      const pluginFiles = files.filter((f) => {
-        return dirs.some((dir) => f.startsWith(dir) && PLUGIN_FILE_PATTERN.test(f));
-      });
+    [...commits].map(async ([hash, { date, files }]) => {
+      const pluginFiles = [...files].filter(
+        (file) =>
+          TYPESCRIPT_FILE_PATTERN.test(file) &&
+          dirs.some((dir) => file.startsWith(dir.endsWith('/') ? dir : `${dir}/`))
+      );
 
       const deprecations = await Promise.all(
         pluginFiles.map(async (file) => {
