@@ -1345,16 +1345,41 @@ const literalStringArgs = (call: CallExpression, evaluator: StaticEvaluator): st
 
 const extractRenames = (
   sourceFiles: readonly SourceFile[],
-  context: PluginContext
+  context: PluginContext,
+  settings: ReadonlyDeep<Record<string, PluginSetting | PluginConfig>>
 ): { settingRenames: SettingRename[]; pluginRenames: PluginRename[] } => {
+  const activeSettingNames = new Set<string>();
+  const collectActiveSettingNames = (
+    currentSettings: ReadonlyDeep<Record<string, PluginSetting | PluginConfig>>,
+    prefix = ''
+  ): void => {
+    for (const [key, setting] of Object.entries(currentSettings)) {
+      const name = prefix ? `${prefix}.${key}` : key;
+      activeSettingNames.add(name);
+      if ('settings' in setting) collectActiveSettingNames(setting.settings, name);
+    }
+  };
+  collectActiveSettingNames(settings);
+
   const settingRenames = apiCalls(
     sourceFiles,
     'migratePluginSetting',
     context.profile,
     context.session.checker
   ).flatMap((call) => {
-    const [pluginName, oldSetting, newSetting] = literalStringArgs(call, context.evaluator);
-    return pluginName && oldSetting && newSetting ? [{ pluginName, oldSetting, newSetting }] : [];
+    const [pluginName, firstSetting, secondSetting] = literalStringArgs(call, context.evaluator);
+    if (!pluginName || !firstSetting || !secondSetting) return [];
+
+    // Vencord declares (plugin, old, new), while Equicord has also used
+    // (plugin, new, old). Shared plugins can contain either convention, so
+    // use the parsed current schema to identify the destination setting.
+    const firstIsActive = activeSettingNames.has(firstSetting);
+    const secondIsActive = activeSettingNames.has(secondSetting);
+    const [oldSetting, newSetting] =
+      firstIsActive && !secondIsActive
+        ? [secondSetting, firstSetting]
+        : [firstSetting, secondSetting];
+    return [{ pluginName, oldSetting, newSetting }];
   });
   const pluginRenames = apiCalls(
     sourceFiles,
@@ -1442,7 +1467,7 @@ async function parseSinglePlugin(
         }
       }
     }
-    const renames = extractRenames(sourceFiles, context);
+    const renames = extractRenames(sourceFiles, context, settings);
     return {
       entry: [
         pluginName,
