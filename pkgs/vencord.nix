@@ -4,7 +4,7 @@
   vencord,
   buildWebExtension ? false,
   bun,
-  pnpm_11,
+  callPackage,
   writeShellApplication,
   cacert,
   curl,
@@ -17,7 +17,7 @@ let
   version = "1.15.4-2026-08-30";
   rev = "0e40e433d7aa9168f656aba733d01e761b7ca8ca";
   hash = "sha256-IoyxQuFrTlpwTqYgqsbeoLMuw8Hh7IJlvQi7ULdNAR0=";
-  pnpmDepsHash = "sha256-Zn6No8EyGHUR36Av1VxGWD19tUMBxSUo3QPCPXzlx0U=";
+  pnpmDepsHash = "sha256-LiAcWwGmZlpO+rr0tcMNpViBiBRhSHj+wvyHFIe32lw=";
   src = fetchFromGitHub {
     inherit (vencord.src) owner repo;
     inherit rev hash;
@@ -26,7 +26,7 @@ in
 (vencord.override { inherit buildWebExtension; }).overrideAttrs (
   oldAttrs:
   let
-    pnpm = pnpm_11;
+    pnpm = callPackage ./pnpm.nix { };
     patches = [ ];
     postPatch = "";
   in

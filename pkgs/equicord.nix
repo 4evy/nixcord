@@ -4,7 +4,7 @@
   fetchPnpmDeps,
   buildWebExtension ? false,
   bun,
-  pnpm_11,
+  callPackage,
   writeShellApplication,
   cacert,
   curl,
@@ -17,7 +17,7 @@ let
   version = "1.15.4.0-2026-09-03";
   rev = "b90a13be8e0636837e9bfdc8f18cc40cf8190962";
   hash = "sha256-Bu1226PDuCmY8w7RKTMZJzsLQiF0URuABZGxgo78H7k=";
-  pnpmDepsHash = "sha256-VW4VKmM/12wl0sMFB9hG9K+sXjYVxlafu14IplGL/sw=";
+  pnpmDepsHash = "sha256-hBZHHB5kRkNqep5vWMMnwIblNCAOZvLotDjJUJd9iMU=";
   inherit (equicord.src) owner repo;
   src = fetchFromGitHub {
     inherit
@@ -59,7 +59,7 @@ in
 (equicord.override { inherit buildWebExtension; }).overrideAttrs (
   oldAttrs:
   let
-    pnpm = pnpm_11;
+    pnpm = callPackage ./pnpm.nix { };
     patches = (oldAttrs.patches or [ ]) ++ [
       ./patches/equicord-content-warning-settings.patch
     ];
