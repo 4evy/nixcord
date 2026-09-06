@@ -1707,6 +1707,11 @@
         "default": true,
         "description": "Remove clan tags. (restart required)"
       },
+      "removeDisplayNameStyles": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Remove animated/styled display names in the member list. (restart required)"
+      },
       "alwaysShowUsername": {
         "type": "types.bool",
         "default": true,
