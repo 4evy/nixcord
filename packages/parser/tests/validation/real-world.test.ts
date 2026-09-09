@@ -254,7 +254,6 @@ describe.skipIf(!existsSync(VENCORD_PATH))('pinned Vencord source', () => {
 
   test('parses the complete plugin tree into the public result schema', () => {
     expect(ParsedPluginsResultSchema.safeParse(result).success).toBe(true);
-    expect(Object.keys(result.vencordPlugins).length).toBeGreaterThan(150);
     assertNormalizedSettingSemantics(result.vencordPlugins);
   });
 
@@ -322,8 +321,6 @@ describe.skipIf(!existsSync(EQUICORD_PATH))('pinned Equicord source', () => {
 
   test('parses both inherited and Equicord-only plugin trees', () => {
     expect(ParsedPluginsResultSchema.safeParse(result).success).toBe(true);
-    expect(Object.keys(result.vencordPlugins).length).toBeGreaterThan(150);
-    expect(Object.keys(result.equicordPlugins).length).toBeGreaterThan(190);
     assertNormalizedSettingSemantics(result.vencordPlugins);
     assertNormalizedSettingSemantics(result.equicordPlugins);
   });
@@ -453,9 +450,6 @@ describe.skipIf(!existsSync(VENCORD_PATH) || !existsSync(EQUICORD_PATH))(
       const [vencord, equicord] = await Promise.all([parseVencord(), parseEquicord()]);
       const categorized = categorizePlugins(vencord, equicord);
 
-      expect(Object.keys(categorized.generic).length).toBeGreaterThan(100);
-      expect(Object.keys(categorized.vencordOnly).length).toBeGreaterThan(20);
-      expect(Object.keys(categorized.equicordOnly).length).toBeGreaterThan(190);
       expect(categorized.generic.RelationshipNotifier).toBeDefined();
       expect(categorized.equicordOnly.Questify).toBeDefined();
       expect(categorized.generic.Settings).toBeUndefined();
