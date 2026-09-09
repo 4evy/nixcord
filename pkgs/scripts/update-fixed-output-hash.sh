@@ -46,8 +46,8 @@ refresh_hash() {
     if output=$("$@" 2>&1); then
       exit 0
     fi
-    new_hash=$(grep -oE 'got:[[:space:]]+sha256-[A-Za-z0-9+/=]+' <<< "$output" \
-      | tail -1 | sed -E 's/got:[[:space:]]*//' || true)
+    new_hash=$(grep -oE 'got:[[:space:]]+sha256-[A-Za-z0-9+/=]+' <<<"$output" |
+      tail -1 | sed -E 's/got:[[:space:]]*//' || true)
     if [[ -z "$new_hash" || "$attempt" -eq 4 ]]; then
       printf '%s\n' "$output" >&2
       exit 1
@@ -57,19 +57,19 @@ refresh_hash() {
 }
 
 case "${1:-}" in
-  get)
-    [[ "$#" -eq 3 ]] || usage
-    get_hash "$2" "$3"
-    ;;
-  set)
-    [[ "$#" -eq 4 ]] || usage
-    set_hash "$2" "$3" "$4"
-    ;;
-  refresh)
-    [[ "$#" -ge 5 ]] || usage
-    refresh_hash "$2" "$3" "${@:4}"
-    ;;
-  *)
-    usage
-    ;;
+get)
+  [[ "$#" -eq 3 ]] || usage
+  get_hash "$2" "$3"
+  ;;
+set)
+  [[ "$#" -eq 4 ]] || usage
+  set_hash "$2" "$3" "$4"
+  ;;
+refresh)
+  [[ "$#" -ge 5 ]] || usage
+  refresh_hash "$2" "$3" "${@:4}"
+  ;;
+*)
+  usage
+  ;;
 esac

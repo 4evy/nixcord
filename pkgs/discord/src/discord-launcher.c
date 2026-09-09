@@ -146,9 +146,11 @@ configure_directory(const struct directory_config *directory) {
 
 [[nodiscard]] static int run_helper(char *const helper_argv[]) {
   pid_t pid = 0;
-  int spawn_error = posix_spawn(&pid, helper_argv[0], nullptr, nullptr, helper_argv, environ);
+  int spawn_error =
+      posix_spawn(&pid, helper_argv[0], nullptr, nullptr, helper_argv, environ);
   if (spawn_error != 0) {
-    fprintf(stderr, "failed to spawn %s: %s\n", helper_argv[0], strerror(spawn_error));
+    fprintf(stderr, "failed to spawn %s: %s\n", helper_argv[0],
+            strerror(spawn_error));
     return 127;
   }
 

@@ -35,7 +35,7 @@ read_file_into() {
   local -n output_ref="$2"
 
   # shellcheck disable=SC2034 # output_ref is assigned through a nameref.
-  IFS= read -r -d '' output_ref < "$path" || true
+  IFS= read -r -d '' output_ref <"$path" || true
 }
 
 read_file_into "$nix_file" original_nix_content
@@ -45,9 +45,9 @@ read_file_into "$bun_lock_file" original_bun_lock_content
 cleanup() {
   local exit_code=$?
   if [[ $exit_code -ne 0 ]]; then
-    printf '%s' "$original_nix_content" > "$nix_file"
-    printf '%s' "$original_root_package_json_content" > "$root_package_json_file"
-    printf '%s' "$original_bun_lock_content" > "$bun_lock_file"
+    printf '%s' "$original_nix_content" >"$nix_file"
+    printf '%s' "$original_root_package_json_content" >"$root_package_json_file"
+    printf '%s' "$original_bun_lock_content" >"$bun_lock_file"
   fi
   exit "$exit_code"
 }
@@ -119,7 +119,7 @@ update_value() {
   [[ "$file_content" == *"$old_assignment"* ]] ||
     die "Could not find assignment for $var_name in $nix_file"
 
-  printf '%s' "${file_content/"$old_assignment"/"$new_assignment"}" > "$nix_file"
+  printf '%s' "${file_content/"$old_assignment"/"$new_assignment"}" >"$nix_file"
   parsed_nix_expr=""
 }
 
@@ -140,7 +140,7 @@ prefetch_github_hash() {
 
   output=$(nix-prefetch-github "$owner" "$repo" --rev "$revision" 2>/dev/null) ||
     die "Failed to prefetch GitHub revision $revision"
-  hash=$(jq -r '.hash // empty' <<< "$output") ||
+  hash=$(jq -r '.hash // empty' <<<"$output") ||
     die "Failed to parse prefetch output for $revision"
 
   [[ -n "$hash" ]] || die "Prefetch output for $revision did not contain a hash"
@@ -215,17 +215,17 @@ determine_update() {
   update_revision=""
 
   commit_json=$(gh_curl "https://api.github.com/repos/$owner/$repo/commits/$branch")
-  update_revision=$(jq -r '.sha // empty' <<< "$commit_json") ||
+  update_revision=$(jq -r '.sha // empty' <<<"$commit_json") ||
     die "Failed to parse commit SHA for $branch"
   [[ -n "$update_revision" ]] || die "Could not resolve $owner/$repo branch $branch"
 
-  commit_date=$(jq -r '.commit.committer.date // empty' <<< "$commit_json") ||
+  commit_date=$(jq -r '.commit.committer.date // empty' <<<"$commit_json") ||
     die "Failed to parse commit date for $update_revision"
   commit_date=${commit_date%%T*}
   [[ -n "$commit_date" ]] || die "Could not determine commit date for $update_revision"
 
   package_json=$(gh_curl "https://raw.githubusercontent.com/$owner/$repo/$update_revision/package.json")
-  upstream_version=$(jq -r '.version // empty' <<< "$package_json") ||
+  upstream_version=$(jq -r '.version // empty' <<<"$package_json") ||
     die "Failed to parse package.json for $update_revision"
   [[ -n "$upstream_version" ]] || die "Could not determine package version for $update_revision"
 
@@ -236,19 +236,19 @@ run_update() {
   local force_update=false
 
   case "${1:-}" in
-    --pnpm-only)
-      update_pnpm_deps_hash
-      log "pnpmDeps update complete"
-      return
-      ;;
-    --force)
-      force_update=true
-      ;;
-    "")
-      ;;
-    *)
-      die "Unknown argument: $1"
-      ;;
+  --pnpm-only)
+    update_pnpm_deps_hash
+    log "pnpmDeps update complete"
+    return
+    ;;
+  --force)
+    force_update=true
+    ;;
+  "")
+    ;;
+  *)
+    die "Unknown argument: $1"
+    ;;
   esac
 
   log "Fetching latest $client_name version..."

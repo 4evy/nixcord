@@ -11,7 +11,7 @@ patch_krisp_module_py=$3
 platform=$4
 
 mkdir -p "$out"
-brotli -d < "$krisp_src" | tar xf - --strip-components=1 -C "$out"
+brotli -d <"$krisp_src" | tar xf - --strip-components=1 -C "$out"
 
 if [[ "$platform" = linux || "$platform" = darwin ]]; then
   python3 "$patch_krisp_py" "$out/discord_krisp.node"

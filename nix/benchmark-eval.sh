@@ -43,56 +43,56 @@ require_option_value() {
   fi
 }
 
-while (( $# > 0 )); do
+while (($# > 0)); do
   case "$1" in
-    --runs)
-      require_option_value "$1" "${2-}"
-      runs=$2
-      shift 2
-      ;;
-    --runs=*)
-      runs=${1#*=}
-      [[ -n $runs ]] || usage_error "--runs requires a value."
-      shift
-      ;;
-    --system)
-      require_option_value "$1" "${2-}"
-      system=$2
-      shift 2
-      ;;
-    --system=*)
-      system=${1#*=}
-      [[ -n $system ]] || usage_error "--system requires a value."
-      shift
-      ;;
-    --skip-ifd)
-      check_ifd=0
-      shift
-      ;;
-    -h|--help)
-      usage
-      exit 0
-      ;;
-    --)
-      shift
-      if (( $# > 1 )); then
-        usage_error "Only one Git revision may be supplied."
-      fi
-      if (( $# == 1 )); then
-        compare_ref=$1
-      fi
-      break
-      ;;
-    -*)
-      usage_error "Unknown option: $1"
-      ;;
-    *)
+  --runs)
+    require_option_value "$1" "${2-}"
+    runs=$2
+    shift 2
+    ;;
+  --runs=*)
+    runs=${1#*=}
+    [[ -n $runs ]] || usage_error "--runs requires a value."
+    shift
+    ;;
+  --system)
+    require_option_value "$1" "${2-}"
+    system=$2
+    shift 2
+    ;;
+  --system=*)
+    system=${1#*=}
+    [[ -n $system ]] || usage_error "--system requires a value."
+    shift
+    ;;
+  --skip-ifd)
+    check_ifd=0
+    shift
+    ;;
+  -h | --help)
+    usage
+    exit 0
+    ;;
+  --)
+    shift
+    if (($# > 1)); then
+      usage_error "Only one Git revision may be supplied."
+    fi
+    if (($# == 1)); then
       compare_ref=$1
-      shift
-      if (( $# > 0 )); then
-        usage_error "Only one Git revision may be supplied."
-      fi
-      ;;
+    fi
+    break
+    ;;
+  -*)
+    usage_error "Unknown option: $1"
+    ;;
+  *)
+    compare_ref=$1
+    shift
+    if (($# > 0)); then
+      usage_error "Only one Git revision may be supplied."
+    fi
+    ;;
   esac
 done
 
@@ -103,16 +103,16 @@ fi
 # Remove leading zeroes before using the value in Bash arithmetic. Without
 # this, values such as 08 are parsed as invalid octal numbers.
 runs=${runs#"${runs%%[!0]*}"}
-if [[ -z $runs || ${#runs} -gt 4 ]] || (( 10#$runs > 1000 )); then
+if [[ -z $runs || ${#runs} -gt 4 ]] || ((10#$runs > 1000)); then
   usage_error "Run count must be an integer from 1 through 1000."
 fi
-runs=$(( 10#$runs ))
+runs=$((10#$runs))
 
 missing_commands=()
 for required_command in git jq nix; do
   command -v "$required_command" >/dev/null 2>&1 || missing_commands+=("$required_command")
 done
-if (( ${#missing_commands[@]} > 0 )); then
+if ((${#missing_commands[@]} > 0)); then
   printf 'Error: required command(s) not found: %s\n' "${missing_commands[*]}" >&2
   exit 127
 fi
@@ -139,7 +139,7 @@ comparison="$work/comparison"
 comparison_added=0
 
 cleanup() {
-  if (( comparison_added )); then
+  if ((comparison_added)); then
     git -C "$repo" worktree remove --force "$comparison" >/dev/null 2>&1 || true
   fi
   rm -rf -- "$work"
@@ -154,7 +154,7 @@ if ! git -C "$repo" worktree add --quiet --detach "$comparison" "$compare_commit
   exit 1
 fi
 
-if (( check_ifd )); then
+if ((check_ifd)); then
   printf 'Checking that the working tree evaluates without IFD...\n'
   if ! nix --option system "$system" flake check \
     --no-build \
@@ -327,16 +327,16 @@ run_evaluation() {
     NIX_SHOW_STATS=1 \
     NIX_SHOW_STATS_PATH="$stats" \
     nix --option warn-dirty false eval \
-      --impure \
-      --json \
-      --no-eval-cache \
-      --option allow-import-from-derivation false \
-      --expr "$expression" >/dev/null; then
+    --impure \
+    --json \
+    --no-eval-cache \
+    --option allow-import-from-derivation false \
+    --expr "$expression" >/dev/null; then
     printf 'Error: %s evaluation failed for %s.\n' "$scenario" "$label" >&2
     return 1
   fi
 
-  if (( measured )) && ! extract_sample "$stats" "$samples"; then
+  if ((measured)) && ! extract_sample "$stats" "$samples"; then
     printf 'Error: Nix wrote an unsupported statistics file for %s (%s).\n' "$scenario" "$label" >&2
     return 1
   fi
@@ -388,9 +388,9 @@ for scenario in "${scenarios[@]}"; do
   run_evaluation working-tree "$repo" "$scenario" 0 0
 
   printf '  Measuring run'
-  for (( run = 1; run <= runs; run++ )); do
+  for ((run = 1; run <= runs; run++)); do
     # Alternate which tree goes first to reduce ordering and thermal bias.
-    if (( run % 2 )); then
+    if ((run % 2)); then
       run_evaluation working-tree "$repo" "$scenario" "$run" 1
       run_evaluation comparison "$comparison" "$scenario" "$run" 1
     else

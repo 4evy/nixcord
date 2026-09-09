@@ -41,16 +41,16 @@ prune_unstaged_modules() {
     [[ -e "$path" ]] || continue
     module=$(basename "$path")
     case "$staged_modules" in
-      *" $module "*) ;;
-      *)
-        if [[ -L "$path" ]]; then
-          rm "$path"
-        else
-          chmod -R u+w "$path" 2>/dev/null || true
-          rm -rf "$path"
-        fi
-        rm -f "$dir/pending/$module"-*.zip 2>/dev/null || true
-        ;;
+    *" $module "*) ;;
+    *)
+      if [[ -L "$path" ]]; then
+        rm "$path"
+      else
+        chmod -R u+w "$path" 2>/dev/null || true
+        rm -rf "$path"
+      fi
+      rm -f "$dir/pending/$module"-*.zip 2>/dev/null || true
+      ;;
     esac
   done
 }
@@ -63,10 +63,10 @@ fi
 
 settings_file="$config_dir/settings.json"
 if [[ -f "$settings_file" ]]; then
-  jq ". + ${DISCORD_DISABLED_UPDATE_SETTINGS_JSON:?}" "$settings_file" > "$settings_file.tmp"
+  jq ". + ${DISCORD_DISABLED_UPDATE_SETTINGS_JSON:?}" "$settings_file" >"$settings_file.tmp"
   mv "$settings_file.tmp" "$settings_file"
 else
-  printf '%s\n' "${DISCORD_DISABLED_UPDATE_SETTINGS_JSON:?}" > "$settings_file"
+  printf '%s\n' "${DISCORD_DISABLED_UPDATE_SETTINGS_JSON:?}" >"$settings_file"
 fi
 
 prune_unstaged_modules "$modules_dir"
@@ -88,5 +88,5 @@ for module in ${DISCORD_STAGED_MODULES:-}; do
   fi
 done
 
-printf '%s\n' "${DISCORD_INSTALLED_MODULES_JSON:?}" > "$modules_dir/installed.json.tmp"
+printf '%s\n' "${DISCORD_INSTALLED_MODULES_JSON:?}" >"$modules_dir/installed.json.tmp"
 mv "$modules_dir/installed.json.tmp" "$modules_dir/installed.json"

@@ -48,7 +48,7 @@ jq \
     | .pins.nixpkgs.revision = $revision
     | .pins.nixpkgs.url = $url
     | .pins.nixpkgs.hash = $hash
-  ' "$npins_lock" > "$generated"
+  ' "$npins_lock" >"$generated"
 
 if cmp --silent "$generated" "$npins_lock"; then
   exit 0

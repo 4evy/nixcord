@@ -51,12 +51,12 @@ for path in "${changed_paths[@]}"; do
     # Stream file contents so large generated files do not exceed the
     # operating system's per-argument size limit.
     # shellcheck disable=SC2094 # jq receives $path as metadata, not as output.
-    base64 < "$path" \
-      | tr -d '\n' \
-      | jq -Rsc --arg path "$path" \
-        '{path: $path, contents: .}' >> "$additions_file"
+    base64 <"$path" |
+      tr -d '\n' |
+      jq -Rsc --arg path "$path" \
+        '{path: $path, contents: .}' >>"$additions_file"
   elif [[ ! -e "$path" ]]; then
-    jq -cn --arg path "$path" '{path: $path}' >> "$deletions_file"
+    jq -cn --arg path "$path" '{path: $path}' >>"$deletions_file"
   else
     echo "::error file=$path::Only regular file changes can be committed"
     exit 1
@@ -102,9 +102,9 @@ jq -n \
         expectedHeadOid: $expectedHeadOid
       }
     }
-  }' > "$request_file"
+  }' >"$request_file"
 
-gh api graphql --input "$request_file" > "$response_file"
+gh api graphql --input "$request_file" >"$response_file"
 commit_sha=$(jq -er '.data.createCommitOnBranch.commit.oid' "$response_file")
 commit_url=$(jq -er '.data.createCommitOnBranch.commit.url' "$response_file")
 if ! jq -e '
