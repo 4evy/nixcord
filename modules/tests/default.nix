@@ -3,6 +3,7 @@
 {
   regression-matrix = import ./examples/regression-matrix.nix { inherit pkgs; };
   config-output = import ./modules/config-output { inherit pkgs; };
+  disabled-module-output = import ./disabled-module-output.nix { inherit pkgs; };
   assertions = import ./modules/assertions { inherit pkgs; };
   activation-scripts = import ./activation-scripts.nix { inherit pkgs; };
   platform-paths = import ./platform-paths.nix { inherit pkgs; };

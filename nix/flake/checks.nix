@@ -1,3 +1,4 @@
+{ inputs, ... }:
 {
   perSystem =
     {
@@ -66,6 +67,10 @@
         // discordIntegrationChecks
         // {
           non-flake-interface = nonFlakeInterface;
+          module-integration = import ../../modules/tests/module-integration.nix {
+            inherit pkgs;
+            inherit (inputs) home-manager nix-darwin;
+          };
         };
     };
 }
