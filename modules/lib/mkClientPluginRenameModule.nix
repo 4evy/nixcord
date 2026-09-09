@@ -19,52 +19,15 @@ let
   oldPath = base ++ migration.from;
   newPath = base ++ migration.to;
   oldOption = lib.attrsets.attrByPath oldPath null options;
-  targetPluginName = builtins.head migration.to;
-  targetSettingPath = builtins.tail migration.to;
+  cfg = config.programs.nixcord;
+  inherit (import ./plugins.nix { inherit lib; }) mkPluginKit;
+  pluginKit = mkPluginKit cfg;
 
-  sharedPlugins = lib.trivial.importJSON ../plugins/shared.json;
-  vencordPlugins = lib.trivial.importJSON ../plugins/vencord.json;
-  equicordPlugins = lib.trivial.importJSON ../plugins/equicord.json;
-
-  hasSettingPath =
-    setting: path:
-    if path == [ ] then
-      true
-    else
-      let
-        child = lib.attrsets.attrByPath [ "settings" (builtins.head path) ] null setting;
-      in
-      child != null && hasSettingPath child (builtins.tail path);
-
-  schemaHasTarget =
-    schema:
-    let
-      plugin = schema.${targetPluginName} or null;
-    in
-    plugin != null
-    && (
-      targetSettingPath == [ "enable" ]
-      || (targetSettingPath != [ ] && hasSettingPath plugin targetSettingPath)
-    );
-
-  hasVencordClient =
-    config.programs.nixcord.discord.vencord.enable
-    || config.programs.nixcord.vesktop.enable
-    || config.programs.nixcord.dorion.enable
-    || config.programs.nixcord.legcord.vencord.enable
-    || (
-      config.programs.nixcord.goofcord.enable && config.programs.nixcord.goofcord.clientMod == "vencord"
-    );
-  hasEquicordClient =
-    config.programs.nixcord.discord.equicord.enable
-    || config.programs.nixcord.equibop.enable
-    || config.programs.nixcord.legcord.equicord.enable
-    || (
-      config.programs.nixcord.goofcord.enable && config.programs.nixcord.goofcord.clientMod == "equicord"
-    );
-  targetIsAvailable =
-    (hasVencordClient && (schemaHasTarget sharedPlugins || schemaHasTarget vencordPlugins))
-    || (hasEquicordClient && (schemaHasTarget sharedPlugins || schemaHasTarget equicordPlugins));
+  # Dorion also consumes Vencord settings through its browser bootstrap.
+  migrationClients = pluginKit.enabledClients ++ lib.lists.optional cfg.dorion.enable "vencord";
+  targetIsAvailable = lib.lists.any (
+    client: pluginKit.clientHasOptionPath client migration.to
+  ) migrationClients;
 
   optionDefaultPriority = (lib.modules.mkOptionDefault null).priority;
   oldOptionHasNonDefaultDefinition =

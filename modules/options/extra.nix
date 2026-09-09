@@ -2,39 +2,27 @@
 let
   jsonFormat = pkgs.formats.json { };
   jsonAttrs = lib.types.attrsOf jsonFormat.type;
+  configOptions =
+    lib.attrsets.mapAttrs
+      (
+        _: target:
+        lib.options.mkOption {
+          type = jsonAttrs;
+          default = { };
+          description = "Additional config merged into `programs.nixcord.config` for ${target}.";
+        }
+      )
+      {
+        vesktopConfig = "Vesktop only";
+        equibopConfig = "Equibop only";
+        goofcordConfig = "GoofCord only";
+        vencordConfig = "Vencord (Discord) only";
+        equicordConfig = "Equicord (Discord) only";
+        extraConfig = "all clients";
+      };
 in
 {
-  options.programs.nixcord = {
-    vesktopConfig = lib.options.mkOption {
-      type = jsonAttrs;
-      default = { };
-      description = "Additional config merged into `programs.nixcord.config` for Vesktop only.";
-    };
-    equibopConfig = lib.options.mkOption {
-      type = jsonAttrs;
-      default = { };
-      description = "Additional config merged into `programs.nixcord.config` for Equibop only.";
-    };
-    goofcordConfig = lib.options.mkOption {
-      type = jsonAttrs;
-      default = { };
-      description = "Additional config merged into `programs.nixcord.config` for GoofCord only.";
-    };
-    vencordConfig = lib.options.mkOption {
-      type = jsonAttrs;
-      default = { };
-      description = "Additional config merged into `programs.nixcord.config` for Vencord (Discord) only.";
-    };
-    equicordConfig = lib.options.mkOption {
-      type = jsonAttrs;
-      default = { };
-      description = "Additional config merged into `programs.nixcord.config` for Equicord (Discord) only.";
-    };
-    extraConfig = lib.options.mkOption {
-      type = jsonAttrs;
-      default = { };
-      description = "Additional config merged into `programs.nixcord.config` for all clients.";
-    };
+  options.programs.nixcord = configOptions // {
     userPlugins =
       let
         coerce = import ../lib/userPlugins.nix { inherit lib; };

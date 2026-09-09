@@ -22,8 +22,6 @@ let
     pluginNameMigrations
     mergePlugins
     collectDeprecatedPlugins
-    collectEnabledEquicordOnlyPlugins
-    collectEnabledVencordOnlyPlugins
     ;
 
   pluginsOptions = options.programs.nixcord.config.plugins;
@@ -55,14 +53,8 @@ let
     ];
   };
 
-  deprecatedFreeformPlugins = lib.lists.subtractLists deprecatedTypedPlugins (
-    collectDeprecatedPlugins freeformPlugins
-  );
-
-  deprecatedPlugins = deprecatedTypedPlugins ++ deprecatedFreeformPlugins;
-
-  deprecatedPluginsSorted = lib.lists.intersectLists deprecatedPlugins (
-    builtins.attrNames pluginNameMigrations
+  deprecatedPluginsSorted = builtins.attrNames (
+    lib.attrsets.genAttrs (deprecatedTypedPlugins ++ collectDeprecatedPlugins freeformPlugins) (_: null)
   );
 
   discordHasNoModClient =
@@ -104,41 +96,32 @@ in
         programs.nixcord.discord.krisp.enable is enabled, but the selected Discord package does not expose nixcord's withKrisp patch override. Krisp patching will be skipped for this package.
       '';
 
-    assertions =
-      mkAssertions {
-        inherit
-          cfg
-          mergePlugins
-          collectEnabledEquicordOnlyPlugins
-          collectEnabledVencordOnlyPlugins
-          ;
+    assertions = mkAssertions cfg pluginKit ++ [
+      {
+        assertion =
+          !cfg.discord.enable
+          || cfg.discord.appDataDir == null
+          || (
+            pkgs.stdenvNoCC.hostPlatform.isDarwin && packageSupportsOverride cfg.discord.package "appDataDir"
+          );
+        message = "programs.nixcord.discord.appDataDir requires Nixcord's Discord package on macOS.";
       }
-      ++ [
-        {
-          assertion =
-            !cfg.discord.enable
-            || cfg.discord.appDataDir == null
-            || (
-              pkgs.stdenvNoCC.hostPlatform.isDarwin && packageSupportsOverride cfg.discord.package "appDataDir"
-            );
-          message = "programs.nixcord.discord.appDataDir requires Nixcord's Discord package on macOS.";
-        }
-        {
-          assertion =
-            !cfg.discord.enable
-            || !pkgs.stdenvNoCC.hostPlatform.isDarwin
-            || !(packageSupportsOverride cfg.discord.package "appDataDir")
-            ||
-              builtins.baseNameOf (toString cfg.discord.configDir)
-              == branchDirName.${getPrimaryDiscordBranch cfg};
-          message = "programs.nixcord.discord.configDir must end with the primary Discord branch's directory name on macOS; set discord.appDataDir to change its parent directory.";
-        }
-        {
-          assertion = !cfg.discord.enable || discordConfigDirsAreUnique;
-          message = ''
-            programs.nixcord.discord.branches resolve multiple branches to the same Discord config directory: ${lib.strings.concatStringsSep ", " discordConfigDirs}. Set programs.nixcord.discord.configDir to a directory for the first branch that does not overlap another branch's standard directory.
-          '';
-        }
-      ];
+      {
+        assertion =
+          !cfg.discord.enable
+          || !pkgs.stdenvNoCC.hostPlatform.isDarwin
+          || !(packageSupportsOverride cfg.discord.package "appDataDir")
+          ||
+            builtins.baseNameOf (toString cfg.discord.configDir)
+            == branchDirName.${getPrimaryDiscordBranch cfg};
+        message = "programs.nixcord.discord.configDir must end with the primary Discord branch's directory name on macOS; set discord.appDataDir to change its parent directory.";
+      }
+      {
+        assertion = !cfg.discord.enable || discordConfigDirsAreUnique;
+        message = ''
+          programs.nixcord.discord.branches resolve multiple branches to the same Discord config directory: ${lib.strings.concatStringsSep ", " discordConfigDirs}. Set programs.nixcord.discord.configDir to a directory for the first branch that does not overlap another branch's standard directory.
+        '';
+      }
+    ];
   };
 }

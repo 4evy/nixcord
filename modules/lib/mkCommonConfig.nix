@@ -74,29 +74,13 @@ let
   dorionConfig =
     if cfg.dorion.enable then jsonFormat.generate "nixcord-dorion-config.json" dorionAttrs else null;
 
-  legcordWeb = {
-    vencord =
-      if cfg.legcord.enable && cfg.legcord.vencord.enable then
-        mkBrowserBuild {
-          inherit cfg;
-          pkg = cfg.discord.vencord.package;
-          browserJsPath = "dist/browser.js";
-          browserCssPath = "dist/browser.css";
-        }
-      else
-        null;
-
-    equicord =
-      if cfg.legcord.enable && cfg.legcord.equicord.enable then
-        mkBrowserBuild {
-          inherit cfg;
-          pkg = cfg.discord.equicord.package;
-          browserJsPath = "dist/browser/browser.js";
-          browserCssPath = "dist/browser/browser.css";
-        }
-      else
-        null;
-  };
+  legcordWeb = lib.attrsets.genAttrs [ "vencord" "equicord" ] (
+    client:
+    if cfg.legcord.enable && cfg.legcord.${client}.enable then
+      mkBrowserBuild { inherit cfg client; }
+    else
+      null
+  );
 
   # Merge user legcord settings with auto-configured mods and noBundleUpdates.
   legcordAttrs =
@@ -105,22 +89,16 @@ let
       bundledMods =
         lib.lists.optional legcord.vencord.enable "vencord"
         ++ lib.lists.optional legcord.equicord.enable "equicord";
-      listSettings = {
-        mods = legcord.settings.mods or [ ];
-        noBundleUpdates = legcord.settings.noBundleUpdates or [ ];
-      };
-      autoSettings = lib.attrsets.optionalAttrs (bundledMods != [ ]) {
-        mods = lib.lists.unique (listSettings.mods ++ bundledMods);
-        noBundleUpdates = lib.lists.unique (listSettings.noBundleUpdates ++ bundledMods);
-      };
+      autoSettings = lib.attrsets.optionalAttrs (bundledMods != [ ]) (
+        lib.attrsets.genAttrs [ "mods" "noBundleUpdates" ] (
+          name: lib.lists.unique ((legcord.settings.${name} or [ ]) ++ bundledMods)
+        )
+      );
     in
     legcord.settings // autoSettings // { doneSetup = true; };
 
   legcordSettings =
-    if cfg.legcord.enable && legcordAttrs != { } then
-      jsonFormat.generate "nixcord-legcord-config.json" legcordAttrs
-    else
-      null;
+    if cfg.legcord.enable then jsonFormat.generate "nixcord-legcord-config.json" legcordAttrs else null;
 
   goofcordCanUseSystemMod = cfg.goofcord.enable && cfg.goofcord.package != null;
 
@@ -128,15 +106,7 @@ let
     if goofcordCanUseSystemMod then
       mkBrowserBuild {
         inherit cfg;
-        pkg =
-          if cfg.goofcord.clientMod == "vencord" then
-            cfg.discord.vencord.package
-          else
-            cfg.discord.equicord.package;
-        browserJsPath =
-          if cfg.goofcord.clientMod == "vencord" then "dist/browser.js" else "dist/browser/browser.js";
-        browserCssPath =
-          if cfg.goofcord.clientMod == "vencord" then "dist/browser.css" else "dist/browser/browser.css";
+        client = cfg.goofcord.clientMod;
       }
     else
       null;
@@ -285,15 +255,13 @@ let
         ;
     };
 
-  fileSpecArgs = {
+  fileSpecs = mkFileSpecs {
     inherit
       cfg
       files
       isQuickCssUsed
       ;
   };
-
-  fileSpecs = mkFileSpecs fileSpecArgs;
 
   fileCopyCommands = mkCopyCommands fileSpecs;
 in

@@ -27,12 +27,9 @@ let
         configDir
         discord
         dorion
-        equibop
         goofcord
         legcord
-        vesktop
         ;
-      inherit (cfg.discord) vencord equicord;
 
       copy =
         spec:
@@ -85,80 +82,59 @@ let
           cfg.vencordConfig
           cfg.equicordConfig
         ];
-      quickCssOnVesktop = cfg.vesktop.enable && quickCssEnabled && isQuickCssUsed cfg.vesktopConfig;
-      quickCssOnEquibop = cfg.equibop.enable && quickCssEnabled && isQuickCssUsed cfg.equibopConfig;
-
       desktopClients = [
-        {
-          name = "vesktop";
-          client = vesktop;
-          fullSettings = settings.vesktopSettingsFile;
-          clientSettings = settings.vesktopClientSettingsFile;
-          state = settings.vesktopStateFile;
-          quickCssUsed = quickCssOnVesktop;
-        }
-        {
-          name = "equibop";
-          client = equibop;
-          fullSettings = settings.equibopSettingsFile;
-          clientSettings = settings.equibopClientSettingsFile;
-          state = settings.equibopStateFile;
-          quickCssUsed = quickCssOnEquibop;
-        }
+        "vesktop"
+        "equibop"
       ];
 
-      discordMods = [
-        {
-          name = "vencord";
-          inherit (vencord) enable;
-          src = settings.vencordSettingsFile;
+      desktopSettingsSpecs = lib.lists.concatMap (
+        name:
+        mkSettingsSpecs {
+          inherit name;
+          client = cfg.${name};
+          fullSettings = settings.${name + "SettingsFile"};
+          clientSettings = settings.${name + "ClientSettingsFile"};
+          state = settings.${name + "StateFile"};
+          quickCssUsed = cfg.${name}.enable && quickCssEnabled && isQuickCssUsed cfg.${name + "Config"};
         }
-        {
-          name = "equicord";
-          inherit (equicord) enable;
-          src = settings.equicordSettingsFile;
-        }
-      ];
+      ) desktopClients;
 
-      discordModSettingsSpecs = map (
-        mod:
-        copy {
-          name = "${mod.name}-settings";
-          enable = discord.enable && mod.enable;
-          inherit (mod) src;
-          dest = "${configDir}/settings/settings.json";
-          writable = true;
-        }
-      ) discordMods;
-
-      legcordWebMods = [
-        {
-          name = "vencord";
-          build = legcordWeb.vencord;
-        }
-        {
-          name = "equicord";
-          build = legcordWeb.equicord;
-        }
-      ];
-
-      legcordWebSpecs = lib.lists.concatMap (
-        mod:
+      discordModSettingsSpecs =
         map
           (
-            extension:
+            name:
             copy {
-              name = "legcord-${mod.name}-${extension}";
-              enable = cfg.legcord.enable && mod.build != null;
-              src = "${mod.build}/browser.${extension}";
-              dest = "${cfg.legcord.configDir}/${mod.name}.${extension}";
+              name = "${name}-settings";
+              enable = discord.enable && discord.${name}.enable;
+              src = settings.${name + "SettingsFile"};
+              dest = "${configDir}/settings/settings.json";
+              writable = true;
             }
           )
           [
-            "js"
-            "css"
-          ]
-      ) legcordWebMods;
+            "vencord"
+            "equicord"
+          ];
+
+      legcordWebSpecs = lib.lists.concatLists (
+        lib.attrsets.mapAttrsToList (
+          name: build:
+          map
+            (
+              extension:
+              copy {
+                name = "legcord-${name}-${extension}";
+                enable = legcord.enable && build != null;
+                src = "${build}/browser.${extension}";
+                dest = "${legcord.configDir}/${name}.${extension}";
+              }
+            )
+            [
+              "js"
+              "css"
+            ]
+        ) legcordWeb
+      );
 
       goofcordAssetSpecs =
         let
@@ -208,31 +184,20 @@ let
             }
           ];
 
-      themeClients = [
-        {
-          name = "vesktop";
-          client = vesktop;
-        }
-        {
-          name = "equibop";
-          client = equibop;
-        }
-      ];
-
       themeSpecs = lib.lists.concatMap (
-        themeClient:
-        lib.lists.optionals themeClient.client.enable (
+        name:
+        lib.lists.optionals cfg.${name}.enable (
           lib.attrsets.mapAttrsToList (
             themeName: path:
             copy {
-              name = "${themeClient.name}-theme-${themeName}";
+              name = "${name}-theme-${themeName}";
               enable = true;
               src = path;
-              dest = "${themeClient.client.configDir}/themes/${themeName}.css";
+              dest = "${cfg.${name}.configDir}/themes/${themeName}.css";
             }
           ) themes
         )
-      ) themeClients;
+      ) desktopClients;
 
       oneOffSpecs = [
         (copy {
@@ -283,7 +248,7 @@ let
         oneOffSpecs
         ++ discordSettingsSpecs
         ++ discordModSettingsSpecs
-        ++ lib.lists.concatMap mkSettingsSpecs desktopClients
+        ++ desktopSettingsSpecs
         ++ legcordWebSpecs
         ++ goofcordAssetSpecs
         ++ themeSpecs;
@@ -303,34 +268,28 @@ let
         spec:
         "copy_file ${lib.strings.escapeShellArg spec.src} ${lib.strings.escapeShellArg spec.dest} 0644";
     in
-    lib.trivial.pipe fileSpecs [
-      (lib.strings.concatMapStringsSep "\n" mkCopy)
-    ];
+    lib.strings.concatMapStringsSep "\n" mkCopy fileSpecs;
 
   mkInstalledPackages =
     cfg: finalPackages:
-    let
-      inherit (cfg)
-        discord
-        dorion
-        equibop
-        goofcord
-        legcord
-        vesktop
-        ;
-    in
-    lib.lists.optionals (discord.enable && discord.installPackage) (
+    lib.lists.optionals (cfg.discord.enable && cfg.discord.installPackage) (
       map (branch: finalPackages.discordBranches.${branch}) (getDiscordBranches cfg)
     )
-    ++ lib.lists.optional (vesktop.enable && vesktop.installPackage) finalPackages.vesktop
-    ++ lib.lists.optional (
-      equibop.enable && finalPackages.equibop != null && equibop.installPackage
-    ) finalPackages.equibop
-    ++ lib.lists.optional (
-      goofcord.enable && finalPackages.goofcord != null && goofcord.installPackage
-    ) finalPackages.goofcord
-    ++ lib.lists.optional (dorion.enable && dorion.installPackage) finalPackages.dorion
-    ++ lib.lists.optional (legcord.enable && legcord.installPackage) finalPackages.legcord;
+    ++
+      lib.lists.concatMap
+        (
+          name:
+          lib.lists.optional (
+            cfg.${name}.enable && cfg.${name}.installPackage && finalPackages.${name} != null
+          ) finalPackages.${name}
+        )
+        [
+          "vesktop"
+          "equibop"
+          "goofcord"
+          "dorion"
+          "legcord"
+        ];
 
   mkSettingsFiles =
     {
@@ -362,37 +321,30 @@ let
           name = "discord-settings";
           value = discordSettings;
         };
-        vesktopSettingsFile = {
-          enable = true;
-          name = "vesktop-settings";
-          value = vesktopFullConfig;
-        };
-        vesktopClientSettingsFile = {
-          enable = cfg.vesktop.settings != { };
-          name = "vesktop-client-settings";
-          value = cfg.vesktop.settings;
-        };
-        vesktopStateFile = {
-          enable = cfg.vesktop.state != { };
-          name = "vesktop-state";
-          value = cfg.vesktop.state;
-        };
-        equibopSettingsFile = {
-          enable = true;
-          name = "equibop-settings";
-          value = equibopFullConfig;
-        };
-        equibopClientSettingsFile = {
-          enable = cfg.equibop.settings != { };
-          name = "equibop-client-settings";
-          value = cfg.equibop.settings;
-        };
-        equibopStateFile = {
-          enable = cfg.equibop.state != { };
-          name = "equibop-state";
-          value = cfg.equibop.state;
-        };
-      };
+      }
+      //
+        lib.attrsets.concatMapAttrs
+          (name: fullConfig: {
+            "${name}SettingsFile" = {
+              enable = true;
+              name = "${name}-settings";
+              value = fullConfig;
+            };
+            "${name}ClientSettingsFile" = {
+              enable = cfg.${name}.settings != { };
+              name = "${name}-client-settings";
+              value = cfg.${name}.settings;
+            };
+            "${name}StateFile" = {
+              enable = cfg.${name}.state != { };
+              name = "${name}-state";
+              value = cfg.${name}.state;
+            };
+          })
+          {
+            vesktop = vesktopFullConfig;
+            equibop = equibopFullConfig;
+          };
     in
     lib.attrsets.mapAttrs (
       _: spec:

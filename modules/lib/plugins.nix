@@ -1,15 +1,61 @@
 { lib, ... }:
 let
-  isPluginEnabled =
-    pluginConfig: builtins.isAttrs pluginConfig && pluginConfig ? enable && pluginConfig.enable;
+  isPluginEnabled = pluginConfig: builtins.isAttrs pluginConfig && (pluginConfig.enable or false);
+
+  schemaHasOptionPath =
+    schema: path:
+    let
+      plugin = schema.${builtins.head path} or null;
+      settingPath = builtins.tail path;
+      schemaPath = lib.lists.concatMap (name: [
+        "settings"
+        name
+      ]) settingPath;
+    in
+    plugin != null
+    && (
+      settingPath == [ "enable" ]
+      || (settingPath != [ ] && lib.attrsets.attrByPath schemaPath null plugin != null)
+    );
+
+  sharedPlugins = lib.trivial.importJSON ../plugins/shared.json;
+  vencordPlugins = lib.trivial.importJSON ../plugins/vencord.json;
+  equicordPlugins = lib.trivial.importJSON ../plugins/equicord.json;
+
+  clientSchemasFor =
+    client:
+    [ sharedPlugins ]
+    ++ lib.lists.optional (client == "vencord") vencordPlugins
+    ++ lib.lists.optional (client == "equicord") equicordPlugins;
+
+  clientSchemaFor =
+    client: lib.lists.foldl' lib.attrsets.recursiveUpdate { } (clientSchemasFor client);
+
+  clientHasOptionPath =
+    client: path: lib.lists.any (schema: schemaHasOptionPath schema path) (clientSchemasFor client);
+
+  # Compatibility checks cover the clients whose mod config we manage.
+  # Dorion's browser bootstrap is handled separately by migration callers.
+  getEnabledClients =
+    cfg:
+    lib.attrsets.attrNames (
+      lib.attrsets.filterAttrs
+        (
+          client: standaloneEnabled:
+          cfg.discord.${client}.enable
+          || cfg.legcord.${client}.enable
+          || standaloneEnabled
+          || (cfg.goofcord.enable && cfg.goofcord.clientMod == client)
+        )
+        {
+          vencord = cfg.vesktop.enable;
+          equicord = cfg.equibop.enable;
+        }
+    );
 
   mkPluginKit =
     cfg:
     let
-      sharedPlugins = lib.trivial.importJSON ../plugins/shared.json;
-      vencordPlugins = lib.trivial.importJSON ../plugins/vencord.json;
-      equicordPlugins = lib.trivial.importJSON ../plugins/equicord.json;
-
       sharedPluginNames = builtins.attrNames sharedPlugins;
       vencordPluginNames = builtins.attrNames vencordPlugins;
       equicordPluginNames = builtins.attrNames equicordPlugins;
@@ -54,56 +100,11 @@ let
 
       pluginNameMigrations = deprecatedPluginNameMigrations // generatedPluginNameMigrations;
 
-      removeAttrByPath =
-        path: attrs:
-        let
-          name = builtins.head path;
-          rest = builtins.tail path;
-        in
-        if rest == [ ] then
-          lib.attrsets.removeAttrs attrs [ name ]
-        else if builtins.hasAttr name attrs && builtins.isAttrs attrs.${name} then
-          attrs // { ${name} = removeAttrByPath rest attrs.${name}; }
-        else
-          attrs;
-
-      schemaHasOptionPath =
-        schema: path:
-        let
-          pluginName = builtins.head path;
-          settingPath = builtins.tail path;
-          plugin = schema.${pluginName} or null;
-          hasSettingPath =
-            setting: remaining:
-            if remaining == [ ] then
-              true
-            else
-              let
-                child = lib.attrsets.attrByPath [ "settings" (builtins.head remaining) ] null setting;
-              in
-              child != null && hasSettingPath child (builtins.tail remaining);
-        in
-        plugin != null
-        && (settingPath == [ "enable" ] || (settingPath != [ ] && hasSettingPath plugin settingPath));
-
-      clientSchemasFor =
-        client:
-        [ sharedPlugins ]
-        ++ lib.lists.optional (client == "vencord") vencordPlugins
-        ++ lib.lists.optional (client == "equicord") equicordPlugins;
-
-      clientSchemaFor =
-        client: lib.lists.foldl' lib.attrsets.recursiveUpdate { } (clientSchemasFor client);
-
-      clientHasOptionPath =
-        client: path: lib.lists.any (schema: schemaHasOptionPath schema path) (clientSchemasFor client);
-
       filterPluginAttrs =
         schema: attrs:
         let
           settingSchemas = schema.settings or { };
-          allowedNames = [ "enable" ] ++ builtins.attrNames settingSchemas;
-          filtered = builtins.intersectAttrs (lib.attrsets.genAttrs allowedNames (_: null)) attrs;
+          filtered = builtins.intersectAttrs (settingSchemas // { enable = null; }) attrs;
         in
         lib.attrsets.mapAttrs (
           name: value:
@@ -121,6 +122,13 @@ let
       migrateAttrByPath =
         from: to: attrs:
         let
+          # The caller has checked that the source path exists
+          withoutOld = lib.attrsets.updateManyAttrsByPath [
+            {
+              path = lib.lists.init from;
+              update = parent: lib.attrsets.removeAttrs parent [ (lib.lists.last from) ];
+            }
+          ] attrs;
           oldValue = lib.attrsets.getAttrFromPath from attrs;
           newValue = lib.attrsets.attrByPath to oldValue attrs;
           mergedValue =
@@ -129,12 +137,10 @@ let
             else
               newValue;
         in
-        lib.attrsets.recursiveUpdate (removeAttrByPath from attrs) (
-          lib.attrsets.setAttrByPath to mergedValue
-        );
+        lib.attrsets.recursiveUpdate withoutOld (lib.attrsets.setAttrByPath to mergedValue);
 
       migrateDeprecatedPluginNamesFor =
-        clientPluginNames: configAttrs:
+        clientSchema: configAttrs:
         let
           migratePlugin =
             plugins: oldName:
@@ -142,8 +148,8 @@ let
               newName = allDeprecatedPluginNameMigrations.${oldName};
             in
             if
-              builtins.elem oldName clientPluginNames
-              || !(builtins.elem newName clientPluginNames)
+              builtins.hasAttr oldName clientSchema
+              || !(builtins.hasAttr newName clientSchema)
               || !(builtins.hasAttr oldName plugins)
             then
               plugins
@@ -169,7 +175,7 @@ let
       migrateFreeformConfigFor =
         client: configAttrs:
         let
-          clientPluginNames = builtins.attrNames (clientSchemaFor client);
+          clientSchema = clientSchemaFor client;
           migrateOption =
             plugins: migration:
             if
@@ -180,15 +186,10 @@ let
               plugins
             else
               migrateAttrByPath migration.from migration.to plugins;
-          migratedConfig = migrateDeprecatedPluginNamesFor clientPluginNames configAttrs;
-          plugins = lib.trivial.pipe (pluginsOf migratedConfig) [
-            (
-              plugins:
-              lib.lists.foldl' migrateOption plugins (
-                migrations.renames ++ (migrations.identifierRenames or [ ]) ++ (migrations.clientRenames or [ ])
-              )
-            )
-          ];
+          migratedConfig = migrateDeprecatedPluginNamesFor clientSchema configAttrs;
+          plugins = lib.lists.foldl' migrateOption (pluginsOf migratedConfig) (
+            migrations.renames ++ (migrations.identifierRenames or [ ]) ++ (migrations.clientRenames or [ ])
+          );
         in
         migratedConfig // { inherit plugins; };
 
@@ -198,22 +199,16 @@ let
           plugins = pluginsOf configAttrs;
         in
         lib.trivial.pipe pluginNameMigrations [
-          (lib.attrsets.filterAttrs (
-            oldName: _:
-            let
-              plugin = plugins.${oldName} or null;
-            in
-            plugin != null && isPluginEnabled plugin
-          ))
+          (lib.attrsets.filterAttrs (oldName: _: isPluginEnabled (plugins.${oldName} or null)))
           lib.attrsets.attrNames
         ];
 
-      sharedMask = lib.attrsets.genAttrs sharedPluginNames (_: null);
-      vencordMask = lib.attrsets.genAttrs vencordPluginNames (_: null);
-      equicordMask = lib.attrsets.genAttrs equicordPluginNames (_: null);
-
-      vencordOnlyMask = lib.attrsets.removeAttrs vencordMask (sharedPluginNames ++ equicordPluginNames);
-      equicordOnlyMask = lib.attrsets.removeAttrs equicordMask (sharedPluginNames ++ vencordPluginNames);
+      vencordOnlyMask = lib.attrsets.removeAttrs vencordPlugins (
+        sharedPluginNames ++ equicordPluginNames
+      );
+      equicordOnlyMask = lib.attrsets.removeAttrs equicordPlugins (
+        sharedPluginNames ++ vencordPluginNames
+      );
 
       collectEnabledExclusivePlugins =
         exclusiveMask: configAttrs:
@@ -254,16 +249,17 @@ let
               "none";
           filteredBaseConfig = filterPluginsFor effectiveClient baseConfig;
         in
-        lib.trivial.pipe
-          [
-            filteredBaseConfig
-            (migrateFreeformConfigFor effectiveClient extraConfig)
-            (migrateFreeformConfigFor effectiveClient clientConfig)
-          ]
-          [ (lib.lists.foldl' lib.attrsets.recursiveUpdate { }) ];
+        lib.lists.foldl' lib.attrsets.recursiveUpdate { } [
+          filteredBaseConfig
+          (migrateFreeformConfigFor effectiveClient extraConfig)
+          (migrateFreeformConfigFor effectiveClient clientConfig)
+        ];
     in
     {
+      enabledClients = getEnabledClients cfg;
+
       inherit
+        clientHasOptionPath
         isPluginEnabled
         pluginsOf
         mergePlugins
@@ -277,13 +273,14 @@ let
     };
 
   mkAssertions =
-    {
-      cfg,
-      mergePlugins,
-      collectEnabledEquicordOnlyPlugins,
-      collectEnabledVencordOnlyPlugins,
-    }:
+    cfg: pluginKit:
     let
+      inherit (pluginKit)
+        enabledClients
+        mergePlugins
+        collectEnabledEquicordOnlyPlugins
+        collectEnabledVencordOnlyPlugins
+        ;
       allPlugins.plugins = mergePlugins [
         cfg.config
         cfg.extraConfig
@@ -293,18 +290,9 @@ let
         cfg.equibopConfig
         cfg.goofcordConfig
       ];
+      goofcordAssets = cfg.goofcord.settings.assets or { };
       wrongEquicordPlugins = collectEnabledEquicordOnlyPlugins allPlugins;
       wrongVencordPlugins = collectEnabledVencordOnlyPlugins allPlugins;
-      hasVencordClient =
-        cfg.discord.vencord.enable
-        || cfg.vesktop.enable
-        || cfg.legcord.vencord.enable
-        || (cfg.goofcord.enable && cfg.goofcord.clientMod == "vencord");
-      hasEquicordClient =
-        cfg.discord.equicord.enable
-        || cfg.equibop.enable
-        || cfg.legcord.equicord.enable
-        || (cfg.goofcord.enable && cfg.goofcord.clientMod == "equicord");
     in
     [
       {
@@ -320,30 +308,31 @@ let
         message = "programs.nixcord.goofcord.enable requires programs.nixcord.goofcord.package to be non-null.";
       }
       {
-        assertion =
-          !cfg.goofcord.enable
-          || !(cfg.goofcord.settings ? assets)
-          || builtins.isAttrs cfg.goofcord.settings.assets;
+        assertion = !cfg.goofcord.enable || builtins.isAttrs goofcordAssets;
         message = "programs.nixcord.goofcord.settings.assets must be an attribute set. Use programs.nixcord.goofcord.extraAssets for additional asset paths or URLs.";
       }
       {
         assertion =
           !cfg.goofcord.enable
-          || !(cfg.goofcord.settings ? assets)
-          || !builtins.isAttrs cfg.goofcord.settings.assets
-          || builtins.all builtins.isString (builtins.attrValues cfg.goofcord.settings.assets);
+          || !builtins.isAttrs goofcordAssets
+          || builtins.all builtins.isString (builtins.attrValues goofcordAssets);
         message = "programs.nixcord.goofcord.settings.assets values must be strings containing local paths or URLs.";
       }
       {
-        assertion = !(hasVencordClient && !hasEquicordClient) || wrongEquicordPlugins == [ ];
+        assertion = enabledClients != [ "vencord" ] || wrongEquicordPlugins == [ ];
         message = "The following Equicord-only plugins are enabled but only Vencord-based clients are active: ${lib.strings.concatStringsSep ", " wrongEquicordPlugins}. These plugins are not available in Vencord.";
       }
       {
-        assertion = !(hasEquicordClient && !hasVencordClient) || wrongVencordPlugins == [ ];
+        assertion = enabledClients != [ "equicord" ] || wrongVencordPlugins == [ ];
         message = "The following Vencord-only plugins are enabled but only Equicord-based clients are active: ${lib.strings.concatStringsSep ", " wrongVencordPlugins}. These plugins are not available in Equicord.";
       }
     ];
 in
 {
-  inherit isPluginEnabled mkPluginKit mkAssertions;
+  inherit
+    isPluginEnabled
+    schemaHasOptionPath
+    mkPluginKit
+    mkAssertions
+    ;
 }

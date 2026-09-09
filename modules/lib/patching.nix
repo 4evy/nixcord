@@ -19,26 +19,33 @@ let
     });
 
   mkBrowserBuild =
-    {
-      cfg,
-      pkg,
-      browserJsPath,
-      browserCssPath,
-    }:
-    (applyPostPatch { inherit cfg pkg; }).overrideAttrs (_old: {
-      buildPhase = ''
-        runHook preBuild
-        pnpm run buildWeb -- --standalone --disable-updater
-        runHook postBuild
-      '';
-      installPhase = ''
-        runHook preInstall
-        mkdir -p "$out"
-        cp ${browserJsPath} "$out/browser.js"
-        cp ${browserCssPath} "$out/browser.css"
-        runHook postInstall
-      '';
-    });
+    { cfg, client }:
+    let
+      browserDir =
+        {
+          vencord = "dist";
+          equicord = "dist/browser";
+        }
+        .${client};
+    in
+    (applyPostPatch {
+      inherit cfg;
+      pkg = cfg.discord.${client}.package;
+    }).overrideAttrs
+      (_old: {
+        buildPhase = ''
+          runHook preBuild
+          pnpm run buildWeb -- --standalone --disable-updater
+          runHook postBuild
+        '';
+        installPhase = ''
+          runHook preInstall
+          mkdir -p "$out"
+          cp ${browserDir}/browser.js "$out/browser.js"
+          cp ${browserDir}/browser.css "$out/browser.css"
+          runHook postInstall
+        '';
+      });
 
 in
 {

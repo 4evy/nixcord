@@ -69,20 +69,13 @@ in
         chatBarButtons = uiElementsOption "chat bar buttons";
         messagePopoverButtons = uiElementsOption "message popover buttons";
       };
-      plugins = lib.lists.foldl' lib.attrsets.recursiveUpdate { } [
-        (import ../plugins/mkPluginOptions.nix {
-          inherit lib;
-          file = ../plugins/shared.json;
-        })
-        (import ../plugins/mkPluginOptions.nix {
-          inherit lib;
-          file = ../plugins/vencord.json;
-        })
-        (import ../plugins/mkPluginOptions.nix {
-          inherit lib;
-          file = ../plugins/equicord.json;
-        })
-      ];
+      plugins = lib.lists.foldl' lib.attrsets.recursiveUpdate { } (
+        map (file: import ../plugins/mkPluginOptions.nix { inherit lib file; }) [
+          ../plugins/shared.json
+          ../plugins/vencord.json
+          ../plugins/equicord.json
+        ]
+      );
     };
   };
 }

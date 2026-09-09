@@ -5,7 +5,7 @@ let
   mkIsQuickCssUsed =
     cfg: appConfig:
     let
-      appQuickCss = builtins.isAttrs appConfig && appConfig ? useQuickCss && appConfig.useQuickCss;
+      appQuickCss = builtins.isAttrs appConfig && (appConfig.useQuickCss or false);
     in
     (cfg.config.useQuickCss || appQuickCss) && cfg.quickCss != "";
 
@@ -43,40 +43,26 @@ let
 
   mkAllFullConfigs =
     cfg: pluginKit:
-    let
-      inherit (pluginKit) mkFullConfig;
-      configSpecs = {
-        vencordFullConfig = {
-          inherit (cfg) extraConfig;
-          baseConfig = cfg.config;
-          clientConfig = cfg.vencordConfig;
-        };
-        equicordFullConfig = {
-          inherit (cfg) extraConfig;
-          baseConfig = cfg.config;
-          clientConfig = cfg.equicordConfig;
-        };
-        vesktopFullConfig = {
-          inherit (cfg) extraConfig;
-          baseConfig = cfg.config;
-          clientConfig = cfg.vesktopConfig;
-          client = "vencord";
-        };
-        equibopFullConfig = {
-          inherit (cfg) extraConfig;
-          baseConfig = cfg.config;
-          clientConfig = cfg.equibopConfig;
-          client = "equicord";
-        };
-        goofcordFullConfig = {
-          inherit (cfg) extraConfig;
-          baseConfig = cfg.config;
-          clientConfig = cfg.goofcordConfig;
-          client = cfg.goofcord.clientMod;
-        };
+    lib.attrsets.mapAttrs'
+      (
+        name: client:
+        lib.attrsets.nameValuePair "${name}FullConfig" (
+          pluginKit.mkFullConfig {
+            inherit client;
+            inherit (cfg) extraConfig;
+            baseConfig = cfg.config;
+            clientConfig = cfg.${name + "Config"};
+          }
+        )
+      )
+      {
+        vencord = null;
+        equicord = null;
+        vesktop = "vencord";
+        equibop = "equicord";
+        goofcord = cfg.goofcord.clientMod;
       };
-    in
-    lib.attrsets.mapAttrs (_name: mkFullConfig) configSpecs;
+
 in
 {
   inherit

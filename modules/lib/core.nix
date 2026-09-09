@@ -15,11 +15,9 @@ let
 
   defaultParseRules = lib.trivial.importJSON ../plugins/parse-rules.json;
 
-  upperNames = lib.lists.unique (defaultParseRules.upperNames ++ parseRules.upperNames);
+  upperNames = defaultParseRules.upperNames ++ parseRules.upperNames;
   upperNamesMask = lib.attrsets.genAttrs upperNames (_: null);
-  lowerPluginTitles = lib.lists.unique (
-    defaultParseRules.lowerPluginTitles ++ parseRules.lowerPluginTitles
-  );
+  lowerPluginTitles = defaultParseRules.lowerPluginTitles ++ parseRules.lowerPluginTitles;
   lowerPluginTitlesMask = lib.attrsets.genAttrs lowerPluginTitles (_: null);
   settingRenames = lib.attrsets.recursiveUpdate defaultParseRules.settingRenames parseRules.settingRenames;
   pluginRenames = lib.attrsets.recursiveUpdate (defaultParseRules.pluginRenames or { }) (

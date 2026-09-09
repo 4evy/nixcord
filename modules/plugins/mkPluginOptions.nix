@@ -26,21 +26,6 @@ let
     "types.listOf types.anything" = lib.types.listOf lib.types.anything;
   };
 
-  normalizeSetting =
-    setting:
-    let
-      normalized = {
-        description = "";
-        example = null;
-        type = null;
-        settings = { };
-      }
-      // setting;
-    in
-    normalized // { settings = lib.attrsets.mapAttrs (_: normalizeSetting) normalized.settings; };
-
-  data = lib.attrsets.mapAttrs (_: normalizeSetting) schema;
-
   resolveDefault =
     type: value:
     if
@@ -57,32 +42,38 @@ let
       value;
 
   mkSettingOption =
-    _name: setting:
-    if setting.type == null then
+    _name:
+    setting@{
+      type ? null,
+      description ? "",
+      example ? null,
+      ...
+    }:
+    if type == null then
       # Nested plugin config (recursive)
       mkPlugin _name setting
     else
-      let
-        commonAttrs = {
-          inherit (setting) description;
+      lib.options.mkOption (
+        {
+          inherit description;
+          type = if type == "types.enum" then lib.types.enum (setting.enumValues or [ ]) else typeMap.${type};
         }
         // lib.attrsets.optionalAttrs (setting ? default) {
-          default = resolveDefault setting.type setting.default;
+          default = resolveDefault type setting.default;
         }
-        // lib.attrsets.optionalAttrs (setting.example != null) { inherit (setting) example; };
-        typeAttr =
-          if setting.type == "types.enum" then
-            { type = lib.types.enum (setting.enumValues or [ ]); }
-          else
-            { type = typeMap.${setting.type}; };
-      in
-      lib.options.mkOption (typeAttr // commonAttrs);
+        // lib.attrsets.optionalAttrs (example != null) { inherit example; }
+      );
 
   mkPlugin =
-    _name: plugin:
+    _name:
     {
-      enable = lib.options.mkEnableOption plugin.description;
+      description ? "",
+      settings ? { },
+      ...
+    }:
+    {
+      enable = lib.options.mkEnableOption description;
     }
-    // lib.attrsets.mapAttrs mkSettingOption plugin.settings;
+    // lib.attrsets.mapAttrs mkSettingOption settings;
 in
-lib.attrsets.mapAttrs mkPlugin data
+lib.attrsets.mapAttrs mkPlugin schema
