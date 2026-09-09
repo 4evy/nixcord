@@ -42,8 +42,6 @@ in
 packages
 // moduleOutputs
 // {
-  inherit packages;
-
-  overlay = overlay;
+  inherit packages overlay;
   overlays.default = overlay;
 }

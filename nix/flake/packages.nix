@@ -1,4 +1,4 @@
-{ inputs, ... }:
+{ inputs, lib, ... }:
 {
   imports = [ inputs.flake-parts.flakeModules.easyOverlay ];
 
@@ -9,13 +9,10 @@
       ...
     }:
     let
-      revision =
-        if inputs.self ? rev && inputs.self.rev != null then
-          inputs.self.rev
-        else if inputs.self ? dirtyRev && inputs.self.dirtyRev != null then
-          inputs.self.dirtyRev
-        else
-          "main";
+      revision = lib.lists.findFirst (rev: rev != null) "main" [
+        (inputs.self.rev or null)
+        (inputs.self.dirtyRev or null)
+      ];
     in
     {
       packages = import ../../pkgs {
