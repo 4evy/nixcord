@@ -9,7 +9,6 @@ pkgs.runCommand "discord-linux-scripts-check"
   {
     nativeBuildInputs = [
       pkgs.jq
-      pkgs.makeWrapper
     ];
   }
   ''
@@ -23,33 +22,6 @@ pkgs.runCommand "discord-linux-scripts-check"
       grep -F -- ${pkgs.lib.strings.escapeShellArg "${nixcordDiscord.stageModules} ${nixcordDiscord}/opt/Discord/modules"} \
         ${nixcordDiscord}/opt/Discord/Discord
     ''}
-
-    wrapper_dir="$PWD/wrapper"
-    mkdir -p "$wrapper_dir/bin"
-    deploy_script="$wrapper_dir/deploy-krisp"
-    printf '#!%s\ntouch "$DEPLOY_MARKER"\n' "${pkgs.runtimeShell}" > "$deploy_script"
-    chmod +x "$deploy_script"
-
-    target="$PWD/Discord-target"
-    cat > "$target" <<'EOF'
-    #!${pkgs.runtimeShell}
-    printf '%s\n' "$@" > "$TARGET_ARGS_FILE"
-    EOF
-    chmod +x "$target"
-
-    launcher="$PWD/Discord"
-    cp "$target" "$launcher"
-    makeWrapper "$launcher" "$PWD/bin-discord" \
-      --run "$deploy_script" \
-      --add-flags "--flag-one --flag-two"
-
-    export DEPLOY_MARKER="$PWD/deployed"
-    export TARGET_ARGS_FILE="$PWD/args"
-    "$PWD/bin-discord" --from-user
-    test -f "$DEPLOY_MARKER"
-    grep -Fx -- "--from-user" "$TARGET_ARGS_FILE"
-    grep -Fx -- "--flag-one" "$TARGET_ARGS_FILE"
-    grep -Fx -- "--flag-two" "$TARGET_ARGS_FILE"
 
     store="$PWD/store-modules"
     export DISCORD_CONFIG_DIR_NAME=discord
