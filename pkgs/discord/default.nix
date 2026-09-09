@@ -46,18 +46,11 @@ let
   basePackage = variantPackages.${branch} or null;
   basePackageOverride = if basePackage != null then basePackage.override or null else null;
   basePackageOverrideArgs =
-    if builtins.isAttrs basePackageOverride then
-      basePackageOverride.__functionArgs or { }
-    else if lib.trivial.isFunction basePackageOverride then
+    if lib.trivial.isFunction basePackageOverride then
       lib.trivial.functionArgs basePackageOverride
     else
       { };
   basePackageSupportsFHSEnv = basePackageOverrideArgs ? useFHSEnv;
-  enabledDiscordModsCount = lib.lists.count lib.trivial.id [
-    withVencord
-    withEquicord
-  ];
-
   binaryName =
     if stdenvNoCC.hostPlatform.isLinux then
       {
@@ -196,9 +189,9 @@ let
     else
       commandLineArgs;
   commandLineArgsList = if builtins.isList commandLineArgs then commandLineArgs else [ ];
-  appDataDirString = if appDataDir == null then "" else appDataDir;
+  appDataDirString = lib.trivial.defaultTo "" appDataDir;
   appDataDirFile = writeText "nixcord-app-data-dir" appDataDirString;
-  modDataDirString = if modDataDir == null then "" else modDataDir;
+  modDataDirString = lib.trivial.defaultTo "" modDataDir;
   modDataDirFile = writeText "nixcord-mod-data-dir" modDataDirString;
 
   # Embed bytes directly: escapeC only supports printable ASCII.
@@ -267,7 +260,7 @@ assert lib.asserts.assertMsg (
   basePackage != null
 ) "nixcord Discord: branch '${branch}' is unavailable on this platform";
 assert lib.asserts.assertMsg (
-  enabledDiscordModsCount <= 1
+  !(withVencord && withEquicord)
 ) "nixcord Discord: Vencord and Equicord cannot both be enabled";
 assert lib.asserts.assertMsg (
   appDataDir == null || (stdenvNoCC.hostPlatform.isDarwin && lib.strings.hasPrefix "/" appDataDir)
