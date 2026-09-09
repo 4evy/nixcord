@@ -18,41 +18,6 @@ let
   nixcordRootString = toString nixcordRoot;
   nixcordRootPrefix = "${nixcordRootString}/";
 
-  # Minimal Home Manager-shaped module context for evaluating Nixcord options.
-  baseHomeManagerModule =
-    { lib, ... }:
-    let
-      visible = false;
-    in
-    {
-      options = {
-        home.homeDirectory = lib.options.mkOption {
-          inherit visible;
-          type = lib.types.path;
-          default = "/home/user";
-          description = "User's home directory";
-        };
-
-        xdg.configHome = lib.options.mkOption {
-          inherit visible;
-          type = lib.types.path;
-          default = "/home/user/.config";
-          description = "XDG config directory";
-        };
-      };
-
-      config = {
-        home.homeDirectory = lib.modules.mkDefault "/home/user";
-        xdg.configHome = lib.modules.mkDefault "/home/user/.config";
-      };
-    };
-
-  docsModules = [
-    baseHomeManagerModule
-    ../modules/options
-    { _module.check = false; }
-  ];
-
   mkGitHubDeclaration = subpath: line: {
     url =
       "https://github.com/4evy/nixcord/blob/${revision}/${subpath}"
@@ -155,7 +120,10 @@ let
     };
 
   evaluatedModules = lib.modules.evalModules {
-    modules = docsModules;
+    modules = [
+      ../modules/options
+      { _module.check = false; }
+    ];
     class = "homeManager";
     specialArgs = { inherit pkgs; };
   };
