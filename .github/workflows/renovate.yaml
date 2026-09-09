@@ -44,36 +44,3 @@ jobs:
           RENOVATE_GIT_AUTHOR: "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
           RENOVATE_ONBOARDING: "false"
           RENOVATE_REPOSITORIES: '["${{ github.repository }}"]'
-
-      - name: Synchronize npins with the updated flake lock
-        env:
-          GH_TOKEN: ${{ github.token }}
-          TARGET_REF: ${{ github.event.repository.default_branch }}
-        run: |
-          set -euo pipefail
-          gh auth setup-git
-
-          for attempt in {1..5}; do
-            git fetch origin "$TARGET_REF"
-            git switch --force-create npins-sync "origin/$TARGET_REF"
-            ./nix/sync-npins.sh
-
-            if git diff --quiet -- npins/sources.json; then
-              echo "::notice::npins already matches the updated flake lock"
-              exit 0
-            fi
-
-            if bash .github/scripts/commit-changes.sh \
-              "$TARGET_REF" \
-              "chore(deps): sync npins with flake lock" \
-              "" \
-              npins/sources.json; then
-              exit 0
-            fi
-
-            if [[ "$attempt" -eq 5 ]]; then
-              echo "::error::Failed to commit npins synchronization after 5 attempts"
-              exit 1
-            fi
-            git restore --source=HEAD --staged --worktree -- npins/sources.json
-          done
