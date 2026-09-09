@@ -2,7 +2,6 @@
   description = "Declarative Discord clients and mods for NixOS, Home Manager, and nix-darwin";
 
   inputs = {
-    flake-parts.url = "github:hercules-ci/flake-parts";
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
     nixpkgs-nixcord.url = "github:NixOS/nixpkgs/nixos-26.05";
     home-manager = {
@@ -19,9 +18,5 @@
     };
   };
 
-  outputs =
-    inputs:
-    inputs.flake-parts.lib.mkFlake { inherit inputs; } {
-      imports = [ ./nix/flake ];
-    };
+  outputs = inputs: import ./nix/flake { inherit inputs; };
 }
