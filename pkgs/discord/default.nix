@@ -2,6 +2,7 @@
   stdenvNoCC,
   stdenv,
   fetchurl,
+  fetchzip,
   lib,
   discord,
   discord-ptb ? null,
@@ -14,6 +15,8 @@
   brotli,
   python3,
   runCommand,
+  asar,
+  nodejs,
   darwin ? null,
   rcodesign ? null,
 
@@ -84,6 +87,21 @@ let
       "$out/opt/${binaryName}/modules"
     else
       "$out/Applications/${binaryName}.app/Contents/Resources/modules";
+
+  resourcesDir =
+    if stdenvNoCC.hostPlatform.isLinux then
+      "$out/opt/${binaryName}/resources"
+    else
+      "$out/Applications/${binaryName}.app/Contents/Resources";
+
+  # TypeScript 7 has no compatible compiler API. Use the latest 6.x API for
+  # the patcher, independently of the repository's native tsc CLI.
+  typescript = fetchzip {
+    name = "typescript-6.0.3";
+    url = "https://registry.npmjs.org/typescript/-/typescript-6.0.3.tgz";
+    hash = "sha256-3+cPVJRyySKkVrRsOld6ShMzHwOP7UFFy0mrq3ZoBKA=";
+  };
+  patchUpdater = "${lib.meta.getExe nodejs} ${./scripts/patch-updater.cts} ${typescript}/lib/typescript.js";
 
   sourceSet = import ./lib/sources.nix {
     inherit
@@ -197,7 +215,7 @@ let
     else
       "require('path').join(process.env.DISCORD_USER_DATA_DIR || require('path').join(require('os').userInfo().homedir, 'Library', 'Application Support'), '${configDirName}', '${version}', 'modules', 'discord_krisp')";
 
-  darwinOpenasar = openasar.overrideAttrs (old: {
+  pinnedOpenasar = openasar.overrideAttrs (old: {
     postPatch = (old.postPatch or "") + ''
       # Match stock Discord: the environment names the base, not one branch's
       # profile. Staging, Krisp, and the declarative settings use that contract.
@@ -205,6 +223,11 @@ let
         --replace-fail \
           "process.env.DISCORD_USER_DATA_DIR ?? join(app.getPath('appData'), appDir)" \
           "join(process.env.DISCORD_USER_DATA_DIR ?? app.getPath('appData'), appDir)"
+      substituteInPlace src/bootstrap.js \
+        --replace-fail \
+          "if (Constants.USE_NEW_UPDATER && updater.tryInitUpdater(" \
+          "if (!buildInfo.disableUpdater && Constants.USE_NEW_UPDATER && updater.tryInitUpdater("
+      ${patchUpdater} openasar src/updater/moduleUpdater.js
     '';
   });
 
@@ -220,7 +243,7 @@ let
   // lib.attrsets.optionalAttrs (vencord != null) { inherit vencord; }
   // lib.attrsets.optionalAttrs (equicord != null) { inherit equicord; }
   // lib.attrsets.optionalAttrs (openasar != null) {
-    openasar = if stdenvNoCC.hostPlatform.isDarwin && withOpenASAR then darwinOpenasar else openasar;
+    openasar = if withOpenASAR then pinnedOpenasar else openasar;
   }
   // lib.attrsets.optionalAttrs (stdenvNoCC.hostPlatform.isLinux && basePackageSupportsFHSEnv) {
     # Keep nixcord's patched, non-FHS package even when nixpkgs defaults to an
@@ -253,8 +276,8 @@ assert lib.asserts.assertMsg (
   modDataDir == null || (stdenvNoCC.hostPlatform.isDarwin && lib.strings.hasPrefix "/" modDataDir)
 ) "nixcord Discord: modDataDir must be an absolute Darwin path";
 assert lib.asserts.assertMsg (
-  !stdenvNoCC.hostPlatform.isDarwin || !withOpenASAR || openasar != null
-) "nixcord Discord: macOS OpenASAR requires an openasar package for data directory patching";
+  !withOpenASAR || openasar != null
+) "nixcord Discord: OpenASAR requires an openasar package for updater and data directory patching";
 package.overrideAttrs (
   oldAttrs:
   let
@@ -275,6 +298,29 @@ package.overrideAttrs (
 
     postInstall =
       (oldAttrs.postInstall or "")
+      + ''
+        # Current Discord ignores USE_NEW_UPDATER in settings.json. Keep both
+        # Linux and Darwin on the legacy loader with Nix-staged modules. On
+        # Darwin, downloaded unpatched Krisp also rejects our ad-hoc signature.
+        ${python3.interpreter} - "${resourcesDir}/build_info.json" <<'PY'
+        import json
+        import sys
+        from pathlib import Path
+
+        path = Path(sys.argv[1])
+        data = json.loads(path.read_text())
+        data["disableUpdater"] = True
+        path.write_text(json.dumps(data) + "\n")
+        PY
+      ''
+      + lib.strings.optionalString (!withOpenASAR) ''
+        host_asar="${resourcesDir}/${if withVencord || withEquicord then "_app.asar" else "app.asar"}"
+        ${lib.meta.getExe asar} extract "$host_asar" nixcord-host-asar
+        ${patchUpdater} stock nixcord-host-asar/bundle.js
+        rm "$host_asar"
+        ${lib.meta.getExe asar} pack nixcord-host-asar "$host_asar"
+        rm -r nixcord-host-asar
+      ''
       + lib.strings.optionalString hasKrispModule ''
         rm -rf "${modulesDir}/discord_krisp"
         mkdir -p "${modulesDir}/discord_krisp"

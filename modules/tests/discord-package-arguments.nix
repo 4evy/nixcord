@@ -2,6 +2,7 @@
 
 let
   discordAvailable = pkgs.lib.meta.availableOn pkgs.stdenv.hostPlatform pkgs.discord;
+  discordPackage = pkgs.callPackage ../../pkgs/discord { };
 
   packageEvaluationFails =
     args: package: !(builtins.tryEval (pkgs.callPackage package args).drvPath).success;
@@ -56,5 +57,10 @@ pkgs.runCommand "discord-package-arguments-test" { } ''
     else
       "exit 1"
   }
+  ${pkgs.lib.strings.optionalString (discordAvailable && pkgs.stdenv.hostPlatform.isDarwin) ''
+    ${pkgs.jq}/bin/jq -e '.disableUpdater == true' \
+      '${discordPackage}/Applications/Discord.app/Contents/Resources/build_info.json'
+    echo 'Darwin native module updater is disabled'
+  ''}
   touch "$out"
 ''
