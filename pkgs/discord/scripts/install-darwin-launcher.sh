@@ -7,18 +7,20 @@ fi
 
 binary_name=$1
 launcher_c=$2
-disable_breaking_updates=$3
+prepare_data=$3
 stage_modules=$4
 modules_dir=$5
 deploy_krisp=$6
 target=$7
 enable_krisp=$8
-command_line_arg_declarations=$9
-command_line_args=${10}
-command_line_args_count=${11}
-cc=${12}
-rcodesign=${13}
-entitlements=${14}
+command_line_args=$9
+cc=${10}
+rcodesign=${11}
+entitlements=${12}
+app_data_dir_file=${13}
+mod_data_dir_file=${14}
+mod_data_env=${15}
+mod_data_suffix=${16}
 
 launcher_cflags=(
   -std=c23
@@ -46,18 +48,25 @@ mv "$app_executable" "$app_executable_unwrapped"
 
 cp "$launcher_c" nixcord-discord-launcher.c
 substituteInPlace nixcord-discord-launcher.c \
-  --replace-fail "@disable_breaking_updates@" "$disable_breaking_updates" \
+  --replace-fail "@prepare_data@" "$prepare_data" \
+  --replace-fail "@app_data_dir_file@" "$app_data_dir_file" \
+  --replace-fail "@mod_data_dir_file@" "$mod_data_dir_file" \
+  --replace-fail "@mod_data_env@" "$mod_data_env" \
+  --replace-fail "@mod_data_suffix@" "$mod_data_suffix" \
   --replace-fail "@stage_modules@" "$stage_modules" \
   --replace-fail "@modules_dir@" "$modules_dir" \
   --replace-fail "@deploy_krisp@" "$deploy_krisp" \
   --replace-fail "@target@" "$target" \
   --replace-fail "@enable_krisp@" "$enable_krisp" \
-  --replace-fail "@command_line_arg_declarations@" "$command_line_arg_declarations" \
-  --replace-fail "@command_line_args@" "$command_line_args" \
-  --replace-fail "@command_line_args_count@" "$command_line_args_count"
+  --replace-fail "@command_line_args@" "$command_line_args"
 
 "$cc" "${launcher_cflags[@]}" -Os -o "$app_executable" nixcord-discord-launcher.c
 chmod +x "$app_executable"
+
+# The upstream CLI wrapper runs helpers against the old, protected profile.
+# Finder and the CLI must both enter the same native launcher first.
+rm "$out/bin/$binary_name"
+ln -s "$app_executable" "$out/bin/$binary_name"
 
 "$rcodesign" sign \
   --exclude "Contents/Resources/modules/**" \

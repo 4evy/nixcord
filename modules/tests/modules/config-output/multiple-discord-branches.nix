@@ -13,6 +13,8 @@ let
       withKrisp ? false,
       withOpenASAR ? false,
       withVencord ? false,
+      appDataDir ? null,
+      modDataDir ? null,
     }:
     pkgs.runCommand "nixcord-discord-${branch}-final-stub" {
       passthru.nixcordOverrideArgs = {
@@ -25,6 +27,8 @@ let
           withKrisp
           withOpenASAR
           withVencord
+          appDataDir
+          modDataDir
           ;
       };
       passthru.nixcordCommandLineArgsList = true;
@@ -54,7 +58,7 @@ let
   packages = cfg.finalPackage.discordBranches;
   configBase =
     if pkgs.stdenvNoCC.hostPlatform.isDarwin then
-      "/home/testuser/Library/Application Support"
+      "/home/testuser/Library/Application Support/nixcord"
     else
       "/home/testuser/.config";
   configDirs = {
@@ -84,6 +88,8 @@ in
       && args.vencord == null
       && args.withKrisp
       && args.withOpenASAR
+      && args.appDataDir == (if pkgs.stdenvNoCC.hostPlatform.isDarwin then configBase else null)
+      && args.modDataDir == (if pkgs.stdenvNoCC.hostPlatform.isDarwin then cfg.configDir else null)
       && args.commandLineArgs == [ "--ozone-platform-hint=auto" ]
     ) branches;
     true;
@@ -107,6 +113,37 @@ in
     assert config.home.activation ? nixcord-discord-ptb-settings;
     assert config.home.activation ? nixcord-discord-canary-settings;
     true;
+
+  "Darwin profile overrides reach every branch and migration precedes settings" =
+    if !pkgs.stdenvNoCC.hostPlatform.isDarwin then
+      true
+    else
+      let
+        custom = testLib.eval.hm (
+          nixcordConfig
+          // {
+            configDir = "/tmp/custom mod settings";
+            discord = nixcordConfig.discord // {
+              appDataDir = "/tmp/custom profiles";
+            };
+          }
+        );
+        customCfg = custom.programs.nixcord;
+      in
+      assert customCfg.discord.configDir == "/tmp/custom profiles/discord";
+      assert lib.lists.all (
+        branch:
+        let
+          args = customCfg.finalPackage.discordBranches.${branch}.passthru.nixcordOverrideArgs;
+        in
+        args.appDataDir == "/tmp/custom profiles" && args.modDataDir == "/tmp/custom mod settings"
+      ) branches;
+      assert lib.lists.all (
+        branch:
+        builtins.elem "disableDiscordUpdates"
+          custom.home.activation."nixcord-discord-${branch}-settings".after
+      ) branches;
+      true;
 
   "duplicate Discord branches are normalized" =
     let

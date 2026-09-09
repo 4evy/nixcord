@@ -131,6 +131,18 @@ let
           // lib.attrsets.optionalAttrs (cfg.discord.krisp.enable && discordPackageSupportsKrisp) {
             withKrisp = true;
           }
+          //
+            lib.attrsets.optionalAttrs
+              (stdenv.hostPlatform.isDarwin && packageSupportsOverride cfg.discord.package "appDataDir")
+              {
+                appDataDir = builtins.dirOf (toString cfg.discord.configDir);
+              }
+          //
+            lib.attrsets.optionalAttrs
+              (stdenv.hostPlatform.isDarwin && packageSupportsOverride cfg.discord.package "modDataDir")
+              {
+                modDataDir = toString cfg.configDir;
+              }
         );
 
       discordBranches = lib.attrsets.genAttrs (getDiscordBranches cfg) mkDiscord;

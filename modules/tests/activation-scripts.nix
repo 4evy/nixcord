@@ -59,6 +59,18 @@ let
     lib.strings.replaceString dorionStorage "${testRoot}/dorion-storage"
       scripts.setupDorionVencordSettings;
   sqlite = lib.meta.getExe pkgs.sqlite;
+  migratingScripts = import ../lib/activation.nix {
+    inherit lib pkgs;
+    cfg = cfg // {
+      homeDirectory = "${testRoot}/migration-home";
+      discord = cfg.discord // {
+        appDataDir = "${testRoot}/migrated";
+        configDir = "${testRoot}/migrated/discord";
+      };
+    };
+    mkVencordCfg = lib.trivial.id;
+    wrapScript = lib.trivial.id;
+  };
 in
 pkgs.runCommand "activation-scripts-test"
   {
@@ -143,6 +155,21 @@ pkgs.runCommand "activation-scripts-test"
       "SELECT hex(value) FROM ItemTable WHERE key = 'VencordSettings';")
     test "$actual_hex" = "$expected_hex"
     test "$(${sqlite} "$unrelated_db" 'SELECT COUNT(*) FROM ItemTable;')" -eq 0
+
+    ${lib.strings.optionalString pkgs.stdenvNoCC.hostPlatform.isDarwin ''
+      # Migration must happen before activation creates or writes the new profile.
+      old_profile=${lib.strings.escapeShellArg "${testRoot}/migration-home/Library/Application Support/discord"}
+      mkdir -p "$old_profile"
+      printf '%s\n' '{"SESSION":"preserved"}' > "$old_profile/settings.json"
+      ${lib.strings.replaceString install (lib.meta.getExe' pkgs.coreutils "true")
+        migratingScripts.disableDiscordUpdates
+      }
+      jq -e '.SESSION == "preserved" and .SKIP_HOST_UPDATE and .SKIP_MODULE_UPDATE' \
+        ${lib.strings.escapeShellArg "${testRoot}/migrated/discord/settings.json"}
+      jq -e '.SESSION == "preserved" and (has("SKIP_HOST_UPDATE") | not)' "$old_profile/settings.json"
+      test -d ${lib.strings.escapeShellArg "${testRoot}/migrated/discordptb"}
+      test -d ${lib.strings.escapeShellArg "${testRoot}/migrated/discordcanary"}
+    ''}
 
     rm -rf ${lib.strings.escapeShellArg testRoot}
     touch "$out"

@@ -9,15 +9,38 @@ let
   inherit (import ./discord.nix { inherit lib; })
     disabledUpdateSettings
     getDiscordConfigDirs
+    packageSupportsOverride
     ;
 
   inherit (cfg) homeDirectory xdgConfigHome;
   disabledUpdateSettingsJson = builtins.toJSON disabledUpdateSettings;
   disabledUpdateSettingsJq = lib.strings.escapeShellArg ". + ${disabledUpdateSettingsJson}";
+  discordConfigBase =
+    if
+      (cfg.discord.appDataDir or null) != null
+      || packageSupportsOverride (cfg.discord.package or { }) "appDataDir"
+    then
+      builtins.dirOf (toString cfg.discord.configDir)
+    else
+      "${homeDirectory}/Library/Application Support";
+  migrateDiscordProfiles =
+    lib.strings.optionalString
+      (
+        pkgs.stdenvNoCC.hostPlatform.isDarwin
+        && discordConfigBase != "${homeDirectory}/Library/Application Support"
+      )
+      ''
+        for config_dir in ${lib.strings.escapeShellArgs (getDiscordConfigDirs cfg)}; do
+          ${pkgs.python3.interpreter} ${../../pkgs/discord/scripts/migrate-darwin-profile.py} \
+            ${lib.strings.escapeShellArg "${homeDirectory}/Library/Application Support"}/"$(basename "$config_dir")" \
+            "$config_dir"
+        done
+      '';
 in
 {
   disableDiscordUpdates = wrapScript ''
     set -euo pipefail
+    ${migrateDiscordProfiles}
     ${lib.meta.getExe' pkgs.coreutils "install"} -d -o ${lib.strings.escapeShellArg cfg.user} ${lib.strings.optionalString pkgs.stdenvNoCC.hostPlatform.isDarwin "-g staff"} ${lib.strings.escapeShellArg cfg.configDir}
     for config_dir in ${lib.strings.escapeShellArgs (getDiscordConfigDirs cfg)}; do
       ${lib.meta.getExe' pkgs.coreutils "install"} -d -o ${lib.strings.escapeShellArg cfg.user} ${lib.strings.optionalString pkgs.stdenvNoCC.hostPlatform.isDarwin "-g staff"} "$config_dir"
@@ -34,10 +57,7 @@ in
 
     config_base=${
       lib.strings.escapeShellArg (
-        if pkgs.stdenvNoCC.hostPlatform.isDarwin then
-          "${homeDirectory}/Library/Application Support"
-        else
-          xdgConfigHome
+        if pkgs.stdenvNoCC.hostPlatform.isDarwin then discordConfigBase else xdgConfigHome
       )
     }
 

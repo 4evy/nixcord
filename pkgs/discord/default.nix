@@ -8,6 +8,7 @@
   discord-canary ? null,
   discord-development ? null,
   writeShellApplication,
+  writeText,
   cacert,
   jq,
   brotli,
@@ -26,6 +27,10 @@
   openasar ? null,
   commandLineArgs ? [ ],
   withKrisp ? false,
+  # Darwin base directory; Discord appends its branch name. Null resolves at
+  # launch to $HOME/Library/Application Support/nixcord.
+  appDataDir ? null,
+  modDataDir ? null,
 }:
 let
   variantPackages = {
@@ -158,32 +163,50 @@ let
       ;
   };
 
+  prepareData = writeShellApplication {
+    name = "discord-prepare-data";
+    text = ''
+      exec ${python3.interpreter} ${./scripts/migrate-darwin-profile.py} \
+        "$HOME/Library/Application Support/${configDirName}" \
+        "''${DISCORD_USER_DATA_DIR:?}/${configDirName}"
+    '';
+  };
+
   commandLineArgsString =
     if builtins.isList commandLineArgs then
       lib.strings.escapeShellArgs commandLineArgs
     else
       commandLineArgs;
   commandLineArgsList = if builtins.isList commandLineArgs then commandLineArgs else [ ];
+  appDataDirString = if appDataDir == null then "" else appDataDir;
+  appDataDirFile = writeText "nixcord-app-data-dir" appDataDirString;
+  modDataDirString = if modDataDir == null then "" else modDataDir;
+  modDataDirFile = writeText "nixcord-mod-data-dir" modDataDirString;
 
-  indexedCommandLineArgs = lib.lists.imap0 (index: arg: {
-    inherit index arg;
-  }) commandLineArgsList;
-  commandLineArgDeclarations = lib.strings.concatMapStringsSep "\n" (
-    { index, arg }:
-    "static char command_line_arg_${toString index}[] = \"${lib.strings.escapeC (lib.strings.stringToCharacters arg) arg}\";"
-  ) indexedCommandLineArgs;
-  commandLineArgPointers = lib.strings.concatMapStringsSep ", " (
-    { index, ... }: "command_line_arg_${toString index}"
-  ) indexedCommandLineArgs;
-  commandLineArgPointersWithComma = lib.strings.optionalString (
-    commandLineArgPointers != ""
-  ) "${commandLineArgPointers},";
+  # Embed bytes directly: escapeC only supports printable ASCII.
+  commandLineArgsC = lib.strings.concatMapStrings (arg: ''
+    (char[]){
+    #embed "${writeText "nixcord-command-line-argument" arg}" suffix(,)
+      0
+    },
+  '') commandLineArgsList;
 
   krispRuntimePath =
     if stdenvNoCC.hostPlatform.isLinux then
       "require('path').join(process.env.DISCORD_USER_DATA_DIR || process.env.XDG_CONFIG_HOME || require('path').join(require('os').homedir(), '.config'), '${configDirName}', '${version}', 'modules', 'discord_krisp')"
     else
       "require('path').join(process.env.DISCORD_USER_DATA_DIR || require('path').join(require('os').userInfo().homedir, 'Library', 'Application Support'), '${configDirName}', '${version}', 'modules', 'discord_krisp')";
+
+  darwinOpenasar = openasar.overrideAttrs (old: {
+    postPatch = (old.postPatch or "") + ''
+      # Match stock Discord: the environment names the base, not one branch's
+      # profile. Staging, Krisp, and the declarative settings use that contract.
+      substituteInPlace src/paths.js \
+        --replace-fail \
+          "process.env.DISCORD_USER_DATA_DIR ?? join(app.getPath('appData'), appDir)" \
+          "join(process.env.DISCORD_USER_DATA_DIR ?? app.getPath('appData'), appDir)"
+    '';
+  });
 
   overrideArgs = {
     inherit
@@ -196,7 +219,9 @@ let
   }
   // lib.attrsets.optionalAttrs (vencord != null) { inherit vencord; }
   // lib.attrsets.optionalAttrs (equicord != null) { inherit equicord; }
-  // lib.attrsets.optionalAttrs (openasar != null) { inherit openasar; }
+  // lib.attrsets.optionalAttrs (openasar != null) {
+    openasar = if stdenvNoCC.hostPlatform.isDarwin && withOpenASAR then darwinOpenasar else openasar;
+  }
   // lib.attrsets.optionalAttrs (stdenvNoCC.hostPlatform.isLinux && basePackageSupportsFHSEnv) {
     # Keep nixcord's patched, non-FHS package even when nixpkgs defaults to an
     # FHS wrapper for unmodified Krisp.
@@ -221,6 +246,15 @@ assert lib.asserts.assertMsg (
 assert lib.asserts.assertMsg (
   enabledDiscordModsCount <= 1
 ) "nixcord Discord: Vencord and Equicord cannot both be enabled";
+assert lib.asserts.assertMsg (
+  appDataDir == null || (stdenvNoCC.hostPlatform.isDarwin && lib.strings.hasPrefix "/" appDataDir)
+) "nixcord Discord: appDataDir must be an absolute Darwin path";
+assert lib.asserts.assertMsg (
+  modDataDir == null || (stdenvNoCC.hostPlatform.isDarwin && lib.strings.hasPrefix "/" modDataDir)
+) "nixcord Discord: modDataDir must be an absolute Darwin path";
+assert lib.asserts.assertMsg (
+  !stdenvNoCC.hostPlatform.isDarwin || !withOpenASAR || openasar != null
+) "nixcord Discord: macOS OpenASAR requires an openasar package for data directory patching";
 package.overrideAttrs (
   oldAttrs:
   let
@@ -262,18 +296,31 @@ package.overrideAttrs (
         source ${./scripts/install-darwin-launcher.sh} \
           ${lib.strings.escapeShellArg binaryName} \
           ${./src/discord-launcher.c} \
-          ${lib.meta.getExe oldPassthru.disableBreakingUpdates} \
+          ${lib.meta.getExe prepareData} \
           ${lib.meta.getExe stageModules} \
           "${modulesDir}" \
           ${lib.strings.escapeShellArg (lib.strings.optionalString hasDeployKrisp (lib.meta.getExe deployKrisp))} \
           "$out/Applications/${binaryName}.app/Contents/MacOS/${binaryName}.unwrapped" \
           ${if hasDeployKrisp then "1" else "0"} \
-          ${lib.strings.escapeShellArg commandLineArgDeclarations} \
-          ${lib.strings.escapeShellArg commandLineArgPointersWithComma} \
-          ${toString (builtins.length commandLineArgsList)} \
+          ${lib.strings.escapeShellArg commandLineArgsC} \
           ${stdenv.cc}/bin/cc \
           ${lib.meta.getExe rcodesign} \
-          ${darwinEntitlements}
+          ${darwinEntitlements} \
+          ${appDataDirFile} \
+          ${modDataDirFile} \
+          ${
+            lib.strings.escapeShellArg (
+              if withEquicord then
+                "EQUICORD_USER_DATA_DIR"
+              else if withVencord then
+                "VENCORD_USER_DATA_DIR"
+              else
+                ""
+            )
+          } \
+          ${lib.strings.escapeShellArg "/Library/Application Support/${
+            if withEquicord then "Equicord" else "Vencord"
+          }"}
       '';
   }
   // lib.attrsets.optionalAttrs stdenvNoCC.hostPlatform.isLinux {

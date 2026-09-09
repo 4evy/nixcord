@@ -71,7 +71,7 @@ let
           if pkgs.stdenvNoCC.hostPlatform.isLinux then
             "/srv/config/testuser/discord"
           else
-            "/srv/home/testuser/Library/Application Support/discord"
+            "/srv/home/testuser/Library/Application Support/nixcord/discord"
         )
       &&
         hm.goofcord.configDir == (
@@ -96,7 +96,7 @@ let
     "nix-darwin paths come from the configured user home" =
       darwin.homeDirectory == "/Volumes/Users/testuser"
       && darwin.xdgConfigHome == "/Volumes/Users/testuser/.config"
-      && darwin.discord.configDir == "/Volumes/Users/testuser/Library/Application Support/discord"
+      && darwin.discord.configDir == "/Volumes/Users/testuser/Library/Application Support/nixcord/discord"
       &&
         darwin.goofcord.configDir
         == "/Volumes/Users/testuser/Library/Application Support/goofcord/GoofCord";

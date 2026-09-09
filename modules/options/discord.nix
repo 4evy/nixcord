@@ -6,6 +6,7 @@
   ...
 }:
 let
+  inherit (import ../lib/discord.nix { inherit lib; }) packageSupportsOverride;
   branchType = lib.types.enum [
     "stable"
     "ptb"
@@ -65,6 +66,33 @@ in
     configDir = lib.options.mkOption {
       type = lib.types.path;
       description = "Config directory for Discord.";
+    };
+    appDataDir = lib.options.mkOption {
+      type = lib.types.nullOr (lib.types.addCheck lib.types.str (lib.strings.hasPrefix "/"));
+      default =
+        if
+          pkgs.stdenvNoCC.hostPlatform.isDarwin
+          && packageSupportsOverride config.programs.nixcord.discord.package "appDataDir"
+        then
+          "${config.programs.nixcord.homeDirectory}/Library/Application Support/nixcord"
+        else
+          null;
+      defaultText = lib.options.literalExpression ''
+        if pkgs.stdenvNoCC.hostPlatform.isDarwin && packageSupportsAppDataDir then
+          "''${config.programs.nixcord.homeDirectory}/Library/Application Support/nixcord"
+        else null
+      '';
+      description = ''
+        Base directory for Discord profiles on macOS. Discord appends its branch
+        name (discord, discordptb, discordcanary, or discorddevelopment).
+        Existing profiles are copied here automatically before activation or
+        first launch. The original profiles are retained. Quit Discord before
+        migrating; macOS 27 may require permission to read the old profile.
+        The default avoids macOS 27's vendor-protected Discord data directory.
+        Only supported by Nixcord's Discord package on macOS. Null uses the
+        legacy location in modules. An explicit discord.configDir takes
+        precedence and must end with the primary branch's directory name.
+      '';
     };
     vencord = {
       enable = lib.options.mkEnableOption "Vencord for Discord (non-Vesktop)";

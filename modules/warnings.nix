@@ -4,6 +4,7 @@
   config,
   lib,
   options,
+  pkgs,
   ...
 }:
 let
@@ -71,6 +72,8 @@ let
     && !cfg.discord.silenceNoModClientWarning;
 
   inherit (import ./lib/discord.nix { inherit lib; })
+    branchDirName
+    getPrimaryDiscordBranch
     getDiscordConfigDirs
     packageSupportsOverride
     ;
@@ -111,6 +114,25 @@ in
           ;
       }
       ++ [
+        {
+          assertion =
+            !cfg.discord.enable
+            || cfg.discord.appDataDir == null
+            || (
+              pkgs.stdenvNoCC.hostPlatform.isDarwin && packageSupportsOverride cfg.discord.package "appDataDir"
+            );
+          message = "programs.nixcord.discord.appDataDir requires Nixcord's Discord package on macOS.";
+        }
+        {
+          assertion =
+            !cfg.discord.enable
+            || !pkgs.stdenvNoCC.hostPlatform.isDarwin
+            || !(packageSupportsOverride cfg.discord.package "appDataDir")
+            ||
+              builtins.baseNameOf (toString cfg.discord.configDir)
+              == branchDirName.${getPrimaryDiscordBranch cfg};
+          message = "programs.nixcord.discord.configDir must end with the primary Discord branch's directory name on macOS; set discord.appDataDir to change its parent directory.";
+        }
         {
           assertion = !cfg.discord.enable || discordConfigDirsAreUnique;
           message = ''

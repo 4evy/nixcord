@@ -28,9 +28,9 @@ let
     ];
 
   mkConfigDirs = cfg: basePath: {
-    discord.configDir = lib.modules.mkDefault "${basePath}/${
-      branchDirName.${getPrimaryDiscordBranch cfg}
-    }";
+    discord.configDir = lib.modules.mkDefault "${
+      lib.trivial.defaultTo basePath (cfg.discord.appDataDir or null)
+    }/${branchDirName.${getPrimaryDiscordBranch cfg}}";
     configDir = lib.modules.mkDefault "${basePath}/${
       if cfg.discord.equicord.enable then "Equicord" else "Vencord"
     }";
