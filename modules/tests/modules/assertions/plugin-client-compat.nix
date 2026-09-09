@@ -1,7 +1,7 @@
 { testLib, lib }:
 
 let
-  inherit (testLib.assertions) hmFails hmMessages;
+  inherit (testLib.assertions) hmMessages;
   inherit (testLib.fixtures.plugins)
     firstVencordOnly
     firstEquicordOnly
@@ -19,12 +19,13 @@ in
         config.plugins.${firstEquicordOnly}.enable = true;
       };
     in
+    assert builtins.length messages == 1;
     assert builtins.any (message: lib.strings.hasInfix firstEquicordOnly message) messages;
     true;
 
   "vencord-only plugin fails with equicord-only client" =
     let
-      fails = hmFails {
+      messages = hmMessages {
         enable = true;
         discord.vencord.enable = false;
         discord.equicord.enable = true;
@@ -33,12 +34,13 @@ in
         config.plugins.${firstVencordOnly}.enable = true;
       };
     in
-    assert fails;
+    assert builtins.length messages == 1;
+    assert lib.strings.hasInfix firstVencordOnly (builtins.head messages);
     true;
 
   "client-specific settings do not hide an incompatible global enable" =
     let
-      fails = hmFails {
+      messages = hmMessages {
         enable = true;
         discord.enable = false;
         vesktop.enable = true;
@@ -46,7 +48,24 @@ in
         vesktopConfig.plugins.${firstEquicordOnly}.regressionSetting = true;
       };
     in
-    assert fails;
+    assert builtins.length messages == 1;
+    assert lib.strings.hasInfix firstEquicordOnly (builtins.head messages);
     true;
 
+  "compatible client enables pass without assertions" =
+    builtins.all
+      (
+        client:
+        hmMessages {
+          enable = true;
+          discord.enable = false;
+          vesktop.enable = client == "vencord";
+          equibop.enable = client == "equicord";
+          config.plugins.${if client == "vencord" then firstVencordOnly else firstEquicordOnly}.enable = true;
+        } == [ ]
+      )
+      [
+        "vencord"
+        "equicord"
+      ];
 }

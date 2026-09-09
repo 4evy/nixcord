@@ -4,9 +4,6 @@ let
   discordAvailable = pkgs.lib.meta.availableOn pkgs.stdenv.hostPlatform pkgs.discord;
   discordPackage = pkgs.callPackage ../../pkgs/discord { };
 
-  packageEvaluationFails =
-    args: package: !(builtins.tryEval (pkgs.callPackage package args).drvPath).success;
-
   fhsCapableDiscord = pkgs.lib.customisation.makeOverridable (
     {
       source ? null,
@@ -28,15 +25,6 @@ let
   ) { };
 
   tests = {
-    "direct package use rejects mutually exclusive mods" = packageEvaluationFails {
-      withVencord = true;
-      withEquicord = true;
-    } ../../pkgs/discord;
-
-    "direct package use rejects unknown branches" = packageEvaluationFails {
-      branch = "unknown";
-    } ../../pkgs/discord;
-
     "FHS-capable upstream is forced to its non-FHS package" =
       let
         package = pkgs.callPackage ../../pkgs/discord {
@@ -50,10 +38,10 @@ let
       (pkgs.callPackage ../../pkgs/discord { withKrisp = true; }).nixcordKrispPatch;
   };
 in
-pkgs.runCommand "discord-package-arguments-test" { } ''
+pkgs.runCommand "discord-package-arguments-test" { nativeBuildInputs = [ pkgs.nix ]; } ''
   ${
     if !discordAvailable || pkgs.lib.lists.all pkgs.lib.trivial.id (builtins.attrValues tests) then
-      "echo '4 discord package argument tests passed'"
+      "echo 'Discord package capability checks passed'"
     else
       "exit 1"
   }
@@ -61,6 +49,34 @@ pkgs.runCommand "discord-package-arguments-test" { } ''
     ${pkgs.jq}/bin/jq -e '.disableUpdater == true' \
       '${discordPackage}/Applications/Discord.app/Contents/Resources/build_info.json'
     echo 'Darwin native module updater is disabled'
+  ''}
+  ${pkgs.lib.strings.optionalString discordAvailable ''
+    export NIX_STATE_DIR="$TMPDIR/nix-state"
+    export NIX_REMOTE=dummy://
+    mkdir -p "$NIX_STATE_DIR"
+    evaluate() {
+      nix-instantiate --eval --strict --expr "
+        let pkgs = import ${pkgs.path} {
+          system = \"${pkgs.stdenv.hostPlatform.system}\";
+          config.allowUnfree = true;
+        };
+        in (pkgs.callPackage ${../../pkgs/discord} { $1 }).name
+      "
+    }
+    # A nearby valid package must evaluate, so unrelated evaluation failures
+    # cannot satisfy the negative cases.
+    evaluate 'withVencord = false; withEquicord = false; branch = "stable";' > /dev/null
+    expect_error() {
+      if evaluate "$1" >actual.out 2>actual.err; then
+        echo "Expected package evaluation to fail: $1" >&2
+        exit 1
+      fi
+      grep -F -- "$2" actual.err
+    }
+    expect_error 'withVencord = true; withEquicord = true;' \
+      'nixcord Discord: Vencord and Equicord cannot both be enabled'
+    expect_error 'branch = "unknown";' \
+      "nixcord Discord: branch 'unknown' is unavailable on this platform"
   ''}
   touch "$out"
 ''
