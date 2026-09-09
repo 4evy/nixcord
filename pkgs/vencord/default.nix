@@ -4,13 +4,12 @@
   vencord,
   buildWebExtension ? false,
   callPackage,
-  nix-update-script,
 }:
 let
   pnpm = callPackage ../pnpm { };
-  version = "1.15.4-2026-08-30";
-  rev = "0e40e433d7aa9168f656aba733d01e761b7ca8ca";
-  hash = "sha256-IoyxQuFrTlpwTqYgqsbeoLMuw8Hh7IJlvQi7ULdNAR0=";
+  version = "1.15.5-2026-09-09";
+  rev = "0850f37fbb1623aa6330764d8f4b1e0b2617dcdf";
+  hash = "sha256-AiZjrbx2A3NMkbyKJBGiCB/zq7fIvWlhpAAcyPrtT7Q=";
   pnpmDepsHash = "sha256-LiAcWwGmZlpO+rr0tcMNpViBiBRhSHj+wvyHFIe32lw=";
   src = fetchFromGitHub {
     inherit (vencord.src) owner repo;
@@ -63,13 +62,9 @@ in
             oldAttrs.meta.description or "Vencord Discord client mod";
       };
       passthru = (oldAttrs.passthru or { }) // {
-        updateScript = nix-update-script {
+        updateScript = callPackage ../plugin-update.nix { } {
           attrPath = "vencord";
-          extraArgs = [
-            "--flake"
-            "--version=branch=main"
-            "--override-filename=pkgs/vencord/default.nix"
-          ];
+          filename = "pkgs/vencord/default.nix";
         };
       };
     }

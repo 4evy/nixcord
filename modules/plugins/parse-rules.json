@@ -4,6 +4,7 @@
   ],
   "pluginRenames": {
     "accountPanelServerProfile": "AccountPanelServerProfile",
+    "addAttachments": "AddAttachments",
     "advancedPermissions": "AdvancedPermissions",
     "altKrispSwitch": "AltKrispSwitch",
     "alwaysAnimate": "AlwaysAnimate",

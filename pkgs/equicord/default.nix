@@ -4,7 +4,6 @@
   fetchPnpmDeps,
   buildWebExtension ? false,
   callPackage,
-  nix-update-script,
 }:
 let
   pnpm = callPackage ../pnpm { };
@@ -21,13 +20,9 @@ let
       hash
       ;
   };
-  updateScript = nix-update-script {
+  updateScript = callPackage ../plugin-update.nix { } {
     attrPath = "equicord";
-    extraArgs = [
-      "--flake"
-      "--version=branch=main"
-      "--override-filename=pkgs/equicord/default.nix"
-    ];
+    filename = "pkgs/equicord/default.nix";
   };
 in
 (equicord.override {

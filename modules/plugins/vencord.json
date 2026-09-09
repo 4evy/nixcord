@@ -1,4 +1,8 @@
 {
+  "addAttachments": {
+    "description": "Allows you to add new attachments while editing messages (Vencord-only)",
+    "settings": {}
+  },
   "alwaysAnimate": {
     "description": "Animates anything that can be animated (Vencord-only)",
     "settings": {}
@@ -79,6 +83,11 @@
         "type": "types.bool",
         "default": false,
         "description": "Close other folders when opening a folder"
+      },
+      "closeServerFolder": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Close folder when selecting a server in that folder"
       },
       "forceOpen": {
         "type": "types.bool",
@@ -260,13 +269,7 @@
   },
   "experiments": {
     "description": "Enable Access to Experiments & other dev-only features in Discord! (Vencord-only)",
-    "settings": {
-      "toolbarDevMenu": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Change the Help (?) toolbar button (top right in chat) to Discord's developer menu (restart required)"
-      }
-    }
+    "settings": {}
   },
   "fakeNitro": {
     "description": "Allows you to send fake emojis/stickers, use nitro themes, and stream in nitro quality (Vencord-only)",
@@ -836,21 +839,25 @@
         "type": "types.listOf types.attrs",
         "default": [
           {
+            "name": "",
             "find": "",
             "replace": "",
             "onlyIfIncludes": ""
           }
-        ]
+        ],
+        "description": "Rules for replacing text using string matching."
       },
       "regexRules": {
         "type": "types.listOf types.attrs",
         "default": [
           {
+            "name": "",
             "find": "",
             "replace": "",
             "onlyIfIncludes": ""
           }
-        ]
+        ],
+        "description": "Rules for replacing text using regular expressions."
       }
     }
   },
@@ -866,6 +873,11 @@
         "type": "types.bool",
         "default": false,
         "description": "Whether to show the typing indicator for muted channels."
+      },
+      "includeIgnoredUsers": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Whether to show the typing indicator for ignored users."
       },
       "includeBlockedUsers": {
         "type": "types.bool",
@@ -916,6 +928,12 @@
   },
   "whoReacted": {
     "description": "Renders the avatars of users who reacted to a message (Vencord-only)",
-    "settings": {}
+    "settings": {
+      "clickableAvatars": {
+        "type": "types.bool",
+        "default": true,
+        "description": "While this is enabled, clicking a reacting user's avatar will open their profile instead of adding the reaction (restart required)"
+      }
+    }
   }
 }

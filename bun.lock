@@ -12,7 +12,7 @@
         "equicord": "github:Equicord/Equicord#3b617d4f02be78808dfbfc1b192e1fd20fe5db00",
         "fallow": "3.14.0",
         "typescript": "npm:@typescript/typescript6@6.0.2",
-        "vencord": "github:Vendicated/Vencord#0e40e433d7aa9168f656aba733d01e761b7ca8ca",
+        "vencord": "github:Vendicated/Vencord#0850f37fbb1623aa6330764d8f4b1e0b2617dcdf",
         "vite": "8.2.0",
         "vitest": "5.0.0",
       },
@@ -580,7 +580,7 @@
 
     "universalify": ["universalify@2.0.1", "", {}, "sha512-gptHNQghINnc/vTGIk0SOFGFNXw7JVrlRUtConJRlvaw6DuX0wO5Jeko9sWrMBhh+PsYAZ7oXAiOnf/UKogyiw=="],
 
-    "vencord": ["vencord@github:Vendicated/Vencord#0e40e43", { "dependencies": { "@intrnl/xxhash64": "^0.1.2", "@vap/core": "0.0.12", "@vap/shiki": "0.10.5", "fflate": "^0.8.3", "gifenc": "github:mattdesl/gifenc#64842fca317b112a8590f8fef2bf3825da8f6fe3", "monaco-editor": "^0.55.1", "nanoid": "^5.1.16", "virtual-merge": "^1.0.1" } }, "Vendicated-Vencord-0e40e43", "sha512-sj9IakBq+RxD0W/c7y1/4o7oNyhs9jBi7kWXCRX/84Q0tzl/757Vg4PdJa3Um0aEFjBHY2rSAEsTn7JWudELxg=="],
+    "vencord": ["vencord@github:Vendicated/Vencord#0850f37", { "dependencies": { "@intrnl/xxhash64": "^0.1.2", "@vap/core": "0.0.12", "@vap/shiki": "0.10.5", "fflate": "^0.8.3", "gifenc": "github:mattdesl/gifenc#64842fca317b112a8590f8fef2bf3825da8f6fe3", "monaco-editor": "^0.55.1", "nanoid": "^5.1.16", "virtual-merge": "^1.0.1" } }, "Vendicated-Vencord-0850f37", "sha512-MEZ/awNj7CwH02vxte/9XCwJcM7asktuVQWLiX/11XO9cMcqQr2p4RG60rBnbu8WrTvHYecbN/oAyV0Zq7LLFg=="],
 
     "virtual-merge": ["virtual-merge@1.0.2", "", {}, "sha512-5hxklfyTUWMKYaLuoriOf9Xqmt3oWtfAiZw0M3ITeeNmVdKhcnys7rYyfBHqvy/hlELP0hQ4u7o1r5HBXbm6sg=="],
 
