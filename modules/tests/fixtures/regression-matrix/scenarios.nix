@@ -401,7 +401,16 @@ let
       goofcord
   ) (builtins.tail goofcordModes);
 
-  scenarios = builtins.listToAttrs (pairwiseScenarios ++ goofcordOnlyScenarios);
+  goofcordCoexistenceScenarios = lib.lists.concatMap (
+    goofcord:
+    map (
+      discord: mkScenario discord (builtins.elemAt desktopCombos 7) (builtins.head legcordModes) goofcord
+    ) (lib.lists.drop 2 discordModes)
+  ) (builtins.tail goofcordModes);
+
+  scenarios = builtins.listToAttrs (
+    pairwiseScenarios ++ goofcordOnlyScenarios ++ goofcordCoexistenceScenarios
+  );
 in
 {
   inherit scenarios;

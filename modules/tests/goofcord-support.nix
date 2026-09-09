@@ -8,6 +8,12 @@ let
     testLib.eval.hm {
       enable = true;
       discord.enable = false;
+      vesktop.enable = true;
+      equibop.enable = true;
+      extraConfig.nixcordCoexistence = "global";
+      vesktopConfig.nixcordCoexistence = "vesktop";
+      equibopConfig.nixcordCoexistence = "equibop";
+      goofcordConfig.nixcordCoexistence = "goofcord-${clientMod}";
       quickCss = "body { color: rebeccapurple; }";
       config = {
         useQuickCss = true;
@@ -74,6 +80,31 @@ pkgs.runCommand "goofcord-support-test" { nativeBuildInputs = [ pkgs.jq ]; } ''
   grep -Fq 'rebeccapurple' ${vencordFiles.goofcordQuickCss}
   printf 'a\nb' > expected-themes.css
   cmp expected-themes.css ${vencordFiles.goofcordThemes}
+
+  ${pkgs.lib.strings.concatMapStringsSep "\n"
+    (
+      config:
+      let
+        cfg = config.programs.nixcord;
+        support = config._nixcordTest.common.files.goofcordSupport;
+      in
+      ''
+        ${testLib.output.json (testLib.output.homeFileSource config "${cfg.vesktop.configDir}/settings/settings.json") ''.nixcordCoexistence == "vesktop"''}
+        ${testLib.output.json (testLib.output.homeFileSource config "${cfg.equibop.configDir}/settings/settings.json") ''.nixcordCoexistence == "equibop"''}
+        grep -Fq ${pkgs.lib.strings.escapeShellArg ''\"nixcordCoexistence\":\"goofcord-${cfg.goofcord.clientMod}\"''} \
+          ${support}/preVencord.js
+        if grep -Fq -e '\"nixcordCoexistence\":\"vesktop\"' -e '\"nixcordCoexistence\":\"equibop\"' \
+          ${support}/preVencord.js; then
+          echo 'Desktop client configuration leaked into Goofcord' >&2
+          exit 1
+        fi
+      ''
+    )
+    [
+      vencord
+      equicord
+    ]
+  }
 
   touch "$out"
 ''
