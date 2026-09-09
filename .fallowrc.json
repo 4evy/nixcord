@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
-  "entry": ["vite.config.shared.ts"],
+  "entry": ["vite.config.shared.ts", "pkgs/discord/scripts/patch-updater.cts"],
   "ignoreDependencies": ["@typescript/native", "equicord", "renovate", "vencord"],
   "audit": {
     "gate": "all"
