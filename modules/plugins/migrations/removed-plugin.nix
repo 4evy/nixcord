@@ -6,7 +6,7 @@
 { pluginName }:
 { config, lib, ... }:
 let
-  inherit (import ./plugins.nix { inherit lib; }) isPluginEnabled;
+  inherit (import ../../lib/plugins.nix { inherit lib; }) isPluginEnabled;
 
   pluginConfig = config.programs.nixcord.config.plugins.${pluginName};
   pluginEnabled = isPluginEnabled pluginConfig;

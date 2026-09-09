@@ -10,7 +10,7 @@
 let
   cfg = config.programs.nixcord;
 
-  inherit (import ./lib/shared.nix { inherit lib; })
+  inherit (import ./lib { inherit lib; })
     isPluginEnabled
     mkPluginKit
     mkAssertions

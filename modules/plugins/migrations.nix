@@ -10,13 +10,13 @@ let
   ];
 
   mkRemovedPluginModule =
-    pluginName: lib.modules.importApply ../lib/mkRemovedPluginModule.nix { inherit pluginName; };
+    pluginName: lib.modules.importApply ./migrations/removed-plugin.nix { inherit pluginName; };
 
   mkRemovedSettingModule =
-    settingPath: lib.modules.importApply ../lib/mkRemovedSettingModule.nix { inherit settingPath; };
+    settingPath: lib.modules.importApply ./migrations/removed-setting.nix { inherit settingPath; };
 
   mkClientPluginRenameModule =
-    migration: lib.modules.importApply ../lib/mkClientPluginRenameModule.nix { inherit migration; };
+    migration: lib.modules.importApply ./migrations/client-rename.nix { inherit migration; };
 
   mkRenameModule =
     migration:

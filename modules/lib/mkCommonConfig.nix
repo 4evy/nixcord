@@ -8,7 +8,7 @@
 let
   cfg = config.programs.nixcord;
 
-  inherit (import ./shared.nix { inherit lib; })
+  inherit (import ./. { inherit lib; })
     applyPostPatch
     mkBrowserBuild
     mkIsQuickCssUsed

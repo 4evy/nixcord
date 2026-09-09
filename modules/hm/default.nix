@@ -8,9 +8,7 @@
   _class = "homeManager";
 
   imports = [
-    ../options
-    ../plugins/migrations.nix
-    ../warnings.nix
+    ../common.nix
   ];
 
   config = lib.modules.mkIf config.programs.nixcord.enable (

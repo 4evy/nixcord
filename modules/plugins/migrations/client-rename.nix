@@ -20,7 +20,7 @@ let
   newPath = base ++ migration.to;
   oldOption = lib.attrsets.attrByPath oldPath null options;
   cfg = config.programs.nixcord;
-  inherit (import ./plugins.nix { inherit lib; }) mkPluginKit;
+  inherit (import ../../lib/plugins.nix { inherit lib; }) mkPluginKit;
   pluginKit = mkPluginKit cfg;
 
   # Dorion also consumes Vencord settings through its browser bootstrap.
