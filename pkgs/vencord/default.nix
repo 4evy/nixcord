@@ -26,7 +26,7 @@ in
 (vencord.override { inherit buildWebExtension; }).overrideAttrs (
   oldAttrs:
   let
-    pnpm = callPackage ./pnpm.nix { };
+    pnpm = callPackage ../pnpm { };
     patches = [ ];
     postPatch = "";
   in
@@ -79,9 +79,9 @@ in
         text = ''
           # shellcheck disable=SC1091
           source ${
-            replaceVars ./scripts/update-vencord-family.sh {
+            replaceVars ../../nix/scripts/update-vencord-family.sh {
               clientName = "Vencord";
-              nixFile = "./pkgs/vencord.nix";
+              nixFile = "./pkgs/vencord/default.nix";
               inherit (vencord.src) owner repo;
               versionVar = "version";
               hashVar = "hash";

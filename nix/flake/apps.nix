@@ -57,7 +57,7 @@
                       config.allowUnfree = true;
                     };
                   in
-                  pkgs.callPackage ./pkgs/generate-options.nix {
+                  pkgs.callPackage ./pkgs/generate-options {
                     vencordSource = $vencord_dir;
                     equicordSource = $equicord_dir;
                     skipGitMigrations = false;

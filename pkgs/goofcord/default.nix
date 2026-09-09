@@ -91,7 +91,7 @@ let
       perl
     ];
     text = ''
-      exec bash ${./scripts/update-goofcord-darwin-deps.sh} "$@"
+      exec bash ${./update-goofcord-darwin-deps.sh} "$@"
     '';
   };
 in

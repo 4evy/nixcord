@@ -15,7 +15,7 @@ let
   openasar = pkgs.openasar;
   discordPackages = lib.attrsets.optionalAttrs discordAvailable (
     lib.attrsets.mapAttrs (
-      _name: args: pkgs.callPackage ../pkgs/discord ({ inherit openasar; } // args)
+      _name: args: pkgs.callPackage ./discord ({ inherit openasar; } // args)
     ) discordVariants
   );
   docsArtifacts = import ../docs {
@@ -31,7 +31,7 @@ let
         docs = docsArtifacts.html;
       };
   goofcordPackages = lib.attrsets.optionalAttrs (pkgs ? goofcord) {
-    goofcord = pkgs.callPackage ../pkgs/goofcord.nix { };
+    goofcord = pkgs.callPackage ./goofcord { };
   };
 in
 discordPackages
@@ -40,8 +40,8 @@ discordPackages
 // {
   inherit openasar;
 
-  vencord = pkgs.callPackage ../pkgs/vencord.nix { };
-  equicord = pkgs.callPackage ../pkgs/equicord.nix { };
-  generate = pkgs.callPackage ../pkgs/generate-options.nix { };
+  vencord = pkgs.callPackage ./vencord { };
+  equicord = pkgs.callPackage ./equicord { };
+  generate = pkgs.callPackage ./generate-options { };
   docs-json = docsArtifacts.json;
 }

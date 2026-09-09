@@ -43,7 +43,7 @@ jobs:
           --command bash -c
           'yamllint . && actionlint && zizmor --pedantic .
           && shellcheck .github/scripts/*.sh nix/benchmark-eval.sh nix/tests/benchmark-eval.sh
-          pkgs/discord/scripts/*.sh pkgs/scripts/*.sh'
+          pkgs/discord/scripts/*.sh pkgs/goofcord/*.sh nix/scripts/*.sh'
 
       - name: Test evaluation benchmark CLI
         run: bash nix/tests/benchmark-eval.sh
@@ -114,7 +114,7 @@ jobs:
           paths=()
           for package in equicord vencord; do
             paths+=("$(nix build --no-link --print-out-paths --impure --expr \
-              "$NIXPKGS_EXPR (pkgs.callPackage ./pkgs/$package.nix {}).pnpmDeps")")
+              "$NIXPKGS_EXPR (pkgs.callPackage ./pkgs/$package {}).pnpmDeps")")
           done
           nix-store --export "${paths[@]}" > pnpm-deps.nar
 

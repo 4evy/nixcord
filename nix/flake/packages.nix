@@ -18,7 +18,7 @@
           "main";
     in
     {
-      packages = import ../packages.nix {
+      packages = import ../../pkgs {
         inherit pkgs revision;
       };
 

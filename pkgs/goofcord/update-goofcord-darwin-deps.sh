@@ -3,8 +3,8 @@
 
 set -euo pipefail
 
-deps_file=pkgs/goofcord.nix
-hash_updater=pkgs/scripts/update-fixed-output-hash.sh
+deps_file=pkgs/goofcord/default.nix
+hash_updater=nix/scripts/update-fixed-output-hash.sh
 supported_system=aarch64-darwin
 
 usage() {

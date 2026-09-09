@@ -12,11 +12,11 @@ on:
       - "package.json"
       - "bun.lock"
       - "flake.lock"
-      - "pkgs/generate-options.nix"
+      - "pkgs/generate-options/default.nix"
       - "pkgs/generate-options/**"
-      - "pkgs/scripts/update-fixed-output-hash.sh"
-      - "pkgs/scripts/update-goofcord-darwin-deps.sh"
-      - "pkgs/goofcord.nix"
+      - "nix/scripts/update-fixed-output-hash.sh"
+      - "pkgs/goofcord/update-goofcord-darwin-deps.sh"
+      - "pkgs/goofcord/default.nix"
       - "modules/lib/core.nix"
       - "modules/plugins/overrides.json"
       - "nix/flake/apps.nix"
@@ -64,7 +64,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          for spec in "equicord.nix:equicord-update" "vencord.nix:vencord-update"; do
+          for spec in "equicord:equicord-update" "vencord:vencord-update"; do
             package_file=${spec%%:*}
             update_bin=${spec#*:}
             update_script=$(nix build --no-link --print-out-paths --impure --expr \
@@ -83,7 +83,7 @@ jobs:
             exit 1
           fi
           node_modules_file=pkgs/generate-options/node-modules.nix
-          hash_updater=pkgs/scripts/update-fixed-output-hash.sh
+          hash_updater=nix/scripts/update-fixed-output-hash.sh
           "$hash_updater" refresh "$node_modules_file" "$system" -- bash -euo pipefail -c '
             nix build --no-link .#generate.node_modules
             nix build --rebuild --no-link .#generate.node_modules
@@ -108,7 +108,7 @@ jobs:
           paths=()
           for package in equicord vencord; do
             paths+=("$(nix build --no-link --print-out-paths --impure --expr \
-              "$NIXPKGS_EXPR (pkgs.callPackage ./pkgs/$package.nix {}).pnpmDeps")")
+              "$NIXPKGS_EXPR (pkgs.callPackage ./pkgs/$package {}).pnpmDeps")")
           done
           nix-store --export "${paths[@]}" > pnpm-deps.nar
 
@@ -124,9 +124,9 @@ jobs:
         run: |
           set -euo pipefail
           paths=(
-            pkgs/equicord.nix
-            pkgs/vencord.nix
-            pkgs/generate-options.nix
+            pkgs/equicord/default.nix
+            pkgs/vencord/default.nix
+            pkgs/generate-options/default.nix
             pkgs/generate-options
             docs/site.nix
             package.json
@@ -221,7 +221,7 @@ jobs:
           fi
 
           node_modules_file=pkgs/generate-options/node-modules.nix
-          hash_updater=pkgs/scripts/update-fixed-output-hash.sh
+          hash_updater=nix/scripts/update-fixed-output-hash.sh
           "$hash_updater" refresh "$node_modules_file" "$EXPECTED_SYSTEM" -- bash -euo pipefail -c "
             nix --option system '$EXPECTED_SYSTEM' build \
               --no-link .#generate.node_modules
@@ -280,7 +280,7 @@ jobs:
           EXPECTED_SYSTEM: ${{ matrix.system }}
         run: |
           set -euo pipefail
-          hash_updater=pkgs/scripts/update-fixed-output-hash.sh
+          hash_updater=nix/scripts/update-fixed-output-hash.sh
           node_modules_hash=$("$hash_updater" get pkgs/generate-options/node-modules.nix "$EXPECTED_SYSTEM")
 
           mkdir -p dependency-hashes
@@ -294,9 +294,9 @@ jobs:
           fi
 
           if [[ "$EXPECTED_SYSTEM" == "aarch64-darwin" ]]; then
-            goofcord_version=$(pkgs/scripts/update-goofcord-darwin-deps.sh get-version)
+            goofcord_version=$(pkgs/goofcord/update-goofcord-darwin-deps.sh get-version)
             goofcord_hash=$(
-              "$hash_updater" get pkgs/goofcord.nix "$EXPECTED_SYSTEM"
+              "$hash_updater" get pkgs/goofcord/default.nix "$EXPECTED_SYSTEM"
             )
             printf 'goofcord_version %s %s\n' \
               "$EXPECTED_SYSTEM" "$goofcord_version" >> "$hashes_file"
@@ -352,7 +352,7 @@ jobs:
             exit 1
           fi
 
-          hash_updater=pkgs/scripts/update-fixed-output-hash.sh
+          hash_updater=nix/scripts/update-fixed-output-hash.sh
           for hashes_file in "${hash_files[@]}"; do
             while read -r kind system hash; do
               case "$kind" in
@@ -363,11 +363,11 @@ jobs:
                   target=docs/site.nix
                   ;;
                 goofcord_version)
-                  pkgs/scripts/update-goofcord-darwin-deps.sh set-version "$hash"
+                  pkgs/goofcord/update-goofcord-darwin-deps.sh set-version "$hash"
                   continue
                   ;;
                 goofcord_hash)
-                  target=pkgs/goofcord.nix
+                  target=pkgs/goofcord/default.nix
                   ;;
                 *)
                   echo "::error::Unknown dependency hash kind: $kind"
@@ -386,12 +386,12 @@ jobs:
         run: |
           set -euo pipefail
           paths=(
-            pkgs/equicord.nix
-            pkgs/vencord.nix
-            pkgs/generate-options.nix
+            pkgs/equicord/default.nix
+            pkgs/vencord/default.nix
+            pkgs/generate-options/default.nix
             pkgs/generate-options
             docs/site.nix
-            pkgs/goofcord.nix
+            pkgs/goofcord/default.nix
             package.json
             bun.lock
             modules/plugins

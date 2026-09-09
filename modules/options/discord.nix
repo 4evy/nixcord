@@ -14,8 +14,8 @@ let
     "development"
   ];
   jsonFormat = pkgs.formats.json { };
-  vencordPackage = pkgs.callPackage ../../pkgs/vencord.nix { };
-  equicordPackage = pkgs.callPackage ../../pkgs/equicord.nix { };
+  vencordPackage = pkgs.callPackage ../../pkgs/vencord { };
+  equicordPackage = pkgs.callPackage ../../pkgs/equicord { };
   openasarPackage = pkgs.openasar;
   selectedNixcordPkgs = if config.programs.nixcord.useGlobalPkgs then { } else nixcordPkgs;
 
@@ -98,14 +98,14 @@ in
       enable = lib.options.mkEnableOption "Vencord for Discord (non-Vesktop)";
       package = lib.options.mkPackageOption pkgs "Vencord" { default = "vencord"; } // {
         default = selectedNixcordPkgs.vencord or vencordPackage;
-        defaultText = lib.options.literalExpression "pkgs.callPackage ../../pkgs/vencord.nix { }";
+        defaultText = lib.options.literalExpression "pkgs.callPackage ../../pkgs/vencord { }";
       };
     };
     equicord = {
       enable = lib.options.mkEnableOption "Equicord (alternative to Vencord)";
       package = lib.options.mkPackageOption pkgs "Equicord" { default = "equicord"; } // {
         default = selectedNixcordPkgs.equicord or equicordPackage;
-        defaultText = lib.options.literalExpression "pkgs.callPackage ../../pkgs/equicord.nix { }";
+        defaultText = lib.options.literalExpression "pkgs.callPackage ../../pkgs/equicord { }";
       };
     };
     silenceNoModClientWarning = lib.options.mkOption {

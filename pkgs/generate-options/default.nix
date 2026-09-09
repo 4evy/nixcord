@@ -12,7 +12,7 @@
   skipGitMigrations ? true,
 }:
 let
-  sources = import ./generate-options/sources.nix { inherit lib; };
+  sources = import ./sources.nix { inherit lib; };
 in
 stdenvNoCC.mkDerivation (finalAttrs: {
   pname = "nixcord-plugin-options";
@@ -23,7 +23,7 @@ stdenvNoCC.mkDerivation (finalAttrs: {
 
   src = sources.project;
 
-  node_modules = callPackage ./generate-options/node-modules.nix {
+  node_modules = callPackage ./node-modules.nix {
     inherit (finalAttrs) version;
     src = sources.dependencies;
   };

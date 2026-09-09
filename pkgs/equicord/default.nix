@@ -40,9 +40,9 @@ let
     text = ''
       # shellcheck disable=SC1091
       source ${
-        replaceVars ./scripts/update-vencord-family.sh {
+        replaceVars ../../nix/scripts/update-vencord-family.sh {
           clientName = "Equicord";
-          nixFile = "./pkgs/equicord.nix";
+          nixFile = "./pkgs/equicord/default.nix";
           inherit (equicord.src) owner repo;
           versionVar = "version";
           hashVar = "hash";
@@ -59,9 +59,9 @@ in
 (equicord.override { inherit buildWebExtension; }).overrideAttrs (
   oldAttrs:
   let
-    pnpm = callPackage ./pnpm.nix { };
+    pnpm = callPackage ../pnpm { };
     patches = (oldAttrs.patches or [ ]) ++ [
-      ./patches/equicord-content-warning-settings.patch
+      ./equicord-content-warning-settings.patch
     ];
   in
   {

@@ -9,7 +9,7 @@
   revision ? "main",
 }:
 let
-  packages = import ./nix/packages.nix {
+  packages = import ./pkgs {
     inherit pkgs revision;
   };
   mkModule =
@@ -27,13 +27,13 @@ let
       _file = location;
       key = location;
       imports = [ module ];
-      _module.args.nixcordPkgs = import ./nix/packages.nix {
+      _module.args.nixcordPkgs = import ./pkgs {
         inherit pkgs revision;
       };
     };
   moduleOutputs = import ./nix/mk-module-outputs.nix { inherit mkModule; };
   overlay = final: _previous: {
-    nixcord = import ./nix/packages.nix {
+    nixcord = import ./pkgs {
       pkgs = final;
       inherit revision;
     };
