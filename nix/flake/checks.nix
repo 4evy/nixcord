@@ -67,6 +67,10 @@
         // discordIntegrationChecks
         // {
           non-flake-interface = nonFlakeInterface;
+          hm-writable-files = import ../../modules/tests/hm-writable-files.nix {
+            inherit pkgs;
+            inherit (inputs) home-manager;
+          };
           module-integration = import ../../modules/tests/module-integration.nix {
             inherit pkgs;
             inherit (inputs) home-manager nix-darwin;

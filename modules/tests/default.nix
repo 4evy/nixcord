@@ -8,7 +8,6 @@
   activation-scripts = import ./activation-scripts.nix { inherit pkgs; };
   platform-paths = import ./platform-paths.nix { inherit pkgs; };
   darwin-activation-stage = import ./darwin-activation-stage.nix { inherit pkgs; };
-  hm-writable-files = import ./hm-writable-files.nix { inherit pkgs; };
   discord-package-arguments = import ./discord-package-arguments.nix { inherit pkgs; };
   discord-launcher-c = import ./c/discord-launcher.nix { inherit pkgs; };
   goofcord-support = import ./goofcord-support.nix { inherit pkgs; };

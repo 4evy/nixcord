@@ -52,17 +52,22 @@
               dest=${lib.strings.escapeShellArg spec.dest}
               src=${lib.strings.escapeShellArg spec.src}
               if [ -L "$dest" ]; then
-                rm "$dest"
+                run rm "$dest"
               elif [ -e "$dest" ]; then
-                chmod u+w "$dest" 2>/dev/null || true
+                run chmod u+w "$dest" 2>/dev/null || true
               fi
-              ${install} -Dm644 "$src" "$dest"
+              run ${install} -Dm644 "$src" "$dest"
             ''
         )
       );
 
       activationScripts = common.mkActivationScripts (
-        script: lib.hm.dag.entryAfter [ "writeBoundary" ] script
+        script:
+        lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+          if [[ ! -v DRY_RUN ]]; then
+            ${script}
+          fi
+        ''
       );
 
     in
