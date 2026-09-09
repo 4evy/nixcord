@@ -3,15 +3,8 @@
   fetchPnpmDeps,
   vencord,
   buildWebExtension ? false,
-  bun,
   callPackage,
-  writeShellApplication,
-  cacert,
-  curl,
-  jq,
-  nix,
-  nix-prefetch-github,
-  replaceVars,
+  nix-update-script,
 }:
 let
   version = "1.15.4-2026-08-30";
@@ -66,33 +59,13 @@ in
           oldAttrs.meta.description or "Vencord Discord client mod";
     };
     passthru = (oldAttrs.passthru or { }) // {
-      updateScript = writeShellApplication {
-        name = "vencord-update";
-        runtimeInputs = [
-          bun
-          cacert
-          curl
-          jq
-          nix
-          nix-prefetch-github
+      updateScript = nix-update-script {
+        attrPath = "vencord";
+        extraArgs = [
+          "--flake"
+          "--version=branch=main"
+          "--override-filename=pkgs/vencord/default.nix"
         ];
-        text = ''
-          # shellcheck disable=SC1091
-          source ${
-            replaceVars ../../nix/scripts/update-vencord-family.sh {
-              clientName = "Vencord";
-              nixFile = "./pkgs/vencord/default.nix";
-              inherit (vencord.src) owner repo;
-              versionVar = "version";
-              hashVar = "hash";
-              revVar = "rev";
-              pnpmHashVar = "pnpmDepsHash";
-              callPackageArgs = "{ }";
-              branch = "main";
-              dependencyName = "vencord";
-            }
-          } "$@"
-        '';
       };
     };
     nativeBuildInputs =

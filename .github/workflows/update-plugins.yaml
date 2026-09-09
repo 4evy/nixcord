@@ -12,10 +12,7 @@ on:
       - "package.json"
       - "bun.lock"
       - "flake.lock"
-      - "pkgs/generate-options/default.nix"
       - "pkgs/generate-options/**"
-      - "nix/scripts/update-fixed-output-hash.sh"
-      - "pkgs/goofcord/update-goofcord-darwin-deps.sh"
       - "pkgs/goofcord/default.nix"
       - "modules/lib/core.nix"
       - "modules/plugins/overrides.json"
@@ -64,13 +61,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          for spec in "equicord:equicord-update" "vencord:vencord-update"; do
-            package_file=${spec%%:*}
-            update_bin=${spec#*:}
-            update_script=$(nix build --no-link --print-out-paths --impure --expr \
-              "$NIXPKGS_EXPR (pkgs.callPackage ./pkgs/$package_file {}).passthru.updateScript")
-            "$update_script/bin/$update_bin"
-          done
+          nix run .#update-plugins
 
       - name: Refresh x86_64-linux dependencies and generate plugin options
         env:
@@ -82,19 +73,11 @@ jobs:
             echo "::error::Expected x86_64-linux, got $system"
             exit 1
           fi
-          node_modules_file=pkgs/generate-options/node-modules.nix
-          hash_updater=nix/scripts/update-fixed-output-hash.sh
-          "$hash_updater" refresh "$node_modules_file" "$system" -- bash -euo pipefail -c '
-            nix build --no-link .#generate.node_modules
-            nix build --rebuild --no-link .#generate.node_modules
-          '
+          nix develop --command nix-update --flake --version=skip --no-src \
+            --override-filename pkgs/generate-options/node-modules.nix generate.node_modules
           nix run .#generate
-
-          docs_file=docs/site.nix
-          "$hash_updater" refresh "$docs_file" "$system" -- bash -euo pipefail -c '
-            nix build --no-link .#docs.deps
-            nix build --rebuild --no-link .#docs.deps
-          '
+          nix develop --command nix-update --flake --version=skip --no-src \
+            --override-filename docs/site.nix docs.deps
 
       - name: Build packages and run checks
         run: |
@@ -126,7 +109,6 @@ jobs:
           paths=(
             pkgs/equicord/default.nix
             pkgs/vencord/default.nix
-            pkgs/generate-options/default.nix
             pkgs/generate-options
             docs/site.nix
             package.json
@@ -190,6 +172,7 @@ jobs:
             git apply --check plugin-update/changes.patch
             git apply plugin-update/changes.patch
           fi
+          git add pkgs docs/site.nix package.json bun.lock modules/plugins
 
       - uses: ./.github/actions/install-nix
 
@@ -220,14 +203,9 @@ jobs:
             exit 1
           fi
 
-          node_modules_file=pkgs/generate-options/node-modules.nix
-          hash_updater=nix/scripts/update-fixed-output-hash.sh
-          "$hash_updater" refresh "$node_modules_file" "$EXPECTED_SYSTEM" -- bash -euo pipefail -c "
-            nix --option system '$EXPECTED_SYSTEM' build \
-              --no-link .#generate.node_modules
-            nix --option system '$EXPECTED_SYSTEM' build \
-              --rebuild --no-link .#generate.node_modules
-          "
+          nix develop --command nix-update --flake --version=skip --no-src \
+            --system "$EXPECTED_SYSTEM" \
+            --override-filename pkgs/generate-options/node-modules.nix generate.node_modules
 
           expected_plugins=$(mktemp -d)
           cp -R modules/plugins/. "$expected_plugins/"
@@ -240,13 +218,8 @@ jobs:
 
           if nix --option system "$EXPECTED_SYSTEM" eval \
             --raw ".#packages.$EXPECTED_SYSTEM.docs.drvPath" >/dev/null 2>&1; then
-            docs_file=docs/site.nix
-            "$hash_updater" refresh "$docs_file" "$EXPECTED_SYSTEM" -- bash -euo pipefail -c "
-              nix --option system '$EXPECTED_SYSTEM' build \
-                --no-link .#docs.deps
-              nix --option system '$EXPECTED_SYSTEM' build \
-                --rebuild --no-link .#docs.deps
-            "
+            nix develop --command nix-update --flake --version=skip --no-src \
+              --system "$EXPECTED_SYSTEM" --override-filename docs/site.nix docs.deps
           fi
 
           if [[ "$EXPECTED_SYSTEM" == "aarch64-darwin" ]]; then
@@ -275,39 +248,21 @@ jobs:
           nix --option system "$EXPECTED_SYSTEM" flake check \
             "${nix_args[@]}" --print-build-logs
 
-      - name: Record dependency hashes
+      - name: Record platform dependency update
         env:
           EXPECTED_SYSTEM: ${{ matrix.system }}
         run: |
           set -euo pipefail
-          hash_updater=nix/scripts/update-fixed-output-hash.sh
-          node_modules_hash=$("$hash_updater" get pkgs/generate-options/node-modules.nix "$EXPECTED_SYSTEM")
-
-          mkdir -p dependency-hashes
-          hashes_file="dependency-hashes/$EXPECTED_SYSTEM.txt"
-          printf 'node_modules %s %s\n' "$EXPECTED_SYSTEM" "$node_modules_hash" > "$hashes_file"
-
-          if nix --option system "$EXPECTED_SYSTEM" eval \
-            --raw ".#packages.$EXPECTED_SYSTEM.docs.drvPath" >/dev/null 2>&1; then
-            docs_hash=$("$hash_updater" get docs/site.nix "$EXPECTED_SYSTEM")
-            printf 'docs %s %s\n' "$EXPECTED_SYSTEM" "$docs_hash" >> "$hashes_file"
-          fi
-
-          if [[ "$EXPECTED_SYSTEM" == "aarch64-darwin" ]]; then
-            goofcord_version=$(pkgs/goofcord/update-goofcord-darwin-deps.sh get-version)
-            goofcord_hash=$(
-              "$hash_updater" get pkgs/goofcord/default.nix "$EXPECTED_SYSTEM"
-            )
-            printf 'goofcord_version %s %s\n' \
-              "$EXPECTED_SYSTEM" "$goofcord_version" >> "$hashes_file"
-            printf 'goofcord_hash %s %s\n' \
-              "$EXPECTED_SYSTEM" "$goofcord_hash" >> "$hashes_file"
-          fi
+          mkdir -p dependency-updates
+          # Zero-context patches allow independent platform hashes in one file.
+          git diff --binary --unified=0 -- \
+            pkgs/generate-options/node-modules.nix docs/site.nix pkgs/goofcord/default.nix \
+            > "dependency-updates/$EXPECTED_SYSTEM.patch"
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: dependency-hashes-${{ matrix.system }}
-          path: dependency-hashes
+          name: dependency-updates-${{ matrix.system }}
+          path: dependency-updates
           retention-days: 1
 
   commit-plugin-update:
@@ -333,8 +288,8 @@ jobs:
 
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          pattern: dependency-hashes-*
-          path: dependency-hashes
+          pattern: dependency-updates-*
+          path: dependency-updates
           merge-multiple: true
 
       - name: Assemble verified plugin update
@@ -346,36 +301,16 @@ jobs:
           fi
 
           shopt -s nullglob
-          hash_files=(dependency-hashes/*.txt)
-          if [[ "${#hash_files[@]}" -ne 2 ]]; then
-            echo "::error::Expected 2 platform hash files, got ${#hash_files[@]}"
+          patches=(dependency-updates/*.patch)
+          if [[ "${#patches[@]}" -ne 2 ]]; then
+            echo "::error::Expected 2 platform patches, got ${#patches[@]}"
             exit 1
           fi
-
-          hash_updater=nix/scripts/update-fixed-output-hash.sh
-          for hashes_file in "${hash_files[@]}"; do
-            while read -r kind system hash; do
-              case "$kind" in
-                node_modules)
-                  target=pkgs/generate-options/node-modules.nix
-                  ;;
-                docs)
-                  target=docs/site.nix
-                  ;;
-                goofcord_version)
-                  pkgs/goofcord/update-goofcord-darwin-deps.sh set-version "$hash"
-                  continue
-                  ;;
-                goofcord_hash)
-                  target=pkgs/goofcord/default.nix
-                  ;;
-                *)
-                  echo "::error::Unknown dependency hash kind: $kind"
-                  exit 1
-                  ;;
-              esac
-              "$hash_updater" set "$target" "$system" "$hash"
-            done < "$hashes_file"
+          for patch in "${patches[@]}"; do
+            if [[ -s "$patch" ]]; then
+              git apply --check --unidiff-zero "$patch"
+              git apply --unidiff-zero "$patch"
+            fi
           done
 
       - name: Commit plugin update
@@ -388,7 +323,6 @@ jobs:
           paths=(
             pkgs/equicord/default.nix
             pkgs/vencord/default.nix
-            pkgs/generate-options/default.nix
             pkgs/generate-options
             docs/site.nix
             pkgs/goofcord/default.nix

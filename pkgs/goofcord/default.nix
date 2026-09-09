@@ -10,13 +10,8 @@
   copyDesktopItems,
   rcodesign,
   writeShellApplication,
-  bash,
-  coreutils,
-  gitMinimal,
-  gnugrep,
-  gnused,
   nix,
-  perl,
+  nix-update,
 }:
 let
   darwinDeps = {
@@ -28,7 +23,8 @@ let
   };
 
   nodeModules = stdenv.mkDerivation {
-    inherit (goofcord) version src;
+    inherit (goofcord) src;
+    inherit (darwinDeps) version;
     pname = "${goofcord.pname}-modules";
 
     impureEnvVars = lib.fetchers.proxyImpureEnvVars ++ [
@@ -68,11 +64,8 @@ let
     '';
 
     outputHash =
-      if goofcord.version != darwinDeps.version then
-        throw "GoofCord ${goofcord.version} does not match the Darwin dependency snapshot for ${darwinDeps.version}; run `nix run .#update-goofcord` on aarch64-darwin"
-      else
-        darwinDeps.hashes.${stdenv.hostPlatform.system}
-          or (throw "Unsupported GoofCord Darwin platform: ${stdenv.hostPlatform.system}");
+      darwinDeps.hashes.${stdenv.hostPlatform.system}
+        or (throw "Unsupported GoofCord Darwin platform: ${stdenv.hostPlatform.system}");
     outputHashAlgo = "sha256";
     outputHashMode = "recursive";
 
@@ -82,16 +75,20 @@ let
   updateScript = writeShellApplication {
     name = "update-goofcord";
     runtimeInputs = [
-      bash
-      coreutils
-      gitMinimal
-      gnugrep
-      gnused
       nix
-      perl
+      nix-update
     ];
     text = ''
-      exec bash ${./update-goofcord-darwin-deps.sh} "$@"
+      system=$(nix eval --impure --raw --expr builtins.currentSystem)
+      if [[ "$system" != "aarch64-darwin" ]]; then
+        echo "GoofCord Darwin dependencies must be updated on aarch64-darwin" >&2
+        exit 1
+      fi
+      version=$(nix eval --raw .#goofcord.version)
+      nix-update --flake --version="$version" --src-only --no-src \
+        --override-filename pkgs/goofcord/default.nix goofcord.darwinNodeModules
+      nix-update --flake --version=skip --no-src \
+        --override-filename pkgs/goofcord/default.nix goofcord.darwinNodeModules
     '';
   };
 in
@@ -104,6 +101,7 @@ goofcord.overrideAttrs (
 
     passthru = (old.passthru or { }) // {
       inherit updateScript;
+      darwinNodeModules = nodeModules;
     };
   }
   // lib.attrsets.optionalAttrs stdenv.hostPlatform.isDarwin (
@@ -165,7 +163,11 @@ goofcord.overrideAttrs (
       '';
     }
     // lib.attrsets.optionalAttrs (old ? node-modules) {
-      node-modules = nodeModules;
+      node-modules =
+        if goofcord.version != darwinDeps.version then
+          throw "GoofCord ${goofcord.version} does not match the Darwin dependency snapshot for ${darwinDeps.version}; run `nix run .#update-goofcord` on aarch64-darwin"
+        else
+          nodeModules;
     }
   )
 )

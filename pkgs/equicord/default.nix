@@ -3,15 +3,8 @@
   fetchFromGitHub,
   fetchPnpmDeps,
   buildWebExtension ? false,
-  bun,
   callPackage,
-  writeShellApplication,
-  cacert,
-  curl,
-  jq,
-  nix,
-  nix-prefetch-github,
-  replaceVars,
+  nix-update-script,
 }:
 let
   version = "1.15.4.0-2026-09-05";
@@ -27,33 +20,13 @@ let
       hash
       ;
   };
-  updateScript = writeShellApplication {
-    name = "equicord-update";
-    runtimeInputs = [
-      bun
-      cacert
-      curl
-      jq
-      nix
-      nix-prefetch-github
+  updateScript = nix-update-script {
+    attrPath = "equicord";
+    extraArgs = [
+      "--flake"
+      "--version=branch=main"
+      "--override-filename=pkgs/equicord/default.nix"
     ];
-    text = ''
-      # shellcheck disable=SC1091
-      source ${
-        replaceVars ../../nix/scripts/update-vencord-family.sh {
-          clientName = "Equicord";
-          nixFile = "./pkgs/equicord/default.nix";
-          inherit (equicord.src) owner repo;
-          versionVar = "version";
-          hashVar = "hash";
-          revVar = "rev";
-          pnpmHashVar = "pnpmDepsHash";
-          callPackageArgs = "{ }";
-          branch = "main";
-          dependencyName = "equicord";
-        }
-      } "$@"
-    '';
   };
 in
 (equicord.override { inherit buildWebExtension; }).overrideAttrs (

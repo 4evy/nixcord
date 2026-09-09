@@ -5,6 +5,7 @@ pkgs.mkShellNoCC {
     bun
     git
     jq
+    nix-update
     nixfmt
     nodejs_24
     npins

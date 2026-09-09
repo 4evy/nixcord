@@ -43,7 +43,7 @@ jobs:
           --command bash -c
           'yamllint . && actionlint && zizmor --pedantic .
           && shellcheck .github/scripts/*.sh nix/benchmark-eval.sh nix/tests/benchmark-eval.sh
-          pkgs/discord/scripts/*.sh pkgs/goofcord/*.sh nix/scripts/*.sh'
+          pkgs/discord/scripts/*.sh'
 
       - name: Test evaluation benchmark CLI
         run: bash nix/tests/benchmark-eval.sh

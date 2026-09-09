@@ -6,6 +6,29 @@
       ...
     }:
     {
+      apps.update-plugins = {
+        type = "app";
+        program = pkgs.lib.meta.getExe (
+          pkgs.writeShellApplication {
+            name = "update-plugins";
+            runtimeInputs = [
+              pkgs.nix-update
+              pkgs.nix
+              pkgs.bun
+            ];
+            text = ''
+              ${pkgs.lib.escapeShellArgs config.packages.equicord.updateScript}
+              ${pkgs.lib.escapeShellArgs config.packages.vencord.updateScript}
+              for package in equicord vencord; do
+                dependency=$(nix eval --raw ".#$package.src" \
+                  --apply 'src: "github:" + src.owner + "/" + src.repo + "#" + src.rev')
+                bun add --dev --lockfile-only --no-progress "$package@$dependency"
+              done
+            '';
+          }
+        );
+      };
+
       apps.generate = {
         type = "app";
         program = pkgs.lib.meta.getExe (
