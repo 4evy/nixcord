@@ -35,6 +35,8 @@ stdenvNoCC.mkDerivation (finalAttrs: {
   ]
   ++ lib.lists.optional (!skipGitMigrations) git;
 
+  nativeCheckInputs = [ git ];
+
   nativeInstallCheckInputs = [ nix ];
 
   configurePhase = ''
