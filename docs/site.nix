@@ -31,20 +31,7 @@ let
     ];
   };
 
-  depsSrc = lib.fileset.toSource {
-    root = ./..;
-    fileset = lib.fileset.unions [
-      ../bun.lock
-      ../package.json
-      ./site/package.json
-      ../packages/ast/package.json
-      ../packages/cli/package.json
-      ../packages/git-analyzer/package.json
-      ../packages/nix-generator/package.json
-      ../packages/parser/package.json
-      ../packages/shared/package.json
-    ];
-  };
+  depsSrc = import ../nix/workspace-source.nix { inherit lib; };
 
   inherit (stdenvNoCC.hostPlatform) system;
 
