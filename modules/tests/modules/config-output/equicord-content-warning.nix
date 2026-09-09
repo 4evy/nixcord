@@ -2,7 +2,7 @@
 
 let
   common = import ./common.nix { inherit testLib; };
-  inherit (common) baseConfig discordModSettingsJSON recursiveUpdate;
+  inherit (common) baseConfig discordModSettingsSource recursiveUpdate;
 in
 {
   "contentWarning trigger words are written for Equicord" =
@@ -20,15 +20,11 @@ in
           };
         }
       );
-      settingsJson = discordModSettingsJSON config;
+      settingsJson = discordModSettingsSource config;
     in
-    assert settingsJson.plugins.ContentWarning.enabled == true;
-    assert
-      settingsJson.plugins.ContentWarning.triggerWords == [
-        "spoiler"
-        "secret"
-      ];
-    true;
+    ''
+      ${testLib.output.json settingsJson ''.plugins.ContentWarning.enabled == true and .plugins.ContentWarning.triggerWords == ["spoiler", "secret"]''}
+    '';
 
   "unset contentWarning trigger words keep upstream fallback active" =
     let
@@ -39,9 +35,9 @@ in
           config.plugins.contentWarning.enable = true;
         }
       );
-      settingsJson = discordModSettingsJSON config;
+      settingsJson = discordModSettingsSource config;
     in
-    assert settingsJson.plugins.ContentWarning.enabled == true;
-    assert settingsJson.plugins.ContentWarning.triggerWords == null;
-    true;
+    ''
+      ${testLib.output.json settingsJson ''.plugins.ContentWarning.enabled == true and .plugins.ContentWarning.triggerWords == null and (.plugins.ContentWarning | has("triggerWords"))''}
+    '';
 }

@@ -19,10 +19,10 @@ in
     vesktop.configDir = "/home/testuser/.config/vesktop";
   };
 
-  discordModSettingsJSON =
+  discordModSettingsSource =
     config:
     if config.home.activation ? nixcord-vencord-settings then
-      testLib.output.homeActivationInstallJSON config "nixcord-vencord-settings"
+      testLib.output.homeActivationSource config "nixcord-vencord-settings"
     else
-      testLib.output.homeActivationInstallJSON config "nixcord-equicord-settings";
+      testLib.output.homeActivationSource config "nixcord-equicord-settings";
 }

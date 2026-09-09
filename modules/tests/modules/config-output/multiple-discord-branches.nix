@@ -99,20 +99,18 @@ in
     true;
 
   "multiple Discord branches each receive managed host settings" =
-    assert lib.lists.all (
-      branch:
-      let
-        settings = testLib.output.homeFileJSON config "${configDirs.${branch}}/settings.json";
-      in
-      settings.BACKGROUND_COLOR == "#2c2d32"
-      && settings.SKIP_HOST_UPDATE
-      && settings.SKIP_MODULE_UPDATE
-      && !settings.USE_NEW_UPDATER
-    ) branches;
     assert config.home.activation ? nixcord-discord-stable-settings;
     assert config.home.activation ? nixcord-discord-ptb-settings;
     assert config.home.activation ? nixcord-discord-canary-settings;
-    true;
+    lib.strings.concatMapStringsSep "\n" (
+      branch:
+      testLib.output.json (testLib.output.homeFileSource config "${configDirs.${branch}}/settings.json") ''
+        .BACKGROUND_COLOR == "#2c2d32"
+        and .SKIP_HOST_UPDATE == true
+        and .SKIP_MODULE_UPDATE == true
+        and .USE_NEW_UPDATER == false
+      ''
+    ) branches;
 
   "Darwin profile overrides reach every branch and migration precedes settings" =
     if !pkgs.stdenvNoCC.hostPlatform.isDarwin then

@@ -21,14 +21,17 @@ in
         };
       };
       cfg = config.programs.nixcord;
-      dorionJson = testLib.output.homeFileJSON config "${cfg.dorion.configDir}/config.json";
+      dorionJson = testLib.output.homeFileSource config "${cfg.dorion.configDir}/config.json";
     in
-    assert dorionJson.autoupdate == true;
-    assert dorionJson.start_maximized == false;
-    assert dorionJson.disable_hardware_accel == true;
-    assert dorionJson.regression_setting == "kept";
-    assert !(dorionJson ? extra_settings);
-    true;
+    ''
+      ${testLib.output.json dorionJson ''
+        .autoupdate == true
+        and .start_maximized == false
+        and .disable_hardware_accel == true
+        and .regression_setting == "kept"
+        and (. | has("extra_settings") | not)
+      ''}
+    '';
 
   "legcord settings add enabled bundles without discarding user values" =
     let
@@ -45,21 +48,11 @@ in
           };
         };
       };
-      settingsJson = testLib.output.homeActivationInstallJSON config "nixcord-legcord-settings";
+      settingsJson = testLib.output.homeActivationSource config "nixcord-legcord-settings";
     in
-    assert
-      settingsJson.mods == [
-        "shelter"
-        "vencord"
-      ];
-    assert
-      settingsJson.noBundleUpdates == [
-        "shelter"
-        "vencord"
-      ];
-    assert settingsJson.channel == "canary";
-    assert settingsJson.doneSetup == true;
-    true;
+    ''
+      ${testLib.output.json settingsJson ''.channel == "canary" and .doneSetup == true and .mods == ["shelter", "vencord"] and .noBundleUpdates == ["shelter", "vencord"]''}
+    '';
 
   "installPackage controls the Home Manager package list" =
     let

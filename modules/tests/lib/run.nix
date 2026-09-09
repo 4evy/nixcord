@@ -10,7 +10,7 @@
           tests = testNames;
         }
         // lib.attrsets.mapAttrs (_: result: {
-          expr = result;
+          expr = if builtins.isString result then true else result;
           expected = true;
         }) tests
       );
@@ -20,7 +20,13 @@
         inherit failures;
         description = name;
       } == null;
-    pkgs.runCommand name { } ''
+    pkgs.runCommand name { nativeBuildInputs = [ pkgs.jq ]; } ''
+      ${lib.strings.concatStringsSep "\n" (
+        lib.attrsets.mapAttrsToList (case: result: ''
+          echo ${lib.strings.escapeShellArg case}
+          ${if builtins.isString result then result else ""}
+        '') tests
+      )}
       echo '${toString (builtins.length testNames)} ${name} tests passed'
       touch $out
     '';

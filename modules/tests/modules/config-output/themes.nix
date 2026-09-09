@@ -13,10 +13,7 @@ in
         }
       );
     in
-    assert
-      testLib.output.homeFileText config "/home/testuser/.config/vesktop/themes/myTheme.css"
-      == "body { background: black; }";
-    true;
+    testLib.output.text (testLib.output.homeFileSource config "/home/testuser/.config/vesktop/themes/myTheme.css") "body { background: black; }";
 
   "equibop themes produce css files" =
     let
@@ -28,8 +25,5 @@ in
         config.themes.myTheme = "body { background: black; }";
       };
     in
-    assert
-      testLib.output.homeFileText config "/home/testuser/.config/equibop/themes/myTheme.css"
-      == "body { background: black; }";
-    true;
+    testLib.output.text (testLib.output.homeFileSource config "/home/testuser/.config/equibop/themes/myTheme.css") "body { background: black; }";
 }

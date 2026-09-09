@@ -25,16 +25,15 @@ in
         };
       };
       cfg = config.programs.nixcord;
-      vesktopJson = testLib.output.homeFileJSON config "${cfg.vesktop.configDir}/settings/settings.json";
-      equibopJson = testLib.output.homeFileJSON config "${cfg.equibop.configDir}/settings/settings.json";
+      vesktopJson = testLib.output.homeFileSource config "${cfg.vesktop.configDir}/settings/settings.json";
+      equibopJson = testLib.output.homeFileSource config "${cfg.equibop.configDir}/settings/settings.json";
       vencordPluginKey = pluginJsonKey config firstVencordOnly;
       equicordPluginKey = pluginJsonKey config firstEquicordOnly;
     in
-    assert vesktopJson.plugins.${vencordPluginKey}.enabled == true;
-    assert !(builtins.hasAttr equicordPluginKey vesktopJson.plugins);
-    assert equibopJson.plugins.${equicordPluginKey}.enabled == true;
-    assert !(builtins.hasAttr vencordPluginKey equibopJson.plugins);
-    true;
+    ''
+      ${testLib.output.json vesktopJson ".plugins[${builtins.toJSON vencordPluginKey}].enabled == true and (.plugins | has(${builtins.toJSON equicordPluginKey}) | not) "}
+      ${testLib.output.json equibopJson ".plugins[${builtins.toJSON equicordPluginKey}].enabled == true and (.plugins | has(${builtins.toJSON vencordPluginKey}) | not) "}
+    '';
 
   "global and client config merge in documented precedence order" =
     let
@@ -48,12 +47,13 @@ in
         vesktopConfig.frameless = false;
       };
       cfg = config.programs.nixcord;
-      vesktopJson = testLib.output.homeFileJSON config "${cfg.vesktop.configDir}/settings/settings.json";
-      equibopJson = testLib.output.homeFileJSON config "${cfg.equibop.configDir}/settings/settings.json";
+      vesktopJson = testLib.output.homeFileSource config "${cfg.vesktop.configDir}/settings/settings.json";
+      equibopJson = testLib.output.homeFileSource config "${cfg.equibop.configDir}/settings/settings.json";
     in
-    assert vesktopJson.frameless == false;
-    assert equibopJson.frameless == true;
-    true;
+    ''
+      ${testLib.output.json vesktopJson ".frameless == false"}
+      ${testLib.output.json equibopJson ".frameless == true"}
+    '';
 
   "custom parse rules affect generated plugin and setting names" =
     let
@@ -75,13 +75,16 @@ in
           lowerThing.enable = true;
         };
       };
-      settingsJson = testLib.output.homeActivationInstallJSON config "nixcord-vencord-settings";
+      settingsJson = testLib.output.homeActivationSource config "nixcord-vencord-settings";
     in
-    assert settingsJson.plugins.MyPlugin.enabled == true;
-    assert settingsJson.plugins.MyPlugin.newSetting == "renamed";
-    assert settingsJson.plugins.MyPlugin.CUSTOM_FLAG == true;
-    assert settingsJson.plugins.lowerThing.enabled == true;
-    true;
+    ''
+      ${testLib.output.json settingsJson ''
+        .plugins.MyPlugin.enabled == true
+        and .plugins.MyPlugin.newSetting == "renamed"
+        and .plugins.MyPlugin.CUSTOM_FLAG == true
+        and .plugins.lowerThing.enabled == true
+      ''}
+    '';
 
   "desktop client settings and state keep their values separate" =
     let
@@ -100,13 +103,14 @@ in
         };
       };
       cfg = config.programs.nixcord;
-      read = testLib.output.homeFileJSON config;
+      read = testLib.output.homeFileSource config;
     in
-    assert (read "${cfg.vesktop.configDir}/settings.json").regressionClient == "vesktop";
-    assert (read "${cfg.vesktop.configDir}/state.json").regressionState == 1;
-    assert (read "${cfg.equibop.configDir}/settings.json").regressionClient == "equibop";
-    assert (read "${cfg.equibop.configDir}/state.json").regressionState == 2;
-    true;
+    ''
+      ${testLib.output.json (read "${cfg.vesktop.configDir}/settings.json") ''.regressionClient == "vesktop"''}
+      ${testLib.output.json (read "${cfg.vesktop.configDir}/state.json") ".regressionState == 1"}
+      ${testLib.output.json (read "${cfg.equibop.configDir}/settings.json") ''.regressionClient == "equibop"''}
+      ${testLib.output.json (read "${cfg.equibop.configDir}/state.json") ".regressionState == 2"}
+    '';
 
   "empty desktop client settings and state do not create files" =
     let

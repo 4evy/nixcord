@@ -22,10 +22,7 @@ in
         }
       );
     in
-    assert
-      testLib.output.homeFileText config "/home/testuser/.config/Vencord/settings/quickCss.css"
-      == "body { color: red; }";
-    true;
+    testLib.output.text (testLib.output.homeFileSource config "/home/testuser/.config/Vencord/settings/quickCss.css") "body { color: red; }";
 
   "quickCss skips the css file when empty" =
     let
@@ -53,9 +50,8 @@ in
       vesktopPath = "${cfg.vesktop.configDir}/settings/quickCss.css";
       equibopPath = "${cfg.equibop.configDir}/settings/quickCss.css";
     in
-    assert testLib.output.homeFileText config vesktopPath == "body { color: purple; }";
     assert !(builtins.hasAttr equibopPath config.home.file);
-    true;
+    testLib.output.text (testLib.output.homeFileSource config vesktopPath) "body { color: purple; }";
 
   "Vencord-specific useQuickCss enables Discord quick CSS" =
     let
@@ -67,6 +63,5 @@ in
       };
       path = "${config.programs.nixcord.configDir}/settings/quickCss.css";
     in
-    assert testLib.output.homeFileText config path == "body { color: green; }";
-    true;
+    testLib.output.text (testLib.output.homeFileSource config path) "body { color: green; }";
 }

@@ -2,7 +2,7 @@
 
 let
   common = import ./common.nix { inherit testLib; };
-  inherit (common) baseConfig discordModSettingsJSON recursiveUpdate;
+  inherit (common) baseConfig discordModSettingsSource recursiveUpdate;
   inherit (testLib) lib pkgs;
   localPlugin = ../../../../packages/parser/tests/fixtures/equicord/src/plugins/shared-plugin;
   stubEquicordPackage = pkgs.runCommand "nixcord-equicord-stub" { } "mkdir $out" // {
@@ -25,10 +25,11 @@ in
           config.plugins.alwaysAnimate.enable = true;
         }
       );
-      settingsJson = discordModSettingsJSON config;
+      settingsJson = discordModSettingsSource config;
     in
-    assert settingsJson.plugins.AlwaysAnimate.enabled == true;
-    true;
+    ''
+      ${testLib.output.json settingsJson ".plugins.AlwaysAnimate.enabled == true"}
+    '';
 
   "acronym plugin option emits upstream JSON key" =
     let
@@ -37,11 +38,11 @@ in
           config.plugins.clearUrls.enable = true;
         }
       );
-      settingsJson = discordModSettingsJSON config;
+      settingsJson = discordModSettingsSource config;
     in
-    assert settingsJson.plugins.ClearURLs.enabled == true;
-    assert !(settingsJson.plugins ? ClearUrls);
-    true;
+    ''
+      ${testLib.output.json settingsJson ''.plugins.ClearURLs.enabled == true and (.plugins | has("ClearUrls") | not)''}
+    '';
 
   "legacy acronym plugin option still emits upstream JSON key" =
     let
@@ -50,11 +51,11 @@ in
           config.plugins.ClearURLs.enable = true;
         }
       );
-      settingsJson = discordModSettingsJSON config;
+      settingsJson = discordModSettingsSource config;
     in
-    assert settingsJson.plugins.ClearURLs.enabled == true;
-    assert !(settingsJson.plugins ? ClearUrls);
-    true;
+    ''
+      ${testLib.output.json settingsJson ''.plugins.ClearURLs.enabled == true and (.plugins | has("ClearUrls") | not)''}
+    '';
 
   "acronym plugin setting option emits upstream JSON key" =
     let
@@ -66,12 +67,11 @@ in
           };
         }
       );
-      settingsJson = discordModSettingsJSON config;
+      settingsJson = discordModSettingsSource config;
     in
-    assert settingsJson.plugins.XSOverlay.enabled == true;
-    assert settingsJson.plugins.XSOverlay.preferUDP == true;
-    assert !(settingsJson.plugins.XSOverlay ? preferUdp);
-    true;
+    ''
+      ${testLib.output.json settingsJson ''.plugins.XSOverlay.enabled == true and .plugins.XSOverlay.preferUDP == true and (.plugins.XSOverlay | has("preferUdp") | not)''}
+    '';
 
   "CustomRPC private settings emit upstream JSON keys" =
     let
@@ -85,15 +85,18 @@ in
           };
         }
       );
-      settingsJson = discordModSettingsJSON config;
+      settingsJson = discordModSettingsSource config;
     in
-    assert settingsJson.plugins.CustomRPC.enabled == true;
-    assert settingsJson.plugins.CustomRPC.appID == "1234567890";
-    assert settingsJson.plugins.CustomRPC.detailsURL == "https://example.com/details";
-    assert settingsJson.plugins.CustomRPC.type == 6;
-    assert !(settingsJson.plugins.CustomRPC ? appId);
-    assert !(settingsJson.plugins.CustomRPC ? detailsUrl);
-    true;
+    ''
+      ${testLib.output.json settingsJson ''
+        .plugins.CustomRPC.enabled == true
+        and .plugins.CustomRPC.appID == "1234567890"
+        and .plugins.CustomRPC.detailsURL == "https://example.com/details"
+        and .plugins.CustomRPC.type == 6
+        and (.plugins.CustomRPC | has("appId") | not)
+        and (.plugins.CustomRPC | has("detailsUrl") | not)
+      ''}
+    '';
 
   "disabled plugin appears as disabled in generated settings" =
     let
@@ -102,10 +105,11 @@ in
           config.plugins.alwaysAnimate.enable = false;
         }
       );
-      settingsJson = discordModSettingsJSON config;
+      settingsJson = discordModSettingsSource config;
     in
-    assert settingsJson.plugins.AlwaysAnimate.enabled == false;
-    true;
+    ''
+      ${testLib.output.json settingsJson ".plugins.AlwaysAnimate.enabled == false"}
+    '';
 
   "plugin settings are copied to generated output" =
     let
@@ -118,12 +122,11 @@ in
           };
         }
       );
-      settingsJson = discordModSettingsJSON config;
+      settingsJson = discordModSettingsSource config;
     in
-    assert settingsJson.plugins.VcNarrator.enabled == true;
-    assert settingsJson.plugins.VcNarrator.volume == 0.5;
-    assert settingsJson.plugins.VcNarrator.joinMessage == "hello {{USER}}";
-    true;
+    ''
+      ${testLib.output.json settingsJson ''.plugins.VcNarrator.enabled == true and .plugins.VcNarrator.volume == 0.5 and .plugins.VcNarrator.joinMessage == "hello {{USER}}"''}
+    '';
 
   "extraConfig is merged into generated output" =
     let
@@ -132,10 +135,11 @@ in
           extraConfig.customSetting = "myValue";
         }
       );
-      settingsJson = discordModSettingsJSON config;
+      settingsJson = discordModSettingsSource config;
     in
-    assert settingsJson.customSetting == "myValue";
-    true;
+    ''
+      ${testLib.output.json settingsJson ''.customSetting == "myValue"''}
+    '';
 
   "themeLinks are preserved in generated output" =
     let
@@ -144,10 +148,11 @@ in
           config.themeLinks = [ "https://example.com/theme.css" ];
         }
       );
-      settingsJson = discordModSettingsJSON config;
+      settingsJson = discordModSettingsSource config;
     in
-    assert builtins.elem "https://example.com/theme.css" settingsJson.themeLinks;
-    true;
+    ''
+      ${testLib.output.json settingsJson ''(.themeLinks | index("https://example.com/theme.css") != null)''}
+    '';
 
   "enabledThemeLinks are preserved in generated output" =
     let
@@ -156,10 +161,11 @@ in
           config.enabledThemeLinks = [ "https://example.com/enabled-theme.css" ];
         }
       );
-      settingsJson = discordModSettingsJSON config;
+      settingsJson = discordModSettingsSource config;
     in
-    assert builtins.elem "https://example.com/enabled-theme.css" settingsJson.enabledThemeLinks;
-    true;
+    ''
+      ${testLib.output.json settingsJson ''(.enabledThemeLinks | index("https://example.com/enabled-theme.css") != null)''}
+    '';
 
   "useQuickCss is renamed for generated output" =
     let
@@ -168,10 +174,11 @@ in
           config.useQuickCss = true;
         }
       );
-      settingsJson = discordModSettingsJSON config;
+      settingsJson = discordModSettingsSource config;
     in
-    assert settingsJson.useQuickCSS == true;
-    true;
+    ''
+      ${testLib.output.json settingsJson ".useQuickCSS == true"}
+    '';
 
   "plugin UI element settings are copied to generated output" =
     let
@@ -184,12 +191,11 @@ in
           };
         }
       );
-      settingsJson = discordModSettingsJSON config;
+      settingsJson = discordModSettingsSource config;
     in
-    assert settingsJson.uiElements.chatBarButtons.MessageLatency.enabled == false;
-    assert settingsJson.uiElements.chatBarButtons.someCustomButton.enabled == false;
-    assert settingsJson.uiElements.messagePopoverButtons.Translate.enabled == true;
-    true;
+    ''
+      ${testLib.output.json settingsJson ".uiElements.chatBarButtons.MessageLatency.enabled == false and .uiElements.chatBarButtons.someCustomButton.enabled == false and .uiElements.messagePopoverButtons.Translate.enabled == true"}
+    '';
 
   "absolute string userPlugins are coerced and copied through the Nix store" =
     let

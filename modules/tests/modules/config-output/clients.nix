@@ -159,15 +159,13 @@ in
           };
         }
       );
-      settingsJson = testLib.output.homeFileJSON config "/home/testuser/.config/discord/settings.json";
+      settingsJson = testLib.output.homeFileSource config "/home/testuser/.config/discord/settings.json";
     in
     assert !(builtins.hasAttr "/home/testuser/.config/discord/settings.json" config.home.file);
     assert config.home.activation ? nixcord-discord-settings;
-    assert settingsJson.BACKGROUND_COLOR == "#2c2d32";
-    assert settingsJson.SKIP_HOST_UPDATE == true;
-    assert settingsJson.SKIP_MODULE_UPDATE == true;
-    assert settingsJson.USE_NEW_UPDATER == false;
-    true;
+    ''
+      ${testLib.output.json settingsJson ''.BACKGROUND_COLOR == "#2c2d32" and .SKIP_HOST_UPDATE == true and .SKIP_MODULE_UPDATE == true and .USE_NEW_UPDATER == false''}
+    '';
 
   "Discord packages without list support receive shell-escaped commandLineArgs" =
     let
@@ -228,10 +226,11 @@ in
           config.plugins.alwaysAnimate.enable = true;
         }
       );
-      settingsJson = testLib.output.homeFileJSON config "/home/testuser/.config/vesktop/settings/settings.json";
+      settingsJson = testLib.output.homeFileSource config "/home/testuser/.config/vesktop/settings/settings.json";
     in
-    assert settingsJson.plugins.AlwaysAnimate.enabled == true;
-    true;
+    ''
+      ${testLib.output.json settingsJson ".plugins.AlwaysAnimate.enabled == true"}
+    '';
 
   "vesktop package options reach its override" =
     let
@@ -338,33 +337,12 @@ in
         };
       };
       cfg = config.programs.nixcord;
-      goofcordJson = testLib.output.homeActivationInstallJSON config "nixcord-goofcord-settings";
+      goofcordJson = testLib.output.homeActivationSource config "nixcord-goofcord-settings";
       modSettings = builtins.fromJSON config._nixcordTest.common.configs.goofcordModSettings;
       bootstrap = config._nixcordTest.common.configs.goofcordSettingsBootstrapText;
       fileNames = map (spec: spec.name) config._nixcordTest.common.fileSpecs;
     in
     assert toString cfg.finalPackage.goofcord != toString stubGoofcordPackage;
-    assert goofcordJson.minimizeToTray == true;
-    assert goofcordJson.autoscroll == true;
-    assert goofcordJson.assets.Custom == "https://example.invalid/custom.js";
-    assert goofcordJson.assets.FromSettings == "https://example.invalid/from-settings.js";
-    assert goofcordJson.assets.Precedence == "https://example.invalid/from-extra-assets.js";
-    assert lib.strings.hasPrefix "/nix/store/" goofcordJson.assets.NixcordPreVencord;
-    assert lib.strings.hasSuffix "/clientMod.js" goofcordJson.assets.NixcordClientMod;
-    assert builtins.all (file: builtins.elem file goofcordJson.managedFiles) [
-      "NixcordPreVencord.js"
-      "NixcordPostVencord.js"
-      "NixcordClientMod.js"
-      "NixcordClientModStyles.css"
-      "NixcordQuickCSS.css"
-      "NixcordThemes.css"
-      "PreVencord.js"
-      "PostVencord.js"
-      "Vencord.js"
-      "VencordStyles.css"
-      "Equicord.js"
-      "EquicordStyles.css"
-    ];
     assert modSettings.plugins.AlwaysAnimate.enabled == true;
     assert lib.strings.hasInfix "VencordSettings" bootstrap;
     assert builtins.all (name: builtins.elem name fileNames) [
@@ -376,7 +354,18 @@ in
       "goofcord-quick-css"
       "goofcord-themes"
     ];
-    true;
+    ''
+      ${testLib.output.json goofcordJson ''
+        .minimizeToTray == true
+        and .autoscroll == true
+        and .assets.Custom == "https://example.invalid/custom.js"
+        and .assets.FromSettings == "https://example.invalid/from-settings.js"
+        and .assets.Precedence == "https://example.invalid/from-extra-assets.js"
+        and (.assets.NixcordPreVencord | startswith("/nix/store/"))
+        and (.assets.NixcordClientMod | endswith("/clientMod.js"))
+        and (.managedFiles | contains(["NixcordPreVencord.js", "NixcordPostVencord.js", "NixcordClientMod.js", "NixcordClientModStyles.css", "NixcordQuickCSS.css", "NixcordThemes.css", "PreVencord.js", "PostVencord.js", "Vencord.js", "VencordStyles.css", "Equicord.js", "EquicordStyles.css"]))
+      ''}
+    '';
 
   "goofcord can use Equicord and filters incompatible plugins" =
     let
