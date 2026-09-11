@@ -7743,16 +7743,6 @@
       }
     }
   },
-  "whoReacted": {
-    "description": "Renders the avatars of users who reacted to a message (Equicord-only)",
-    "settings": {
-      "avatarClick": {
-        "type": "types.bool",
-        "default": false,
-        "description": "Toggle clicking avatars in reactions (restart required)"
-      }
-    }
-  },
   "whosWatching": {
     "description": "Hover over the screenshare icon to view what users are watching your stream (Equicord-only)",
     "settings": {

@@ -9,6 +9,10 @@
       }
     }
   },
+  "addAttachments": {
+    "description": "Allows you to add new attachments while editing messages (Shared between Vencord and Equicord)",
+    "settings": {}
+  },
   "appleMusicRichPresence": {
     "description": "Discord rich presence for your Apple Music! (Shared between Vencord and Equicord)",
     "settings": {
@@ -536,7 +540,7 @@
       "ignoreListening": {
         "type": "types.bool",
         "default": false,
-        "description": "Ignore all listening activities (These are usually spotify activities)"
+        "description": "Ignore all listening activities (These are usually Spotify activities)"
       },
       "ignoreWatching": {
         "type": "types.bool",
@@ -1892,6 +1896,16 @@
   "webScreenShareFixes": {
     "description": "Removes 2500kbps bitrate cap on chromium and vesktop clients and fixes CPU usage growing endlessly while screensharing. (Shared between Vencord and Equicord)",
     "settings": {}
+  },
+  "whoReacted": {
+    "description": "Renders the avatars of users who reacted to a message (Shared between Vencord and Equicord)",
+    "settings": {
+      "clickableAvatars": {
+        "type": "types.bool",
+        "default": true,
+        "description": "While this is enabled, clicking a reacting user's avatar will open their profile instead of adding the reaction (restart required)"
+      }
+    }
   },
   "xsOverlay": {
     "description": "Forwards discord notifications to XSOverlay, for easy viewing in VR (Shared between Vencord and Equicord)",

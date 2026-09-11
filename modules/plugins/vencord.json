@@ -1,8 +1,4 @@
 {
-  "addAttachments": {
-    "description": "Allows you to add new attachments while editing messages (Vencord-only)",
-    "settings": {}
-  },
   "alwaysAnimate": {
     "description": "Animates anything that can be animated (Vencord-only)",
     "settings": {}
@@ -923,16 +919,6 @@
         "type": "types.bool",
         "default": true,
         "description": "Show the plugins menu in the toolbox"
-      }
-    }
-  },
-  "whoReacted": {
-    "description": "Renders the avatars of users who reacted to a message (Vencord-only)",
-    "settings": {
-      "clickableAvatars": {
-        "type": "types.bool",
-        "default": true,
-        "description": "While this is enabled, clicking a reacting user's avatar will open their profile instead of adding the reaction (restart required)"
       }
     }
   }
