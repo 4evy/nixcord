@@ -145,6 +145,9 @@ const plans: Record<'stock' | 'openasar', () => PatchPlan> = {
         }));
       }`,
       checkForUpdates: `async () => {
+        // initOld checks before launchSplash creates the window. Yield so its
+        // completion handler can launch the main window instead of returning.
+        await Promise.resolve();
         events.emit(exports.CHECKING_FOR_UPDATES);
         events.emit(exports.UPDATE_CHECK_FINISHED, {
           succeeded: true, updateCount: 0, manualRequired: false

@@ -220,6 +220,12 @@ let
         --replace-fail \
           "if (Constants.USE_NEW_UPDATER && updater.tryInitUpdater(" \
           "if (!buildInfo.disableUpdater && Constants.USE_NEW_UPDATER && updater.tryInitUpdater("
+      # Match stock Discord's Linux workaround for Wayland startup hangs.
+      # Add it to OpenASAR's flags so its preset cannot overwrite the switch.
+      substituteInPlace src/cmdSwitches.js \
+        --replace-fail \
+          "let c = {};" \
+          "if (process.platform === 'linux') flags.push('--disable-features=WaylandWpColorManagerV1'); let c = {};"
       ${patchUpdater} openasar src/updater/moduleUpdater.js
     '';
   });
