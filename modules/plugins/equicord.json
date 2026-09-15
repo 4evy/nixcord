@@ -415,6 +415,33 @@
       }
     }
   },
+  "betterImageEditor": {
+    "description": "Image editor with shelving for older images and allowing cropping (Equicord-only)",
+    "settings": {
+      "librarySize": {
+        "type": "types.float",
+        "default": {
+          "__nixRaw": "24.0"
+        },
+        "description": "How many pictures to keep on each shelf."
+      },
+      "rememberCrop": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Restore the zoom and position you last used for a picture."
+      },
+      "saveCropped": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Keep a copy of each picture after you crop it."
+      },
+      "askBeforeSavingCropped": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Ask first, instead of keeping the cropped copy automatically."
+      }
+    }
+  },
   "betterInvites": {
     "description": "See invites expiration date, view inviter profile and preview servers before joining by clicking the name (Equicord-only)",
     "settings": {}
@@ -5412,6 +5439,10 @@
         "description": "Option to avoid states"
       }
     }
+  },
+  "reactionTimestamps": {
+    "description": "Shows each reaction time in the reaction popout. (Equicord-only)",
+    "settings": {}
   },
   "recentDmSwitcher": {
     "description": "Ctrl+Tab between most recently used DMs (Ctrl+Shift+Tab reverse) (Equicord-only)",
