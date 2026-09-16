@@ -1,13 +1,17 @@
+import { type ExecFileOptionsWithStringEncoding, execFile } from 'node:child_process';
 import { realpath } from 'node:fs/promises';
+import { promisify } from 'node:util';
 import { REMOVAL_EXPIRY_DAYS, RENAME_EXPIRY_DAYS } from '@nixcord/shared';
-import { execFile } from 'child_process';
-import { promisify } from 'util';
+import { limitFunction } from 'p-limit';
+import { ts } from 'ts-morph';
 
-const execFileAsync = promisify(execFile);
+const execFileAsync = limitFunction<
+  [file: string, args: readonly string[], options: ExecFileOptionsWithStringEncoding],
+  { stdout: string; stderr: string }
+>(promisify(execFile), { concurrency: 8 });
 
 const COMMIT_PREFIX = 'COMMIT:';
 const TYPESCRIPT_FILE_PATTERN = /\.(ts|tsx)$/;
-const SETTING_DECLARATION_PATTERN = /^(\s*)(?:["']([\w$]+)["']|([A-Za-z_$][\w$]*))\s*:\s*\{/;
 
 type GitCommit = {
   hash: string;
@@ -65,39 +69,36 @@ const getRemovedSettings = async (
       execFileAsync('git', ['show', `${oldHash}:${filePath}`], { cwd: repoPath }),
       execFileAsync('git', ['show', `${newHash}:${filePath}`], { cwd: repoPath }),
     ]);
-    const oldSettings = extractDeclaredSettings(oldFile.stdout);
-    const newSettings = extractDeclaredSettings(newFile.stdout);
+    const oldSettings = extractDeclaredSettings(oldFile.stdout, filePath);
+    const newSettings = extractDeclaredSettings(newFile.stdout, filePath);
     return [...oldSettings].filter((setting) => !newSettings.has(setting));
   } catch {
     return [];
   }
 };
 
-const extractDeclaredSettings = (source: string): Set<string> => {
+const extractDeclaredSettings = (source: string, filePath: string): Set<string> => {
   const settings = new Set<string>();
-  const lines = source.split('\n');
-
-  for (let index = 0; index < lines.length; index++) {
-    const callLine = lines[index];
-    if (!callLine.includes('definePluginSettings({')) continue;
-    const callIndentation = callLine.match(/^\s*/)?.[0].length ?? 0;
-    const candidates: Array<{ indentation: number; name: string }> = [];
-
-    for (index += 1; index < lines.length; index++) {
-      const line = lines[index];
-      const indentation = line.match(/^\s*/)?.[0].length ?? 0;
-      if (indentation <= callIndentation && /^\s*}\)/.test(line)) break;
-      const match = line.match(SETTING_DECLARATION_PATTERN);
-      const name = match?.[2] ?? match?.[3];
-      if (match && name) candidates.push({ indentation: match[1].length, name });
+  const sourceFile = ts.createSourceFile(filePath, source, ts.ScriptTarget.Latest);
+  const visit = (node: ts.Node): void => {
+    if (
+      ts.isCallExpression(node) &&
+      ts.isIdentifier(node.expression) &&
+      node.expression.text === 'definePluginSettings'
+    ) {
+      const argument = node.arguments[0];
+      if (argument && ts.isObjectLiteralExpression(argument)) {
+        for (const property of argument.properties) {
+          const name = property.name;
+          if (name && (ts.isIdentifier(name) || ts.isStringLiteral(name))) {
+            settings.add(name.text);
+          }
+        }
+      }
     }
-
-    if (candidates.length === 0) continue;
-    const settingIndentation = Math.min(...candidates.map(({ indentation }) => indentation));
-    for (const candidate of candidates) {
-      if (candidate.indentation === settingIndentation) settings.add(candidate.name);
-    }
-  }
+    ts.forEachChild(node, visit);
+  };
+  visit(sourceFile);
 
   return settings;
 };
@@ -313,8 +314,6 @@ export const extractDeprecationsFromGit = async (
   if (!(await hasGit(repoPath))) return [];
 
   const dirs = pluginsDirs ?? ['src/plugins'];
-  const declarationPattern =
-    '^[[:space:]]*([A-Za-z_$][A-Za-z0-9_$]*|["\'][A-Za-z0-9_$]+["\'])[[:space:]]*:[[:space:]]*\\{';
   const pathspecs = dirs.flatMap((dir) => [
     `:(glob)${dir}/*.ts`,
     `:(glob)${dir}/*.tsx`,
@@ -331,7 +330,6 @@ export const extractDeprecationsFromGit = async (
         `--since=${REMOVAL_EXPIRY_DAYS} days ago`,
         '-M',
         '--diff-filter=M',
-        `-G${declarationPattern}`,
         '--name-status',
         '-z',
         '--no-color',
