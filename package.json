@@ -2,14 +2,19 @@
   "private": true,
   "type": "module",
   "workspaces": [
-    "packages/*",
+    "packages/shared",
+    "packages/ast",
+    "packages/git-analyzer",
+    "packages/nix-generator",
+    "packages/parser",
+    "packages/cli",
     "docs/site"
   ],
   "scripts": {
-    "build": "bun run --filter '*' build && tsc --build --emitDeclarationOnly --force",
-    "test": "vitest run --exclude 'packages/parser/tests/validation/**' --no-isolate --experimental.fsModuleCache --maxWorkers=4",
-    "test:all": "bun run test && bun run test:upstream",
-    "test:upstream": "vitest run packages/parser/tests/validation/real-world.test.ts --no-isolate --experimental.fsModuleCache --maxWorkers=4",
+    "build": "npm run build:packages && npm run docs:build",
+    "test": "vitest run --exclude 'packages/parser/tests/validation/**' --no-isolate --fsModuleCache --maxWorkers=4",
+    "test:all": "npm run test && npm run test:upstream",
+    "test:upstream": "vitest run packages/parser/tests/validation/real-world.test.ts --no-isolate --fsModuleCache --maxWorkers=4",
     "test:watch": "vitest --exclude 'packages/parser/tests/validation/**' --no-isolate --maxWorkers=4",
     "typecheck": "tsc --build",
     "clean": "rm -rf packages/*/dist",
@@ -17,25 +22,29 @@
     "format:check": "biome check .",
     "lint": "fallow dead-code && fallow dupes",
     "lint:health": "fallow health",
-    "docs:dev": "bun run --filter nixcord-docs dev",
-    "docs:dev:options": "bun run --filter nixcord-docs dev:options",
-    "docs:prepare-options": "bun run --filter nixcord-docs prepare-options",
-    "docs:build": "bun run --filter nixcord-docs build",
-    "docs:check": "bun run --filter nixcord-docs check",
-    "docs:preview": "bun run --filter nixcord-docs preview",
-    "check": "bun run typecheck && bun run docs:check && bun run lint && bun run format:check"
+    "docs:dev": "npm run dev --workspace nixcord-docs",
+    "docs:dev:options": "npm run dev:options --workspace nixcord-docs",
+    "docs:prepare-options": "npm run prepare-options --workspace nixcord-docs",
+    "docs:build": "npm run build --workspace nixcord-docs",
+    "docs:check": "npm run check --workspace nixcord-docs",
+    "docs:preview": "npm run preview --workspace nixcord-docs",
+    "check": "npm run typecheck && npm run docs:check && npm run lint && npm run format:check",
+    "build:packages": "npm run build --workspace packages && tsc --build --emitDeclarationOnly --force"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.7",
-    "@types/bun": "1.3.14",
+    "@biomejs/biome": "2.5.13",
     "@types/fs-extra": "11.0.4",
-    "@types/node": "26.1.2",
+    "@types/node": "26.6.1",
     "@typescript/native": "npm:typescript@7.0.2",
-    "equicord": "github:Equicord/Equicord#56c4dd99b4560aff00e4a6e57da9626b8a910bd0",
-    "fallow": "3.14.0",
+    "equicord": "https://github.com/Equicord/Equicord/archive/56c4dd99b4560aff00e4a6e57da9626b8a910bd0.tar.gz",
+    "fallow": "3.26.0",
     "typescript": "npm:@typescript/typescript6@6.0.2",
-    "vencord": "github:Vendicated/Vencord#339b85ba4055dfec6b349b7fcd2ad420d775793a",
-    "vite": "8.2.0",
-    "vitest": "5.0.0"
-  }
+    "vencord": "https://github.com/Vendicated/Vencord/archive/339b85ba4055dfec6b349b7fcd2ad420d775793a.tar.gz",
+    "vite": "8.3.0",
+    "vitest": "5.0.1"
+  },
+  "engines": {
+    "node": "26.8.2"
+  },
+  "packageManager": "npm@11.19.1"
 }

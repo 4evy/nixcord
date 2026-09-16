@@ -5,24 +5,24 @@
   "scripts": {
     "prepare-options": "mkdir -p public && nix build ../..#docs-json --out-link .options-json-result && rm -f public/options.json && install -m 0644 .options-json-result/share/doc/nixos/options.json public/options.json && unlink .options-json-result",
     "dev": "vite --host 127.0.0.1",
-    "dev:options": "bun run prepare-options && vite --host 127.0.0.1",
-    "generate-logo": "bun run scripts/generate-nix-logo.ts",
+    "dev:options": "npm run prepare-options && vite --host 127.0.0.1",
+    "generate-logo": "node scripts/generate-nix-logo.ts",
     "build": "vite build",
     "check": "tsc --noEmit --project tsconfig.json",
     "preview": "vite preview --host 127.0.0.1"
   },
   "dependencies": {
-    "@sveltejs/vite-plugin-svelte": "^7.2.0",
+    "@sveltejs/vite-plugin-svelte": "^7.3.0",
     "@tailwindcss/vite": "^4.3.3",
-    "highlight.js": "^11.11.1",
+    "highlight.js": "^11.12.0",
     "mode-watcher": "^1.1.0",
-    "svelte": "^5.56.8",
+    "svelte": "^5.57.0",
     "tailwindcss": "^4.3.3",
-    "vite": "^8.2.0"
+    "vite": "^8.3.0"
   },
   "devDependencies": {
     "@typescript/native": "npm:typescript@7.0.2",
-    "fs-fixture": "2.14.0",
+    "fs-fixture": "2.16.0",
     "typescript": "npm:@typescript/typescript6@6.0.2"
   }
 }

@@ -22,14 +22,11 @@ let
   );
 in
 {
-  dependencies = import ../../nix/workspace-source.nix { inherit lib; };
-
   project = lib.fileset.toSource {
     inherit root;
     fileset = lib.fileset.unions [
-      ../../package.json
-      ../../bun.lock
-      ../../docs/site/package.json
+      (lib.fileset.fromSource (import ../../nix/workspace-source.nix { inherit lib; }))
+      ../../tsconfig.json
       ../../tsconfig.base.json
       ../../vitest.workspace.ts
       ../../vite.config.shared.ts

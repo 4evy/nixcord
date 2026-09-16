@@ -2,12 +2,11 @@
 pkgs.mkShellNoCC {
   packages = with pkgs; [
     actionlint
-    bun
     git
     jq
     nix-update
     nixfmt
-    nodejs_24
+    (callPackage ./nodejs.nix { })
     npins
     treefmt
     yamllint
@@ -16,7 +15,7 @@ pkgs.mkShellNoCC {
 
   shellHook = ''
     echo "nixcord development shell"
-    echo "Run 'bun install' once, then 'bun run check' and 'nix flake check'."
+    echo "Run 'npm ci' once, then 'npm run check' and 'nix flake check'."
     echo "Run './nix/benchmark-eval.sh [GIT_REF]' to compare evaluator cost and check IFD."
   '';
 }

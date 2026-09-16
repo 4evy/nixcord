@@ -1,9 +1,7 @@
 {
-  stdenvNoCC,
+  buildNpmPackage,
   lib,
   callPackage,
-  nodejs,
-  bun,
   git,
   writableTmpDirAsHomeHook,
   nix,
@@ -12,9 +10,10 @@
   skipGitMigrations ? true,
 }:
 let
+  nodejs = callPackage ../../nix/nodejs.nix { };
   sources = import ./sources.nix { inherit lib; };
 in
-stdenvNoCC.mkDerivation (finalAttrs: {
+buildNpmPackage {
   pname = "nixcord-plugin-options";
   version = "generated";
 
@@ -23,13 +22,12 @@ stdenvNoCC.mkDerivation (finalAttrs: {
 
   src = sources.project;
 
-  node_modules = callPackage ./node-modules.nix {
-    inherit (finalAttrs) version;
-    src = sources.dependencies;
-  };
+  inherit nodejs;
+  npmDeps = callPackage ./node-modules.nix { };
+  npmDepsFetcherVersion = 2;
+  npmInstallFlags = [ "--ignore-scripts" ];
 
   nativeBuildInputs = [
-    bun
     nodejs
     writableTmpDirAsHomeHook
   ]
@@ -39,26 +37,7 @@ stdenvNoCC.mkDerivation (finalAttrs: {
 
   nativeInstallCheckInputs = [ nix ];
 
-  configurePhase = ''
-    runHook preConfigure
-
-    cp -R ${finalAttrs.node_modules}/. .
-    chmod -R u+w node_modules packages/*/node_modules
-    patchShebangs --build node_modules packages/*/node_modules
-
-    runHook postConfigure
-  '';
-
-  buildPhase = ''
-    runHook preBuild
-    bun run --filter '@nixcord/shared' build
-    bun run --filter '@nixcord/git-analyzer' build
-    bun run --filter '@nixcord/ast' build
-    bun run --filter '@nixcord/nix-generator' build
-    bun run --filter '@nixcord/parser' build
-    bun run --filter '@nixcord/cli' build
-    runHook postBuild
-  '';
+  npmBuildScript = "build:packages";
 
   doCheck = true;
 
@@ -67,13 +46,13 @@ stdenvNoCC.mkDerivation (finalAttrs: {
     ./node_modules/.bin/vitest run \
       --exclude 'packages/parser/tests/validation/**' \
       --no-isolate \
-      --experimental.fsModuleCache \
+      --fsModuleCache \
       --maxWorkers=1 \
       --testTimeout=30000
     ./node_modules/.bin/vitest run \
       packages/parser/tests/validation/real-world.test.ts \
       --no-isolate \
-      --experimental.fsModuleCache \
+      --fsModuleCache \
       --maxWorkers=1 \
       --testTimeout=30000
     runHook postCheck
@@ -133,6 +112,6 @@ stdenvNoCC.mkDerivation (finalAttrs: {
     description = "Generate nixcord Vencord and Equicord plugin option files";
     homepage = "https://github.com/4evy/nixcord";
     license = lib.licenses.mit;
-    inherit (finalAttrs.node_modules.meta) platforms;
+    platforms = lib.platforms.unix;
   };
-})
+}

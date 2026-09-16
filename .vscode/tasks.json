@@ -4,27 +4,27 @@
     {
       "label": "typecheck",
       "type": "shell",
-      "command": "bun run typecheck",
+      "command": "npm run typecheck",
       "group": "build",
       "problemMatcher": "$tsc"
     },
     {
       "label": "test",
       "type": "shell",
-      "command": "bun run test",
+      "command": "npm run test",
       "group": "test",
       "problemMatcher": []
     },
     {
       "label": "format:check",
       "type": "shell",
-      "command": "bun run format:check",
+      "command": "npm run format:check",
       "problemMatcher": []
     },
     {
       "label": "docs:dev",
       "type": "shell",
-      "command": "bun run docs:dev",
+      "command": "npm run docs:dev",
       "isBackground": true,
       "problemMatcher": {
         "owner": "vite",

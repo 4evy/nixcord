@@ -1,0 +1,20 @@
+name: Set up npm
+description: Install the pinned Node.js version and restore workspace dependencies
+
+inputs:
+  working-directory:
+    description: Directory containing the package manifest and npm lockfile
+    required: false
+    default: "."
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      with:
+        node-version-file: package.json
+
+    - name: Install workspace dependencies
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: npm ci

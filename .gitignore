@@ -94,7 +94,6 @@ tags
 node_modules/
 
 # Bun
-bun.lockb
 tsconfig.tools.tsbuildinfo
 npm-debug.log*
 yarn-debug.log*

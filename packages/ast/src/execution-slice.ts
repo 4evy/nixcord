@@ -522,19 +522,12 @@ function buildSlice(
 
 const runnerPath = (): string => {
   const built = resolve(dirname(fileURLToPath(import.meta.url)), 'execution-runner.js');
-  if (existsSync(built)) return built;
   if (built.includes('/src/')) return built.replace(/execution-runner\.js$/, 'execution-runner.ts');
+  if (existsSync(built)) return built;
   return built.replace(/\/dist\/execution-runner\.js$/, '/src/execution-runner.ts');
 };
 
-const nodeExecutable = (): string => {
-  if (!('bun' in process.versions)) return process.execPath;
-  for (const directory of (process.env.PATH ?? '').split(':')) {
-    const candidate = `${directory}/node`;
-    if (existsSync(candidate)) return candidate;
-  }
-  return 'node';
-};
+const nodeExecutable = (): string => process.execPath;
 
 const transpileSlice = (code: string): string => {
   const source = `const __nixcordExecuteSlice = async (__runtime: unknown, React: unknown) => {\n${code}\n};`;

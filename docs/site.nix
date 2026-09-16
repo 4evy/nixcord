@@ -1,14 +1,14 @@
 {
-  bun,
   lib,
   nixcord-options,
-  nodejs,
+  callPackage,
   revision,
-  stdenvNoCC,
+  buildNpmPackage,
   writableTmpDirAsHomeHook,
   ...
 }:
 let
+  nodejs = callPackage ../nix/nodejs.nix { };
   siteSources = lib.fileset.difference ./site (
     lib.fileset.unions (
       map lib.fileset.maybeMissing [
@@ -21,8 +21,8 @@ let
   src = lib.fileset.toSource {
     root = ./..;
     fileset = lib.fileset.unions [
-      ../bun.lock
-      ../package.json
+      (lib.fileset.fromSource (import ../nix/workspace-source.nix { inherit lib; }))
+      ../tsconfig.base.json
       ../modules/plugins/equicord.json
       ../modules/plugins/parse-rules.json
       ../modules/plugins/shared.json
@@ -31,84 +31,19 @@ let
     ];
   };
 
-  depsSrc = import ../nix/workspace-source.nix { inherit lib; };
-
-  inherit (stdenvNoCC.hostPlatform) system;
-
-  outputHashes = {
-    x86_64-linux = "sha256-cT71HCs+XwhsYmaxnoJ1P18uAzA2z4z+SusP4JGwD8c=";
-    aarch64-darwin = "sha256-+P5kSKIAfVuGEHIFkyE9NS5ggCmT7YCrLJHq/FAbf7g=";
-  };
-
-  deps = stdenvNoCC.mkDerivation {
-    pname = "nixcord-docs-deps";
-    version = "latest";
-
-    src = depsSrc;
-    nativeBuildInputs = [
-      bun
-      writableTmpDirAsHomeHook
-    ];
-
-    dontConfigure = true;
-    dontFixup = true;
-
-    buildPhase = ''
-      runHook preBuild
-      export BUN_INSTALL_CACHE_DIR="$TMPDIR/bun-cache"
-      bun install --filter nixcord-docs --frozen-lockfile --no-progress
-      runHook postBuild
-    '';
-
-    installPhase = ''
-      runHook preInstall
-      mkdir -p "$out"
-      mkdir -p "$out/docs/site"
-      cp -R node_modules "$out/node_modules"
-      cp -R docs/site/node_modules "$out/docs/site/node_modules"
-      runHook postInstall
-    '';
-
-    outputHashAlgo = "sha256";
-    outputHashMode = "recursive";
-    outputHash = outputHashes.${system} or (throw "Unsupported system: ${system}");
-  };
 in
-stdenvNoCC.mkDerivation {
+buildNpmPackage {
   pname = "nixcord-docs";
   version = revision;
 
-  passthru = { inherit deps; };
+  inherit src nodejs;
+  npmDeps = callPackage ../pkgs/generate-options/node-modules.nix { };
+  npmDepsFetcherVersion = 2;
+  npmInstallFlags = [ "--ignore-scripts" ];
+  nativeBuildInputs = [ writableTmpDirAsHomeHook ];
 
-  inherit src;
-  nativeBuildInputs = [
-    bun
-    nodejs
-    writableTmpDirAsHomeHook
-  ];
-
-  configurePhase = ''
-    runHook preConfigure
-    rm -rf node_modules docs/site/node_modules
-    cp -R ${deps}/node_modules ./node_modules
-    cp -R ${deps}/docs/site/node_modules ./docs/site/node_modules
-    chmod -R u+w ./node_modules ./docs/site/node_modules
-    patchShebangs --build node_modules docs/site/node_modules
-    runHook postConfigure
-  '';
-
-  buildPhase = ''
-    runHook preBuild
-    set -a
-    ${lib.strings.toShellVars {
-      NIXCORD_REVISION = revision;
-    }}
-    set +a
-    cd docs/site
-    node node_modules/vite/bin/vite.js build
-    cd ../..
-    runHook postBuild
-  '';
+  npmWorkspace = "docs/site";
+  env.NIXCORD_REVISION = revision;
 
   installPhase = ''
     runHook preInstall
