@@ -113,7 +113,11 @@ if __name__ == "__main__":
         print(
             "Quit Discord and retry. On macOS 27, if access is denied, allow the "
             "launching app or terminal to read Discord's data in System Settings > "
-            "Privacy & Security, then retry. The original profile is unchanged.",
+            "Privacy & Security > Files & Folders. macOS 27 denies this access "
+            "without prompting. If the process has no bundle ID and cannot be "
+            "granted access there, Apple's documented workaround is temporary "
+            "Full Disk Access for that process during migration. Retry, then "
+            "remove that temporary access. The original profile is unchanged.",
             file=sys.stderr,
         )
         sys.exit(1)
