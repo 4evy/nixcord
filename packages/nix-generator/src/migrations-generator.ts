@@ -1,5 +1,5 @@
-import type { DeprecatedData, PluginConfig, ReadonlyDeep } from '@nixcord/shared';
-import { isNestedConfig, sortedEntries } from '@nixcord/shared';
+import type { DeprecatedData, PluginConfig } from '@nixcord/shared';
+import { sortedEntries } from '@nixcord/shared';
 import { toLegacyNixIdentifier, toNixIdentifier } from './identifier.js';
 
 export interface MigrationRenameJson {
@@ -44,7 +44,7 @@ function normalizePathParts(
 }
 
 function collectSettingNames(
-  config: ReadonlyDeep<PluginConfig>,
+  config: Readonly<PluginConfig>,
   normalizer: (name: string) => string = toNixIdentifier
 ): string[] {
   const names = new Set<string>(['enable']);
@@ -53,7 +53,7 @@ function collectSettingNames(
     const settingName = normalizer(
       'name' in setting && typeof setting.name === 'string' ? setting.name : key
     );
-    if (isNestedConfig(setting)) {
+    if ('settings' in setting) {
       for (const nestedName of collectSettingNames(setting, normalizer)) {
         names.add(`${settingName}.${nestedName}`);
       }
@@ -65,7 +65,7 @@ function collectSettingNames(
   return [...names];
 }
 
-function collectSettingNamePairs(config: ReadonlyDeep<PluginConfig>): SettingNamePair[] {
+function collectSettingNamePairs(config: Readonly<PluginConfig>): SettingNamePair[] {
   const pairs: SettingNamePair[] = [{ legacy: 'enable', current: 'enable' }];
 
   for (const [key, setting] of Object.entries(config.settings)) {
@@ -73,7 +73,7 @@ function collectSettingNamePairs(config: ReadonlyDeep<PluginConfig>): SettingNam
     const legacyName = toLegacyNixIdentifier(rawName);
     const currentName = toNixIdentifier(rawName);
 
-    if (isNestedConfig(setting)) {
+    if ('settings' in setting) {
       for (const nestedPair of collectSettingNamePairs(setting)) {
         pairs.push({
           legacy: `${legacyName}.${nestedPair.legacy}`,
@@ -119,9 +119,7 @@ function optionPathKey(parts: readonly string[]): string {
   return parts.join('\u0000');
 }
 
-function collectActiveOptionPaths(
-  sources: ReadonlyDeep<Record<string, PluginConfig>>[]
-): Set<string> {
+function collectActiveOptionPaths(sources: Readonly<Record<string, PluginConfig>>[]): Set<string> {
   const paths = new Set<string>();
 
   for (const source of sources) {
@@ -137,7 +135,7 @@ function collectActiveOptionPaths(
 }
 
 function generateIdentifierRenames(
-  sources: ReadonlyDeep<Record<string, PluginConfig>>[]
+  sources: Readonly<Record<string, PluginConfig>>[]
 ): MigrationRenameJson[] {
   const activeOptionPaths = collectActiveOptionPaths(sources);
   const renames = new Map<string, MigrationRenameJson>();
@@ -169,8 +167,8 @@ function generateIdentifierRenames(
 
 export function generateMigrationsData(
   deprecated: DeprecatedData,
-  allPlugins: ReadonlyDeep<Record<string, PluginConfig>>,
-  pluginSources?: ReadonlyDeep<Record<string, PluginConfig>>[]
+  allPlugins: Readonly<Record<string, PluginConfig>>,
+  pluginSources?: Readonly<Record<string, PluginConfig>>[]
 ): MigrationsJson {
   // Build lookup of active plugin nix identifiers to skip conflicting migrations
   const activeNixNames = new Set(Object.keys(allPlugins).map((k) => toNixIdentifier(k)));
@@ -345,8 +343,8 @@ export function generateMigrationsData(
 
 export function generateMigrationsJson(
   deprecated: DeprecatedData,
-  allPlugins: ReadonlyDeep<Record<string, PluginConfig>>,
-  pluginSources?: ReadonlyDeep<Record<string, PluginConfig>>[]
+  allPlugins: Readonly<Record<string, PluginConfig>>,
+  pluginSources?: Readonly<Record<string, PluginConfig>>[]
 ): string {
   return `${JSON.stringify(generateMigrationsData(deprecated, allPlugins, pluginSources), null, 2)}\n`;
 }

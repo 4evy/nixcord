@@ -6,7 +6,6 @@ const LEADING_TRAILING_UNDERSCORES_PATTERN = /^_+|_+$/g;
 const MULTIPLE_UNDERSCORES_PATTERN = /_+/g;
 const VALID_IDENTIFIER_START_PATTERN = /^[A-Za-z_]/;
 const LEADING_UNDERSCORE_PREFIX = '_';
-const WORD_PATTERN = /[0-9]+[a-z]+|[A-Z]+(?=[A-Z][a-z]|[0-9]|$)|[A-Z]?[a-z]+|[0-9]+/g;
 const PLUS_PATTERN = /\+/g;
 
 function sanitizeIdentifierInput(name: string): {
@@ -77,12 +76,8 @@ export function toLegacyNixIdentifier(name: string): string {
   );
 }
 
-function capitalize(word: string): string {
-  return word.length === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1);
-}
-
 function normalizePluralAcronyms(segment: string): string {
-  return segment.replace(/([A-Z]{2,})s(?=$|[A-Z])/g, '$1S');
+  return segment.replace(/([A-Z]{2,})s(?=$|[A-Z_\s'-])/g, '$1S');
 }
 
 /**
@@ -100,15 +95,9 @@ export function toNixIdentifier(name: string): string {
   const needsPrefix =
     initialSanitized.length === 0 || !VALID_IDENTIFIER_START_PATTERN.test(initialSanitized);
 
-  const words = initialSanitized
-    .split(/[_\s'-]+/)
-    .flatMap((segment) => normalizePluralAcronyms(segment).match(WORD_PATTERN) ?? [])
-    .map((word) => word.toLowerCase());
-
-  const sanitized =
-    words.length === 0
-      ? initialSanitized
-      : words.map((word, index) => (index === 0 ? word : capitalize(word))).join('');
+  const sanitized = camelCase(normalizePluralAcronyms(initialSanitized), {
+    mergeAmbiguousCharacters: true,
+  });
 
   return finalizeIdentifier(
     sanitized,

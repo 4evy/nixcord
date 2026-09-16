@@ -1,13 +1,6 @@
-import type { PluginConfig, PluginSetting, ReadonlyDeep, SettingType } from '@nixcord/shared';
+import type { PluginConfig, PluginSetting, SettingType } from '@nixcord/shared';
 import {
   INTEGER_STRING_PATTERN,
-  isArray,
-  isBoolean,
-  isNestedConfig,
-  isNull,
-  isNumber,
-  isObject,
-  isString,
   NIX_ENUM_TYPE,
   NIX_TYPE_ATTRS,
   NIX_TYPE_BOOL,
@@ -53,11 +46,11 @@ const categoryLabel = (category: PluginCategory): string => {
 
 const buildEnumMappingDescription = (
   enumValues: readonly (string | number | boolean)[],
-  enumLabels?: ReadonlyDeep<Record<string, string> & Partial<Record<number, string>>>
+  enumLabels?: Readonly<Record<string, string> & Partial<Record<number, string>>>
 ): string | undefined => {
   if (!enumLabels) return undefined;
 
-  const integerValues = enumValues.filter(isNumber);
+  const integerValues = enumValues.filter((value) => typeof value === 'number');
   if (integerValues.length === 0) return undefined;
 
   const mappings = integerValues
@@ -108,24 +101,14 @@ const resolveDefault = (setting: Readonly<PluginSetting>, nixType: string): unkn
   const val = setting.default;
 
   // Float integers need to stay as floats (e.g. 1 -> 1.0)
-  if (isNumber(val) && nixType === NIX_TYPE_FLOAT && Number.isInteger(val))
+  if (typeof val === 'number' && nixType === NIX_TYPE_FLOAT && Number.isInteger(val))
     return { __nixRaw: val.toFixed(1) };
 
   // String integers used as int defaults (e.g. BigInt IDs)
-  if (nixType === NIX_TYPE_INT && isString(val) && INTEGER_STRING_PATTERN.test(val))
+  if (nixType === NIX_TYPE_INT && typeof val === 'string' && INTEGER_STRING_PATTERN.test(val))
     return { __nixRaw: val };
 
-  if (
-    isString(val) ||
-    isNumber(val) ||
-    isBoolean(val) ||
-    isNull(val) ||
-    isArray(val) ||
-    isObject(val)
-  )
-    return val;
-
-  return undefined;
+  return val;
 };
 
 const buildSettingDescription = (setting: Readonly<PluginSetting>): string | undefined => {
@@ -134,7 +117,11 @@ const buildSettingDescription = (setting: Readonly<PluginSetting>): string | und
     : undefined;
   if (!description) return undefined;
 
-  if (setting.type.kind !== 'enum' || !setting.type.values.every(isNumber)) return description;
+  if (
+    setting.type.kind !== 'enum' ||
+    !setting.type.values.every((value) => typeof value === 'number')
+  )
+    return description;
 
   const mapping = buildEnumMappingDescription(setting.type.values, setting.type.labels);
   return mapping !== undefined ? `${description}\n\nValues: ${mapping}` : description;
@@ -181,10 +168,10 @@ export const generatePluginJson = (
         `Settings ${JSON.stringify(previous)} and ${JSON.stringify(setting.name)} in plugin ${JSON.stringify(pluginName)} both normalize to ${JSON.stringify(nixName)}`
       );
     sourceNames.set(nixName, setting.name);
-    if (isNestedConfig(setting)) {
-      settings[nixName] = generatePluginJson(setting.name, setting as PluginConfig, category);
+    if ('settings' in setting) {
+      settings[nixName] = generatePluginJson(setting.name, setting, category);
     } else {
-      settings[nixName] = generateSettingJson(setting as PluginSetting, category);
+      settings[nixName] = generateSettingJson(setting, category);
     }
   }
 
@@ -194,7 +181,7 @@ export const generatePluginJson = (
 };
 
 export const generatePluginModule = (
-  plugins: ReadonlyDeep<Record<string, PluginConfig>>,
+  plugins: Readonly<Record<string, PluginConfig>>,
   category?: PluginCategory
 ): string => {
   const output: Record<string, PluginJson> = {};

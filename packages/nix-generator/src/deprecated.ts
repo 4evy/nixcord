@@ -4,16 +4,16 @@ import type {
   DeprecatedRenameEntry,
   Logger,
   PluginConfig,
-  ReadonlyDeep,
   SettingRename,
 } from '@nixcord/shared';
 import { REMOVAL_EXPIRY_DAYS, RENAME_EXPIRY_DAYS, sortedEntries } from '@nixcord/shared';
 import fse from 'fs-extra';
 import { join } from 'pathe';
+import * as z from 'zod';
 
 /** Plugin names must be valid Nix identifiers (no dots or other special chars). */
 function isValidPluginName(name: string): boolean {
-  return /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(name);
+  return PluginNameSchema.safeParse(name).success;
 }
 
 function isExpired(dateStr: string, expiryDays: number): boolean {
@@ -24,64 +24,42 @@ function isExpired(dateStr: string, expiryDays: number): boolean {
   return diffDays > expiryDays;
 }
 
-/**
- * Read and parse deprecated.json.
- */
-async function readDeprecatedJson(filePath: string): Promise<DeprecatedData> {
-  const empty: DeprecatedData = {
-    renames: {},
-    removals: {},
-    settingRenames: {},
-    settingRemovals: {},
-  };
-  try {
-    const raw = await fse.readFile(filePath, 'utf-8');
-    const parsed = JSON.parse(raw) as {
-      renames?: Record<string, unknown>;
-      removals?: Record<string, unknown>;
-      settingRenames?: Record<string, Record<string, string>>;
-      settingRemovals?: Record<string, Record<string, { date?: string }>>;
-    };
-    const data: DeprecatedData = {
-      renames: {},
-      removals: {},
-      settingRenames: {},
-      settingRemovals: {},
-    };
-
-    for (const [name, val] of Object.entries(parsed.renames ?? {})) {
-      const v = val as { to?: string; date?: string };
-      if (v.to && isValidPluginName(name) && isValidPluginName(v.to)) {
-        data.renames[name] = { to: v.to, ...(v.date ? { date: v.date } : {}) };
-      }
-    }
-    for (const [name, val] of Object.entries(parsed.removals ?? {})) {
-      const v = val as { date?: string };
-      if (v.date && isValidPluginName(name)) {
-        data.removals[name] = { date: v.date };
-      }
-    }
-    for (const [pluginName, settings] of Object.entries(parsed.settingRenames ?? {})) {
-      if (typeof settings === 'object' && settings !== null) {
-        data.settingRenames[pluginName] = settings;
-      }
-    }
-    for (const [pluginName, settings] of Object.entries(parsed.settingRemovals ?? {})) {
-      if (!isValidPluginName(pluginName) || typeof settings !== 'object' || settings === null)
-        continue;
-      const validSettings = Object.fromEntries(
-        Object.entries(settings).filter((entry): entry is [string, { date: string }] => {
-          const value = entry[1];
-          return typeof value?.date === 'string';
+// Persisted history is best-effort: keep valid entries even if another entry is malformed.
+const historyRecord = <T>(key: z.ZodType<string>, value: z.ZodType<T>) => {
+  const entrySchema = z.tuple([key, value]);
+  return z
+    .record(z.string(), z.unknown())
+    .transform((record) =>
+      Object.fromEntries(
+        Object.entries(record).flatMap((entry) => {
+          const result = entrySchema.safeParse(entry);
+          return result.success ? [result.data] : [];
         })
-      );
-      if (Object.keys(validSettings).length > 0) data.settingRemovals![pluginName] = validSettings;
-    }
+      )
+    )
+    .catch({});
+};
 
-    return data;
-  } catch {
-    return empty;
-  }
+const PluginNameSchema = z.string().regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/);
+const RemovalEntrySchema = z.object({ date: z.string().min(1) });
+const DeprecatedHistorySchema = z
+  .object({
+    renames: historyRecord(
+      PluginNameSchema,
+      z.object({
+        to: PluginNameSchema,
+        date: z.string().min(1).optional().catch(undefined),
+      })
+    ),
+    removals: historyRecord(PluginNameSchema, RemovalEntrySchema),
+    settingRenames: historyRecord(z.string(), z.record(z.string(), z.string())),
+    settingRemovals: historyRecord(PluginNameSchema, historyRecord(z.string(), RemovalEntrySchema)),
+  })
+  .catch({ renames: {}, removals: {}, settingRenames: {}, settingRemovals: {} });
+
+async function readDeprecatedJson(filePath: string): Promise<DeprecatedData> {
+  const parsed: unknown = await fse.readJson(filePath).catch(() => undefined);
+  return DeprecatedHistorySchema.parse(parsed);
 }
 
 export function generateDeprecatedJson(data: DeprecatedData): string {
@@ -153,7 +131,7 @@ function removeSelfRenames(
   }
 }
 
-function collectSettingNames(config: ReadonlyDeep<PluginConfig>, prefix = ''): Set<string> {
+function collectSettingNames(config: Readonly<PluginConfig>, prefix = ''): Set<string> {
   const names = new Set<string>();
   for (const [key, setting] of Object.entries(config.settings)) {
     const name = prefix ? `${prefix}.${key}` : key;
@@ -173,12 +151,10 @@ export async function updateDeprecatedPlugins(
   settingRenames: SettingRename[] = [],
   activePluginNames?: Set<string>,
   normalizePluginName?: (name: string) => string,
-  activePlugins?: ReadonlyDeep<Record<string, PluginConfig>>
+  activePlugins?: Readonly<Record<string, PluginConfig>>
 ): Promise<DeprecatedData> {
   const deprecatedPath = join(pluginsDir, 'deprecated.json');
-  const existing: DeprecatedData = (await fse.pathExists(deprecatedPath))
-    ? await readDeprecatedJson(deprecatedPath)
-    : { renames: {}, removals: {}, settingRenames: {}, settingRemovals: {} };
+  const existing = await readDeprecatedJson(deprecatedPath);
   const normalize = normalizePluginName ?? ((n: string) => n);
 
   // Prune stale persisted entries before merging migrations discovered in the

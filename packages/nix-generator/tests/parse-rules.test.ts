@@ -1,9 +1,9 @@
-import type { PluginConfig, ReadonlyDeep } from '@nixcord/shared';
+import type { PluginConfig } from '@nixcord/shared';
 import { describe, expect, test } from 'vitest';
 import { generateParseRulesModule } from '../src/parse-rules.js';
 
 describe('generateParseRulesModule()', () => {
-  const shared: ReadonlyDeep<Record<string, PluginConfig>> = {
+  const shared: Readonly<Record<string, PluginConfig>> = {
     showConnections: {
       name: 'ShowConnections',
       description: 'Show connected accounts',
@@ -11,7 +11,7 @@ describe('generateParseRulesModule()', () => {
     },
   } as const;
 
-  const vencordOnly: ReadonlyDeep<Record<string, PluginConfig>> = {
+  const vencordOnly: Readonly<Record<string, PluginConfig>> = {
     iLoveSpam: {
       name: 'iLoveSpam',
       description: 'Keep spam visible',
@@ -19,7 +19,7 @@ describe('generateParseRulesModule()', () => {
     },
   } as const;
 
-  const equicordOnly: ReadonlyDeep<Record<string, PluginConfig>> = {
+  const equicordOnly: Readonly<Record<string, PluginConfig>> = {
     petpet: {
       name: 'petpet',
       description: 'Pet pets',

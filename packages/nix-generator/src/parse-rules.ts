@@ -1,5 +1,5 @@
-import type { PluginConfig, ReadonlyDeep } from '@nixcord/shared';
-import { isNestedConfig, sortedEntries } from '@nixcord/shared';
+import type { PluginConfig } from '@nixcord/shared';
+import { sortedEntries } from '@nixcord/shared';
 import { toNixIdentifier } from './identifier.js';
 
 const baseUpperNames = [
@@ -24,7 +24,7 @@ const baseUpperNames = [
 
 const baseLowerPluginTitles: readonly string[] = [];
 
-type PluginCollections = ReadonlyArray<ReadonlyDeep<Record<string, PluginConfig>>>;
+type PluginCollections = ReadonlyArray<Readonly<Record<string, PluginConfig>>>;
 
 function collectLowerPluginTitles(...collections: PluginCollections): string[] {
   const entriesList = collections.flatMap((collection) => Object.entries(collection));
@@ -44,16 +44,16 @@ function collectSettingRenames(
 ): Record<string, Record<string, string>> {
   const renames: Record<string, Record<string, string>> = {};
 
-  const collectFromConfig = (parentNixName: string, config: ReadonlyDeep<PluginConfig>): void => {
+  const collectFromConfig = (parentNixName: string, config: Readonly<PluginConfig>): void => {
     for (const setting of Object.values(config.settings)) {
       const nixName = toNixIdentifier(setting.name);
       if (nixName !== setting.name) {
         renames[parentNixName] ??= {};
         renames[parentNixName][nixName] = setting.name;
       }
-      if (isNestedConfig(setting)) {
+      if ('settings' in setting) {
         const nestedNixName = toNixIdentifier(setting.name);
-        collectFromConfig(nestedNixName, setting as ReadonlyDeep<PluginConfig>);
+        collectFromConfig(nestedNixName, setting);
       }
     }
   };
@@ -89,9 +89,9 @@ function collectPluginRenames(...collections: PluginCollections): Record<string,
 }
 
 export function generateParseRulesModule(
-  shared: ReadonlyDeep<Record<string, PluginConfig>>,
-  vencordOnly: ReadonlyDeep<Record<string, PluginConfig>>,
-  equicordOnly: ReadonlyDeep<Record<string, PluginConfig>>
+  shared: Readonly<Record<string, PluginConfig>>,
+  vencordOnly: Readonly<Record<string, PluginConfig>>,
+  equicordOnly: Readonly<Record<string, PluginConfig>>
 ): string {
   const lowerPluginTitles = collectLowerPluginTitles(shared, vencordOnly, equicordOnly);
   const settingRenames = collectSettingRenames(shared, vencordOnly, equicordOnly);

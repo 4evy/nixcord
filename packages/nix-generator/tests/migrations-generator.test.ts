@@ -1,11 +1,11 @@
-import type { DeprecatedData, PluginConfig, ReadonlyDeep } from '@nixcord/shared';
+import type { DeprecatedData, PluginConfig } from '@nixcord/shared';
 import { createFixture } from 'fs-fixture';
 import { describe, expect, test } from 'vitest';
 import { updateDeprecatedPlugins } from '../src/deprecated.js';
 import { toNixIdentifier } from '../src/identifier.js';
 import { generateMigrationsData } from '../src/migrations-generator.js';
 
-const mkPlugin = (description = ''): ReadonlyDeep<PluginConfig> => ({
+const mkPlugin = (description = ''): Readonly<PluginConfig> => ({
   name: 'TestPlugin',
   description,
   settings: {},
@@ -22,7 +22,7 @@ describe('generateMigrationsData()', () => {
       },
       settingRenames: {},
     };
-    const allPlugins: Record<string, ReadonlyDeep<PluginConfig>> = {
+    const allPlugins: Record<string, Readonly<PluginConfig>> = {
       testPlugin: mkPlugin('A test plugin'),
     };
 
@@ -38,7 +38,7 @@ describe('generateMigrationsData()', () => {
       removals: {},
       settingRenames: {},
     };
-    const allPlugins: Record<string, ReadonlyDeep<PluginConfig>> = {};
+    const allPlugins: Record<string, Readonly<PluginConfig>> = {};
 
     const result = generateMigrationsData(deprecated, allPlugins);
 
@@ -53,7 +53,7 @@ describe('generateMigrationsData()', () => {
         testPlugin: { oldSetting: 'newSetting' },
       },
     };
-    const allPlugins: Record<string, ReadonlyDeep<PluginConfig>> = {
+    const allPlugins: Record<string, Readonly<PluginConfig>> = {
       testPlugin: mkPlugin('test'),
     };
 
@@ -78,7 +78,7 @@ describe('generateMigrationsData()', () => {
       removals: {},
       settingRenames: {},
     };
-    const allPlugins: Record<string, ReadonlyDeep<PluginConfig>> = {
+    const allPlugins: Record<string, Readonly<PluginConfig>> = {
       NewPlugin: {
         ...mkPlugin('new'),
         settings: {
@@ -116,7 +116,7 @@ describe('generateMigrationsData()', () => {
       },
       settingRenames: {},
     };
-    const allPlugins: Record<string, ReadonlyDeep<PluginConfig>> = {
+    const allPlugins: Record<string, Readonly<PluginConfig>> = {
       testPlugin: mkPlugin('still active'),
     };
 
@@ -133,7 +133,7 @@ describe('generateMigrationsData()', () => {
       removals: {},
       settingRenames: {},
     };
-    const allPlugins: Record<string, ReadonlyDeep<PluginConfig>> = {
+    const allPlugins: Record<string, Readonly<PluginConfig>> = {
       ClearURLs: {
         ...mkPlugin('clear urls'),
         settings: {

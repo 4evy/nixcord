@@ -1,4 +1,4 @@
-import type { PluginConfig, PluginSetting, ReadonlyDeep } from '@nixcord/shared';
+import type { PluginConfig, PluginSetting } from '@nixcord/shared';
 import { describe, expect, test } from 'vitest';
 import { generatePluginJson, generatePluginModule, generateSettingJson } from '../src/generator.js';
 
@@ -314,7 +314,7 @@ describe('generatePluginJson()', () => {
 
 describe('generatePluginModule()', () => {
   test('sorts plugins alphabetically', () => {
-    const plugins: ReadonlyDeep<Record<string, PluginConfig>> = {
+    const plugins: Readonly<Record<string, PluginConfig>> = {
       ZuluPlugin: {
         name: 'ZuluPlugin',
         settings: {},
@@ -335,13 +335,13 @@ describe('generatePluginModule()', () => {
   });
 
   test('handles empty plugins record', () => {
-    const plugins: ReadonlyDeep<Record<string, PluginConfig>> = {};
+    const plugins: Readonly<Record<string, PluginConfig>> = {};
     const result = generatePluginModule(plugins);
     expect(JSON.parse(result)).toEqual({});
   });
 
   test('uses acronym-aware identifiers for plugin and setting names', () => {
-    const plugins: ReadonlyDeep<Record<string, PluginConfig>> = {
+    const plugins: Readonly<Record<string, PluginConfig>> = {
       ClearURLs: {
         name: 'ClearURLs',
         settings: {
@@ -365,7 +365,7 @@ describe('generatePluginModule()', () => {
   });
 
   test('rejects plugins that normalize to the same Nix identifier', () => {
-    const plugins: ReadonlyDeep<Record<string, PluginConfig>> = {
+    const plugins: Readonly<Record<string, PluginConfig>> = {
       ClearURLs: { name: 'ClearURLs', settings: {} },
       'Clear-URLs': { name: 'Clear-URLs', settings: {} },
     };
