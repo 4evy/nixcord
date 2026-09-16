@@ -22,4 +22,4 @@ export type {
   SliceTraceEvent,
 } from './execution-slice.js';
 export { executeComponentSlice } from './execution-slice.js';
-export { resolvedDeclaration } from './node-helpers.js';
+export { resolvedDeclaration, unwrapExpression } from './node-helpers.js';

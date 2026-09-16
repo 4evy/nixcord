@@ -1,4 +1,3 @@
-import { dirname, resolve } from 'node:path';
 import {
   type ArrowFunction,
   type BinaryExpression,
@@ -8,13 +7,24 @@ import {
   type Expression,
   type FunctionDeclaration,
   type FunctionExpression,
-  type Node,
+  Node,
   type ParameterDeclaration,
   type Statement,
   SyntaxKind,
   type TypeChecker,
 } from 'ts-morph';
 import { resolvedDeclaration, unwrapExpression } from './node-helpers.js';
+
+const STRING_METHODS = new Set([
+  'toLowerCase',
+  'toUpperCase',
+  'trim',
+  'split',
+  'slice',
+  'includes',
+  'startsWith',
+  'endsWith',
+]);
 
 export type StaticScalar = null | string | number | boolean;
 export type StaticValue =
@@ -93,46 +103,9 @@ const nodeKey = (node: Node): string =>
   `${node.getSourceFile().getFilePath()}:${node.getStart()}:${node.getEnd()}`;
 
 const literalPropertyName = (node: Node): string | undefined => {
-  if (
-    node.isKind(SyntaxKind.Identifier) ||
-    node.isKind(SyntaxKind.StringLiteral) ||
-    node.isKind(SyntaxKind.NumericLiteral)
-  ) {
-    return node.getText().replace(/^['"]|['"]$/g, '');
-  }
-  return undefined;
-};
-
-const importedDeclaration = (node: import('ts-morph').Identifier): Node | undefined => {
-  const localName = node.getText();
-  for (const importDeclaration of node.getSourceFile().getImportDeclarations()) {
-    const moduleName = importDeclaration.getModuleSpecifierValue().replace(/\?.*$/, '');
-    const basePath = moduleName.startsWith('.')
-      ? resolve(dirname(node.getSourceFile().getFilePath()), moduleName)
-      : undefined;
-    const project = node.getSourceFile().getProject();
-    const sourceFile =
-      importDeclaration.getModuleSpecifierSourceFile() ??
-      (basePath
-        ? [
-            basePath,
-            `${basePath}.ts`,
-            `${basePath}.tsx`,
-            `${basePath}/index.ts`,
-            `${basePath}/index.tsx`,
-          ]
-            .map((candidate) => project.getSourceFile(candidate))
-            .find((candidate) => candidate !== undefined)
-        : undefined);
-    if (!sourceFile) continue;
-    for (const namedImport of importDeclaration.getNamedImports()) {
-      const importedLocalName = namedImport.getAliasNode()?.getText() ?? namedImport.getName();
-      if (importedLocalName !== localName) continue;
-      return sourceFile.getExportedDeclarations().get(namedImport.getName())?.[0];
-    }
-    if (importDeclaration.getDefaultImport()?.getText() === localName)
-      return sourceFile.getDefaultExportSymbol()?.getDeclarations()[0];
-  }
+  if (node.isKind(SyntaxKind.StringLiteral) || node.isKind(SyntaxKind.NumericLiteral))
+    return String(node.getLiteralValue());
+  if (node.isKind(SyntaxKind.Identifier)) return node.getText();
   return undefined;
 };
 
@@ -149,9 +122,8 @@ const sourceDeclaration = (node: import('ts-morph').Identifier): Node | undefine
 
 const initializerOf = (declaration: Node): Node | undefined => {
   if (declaration.isKind(SyntaxKind.ExportAssignment)) return declaration.getExpression();
-  if ('getInitializer' in declaration) {
-    return (declaration as { getInitializer(): Node | undefined }).getInitializer();
-  }
+  if (Node.isExpression(declaration)) return declaration;
+  if (Node.isInitializerExpressionGetable(declaration)) return declaration.getInitializer();
   return undefined;
 };
 
@@ -163,8 +135,6 @@ const cloneRuntime = (value: RuntimeValue): RuntimeValue => {
     Object.entries(value).map(([key, item]) => [key, cloneRuntime(item as RuntimeValue)])
   ) as StaticValue;
 };
-
-const truthy = (value: RuntimeValue): boolean => Boolean(value);
 
 export class StaticEvaluator {
   readonly #checker: TypeChecker;
@@ -252,11 +222,8 @@ export class StaticEvaluator {
       return known(node.getLiteralValue(), node);
     if (node.isKind(SyntaxKind.NumericLiteral)) return known(node.getLiteralValue(), node);
     if (node.isKind(SyntaxKind.BigIntLiteral)) return known(node.getText().replace(/n$/, ''), node);
-    if (node.isKind(SyntaxKind.RegularExpressionLiteral)) {
-      const text = node.getText();
-      const separator = text.lastIndexOf('/');
-      return known(new RegExp(text.slice(1, separator), text.slice(separator + 1)), node);
-    }
+    if (node.isKind(SyntaxKind.RegularExpressionLiteral))
+      return known(node.getLiteralValue(), node);
     if (node.isKind(SyntaxKind.TrueKeyword)) return known(true, node);
     if (node.isKind(SyntaxKind.FalseKeyword)) return known(false, node);
     if (node.isKind(SyntaxKind.NullKeyword)) return known(null, node);
@@ -280,7 +247,7 @@ export class StaticEvaluator {
       const condition = this.#evaluate(node.getCondition(), environment, depth + 1, state);
       if (!condition.known) return condition;
       return this.#evaluate(
-        truthy(condition.value) ? node.getWhenTrue() : node.getWhenFalse(),
+        Boolean(condition.value) ? node.getWhenTrue() : node.getWhenFalse(),
         environment,
         depth + 1,
         state
@@ -314,7 +281,6 @@ export class StaticEvaluator {
     let foundDeclaration = false;
     for (const resolveCandidate of [
       () => resolvedDeclaration(node, this.#checker),
-      () => importedDeclaration(node),
       () => sourceDeclaration(node),
     ]) {
       const declaration = resolveCandidate();
@@ -508,8 +474,8 @@ export class StaticEvaluator {
     const operator = node.getOperatorToken().getKind();
     const left = this.#evaluate(node.getLeft(), environment, depth + 1, state);
     if (!left.known) return left;
-    if (operator === SyntaxKind.AmpersandAmpersandToken && !truthy(left.value)) return left;
-    if (operator === SyntaxKind.BarBarToken && truthy(left.value)) return left;
+    if (operator === SyntaxKind.AmpersandAmpersandToken && !Boolean(left.value)) return left;
+    if (operator === SyntaxKind.BarBarToken && Boolean(left.value)) return left;
     if (operator === SyntaxKind.QuestionQuestionToken && left.value != null) return left;
 
     const right = this.#evaluate(node.getRight(), environment, depth + 1, state);
@@ -705,7 +671,7 @@ export class StaticEvaluator {
           );
           if (!result.known) return result;
           if (method === 'map') output.push(result.value);
-          else if (truthy(result.value)) output.push(receiver.value[index]);
+          else if (Boolean(result.value)) output.push(receiver.value[index]);
         }
         return known(output as StaticValue[], call);
       }
@@ -738,38 +704,19 @@ export class StaticEvaluator {
           ? unknown('Array.join separator is not a string', call)
           : separator;
     }
-    if (typeof receiver.value === 'string') {
+    if (typeof receiver.value === 'string' && STRING_METHODS.has(method)) {
       const evaluatedArgs: RuntimeValue[] = [];
       for (const arg of args) {
         const result = this.#evaluate(arg, environment, depth + 1, state);
         if (!result.known || isCallable(result.value)) return result;
         evaluatedArgs.push(result.value);
       }
-      switch (method) {
-        case 'toLowerCase':
-          return known(receiver.value.toLowerCase(), call);
-        case 'toUpperCase':
-          return known(receiver.value.toUpperCase(), call);
-        case 'trim':
-          return known(receiver.value.trim(), call);
-        case 'split':
-          return known(receiver.value.split(evaluatedArgs[0] as string | RegExp), call);
-        case 'slice':
-          return known(
-            receiver.value.slice(
-              evaluatedArgs[0] as number | undefined,
-              evaluatedArgs[1] as number | undefined
-            ),
-            call
-          );
-        case 'includes':
-          return known(receiver.value.includes(evaluatedArgs[0] as string), call);
-        case 'startsWith':
-          return known(receiver.value.startsWith(evaluatedArgs[0] as string), call);
-        case 'endsWith':
-          return known(receiver.value.endsWith(evaluatedArgs[0] as string), call);
-      }
+      return known(
+        Reflect.apply(Reflect.get(String.prototype, method), receiver.value, evaluatedArgs),
+        call
+      );
     }
+
     if (receiver.value instanceof RegExp && method === 'test') {
       const argument = args[0]
         ? this.#evaluate(args[0], environment, depth + 1, state)
@@ -904,7 +851,7 @@ export class StaticEvaluator {
     if (statement.isKind(SyntaxKind.IfStatement)) {
       const condition = this.#evaluate(statement.getExpression(), environment, depth + 1, state);
       if (!condition.known) return condition;
-      const branch = truthy(condition.value)
+      const branch = Boolean(condition.value)
         ? statement.getThenStatement()
         : statement.getElseStatement();
       if (!branch) return known(undefined, statement);

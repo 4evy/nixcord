@@ -1,21 +1,17 @@
-import { dirname, resolve } from 'node:path';
-import { type Node, SyntaxKind, type TypeChecker } from 'ts-morph';
+import { type Node, SyntaxKind, type TypeChecker, ts } from 'ts-morph';
 
-const IMPORT_SOURCE_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx', '.mts', '.cts'] as const;
-
-const relativeImportSource = (node: Node, moduleName: string): Node | undefined => {
-  if (!moduleName.startsWith('.')) return undefined;
+const importSource = (node: Node, moduleName: string): Node | undefined => {
   const sourceFile = node.getSourceFile();
-  const base = resolve(dirname(sourceFile.getFilePath()), moduleName);
-  const candidates = new Set([
-    base,
-    ...IMPORT_SOURCE_EXTENSIONS.map((extension) => `${base}${extension}`),
-    ...IMPORT_SOURCE_EXTENSIONS.map((extension) => resolve(base, `index${extension}`)),
-  ]);
-  return sourceFile
-    .getProject()
-    .getSourceFiles()
-    .find((candidate) => candidates.has(candidate.getFilePath()));
+  const project = sourceFile.getProject();
+  const resolution = ts.resolveModuleName(
+    moduleName.replace(/\?.*$/, ''),
+    sourceFile.getFilePath(),
+    { moduleResolution: ts.ModuleResolutionKind.Bundler, ...project.getCompilerOptions() },
+    project.getModuleResolutionHost()
+  );
+  return resolution.resolvedModule
+    ? project.getSourceFile(resolution.resolvedModule.resolvedFileName)
+    : undefined;
 };
 
 const importedDeclaration = (node: Node): Node | undefined => {
@@ -33,7 +29,7 @@ const importedDeclaration = (node: Node): Node | undefined => {
     if (!importedName) continue;
     const importedFile =
       importDeclaration.getModuleSpecifierSourceFile() ??
-      relativeImportSource(node, importDeclaration.getModuleSpecifierValue());
+      importSource(node, importDeclaration.getModuleSpecifierValue());
     const declarations = importedFile
       ?.asKind(SyntaxKind.SourceFile)
       ?.getExportedDeclarations()
@@ -45,7 +41,11 @@ const importedDeclaration = (node: Node): Node | undefined => {
 
 export const resolvedDeclaration = (node: Node, checker: TypeChecker): Node | undefined => {
   try {
-    const symbol = checker.getSymbolAtLocation(node) ?? node.getSymbol();
+    const shorthand = node.getParentIfKind(SyntaxKind.ShorthandPropertyAssignment);
+    const symbol =
+      (shorthand && checker.getShorthandAssignmentValueSymbol(shorthand)) ??
+      checker.getSymbolAtLocation(node) ??
+      node.getSymbol();
     const resolved = symbol?.isAlias() ? symbol.getAliasedSymbol() : symbol;
     return (
       resolved?.getValueDeclaration() ?? resolved?.getDeclarations()[0] ?? importedDeclaration(node)

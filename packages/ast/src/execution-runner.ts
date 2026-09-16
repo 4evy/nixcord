@@ -1,3 +1,4 @@
+import { json } from 'node:stream/consumers';
 import { createContext, Script } from 'node:vm';
 
 interface RunnerPayload {
@@ -5,8 +6,6 @@ interface RunnerPayload {
   readonly settingKey: string;
   readonly maxTraceEvents: number;
 }
-
-export {};
 
 type TraceEvent = {
   kind: 'read' | 'write' | 'control';
@@ -235,11 +234,8 @@ async function runSandboxed(payload: RunnerPayload, execute: SliceExecutor): Pro
         if (hookName === 'useForceUpdater') return () => () => undefined;
         if (hookName === 'useStateFromStores') {
           return (...args: unknown[]) => {
-            for (let index = args.length - 1; index >= 0; index--) {
-              const snapshot = args[index];
-              if (typeof snapshot === 'function') return snapshot();
-            }
-            return {};
+            const snapshot = args.findLast((value) => typeof value === 'function');
+            return snapshot ? snapshot() : {};
           };
         }
         return () => undefined;
@@ -287,12 +283,8 @@ async function runSandboxed(payload: RunnerPayload, execute: SliceExecutor): Pro
 
 process.stdout.write('__NIXCORD_SLICE_READY__\n');
 
-let input = '';
-process.stdin.setEncoding('utf8');
-for await (const chunk of process.stdin) input += chunk;
-
 try {
-  const payload = JSON.parse(input) as RunnerPayload;
+  const payload = (await json(process.stdin)) as RunnerPayload;
   const sandbox = Object.assign(Object.create(null), {
     IS_DISCORD_DESKTOP: true,
     IS_LINUX: false,

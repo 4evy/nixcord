@@ -131,6 +131,24 @@ const bindingTarget = (
     .get(binding.importedName)?.[0];
 };
 
+const sourcePrinter = ts.createPrinter();
+const unexportedText = (node: Node): string => {
+  if (node.isKind(SyntaxKind.ExportAssignment)) return node.getExpression().getText();
+  const compilerNode = node.compilerNode;
+  if (!ts.canHaveModifiers(compilerNode)) return node.getText();
+  const modifiers = ts
+    .getModifiers(compilerNode)
+    ?.filter(
+      (modifier) =>
+        modifier.kind !== SyntaxKind.ExportKeyword && modifier.kind !== SyntaxKind.DefaultKeyword
+    );
+  return sourcePrinter.printNode(
+    ts.EmitHint.Unspecified,
+    ts.factory.replaceModifiers(compilerNode, modifiers),
+    node.getSourceFile().compilerNode
+  );
+};
+
 const componentExpressionText = (component: Node): string => {
   const variable = component.asKind(SyntaxKind.VariableDeclaration);
   if (variable) return variable.getInitializerOrThrow().getText();
@@ -139,10 +157,7 @@ const componentExpressionText = (component: Node): string => {
     const parameters = method.getParameters().map((parameter) => parameter.getText());
     return `function (${parameters.join(', ')}) ${method.getBodyOrThrow().getText()}`;
   }
-  return component
-    .getText()
-    .replace(/^\s*export\s+default\s+/, '')
-    .replace(/^\s*export\s+/, '');
+  return unexportedText(component);
 };
 
 const resolvedComponentTarget = (component: Node, checker: TypeChecker): Node => {
@@ -161,10 +176,7 @@ const executableText = (node: Node, defaultName: string): string => {
   const exportAssignment = node.asKind(SyntaxKind.ExportAssignment);
   if (exportAssignment)
     return `const ${defaultName} = (${exportAssignment.getExpression().getText()});`;
-  return node
-    .getText()
-    .replace(/^\s*export\s+default\s+/, '')
-    .replace(/^\s*export\s+/, '');
+  return unexportedText(node);
 };
 
 const localDeclarationName = (declaration: Node, defaultNames: ReadonlyMap<string, string>) => {
@@ -521,13 +533,14 @@ function buildSlice(
 }
 
 const runnerPath = (): string => {
-  const built = resolve(dirname(fileURLToPath(import.meta.url)), 'execution-runner.js');
-  if (built.includes('/src/')) return built.replace(/execution-runner\.js$/, 'execution-runner.ts');
-  if (existsSync(built)) return built;
-  return built.replace(/\/dist\/execution-runner\.js$/, '/src/execution-runner.ts');
+  const directory = dirname(fileURLToPath(import.meta.url));
+  const candidates = [
+    'execution-runner.js',
+    'execution-runner.ts',
+    '../src/execution-runner.ts',
+  ].map((path) => resolve(directory, path));
+  return candidates.find(existsSync) ?? candidates[0];
 };
-
-const nodeExecutable = (): string => process.execPath;
 
 const transpileSlice = (code: string): string => {
   const source = `const __nixcordExecuteSlice = async (__runtime: unknown, React: unknown) => {\n${code}\n};`;
@@ -566,7 +579,7 @@ export async function executeComponentSlice(
 
   return await new Promise<SliceExecutionResult>((resolveResult) => {
     const child = spawn(
-      nodeExecutable(),
+      process.execPath,
       ['--permission', '--max-old-space-size=64', runnerPath()],
       {
         stdio: ['pipe', 'pipe', 'pipe'],

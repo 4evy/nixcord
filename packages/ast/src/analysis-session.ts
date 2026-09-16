@@ -1,4 +1,4 @@
-import { access } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { type Program, Project, type SourceFile, type TypeChecker, ts } from 'ts-morph';
 
@@ -17,15 +17,6 @@ export interface AnalysisSession {
   getSourceFile(filePath: string): SourceFile | undefined;
 }
 
-const exists = async (filePath: string): Promise<boolean> => {
-  try {
-    await access(filePath);
-    return true;
-  } catch {
-    return false;
-  }
-};
-
 /**
  * Creates a fully-loaded, immutable analysis view. Callers provide the complete file set up front;
  * adding or removing files after this function returns is deliberately not part of the API.
@@ -39,7 +30,7 @@ export async function createAnalysisSession(
     skipAddingFilesFromTsConfig: true,
     skipFileDependencyResolution: false,
     skipLoadingLibFiles: true,
-    tsConfigFilePath: tsConfigPath && (await exists(tsConfigPath)) ? tsConfigPath : undefined,
+    tsConfigFilePath: tsConfigPath && existsSync(tsConfigPath) ? tsConfigPath : undefined,
     compilerOptions: {
       target: ts.ScriptTarget.ES2022,
       module: ts.ModuleKind.ESNext,
