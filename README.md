@@ -7,9 +7,11 @@
 **One Nix config for your Discord mods, themes, and clients.**
 
 Manage [Vencord](https://github.com/Vendicated/Vencord),
-[Equicord](https://github.com/Equicord/Equicord), [Vesktop](https://github.com/Vencord/Vesktop),
-[Dorion](https://github.com/SpikeHD/Dorion), and [Legcord](https://github.com/Legcord/Legcord) from
-your Nix config.
+[Equicord](https://github.com/Equicord/Equicord),
+[Vesktop](https://github.com/Vencord/Vesktop),
+[GoofCord](https://github.com/Milkshiift/GoofCord),
+[Dorion](https://github.com/SpikeHD/Dorion), and
+[Legcord](https://github.com/Legcord/Legcord) from your Nix config.
 
 [![Flake Checks](https://github.com/4evy/nixcord/actions/workflows/check.yaml/badge.svg?branch=main)](https://github.com/4evy/nixcord/actions/workflows/check.yaml)
 [![Docs](https://github.com/4evy/nixcord/actions/workflows/github-pages.yaml/badge.svg?branch=main)](https://github.com/4evy/nixcord/actions/workflows/github-pages.yaml)
@@ -17,20 +19,20 @@ your Nix config.
 [![GitHub stars](https://img.shields.io/github/stars/4evy/nixcord?style=flat-square&logo=github)](https://github.com/4evy/nixcord/stargazers)
 [![Built with Nix](https://img.shields.io/badge/built%20with-Nix-5277C3?style=flat-square&logo=nixos&logoColor=white)](https://nixos.org/)
 
-[Quickstart](#quickstart) | [Without Flakes](#without-flakes) | [Configuration](#configuration) |
-[Settings Converter](#settings-converter) | [Options](https://4evy.github.io/nixcord/) |
-[User Plugins](#third-party-user-plugins)
+[Quickstart](#quickstart) | [Without flakes](#without-flakes) | [Configuration](#configuration) |
+[Settings converter](#settings-converter) | [Options](https://4evy.github.io/nixcord/) |
+[User plugins](#third-party-user-plugins)
 
 </div>
 
 <!-- prettier-ignore -->
 > [!IMPORTANT]
-> Nixcord is declarative, so changes made in the client's in-app "Plugins" menu are not persistent.
-> Update your `.nix` file to make settings stick.
+> Configure plugins in your `.nix` file. Changes made in the client's
+> **Plugins** menu do not persist.
 
 ## Quickstart
 
-Add to `flake.nix`:
+Add Nixcord to your `flake.nix` inputs:
 
 ```nix
 {
@@ -44,11 +46,12 @@ Add to `flake.nix`:
 }
 ```
 
-Then import the module
+Import the module for your setup. Pass `inputs` through `extraSpecialArgs` for
+Home Manager or `specialArgs` for NixOS and nix-darwin.
 
-**Home Manager (Recommended)**
+### Home Manager (recommended)
 
-Most people should use this. It handles paths and permissions for you
+Home Manager handles paths and permissions for your user.
 
 ```nix
 # home.nix
@@ -58,9 +61,10 @@ Most people should use this. It handles paths and permissions for you
 }
 ```
 
-**NixOS (System-wide)**
+### NixOS
 
-If you don't use Home Manager
+For system-wide configuration, specify the user whose settings you want to
+manage:
 
 ```nix
 # configuration.nix
@@ -75,9 +79,9 @@ If you don't use Home Manager
 }
 ```
 
-**nix-darwin (macOS)**
+### nix-darwin (macOS)
 
-If you are managing your Mac system-wide
+For system-wide configuration on macOS, specify the user:
 
 ```nix
 # darwin-configuration.nix
@@ -92,13 +96,10 @@ If you are managing your Mac system-wide
 }
 ```
 
-## Without Flakes
+## Without flakes
 
-Nixcord has a native `default.nix`; using it does not enable flakes or evaluate `flake.lock`.
-[npins](https://github.com/andir/npins) is the recommended way to pin both Nixpkgs and Nixcord.
-
-Run these commands from the root of your Nix configuration. They create an `npins` directory, pin
-the same Nixpkgs release used in the flake quickstart, and pin Nixcord's `main` branch:
+Use [npins](https://github.com/andir/npins) to pin Nixpkgs and Nixcord. From
+your Nix configuration directory, run:
 
 ```sh
 nix-shell -p npins --run 'npins init --bare'
@@ -106,19 +107,13 @@ nix-shell -p npins --run 'npins add github NixOS nixpkgs --branch nixos-26.05 --
 nix-shell -p npins --run 'npins add github 4evy nixcord --branch main'
 ```
 
-Commit the generated `npins/default.nix` and `npins/sources.json` files so every machine evaluates
-the same revisions.
-
-Import the pinned sources, create your package set, and pass that package set to Nixcord. For
-example, in a Home Manager configuration:
+Skip initialization if you already use npins. Commit the generated `npins`
+files. Then import Nixcord in your Home Manager configuration:
 
 ```nix
 let
   sources = import ./npins;
-  pkgs = import sources.nixpkgs {
-    config.allowUnfree = true;
-  };
-  nixcord = import sources.nixcord { inherit pkgs; };
+  nixcord = import sources.nixcord { nixpkgs = sources.nixpkgs; };
 in
 {
   imports = [ nixcord.homeModules.nixcord ];
@@ -130,62 +125,57 @@ in
 }
 ```
 
-If your configuration already has a package set available independently of module arguments, pass
-it as `pkgs` to reuse its Nixpkgs configuration and overlays.
+For NixOS or nix-darwin, use `nixcord.nixosModules.nixcord` or
+`nixcord.darwinModules.nixcord` and set `programs.nixcord.user`, as shown above.
 
-Home Manager's usual `pkgs` module argument cannot be used to calculate that module's `imports`; it
-is provided through the module graph after imports are collected. When your pinned inputs are
-available through `home-manager.extraSpecialArgs`, pass the pinned Nixpkgs source instead. With
+To update, run the following command, then review and commit the pin changes:
+
+```sh
+nix-shell -p npins --run 'npins update nixpkgs nixcord'
+```
+
+<details>
+
+<summary>Other sources, package sets, and standalone builds</summary>
+
+Nixcord's `default.nix` also accepts sources from channels, `fetchTarball`, or
+other pinning tools. It does not enable flakes or read `flake.lock`.
+
+Pass `nixpkgs` to select the source for standalone package outputs, or `pkgs` to
+reuse an existing package set with its configuration and overlays:
+
+```nix
+nixcord = import path-to-nixcord { inherit pkgs; };
+```
+
+Do not use a module's `pkgs` argument to calculate its `imports`: that argument
+is resolved after imports are collected. Use a package set defined outside the
+module or a pinned source passed through `extraSpecialArgs`. For example, with
 [Nixtamal](https://nixtamal.toast.al/):
 
 ```nix
-# `nixtamal` is provided through `home-manager.extraSpecialArgs`.
 { nixtamal, ... }:
-
 let
-  nixcord = import nixtamal.nixcord {
-    nixpkgs = nixtamal.nixpkgs;
-  };
+  nixcord = import nixtamal.nixcord { nixpkgs = nixtamal.nixpkgs; };
 in
 {
   imports = [ nixcord.homeModules.nixcord ];
 }
 ```
 
-This gives `nixcord.packages` a separate package set from the supplied Nixpkgs source; it does not
-inherit the Home Manager package set's configuration or overlays. An empty argument set also works,
-but uses Nixcord's bundled Nixpkgs pin for package outputs.
+Passing `nixpkgs` creates a separate package set for `nixcord.packages`; it does
+not inherit Home Manager's overlays or package configuration. Passing `{}` uses
+Nixcord's bundled Nixpkgs pin. Nixcord modules use the host's package set.
 
-For NixOS or nix-darwin, select the corresponding module just as in the flake examples above:
-
-```nix
-# NixOS
-imports = [ nixcord.nixosModules.nixcord ];
-
-# nix-darwin
-imports = [ nixcord.darwinModules.nixcord ];
-```
-
-System-wide NixOS and nix-darwin configurations must also set `programs.nixcord.user` to the user
-whose Discord configuration Nixcord should manage.
-
-Update the pins explicitly when you want newer revisions, then review and commit the changes to
-`npins/sources.json`:
-
-```sh
-nix-shell -p npins --run 'npins update nixpkgs nixcord'
-```
-
-The same import interface works if the Nixcord source comes from a channel, `fetchTarball`, or
-another pinning tool:
+The import exposes `homeModules`, `nixosModules`, `darwinModules`, `packages`,
+`overlay`, and `overlays.default`. The overlay adds packages under
+`pkgs.nixcord`:
 
 ```nix
-nixcord = import path-to-nixcord { inherit pkgs; };
+(pkgs.extend nixcord.overlay).nixcord.vencord
 ```
 
-The imported source exposes `homeModules`, `nixosModules`, `darwinModules`, `packages`, `overlay`,
-and `overlays.default`. Package derivations are also available directly, so a source checkout
-supports:
+You can also build packages or open a development shell from a Nixcord checkout:
 
 ```sh
 nix-build -A vencord
@@ -194,33 +184,23 @@ nix-build -A docs
 nix-shell
 ```
 
-The overlay keeps Nixcord packages namespaced under `pkgs.nixcord`:
-
-```nix
-let
-  nixcord = import sources.nixcord { inherit pkgs; };
-  pkgsWithNixcord = pkgs.extend nixcord.overlay;
-in
-pkgsWithNixcord.nixcord.vencord
-```
+</details>
 
 ## Configuration
 
-You can configure Vencord, Equicord, Vesktop, GoofCord, Dorion, or Legcord
-
-**Tip:** Launch your client once manually to look through the plugins list so you know what you
-actually want to enable
+Enable your client, then choose plugins and themes. Open the client to browse
+available plugins before adding them to your configuration:
 
 ```nix
 {
   programs.nixcord = {
     enable = true;
 
-    # Choose your Discord mod client (enable at most one of these two)
+    # Enable either Vencord or Equicord for Discord
     discord.vencord.enable = true;      # Standard Vencord
     # discord.equicord.enable = true;   # Equicord (has more plugins)
 
-    # Or these
+    # Additional clients
     vesktop.enable = true;
     # goofcord.enable = true;
     # dorion.enable = true;
@@ -250,13 +230,13 @@ actually want to enable
 }
 ```
 
-Check the [online docs](https://4evy.github.io/nixcord/) for the full list of options
+See the [options reference](https://4evy.github.io/nixcord/) for all settings.
 
 ### Multiple Discord branches
 
-Stable, PTB, Canary, and Development can be installed at the same time. Every selected
-branch uses the same Vencord or Equicord configuration and Discord package options,
-including Krisp and OpenASAR:
+Stable, PTB, Canary, and Development can be installed at the same time. Every
+selected branch uses the same Vencord or Equicord configuration and Discord
+package options, including Krisp and OpenASAR:
 
 ```nix
 programs.nixcord = {
@@ -269,18 +249,20 @@ programs.nixcord = {
 };
 ```
 
-The first configured branch is exposed through `finalPackage.discord`; all resulting
-packages are available by branch through `finalPackage.discordBranches`.
+The first configured branch is exposed through `finalPackage.discord`; all
+resulting packages are available by branch through
+`finalPackage.discordBranches`.
 
-## Settings Converter
+## Settings converter
 
-Already have Vencord or Equicord configured? The docs include a browser-side
-[settings converter](https://4evy.github.io/nixcord/#sec-converter) that turns an exported
-`settings.json` into Nixcord config.
+Convert an exported Vencord or Equicord `settings.json` to Nix with the
+[settings converter](https://4evy.github.io/nixcord/#sec-converter). Conversion
+runs in your browser.
 
 ## Legcord
 
-[Legcord](https://github.com/Legcord/Legcord) is a lightweight Discord client. Enable it with:
+[Legcord](https://github.com/Legcord/Legcord) is a lightweight Discord client.
+Enable it with:
 
 ```nix
 {
@@ -304,17 +286,15 @@ Already have Vencord or Equicord configured? The docs include a browser-side
 
 ## GoofCord
 
-[GoofCord](https://github.com/Milkshiift/GoofCord) loads client mods through its asset
-loader. Nixcord overrides the GoofCord package with version-matched
-PreVencord/PostVencord assets, a local Vencord or Equicord browser build, and the
-generated plugin settings:
+[GoofCord](https://github.com/Milkshiift/GoofCord) uses Vencord by default.
+Nixcord bundles the mod and plugin settings with the client:
 
 ```nix
 {
   programs.nixcord.goofcord = {
     enable = true;
 
-    # Defaults to Vencord; use "equicord" for Equicord's larger plugin set.
+    # Defaults to Vencord; use "equicord" for Equicord
     clientMod = "vencord";
 
     settings = {
@@ -325,16 +305,17 @@ generated plugin settings:
 }
 ```
 
-Nixcord also extends the nixpkgs GoofCord package with Apple silicon macOS support
+Nixcord also adds Apple silicon macOS support to the Nixpkgs GoofCord package.
 
-## Third-Party User Plugins
+## Third-party user plugins
 
-You can load custom Vencord/Equicord plugins that aren't in the upstream plugin list using
-`userPlugins`. Any plugin you add also needs to be enabled in `extraConfig.plugins`:
+Add custom Vencord or Equicord plugins with `userPlugins`, then enable them in
+`extraConfig.plugins`.
 
-GitHub, GitLab, Codeberg, SourceHut, and Bitbucket have short aliases. Any other Git
-forge, including self-hosted instances, works through a `git+<url>?rev=<commit>` source.
-Remote sources must be pinned to a full 40-character commit hash.
+GitHub, GitLab, Codeberg, SourceHut, and Bitbucket have short aliases. Any other
+Git forge, including self-hosted instances, works through a
+`git+<url>?rev=<commit>` source. Remote sources must be pinned to a full
+40-character commit hash.
 
 ```nix
 {
@@ -365,20 +346,21 @@ Remote sources must be pinned to a full 40-character commit hash.
 }
 ```
 
-## A Note on Dorion
+## Dorion
 
-Dorion can read its Nix-managed `config.json` immediately, but Vencord settings live in Discord's
-WebKit `LocalStorage`. That SQLite database is only created after Dorion has successfully loaded
-Discord once, so Nixcord cannot patch `VencordSettings` on a completely fresh profile.
+Launch Dorion and load Discord once before enabling the module. This creates the
+WebKit storage that Nixcord needs to apply Vencord settings.
 
-1. Run Dorion once before enabling Nixcord's Dorion module: `nix run nixpkgs#dorion`
+1. Run Dorion once before enabling Nixcord's Dorion module:
+   `nix run nixpkgs#dorion`
 2. Log in, wait for Discord to finish loading, then close it.
 3. Enable `dorion.enable = true` in your config and rebuild.
 
 <!-- prettier-ignore -->
 > [!WARNING]
-> Upstream Dorion still marks Linux voice as unsupported because WebKitGTK WebRTC support is
-> incomplete. Voice/video may fail even after Nixcord is configured.
+> Upstream Dorion still marks Linux voice as unsupported because WebKitGTK
+> WebRTC support is incomplete. Voice/video may fail even after Nixcord is
+> configured.
 
 ## Docs
 
@@ -388,5 +370,5 @@ Discord once, so Nixcord cannot patch `VencordSettings` on a completely fresh pr
 
 <!-- prettier-ignore -->
 > [!CAUTION]
-> Vencord & Equicord violate Discord ToS. You probably know this already, but use at your own
-> risk!
+> Vencord and Equicord violate Discord's terms of service. Use them at your own
+> risk.
