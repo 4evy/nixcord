@@ -12,9 +12,5 @@
     "src/setting-rules.ts",
     "src/source-profiles.ts"
   ],
-  "references": [
-    { "path": "../shared" },
-    { "path": "../ast" },
-    { "path": "../git-analyzer" }
-  ]
+  "references": [{ "path": "../shared" }, { "path": "../ast" }, { "path": "../git-analyzer" }]
 }

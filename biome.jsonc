@@ -9,8 +9,12 @@
     "includes": [
       "biome.jsonc",
       "package.json",
+      "tsconfig*.json",
       "*.ts",
       "scripts/**/*.ts",
+      "packages/*/package.json",
+      "packages/*/tsconfig.json",
+      "packages/*/vite.config.ts",
       "packages/*/src/**",
       "packages/*/tests/**",
       "docs/site"
