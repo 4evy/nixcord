@@ -8,10 +8,13 @@ on:
       - "flake.nix"
       - "flake.lock"
       - "package.json"
-      - "bun.lock"
+      - "package-lock.json"
       - "packages/**"
       - "modules/**"
       - "docs/**"
+      - "nix/**"
+      - "pkgs/generate-options/**"
+      - ".github/actions/install-nix/**"
       - ".github/workflows/github-pages.yaml"
   workflow_dispatch:
 
@@ -24,10 +27,8 @@ permissions: {}
 jobs:
   build:
     name: Build documentation
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
     permissions:
       contents: read
     steps:
@@ -56,7 +57,8 @@ jobs:
     name: Publish documentation
     if: github.ref_name == github.event.repository.default_branch
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
     permissions:
       pages: write # Deploy the built site to GitHub Pages.
       id-token: write # Authenticate the Pages deployment.
