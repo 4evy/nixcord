@@ -13,13 +13,8 @@ concurrency:
 permissions: {}
 
 jobs:
-  repository-quality:
-    name: Repository quality
-    if: >-
-      github.event_name != 'pull_request' ||
-      github.event.pull_request.author_association == 'OWNER' ||
-      github.event.pull_request.author_association == 'MEMBER' ||
-      github.event.pull_request.author_association == 'COLLABORATOR'
+  workflow-quality:
+    name: Workflow and shell checks
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
@@ -31,63 +26,82 @@ jobs:
 
       - uses: ./.github/actions/install-nix
 
-      - uses: ./.github/actions/setup-bun
-
-      - name: Install Renovate dependencies
-        working-directory: .github/renovate
-        run: bun install --frozen-lockfile
-
       - name: Lint and security-audit GitHub Actions
         run: >-
           nix shell nixpkgs#yamllint nixpkgs#actionlint nixpkgs#zizmor nixpkgs#shellcheck
           --command bash -c
-          'yamllint . && actionlint && zizmor --pedantic .
-          && shellcheck .github/scripts/*.sh nix/benchmark-eval.sh nix/tests/benchmark-eval.sh
+          'yamllint . && actionlint && zizmor --pedantic .github/workflows .github/actions
+          && shellcheck nix/benchmark-eval.sh nix/tests/benchmark-eval.sh
           pkgs/discord/scripts/*.sh'
+
+  javascript:
+    name: JavaScript and documentation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup-node
+
+      - name: Check TypeScript, docs, dead code, duplication, and formatting
+        run: npm run check
+
+      - name: Run JavaScript and TypeScript tests
+        run: npm run test
+
+  nix-quality:
+    name: Nix formatting and evaluation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/install-nix
 
       - name: Test evaluation benchmark CLI
         run: bash nix/tests/benchmark-eval.sh
 
-      - name: Enforce GitHub-signed workflow commits
-        run: |
-          set -euo pipefail
-          if git grep -nE 'git (commit|push)( |$)' -- .github/workflows; then
-            echo "::error::Workflows must commit through .github/scripts/commit-changes.sh"
-            exit 1
-          fi
+      - name: Verify non-flake source
+        run: nix-instantiate --eval --strict --expr '(import ./npins).nixpkgs'
 
-      - name: Test GitHub-signed commit helper
-        run: bash .github/scripts/test-commit-changes.sh
+      - name: Check Nix formatting
+        run: |
+          nix_files=()
+          while IFS= read -r -d '' file; do
+            [[ ! -f "$file" ]] || nix_files+=("$file")
+          done < <(git ls-files -z -- '*.nix')
+          nix shell nixpkgs#nixfmt --command nixfmt --check "${nix_files[@]}"
+
+  renovate-config:
+    name: Renovate configuration
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup-node
+        with:
+          working-directory: .github/renovate
 
       - name: Validate Renovate configuration
         run: >-
           node .github/renovate/node_modules/renovate/dist/config-validator.js
           --strict --no-global .github/renovate.json
 
-      - name: Verify non-flake source
-        run: nix-instantiate --eval --strict --expr '(import ./npins).nixpkgs'
-
-      - name: Check TypeScript, docs, dead code, duplication, and formatting
-        run: bun run check
-
-      - name: Run JavaScript and TypeScript tests
-        run: bun run test
-
-      - name: Check Nix formatting
-        run: |
-          nix_files=()
-          while IFS= read -r file; do
-            [[ ! -f "$file" ]] || nix_files+=("$file")
-          done < <(git ls-files '*.nix')
-          nix shell nixpkgs#nixfmt --command nixfmt --check "${nix_files[@]}"
-
   prepare-pnpm-deps:
     name: Prepare pnpm dependencies
-    if: >-
-      github.event_name != 'pull_request' ||
-      github.event.pull_request.author_association == 'OWNER' ||
-      github.event.pull_request.author_association == 'MEMBER' ||
-      github.event.pull_request.author_association == 'COLLABORATOR'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
@@ -128,11 +142,6 @@ jobs:
   nix:
     name: Nix
     needs: prepare-pnpm-deps
-    if: >-
-      github.event_name != 'pull_request' ||
-      github.event.pull_request.author_association == 'OWNER' ||
-      github.event.pull_request.author_association == 'MEMBER' ||
-      github.event.pull_request.author_association == 'COLLABORATOR'
     permissions:
       contents: read
     uses: ./.github/workflows/nix-check.yaml

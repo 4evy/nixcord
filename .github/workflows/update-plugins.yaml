@@ -7,16 +7,17 @@ on:
       - dev
     paths:
       - ".github/actions/install-nix/**"
-      - ".github/scripts/commit-changes.sh"
+      - ".github/scripts/update-message.py"
       - ".github/workflows/update-plugins.yaml"
+      - ".github/workflows/publish-update.yaml"
       - "package.json"
-      - "bun.lock"
+      - "package-lock.json"
       - "flake.lock"
       - "pkgs/generate-options/**"
       - "pkgs/plugin-update.nix"
       - "pkgs/equicord/default.nix"
       - "pkgs/vencord/default.nix"
-      - "pkgs/goofcord/default.nix"
+      - "pkgs/goofcord/**"
       - "modules/lib/core.nix"
       - "modules/plugins/overrides.json"
       - "nix/flake/apps.nix"
@@ -66,7 +67,7 @@ jobs:
           set -euo pipefail
           nix run .#update-plugins
 
-      - name: Refresh x86_64-linux dependencies and generate plugin options
+      - name: Refresh shared npm dependencies and generate plugin options
         env:
           NIXCORD_GENERATE_WITH_GIT: "1"
         run: |
@@ -77,10 +78,8 @@ jobs:
             exit 1
           fi
           nix develop --command nix-update --flake --version=skip --no-src \
-            --override-filename pkgs/generate-options/node-modules.nix generate.node_modules
+            --override-filename pkgs/generate-options/node-modules.nix generate.npmDeps
           nix run .#generate
-          nix develop --command nix-update --flake --version=skip --no-src \
-            --override-filename docs/site.nix docs.deps
 
       - name: Build packages and run checks
         run: |
@@ -115,30 +114,26 @@ jobs:
             pkgs/generate-options
             docs/site.nix
             package.json
-            bun.lock
+            package-lock.json
             modules/plugins
           )
 
-          mkdir -p plugin-update
+          mkdir -p source-update
           git add --intent-to-add -- "${paths[@]}"
-          git diff --binary --full-index -- "${paths[@]}" > plugin-update/changes.patch
+          git diff --no-ext-diff --no-textconv --no-color --binary --full-index \
+            -- "${paths[@]}" > source-update/changes.patch
 
-          equicord_version=$(nix eval --raw .#equicord.version)
-          vencord_version=$(nix eval --raw .#vencord.version)
-          goofcord_version=$(nix eval --raw .#goofcord.version)
-          printf 'Equicord: %s\nVencord: %s\nGoofCord: %s\n' \
-            "$equicord_version" "$vencord_version" "$goofcord_version" \
-            > plugin-update/commit-body.txt
           echo "base-sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
-          if [[ ! -s plugin-update/changes.patch ]]; then
+          if [[ ! -s source-update/changes.patch ]]; then
             echo "::notice::Plugin sources and generated options are already current"
           fi
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: plugin-update
-          path: plugin-update
+          name: source-update
+          path: source-update
+          if-no-files-found: error
           retention-days: 1
 
   verify-platforms:
@@ -165,17 +160,16 @@ jobs:
 
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: plugin-update
-          path: plugin-update
+          name: source-update
+          path: source-update
 
       - name: Apply prepared plugin update
         run: |
           set -euo pipefail
-          if [[ -s plugin-update/changes.patch ]]; then
-            git apply --check plugin-update/changes.patch
-            git apply plugin-update/changes.patch
+          if [[ -s source-update/changes.patch ]]; then
+            git apply source-update/changes.patch
           fi
-          git add pkgs docs/site.nix package.json bun.lock modules/plugins
+          git add -- pkgs docs/site.nix package.json package-lock.json modules/plugins
 
       - uses: ./.github/actions/install-nix
 
@@ -187,7 +181,7 @@ jobs:
       - name: Import pnpm dependency stores
         run: nix-store --import < pnpm-deps.nar
 
-      - name: Refresh target dependencies
+      - name: Verify generated metadata and refresh GoofCord
         env:
           EXPECTED_HOST_SYSTEM: ${{ matrix.system }}
           EXPECTED_SYSTEM: ${{ matrix.system }}
@@ -206,10 +200,6 @@ jobs:
             exit 1
           fi
 
-          nix develop --command nix-update --flake --version=skip --no-src \
-            --system "$EXPECTED_SYSTEM" \
-            --override-filename pkgs/generate-options/node-modules.nix generate.node_modules
-
           expected_plugins=$(mktemp -d)
           cp -R modules/plugins/. "$expected_plugins/"
           nix --option system "$EXPECTED_SYSTEM" run .#generate
@@ -217,12 +207,6 @@ jobs:
             echo "::error::Generated plugin metadata differs on $EXPECTED_SYSTEM"
             diff -ru "$expected_plugins" modules/plugins || true
             exit 1
-          fi
-
-          if nix --option system "$EXPECTED_SYSTEM" eval \
-            --raw ".#packages.$EXPECTED_SYSTEM.docs.drvPath" >/dev/null 2>&1; then
-            nix develop --command nix-update --flake --version=skip --no-src \
-              --system "$EXPECTED_SYSTEM" --override-filename docs/site.nix docs.deps
           fi
 
           if [[ "$EXPECTED_SYSTEM" == "aarch64-darwin" ]]; then
@@ -237,6 +221,7 @@ jobs:
           packages=(
             ".#packages.$EXPECTED_SYSTEM.equicord"
             ".#packages.$EXPECTED_SYSTEM.vencord"
+            ".#packages.$EXPECTED_SYSTEM.goofcord"
           )
           if nix --option system "$EXPECTED_SYSTEM" eval \
             --raw ".#packages.$EXPECTED_SYSTEM.docs.drvPath" >/dev/null 2>&1; then
@@ -251,104 +236,24 @@ jobs:
           nix --option system "$EXPECTED_SYSTEM" flake check \
             "${nix_args[@]}" --print-build-logs
 
-      - name: Record platform dependency update
-        env:
-          EXPECTED_SYSTEM: ${{ matrix.system }}
-        run: |
-          set -euo pipefail
-          mkdir -p dependency-updates
-          # Zero-context patches allow independent platform hashes in one file.
-          git diff --binary --unified=0 -- \
-            pkgs/generate-options/node-modules.nix docs/site.nix pkgs/goofcord/default.nix \
-            > "dependency-updates/$EXPECTED_SYSTEM.patch"
-
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - name: Upload verified GoofCord dependencies
+        if: matrix.system == 'aarch64-darwin'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: dependency-updates-${{ matrix.system }}
-          path: dependency-updates
+          name: goofcord-update
+          path: |
+            pkgs/goofcord/default.nix
+            pkgs/goofcord/package-lock.json
+          if-no-files-found: error
           retention-days: 1
 
-  commit-plugin-update:
-    name: Commit verified plugin update
-    needs:
-      - update-plugins
-      - verify-platforms
-    runs-on: ubuntu-24.04
+  publish:
+    name: Publish verified plugin update
+    needs: [update-plugins, verify-platforms]
     permissions:
-      actions: write # Dispatch checks for the refreshed head commit.
-      contents: write # Commit the fully verified update atomically.
-
-    steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          ref: ${{ needs.update-plugins.outputs.base-sha }}
-          persist-credentials: false
-
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: plugin-update
-          path: plugin-update
-
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          pattern: dependency-updates-*
-          path: dependency-updates
-          merge-multiple: true
-
-      - name: Assemble verified plugin update
-        run: |
-          set -euo pipefail
-          if [[ -s plugin-update/changes.patch ]]; then
-            git apply --check plugin-update/changes.patch
-            git apply plugin-update/changes.patch
-          fi
-
-          shopt -s nullglob
-          patches=(dependency-updates/*.patch)
-          if [[ "${#patches[@]}" -ne 2 ]]; then
-            echo "::error::Expected 2 platform patches, got ${#patches[@]}"
-            exit 1
-          fi
-          for patch in "${patches[@]}"; do
-            if [[ -s "$patch" ]]; then
-              git apply --check --unidiff-zero "$patch"
-              git apply --unidiff-zero "$patch"
-            fi
-          done
-
-      - name: Commit plugin update
-        id: commit-update
-        env:
-          GH_TOKEN: ${{ github.token }}
-          REF_NAME: ${{ github.ref_name }}
-        run: |
-          set -euo pipefail
-          paths=(
-            pkgs/equicord/default.nix
-            pkgs/vencord/default.nix
-            pkgs/generate-options
-            docs/site.nix
-            pkgs/goofcord/default.nix
-            package.json
-            bun.lock
-            modules/plugins
-          )
-          if [[ -z "$(git status --porcelain -- "${paths[@]}")" ]]; then
-            echo "::notice::Plugin sources and dependency hashes are already current"
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          body=$(< plugin-update/commit-body.txt)
-          bash .github/scripts/commit-changes.sh \
-            "$REF_NAME" "plugins: update snapshots and dependency hashes" "$body" \
-            "${paths[@]}"
-          echo "changed=true" >> "$GITHUB_OUTPUT"
-
-      - name: Check refreshed head commit
-        if: steps.commit-update.outputs.changed == 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          REF_NAME: ${{ github.ref_name }}
-        run: |
-          gh workflow run check.yaml --ref "$REF_NAME"
+      actions: write # Dispatch validation and documentation for the bot commit.
+      contents: write # Publish the verified update.
+    uses: ./.github/workflows/publish-update.yaml
+    with:
+      kind: plugins
+      base-sha: ${{ needs.update-plugins.outputs.base-sha }}

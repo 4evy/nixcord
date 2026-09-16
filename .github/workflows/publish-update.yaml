@@ -1,0 +1,102 @@
+name: Publish Verified Update
+
+on:
+  workflow_call:
+    inputs:
+      kind:
+        description: Update type (plugins or discord)
+        required: true
+        type: string
+      base-sha:
+        description: Exact revision used for generation and validation
+        required: true
+        type: string
+
+permissions: {}
+
+jobs:
+  publish:
+    name: Commit and dispatch follow-up workflows
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      actions: write # GITHUB_TOKEN commits do not trigger push workflows.
+      contents: write # Commit the verified files with GitHub signing.
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ inputs.base-sha }}
+          persist-credentials: false
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: source-update
+          path: source-update
+
+      - name: Apply verified source update
+        run: |
+          if [[ -s source-update/changes.patch ]]; then
+            git apply source-update/changes.patch
+          fi
+
+      - name: Download verified GoofCord dependencies
+        if: inputs.kind == 'plugins'
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: goofcord-update
+          path: pkgs/goofcord
+
+      - name: Describe update
+        id: message
+        env:
+          UPDATE_KIND: ${{ inputs.kind }}
+        run: |
+          case "$UPDATE_KIND" in
+            discord) paths=(pkgs/discord/data/sources.json) ;;
+            plugins)
+              paths=(
+                pkgs/equicord/default.nix pkgs/vencord/default.nix
+                pkgs/generate-options docs/site.nix pkgs/goofcord/default.nix
+                pkgs/goofcord/package-lock.json
+                package.json package-lock.json modules/plugins
+              )
+              ;;
+            *) echo "::error::Unknown update kind"; exit 1 ;;
+          esac
+          message=$(python3 .github/scripts/update-message.py "$UPDATE_KIND" "${paths[@]}")
+          delimiter=$(openssl rand -hex 16)
+          {
+            echo "files=${paths[*]}"
+            echo "message<<$delimiter"
+            jq -r '.headline + "\n\n" + .body' <<< "$message"
+            echo "$delimiter"
+          } >> "$GITHUB_OUTPUT"
+
+      # ghcommit uses local HEAD as expectedHeadOid: a moved branch fails instead
+      # of rebasing generated files onto an unvalidated revision.
+      - name: Commit verified update
+        id: commit
+        uses: planetscale/ghcommit-action@a6b150b81dca5dd027baa898604418eec9e11465 # v0.2.22
+        with:
+          repo: ${{ github.repository }}
+          branch: ${{ github.ref_name }}
+          commit_message: ${{ steps.message.outputs.message }}
+          file_pattern: ${{ steps.message.outputs.files }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Check refreshed head commit
+        if: steps.commit.outputs.commit-hash != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REF_NAME: ${{ github.ref_name }}
+        run: gh workflow run check.yaml --ref "$REF_NAME"
+
+      - name: Rebuild published documentation
+        if: >-
+          steps.commit.outputs.commit-hash != '' && inputs.kind == 'plugins' &&
+          github.ref_name == github.event.repository.default_branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REF_NAME: ${{ github.ref_name }}
+        run: gh workflow run github-pages.yaml --ref "$REF_NAME"

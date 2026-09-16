@@ -26,8 +26,10 @@ jobs:
     name: Update and verify Discord
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    outputs:
+      base-sha: ${{ steps.prepare-update.outputs.base-sha }}
     permissions:
-      contents: write # Commit refreshed Discord source metadata.
+      contents: read
 
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -41,7 +43,6 @@ jobs:
         run: |
           set -euo pipefail
           test -f pkgs/discord/data/sources.json
-          cp pkgs/discord/data/sources.json "$RUNNER_TEMP/discord-sources-before.json"
 
           update_script=$(nix build --no-link --print-out-paths --impure --expr \
             "$NIXPKGS_EXPR (pkgs.callPackage ./pkgs/discord {}).passthru.updateScript")
@@ -75,39 +76,27 @@ jobs:
             .#discord-canary \
             .#discord-development
 
-      - name: Commit source changes
-        env:
-          GH_TOKEN: ${{ github.token }}
-          REF_NAME: ${{ github.ref_name }}
+      - name: Prepare verified source update
+        id: prepare-update
         run: |
-          set -euo pipefail
-          if git diff --quiet -- pkgs/discord/data/sources.json; then
-            echo "::notice::Discord sources are already current"
-            exit 0
-          fi
+          mkdir -p source-update
+          git diff --binary --full-index -- pkgs/discord/data/sources.json > source-update/changes.patch
+          echo "base-sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
-          git config pull.rebase true
-          git config rebase.autoStash true
-          gh auth setup-git
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: source-update
+          path: source-update
+          if-no-files-found: error
+          retention-days: 1
 
-          changes=$(jq -r --slurpfile old "$RUNNER_TEMP/discord-sources-before.json" '
-            to_entries[]
-            | select(.value.version != $old[0][.key].version)
-            | "  \(.key): \($old[0][.key].version) -> \(.value.version)"
-          ' pkgs/discord/data/sources.json)
-
-          for attempt in {1..5}; do
-            git rebase --abort 2>/dev/null || true
-            if git fetch origin \
-              && git pull --rebase origin "$REF_NAME" \
-              && bash .github/scripts/commit-changes.sh \
-                "$REF_NAME" "discord: update sources" "$changes" \
-                pkgs/discord/data/sources.json; then
-              exit 0
-            fi
-            if [[ "$attempt" -eq 5 ]]; then
-              echo "::error::Failed to commit Discord sources after 5 attempts"
-              exit 1
-            fi
-            sleep $((attempt * 2))
-          done
+  publish:
+    name: Publish verified Discord update
+    needs: update-discord
+    permissions:
+      actions: write # Dispatch validation for the bot commit.
+      contents: write # Publish the verified update.
+    uses: ./.github/workflows/publish-update.yaml
+    with:
+      kind: discord
+      base-sha: ${{ needs.update-discord.outputs.base-sha }}
