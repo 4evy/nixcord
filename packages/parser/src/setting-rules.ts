@@ -1,4 +1,5 @@
 import type { SettingListElement, SettingScalar, SettingType, SettingValue } from '@nixcord/shared';
+import { ts } from 'ts-morph';
 import type { OptionTypeName } from './source-profiles.js';
 
 export interface SelectOption {
@@ -73,19 +74,31 @@ const selectRule = (input: SettingRuleInput): SettingRuleResult => {
 
 export const inferTypeFromValue = (
   value: SettingValue | undefined,
-  contextualType?: string
+  contextualType?: string | ts.TypeNode
 ): SettingType => {
   if (typeof value === 'boolean') return { kind: 'boolean' };
   if (typeof value === 'number')
     return Number.isInteger(value) ? { kind: 'integer' } : { kind: 'float' };
   if (typeof value === 'string') return { kind: 'string', nullable: false };
+  const context =
+    typeof contextualType === 'string'
+      ? contextualTypeNode(contextualType)
+      : contextualType
+        ? unwrapType(contextualType)
+        : undefined;
+  const members = context && ts.isUnionTypeNode(context) ? context.types : context ? [context] : [];
+  const isRecord = members.some(
+    (member) =>
+      ts.isTypeLiteralNode(member) ||
+      (ts.isTypeReferenceNode(member) &&
+        ts.isIdentifier(member.typeName) &&
+        member.typeName.text === 'Record')
+  );
   if (value === null) {
-    return contextualType?.includes('Record') || contextualType?.includes('{')
-      ? { kind: 'attrs', nullable: true }
-      : { kind: 'string', nullable: true };
+    return isRecord ? { kind: 'attrs', nullable: true } : { kind: 'string', nullable: true };
   }
   if (Array.isArray(value)) {
-    const contextualElement = listElementFromContext(contextualType);
+    const contextualElement = listElementFromContext(context);
     if (value.length === 0) return { kind: 'list', element: contextualElement ?? 'anything' };
     if (value.every((item) => typeof item === 'string')) return { kind: 'list', element: 'string' };
     if (value.every((item) => typeof item === 'number')) return { kind: 'list', element: 'number' };
@@ -96,32 +109,61 @@ export const inferTypeFromValue = (
     return { kind: 'list', element: 'anything' };
   }
   if (value && typeof value === 'object') return { kind: 'attrs', nullable: false };
-  const contextualListElement = listElementFromContext(contextualType);
+  const contextualListElement = listElementFromContext(context);
   if (contextualListElement) return { kind: 'list', element: contextualListElement };
-  if (/(?:Record\s*<|\{)/.test(contextualType ?? '')) return { kind: 'attrs', nullable: true };
-  if ((contextualType ?? '').includes('boolean')) return { kind: 'boolean' };
-  if ((contextualType ?? '').includes('number')) return { kind: 'float' };
+  if (isRecord) return { kind: 'attrs', nullable: true };
+  if (members.some((member) => member.kind === ts.SyntaxKind.BooleanKeyword))
+    return { kind: 'boolean' };
+  if (members.some((member) => member.kind === ts.SyntaxKind.NumberKeyword))
+    return { kind: 'float' };
   return { kind: 'string', nullable: true };
 };
 
-const listElementFromContext = (
-  contextualType: string | undefined
-): SettingListElement | undefined => {
-  if (!contextualType) return undefined;
-  const type = contextualType.replace(/\s+/g, ' ').trim();
-  const arrayElement =
-    type.match(/^(?:readonly )?(.+?)\[\]$/)?.[1] ??
-    type.match(/^(?:Readonly)?Array\s*<\s*(.+)\s*>$/)?.[1];
-  if (!arrayElement) return undefined;
-  const element = arrayElement
-    .trim()
-    .replace(/^\((.*)\)$/, '$1')
-    .trim();
-  if (element === 'string' || /^(?:string\s*\|\s*)+never$/.test(element)) return 'string';
-  if (element === 'number') return 'number';
-  if (element === 'boolean') return 'boolean';
-  if (element === 'any' || element === 'unknown' || element === 'never') return 'anything';
-  if (element.includes('|') && !/^\{.*\}$/.test(element)) return 'anything';
+const unwrapType = (node: ts.TypeNode): ts.TypeNode => {
+  while (ts.isParenthesizedTypeNode(node) || ts.isTypeOperatorNode(node)) node = node.type;
+  return node;
+};
+
+const contextualTypeNode = (text: string | undefined): ts.TypeNode | undefined => {
+  if (!text) return undefined;
+  const source = ts.createSourceFile(
+    'context.ts',
+    `type Setting = ${text};`,
+    ts.ScriptTarget.Latest
+  );
+  const declaration = source.statements[0];
+  return declaration && ts.isTypeAliasDeclaration(declaration)
+    ? unwrapType(declaration.type)
+    : undefined;
+};
+
+const listElementFromContext = (type: ts.TypeNode | undefined): SettingListElement | undefined => {
+  if (!type) return undefined;
+  const element = ts.isArrayTypeNode(type)
+    ? type.elementType
+    : ts.isTypeReferenceNode(type) &&
+        ts.isIdentifier(type.typeName) &&
+        ['Array', 'ReadonlyArray'].includes(type.typeName.text)
+      ? type.typeArguments?.[0]
+      : undefined;
+  if (!element) return undefined;
+  const unwrapped = unwrapType(element);
+  const members = ts.isUnionTypeNode(unwrapped)
+    ? unwrapped.types.filter((member) => member.kind !== ts.SyntaxKind.NeverKeyword)
+    : [unwrapped];
+  if (members.length === 0) return 'anything';
+  if (members.every((member) => member.kind === ts.SyntaxKind.StringKeyword)) return 'string';
+  if (members.every((member) => member.kind === ts.SyntaxKind.NumberKeyword)) return 'number';
+  if (members.every((member) => member.kind === ts.SyntaxKind.BooleanKeyword)) return 'boolean';
+  if (
+    members.length > 1 ||
+    members.some((member) =>
+      [ts.SyntaxKind.AnyKeyword, ts.SyntaxKind.UnknownKeyword, ts.SyntaxKind.NeverKeyword].includes(
+        member.kind
+      )
+    )
+  )
+    return 'anything';
   return 'attrs';
 };
 

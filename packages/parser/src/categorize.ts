@@ -1,5 +1,4 @@
-import type { ParsedPluginsResult, PluginConfig, ReadonlyDeep } from '@nixcord/shared';
-import { filterNullish } from '@nixcord/shared';
+import type { ParsedPluginsResult, PluginConfig } from '@nixcord/shared';
 import { SOURCE_PROFILES } from './source-profiles.js';
 
 const PLUGIN_RENAME_MAP: Record<string, string> = { oneko: 'CursorBuddy' };
@@ -40,20 +39,19 @@ export function categorizePlugins(
   vencordResult: Readonly<ParsedPluginsResult>,
   equicordResult?: Readonly<ParsedPluginsResult>
 ): {
-  readonly generic: ReadonlyDeep<Record<string, PluginConfig>>;
-  readonly vencordOnly: ReadonlyDeep<Record<string, PluginConfig>>;
-  readonly equicordOnly: ReadonlyDeep<Record<string, PluginConfig>>;
+  readonly generic: Readonly<Record<string, PluginConfig>>;
+  readonly vencordOnly: Readonly<Record<string, PluginConfig>>;
+  readonly equicordOnly: Readonly<Record<string, PluginConfig>>;
 } {
   const vencordPlugins = vencordResult.vencordPlugins;
   const equicordSharedPlugins = equicordResult?.vencordPlugins ?? {};
   const equicordOnlyPlugins = equicordResult?.equicordPlugins ?? {};
 
-  const equicordDirectoryMap = Object.entries(equicordSharedPlugins)
-    .filter(([, config]) => config.directoryName !== undefined)
-    .reduce((acc, [name, config]) => {
-      acc.set(config.directoryName!.toLowerCase(), name);
-      return acc;
-    }, new Map<string, string>());
+  const equicordDirectoryMap = new Map(
+    Object.entries(equicordSharedPlugins).flatMap(([name, config]) =>
+      config.directoryName === undefined ? [] : [[config.directoryName.toLowerCase(), name]]
+    )
+  );
 
   const pluginMatches = Object.entries(vencordPlugins).map(([name, config]) => {
     const getEquicordConfig = (): PluginConfig | undefined => {
@@ -144,16 +142,12 @@ export function categorizePlugins(
   );
 
   return {
-    generic: filterNullish(Object.fromEntries(genericTuples)) as ReadonlyDeep<
-      Record<string, PluginConfig>
-    >,
-    vencordOnly: filterNullish(Object.fromEntries(vencordTuples)) as ReadonlyDeep<
-      Record<string, PluginConfig>
-    >,
-    equicordOnly: filterNullish({
+    generic: Object.fromEntries(genericTuples),
+    vencordOnly: Object.fromEntries(vencordTuples),
+    equicordOnly: {
       ...filteredEquicordOnly,
       ...modifiedSharedPlugins,
       ...equicordSharedExtras,
-    }) as ReadonlyDeep<Record<string, PluginConfig>>,
+    },
   };
 }

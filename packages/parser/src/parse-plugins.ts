@@ -7,6 +7,7 @@ import {
   type StaticValue,
   traceComponentSetting,
   traceStoreSetting,
+  unwrapExpression,
 } from '@nixcord/ast';
 import {
   CLI_CONFIG,
@@ -15,7 +16,6 @@ import {
   type PluginConfig,
   type PluginRename,
   type PluginSetting,
-  type ReadonlyDeep,
   type SettingRename,
   type SettingScalar,
   type SettingType,
@@ -27,7 +27,7 @@ import pLimit from 'p-limit';
 import { basename, dirname, join, normalize, relative, resolve } from 'pathe';
 import {
   type CallExpression,
-  type Node,
+  Node,
   type ObjectLiteralExpression,
   type SourceFile,
   SyntaxKind,
@@ -60,7 +60,7 @@ export interface ParsePluginsOptions {
 }
 
 interface DirectoryParseResult {
-  readonly plugins: ReadonlyDeep<Record<string, PluginConfig>>;
+  readonly plugins: Readonly<Record<string, PluginConfig>>;
   readonly settingRenames: SettingRename[];
   readonly pluginRenames: PluginRename[];
   readonly diagnostics: ParseDiagnostic[];
@@ -117,7 +117,7 @@ const recordUnresolvedAstValue = (
 };
 
 const emptyDirectoryResult = (): DirectoryParseResult => ({
-  plugins: {} as ReadonlyDeep<Record<string, PluginConfig>>,
+  plugins: {} as Readonly<Record<string, PluginConfig>>,
   settingRenames: [],
   pluginRenames: [],
   diagnostics: [],
@@ -234,9 +234,7 @@ const isApiCall = (
     const resolved = symbol?.isAlias() ? symbol.getAliasedSymbol() : symbol;
     const declaration = resolved?.getValueDeclaration() ?? resolved?.getDeclarations()[0];
     const declarationName =
-      declaration && 'getName' in declaration
-        ? (declaration as { getName(): string | undefined }).getName()
-        : undefined;
+      Node.isNamed(declaration) || Node.isNameable(declaration) ? declaration.getName() : undefined;
     const filePath = declaration?.getSourceFile().getFilePath().replaceAll('\\', '/');
     return Boolean(
       declarationName === canonicalName &&
@@ -260,8 +258,8 @@ const apiCalls = (
 const declarationInitializer = (node: Node, checker: TypeChecker): Node | undefined => {
   try {
     const declaration = resolvedDeclaration(node, checker);
-    if (declaration && 'getInitializer' in declaration) {
-      const initializer = (declaration as { getInitializer(): Node | undefined }).getInitializer();
+    if (Node.isInitializerExpressionGetable(declaration)) {
+      const initializer = declaration.getInitializer();
       if (initializer) return initializer;
     }
     if (node.isKind(SyntaxKind.Identifier))
@@ -272,19 +270,9 @@ const declarationInitializer = (node: Node, checker: TypeChecker): Node | undefi
   return undefined;
 };
 
-const unwrapNode = (node: Node): Node => {
-  const expression =
-    node.asKind(SyntaxKind.AsExpression)?.getExpression() ??
-    node.asKind(SyntaxKind.TypeAssertionExpression)?.getExpression() ??
-    node.asKind(SyntaxKind.ParenthesizedExpression)?.getExpression() ??
-    node.asKind(SyntaxKind.NonNullExpression)?.getExpression() ??
-    node.asKind(SyntaxKind.SatisfiesExpression)?.getExpression();
-  return expression ? unwrapNode(expression) : node;
-};
-
 const resolveNode = (node: Node | undefined, checker: TypeChecker): Node | undefined => {
   if (!node) return undefined;
-  const unwrapped = unwrapNode(node);
+  const unwrapped = unwrapExpression(node);
   if (unwrapped.isKind(SyntaxKind.Identifier)) {
     const initializer = declarationInitializer(unwrapped, checker);
     return initializer && initializer !== node ? resolveNode(initializer, checker) : unwrapped;
@@ -320,7 +308,7 @@ const explicitTypeText = (
     } catch {}
   }
 
-  const unwrapped = unwrapNode(node);
+  const unwrapped = unwrapExpression(node);
   if (unwrapped.isKind(SyntaxKind.ConditionalExpression)) {
     const branchTypes = [unwrapped.getWhenTrue(), unwrapped.getWhenFalse()]
       .map((branch) => explicitTypeText(branch, checker, new Set(visited)))
@@ -330,20 +318,24 @@ const explicitTypeText = (
   if (unwrapped.isKind(SyntaxKind.ArrayLiteralExpression)) {
     const elements = unwrapped.getElements();
     if (elements.length === 0) return undefined;
-    if (elements.every((element) => unwrapNode(element).isKind(SyntaxKind.StringLiteral)))
+    if (elements.every((element) => unwrapExpression(element).isKind(SyntaxKind.StringLiteral)))
       return 'string[]';
-    if (elements.every((element) => unwrapNode(element).isKind(SyntaxKind.NumericLiteral)))
+    if (elements.every((element) => unwrapExpression(element).isKind(SyntaxKind.NumericLiteral)))
       return 'number[]';
     if (
       elements.every((element) => {
-        const candidate = unwrapNode(element);
+        const candidate = unwrapExpression(element);
         return (
           candidate.isKind(SyntaxKind.TrueKeyword) || candidate.isKind(SyntaxKind.FalseKeyword)
         );
       })
     )
       return 'boolean[]';
-    if (elements.every((element) => unwrapNode(element).isKind(SyntaxKind.ObjectLiteralExpression)))
+    if (
+      elements.every((element) =>
+        unwrapExpression(element).isKind(SyntaxKind.ObjectLiteralExpression)
+      )
+    )
       return 'Record<string, unknown>[]';
   }
 
@@ -434,33 +426,21 @@ const evaluated = (node: Node | undefined, evaluator: StaticEvaluator): unknown 
 const isRecord = (value: unknown): value is RawRecord =>
   typeof value === 'object' && value !== null && !Array.isArray(value) && !('callable' in value);
 
-const jsonValue = (
-  value: unknown
-): { readonly valid: true; readonly value: SettingValue } | { readonly valid: false } => {
-  if (typeof value === 'number' && !Number.isFinite(value)) return { valid: false };
-  if (value === null || ['string', 'number', 'boolean'].includes(typeof value))
-    return { valid: true, value: value as SettingValue };
-  if (Array.isArray(value)) {
-    const items: SettingValue[] = [];
-    for (const item of value) {
-      const converted = jsonValue(item);
-      if (!converted.valid) return { valid: false };
-      items.push(converted.value);
-    }
-    return { valid: true, value: items };
-  }
-  if (isRecord(value)) {
-    const output: Record<string, SettingValue> = {};
-    for (const [key, item] of Object.entries(value)) {
-      if (item === undefined) continue;
-      const converted = jsonValue(item);
-      if (!converted.valid) return { valid: false };
-      output[key] = converted.value;
-    }
-    return { valid: true, value: output };
-  }
-  return { valid: false };
-};
+const JsonValueSchema: z.ZodType<SettingValue> = z.lazy(() =>
+  z.union([
+    z.null(),
+    z.string(),
+    z.number(),
+    z.boolean(),
+    z.array(JsonValueSchema),
+    z
+      .custom<RawRecord>(isRecord)
+      .transform((value) =>
+        Object.fromEntries(Object.entries(value).filter(([, item]) => item !== undefined))
+      )
+      .pipe(z.record(z.string(), JsonValueSchema)),
+  ])
+);
 
 const rawOptions = (value: unknown): SelectOption[] =>
   Array.isArray(value)
@@ -493,7 +473,7 @@ const scalarFromNode = (
       typeof result.value === 'boolean')
   )
     return result.value;
-  const property = unwrapNode(node).asKind(SyntaxKind.PropertyAccessExpression);
+  const property = unwrapExpression(node).asKind(SyntaxKind.PropertyAccessExpression);
   if (!property) return undefined;
   const enumName = property.getExpression().getText().split('.').at(-1);
   return enumName ? profile.enumMemberFallbacks[enumName]?.[property.getName()] : undefined;
@@ -542,7 +522,9 @@ const optionsFromNode = (node: Node | undefined, context: PluginContext): Select
         callback?.isKind(SyntaxKind.FunctionExpression))
     ) {
       const parameter = callback.getParameters()[0]?.getName();
-      const directBody = unwrapNode(callback.getBody()).asKind(SyntaxKind.ObjectLiteralExpression);
+      const directBody = unwrapExpression(callback.getBody()).asKind(
+        SyntaxKind.ObjectLiteralExpression
+      );
       const returnedBody = callback
         .getBody()
         .asKind(SyntaxKind.Block)
@@ -627,12 +609,8 @@ const settingNodeMap = (
       continue;
     }
     if (!property.isKind(SyntaxKind.PropertyAssignment)) continue;
-    const nameNode = property.getNameNode();
-    const nameResult = evaluator.evaluate(nameNode);
-    const name =
-      nameResult.known && ['string', 'number'].includes(typeof nameResult.value)
-        ? String(nameResult.value)
-        : property.getName().replace(/^['"]|['"]$/g, '');
+    const name = propertyKey(property.getNameNode(), evaluator);
+    if (name === undefined) continue;
     const value = resolveNode(property.getInitializer(), checker)?.asKind(
       SyntaxKind.ObjectLiteralExpression
     );
@@ -642,12 +620,9 @@ const settingNodeMap = (
 };
 
 const propertyKey = (node: Node, evaluator: StaticEvaluator): string | undefined => {
-  if (
-    node.isKind(SyntaxKind.Identifier) ||
-    node.isKind(SyntaxKind.StringLiteral) ||
-    node.isKind(SyntaxKind.NumericLiteral)
-  )
-    return node.getText().replace(/^['"]|['"]$/g, '');
+  if (node.isKind(SyntaxKind.StringLiteral) || node.isKind(SyntaxKind.NumericLiteral))
+    return String(node.getLiteralValue());
+  if (node.isKind(SyntaxKind.Identifier)) return node.getText();
   const computed = node.asKind(SyntaxKind.ComputedPropertyName)?.getExpression();
   const result = evaluator.evaluate(computed ?? node);
   if (result.known && (typeof result.value === 'string' || typeof result.value === 'number'))
@@ -779,15 +754,15 @@ const nestedConfigFromDefaults = (
           : undefined;
         const children = Object.fromEntries(
           Object.entries(value).flatMap(([childName, childValue]) => {
-            const converted = jsonValue(childValue);
-            return converted.valid
+            const converted = JsonValueSchema.safeParse(childValue);
+            return converted.success
               ? [
                   [
                     childName,
                     {
                       name: childName,
-                      type: inferTypeFromValue(converted.value),
-                      default: converted.value,
+                      type: inferTypeFromValue(converted.data),
+                      default: converted.data,
                       ...(parentDescription &&
                       profile.structuredComponentDescriptions.childTemplates[childName]
                         ? {
@@ -811,13 +786,13 @@ const nestedConfigFromDefaults = (
           } satisfies PluginConfig,
         ];
       }
-      const converted = jsonValue(value);
+      const converted = JsonValueSchema.safeParse(value);
       return [
         entryName,
         {
           name: entryName,
-          type: inferTypeFromValue(converted.valid ? converted.value : undefined),
-          ...(converted.valid ? { default: converted.value } : {}),
+          type: inferTypeFromValue(converted.success ? converted.data : undefined),
+          ...(converted.success ? { default: converted.data } : {}),
         } satisfies PluginSetting,
       ];
     })
@@ -849,16 +824,16 @@ const settingFromComponentTrace = (
   else if (control?.kind === 'enum' && control.values?.length)
     type = { kind: 'enum', values: control.values };
   else if (trace.hasDefault) {
-    const converted = jsonValue(trace.defaultValue);
-    type = inferTypeFromValue(converted.valid ? converted.value : undefined);
+    const converted = JsonValueSchema.safeParse(trace.defaultValue);
+    type = inferTypeFromValue(converted.success ? converted.data : undefined);
   } else type = inferTypeFromValue(undefined, contextualType);
-  const converted = jsonValue(trace.defaultValue);
+  const converted = JsonValueSchema.safeParse(trace.defaultValue);
   return {
     name: key,
     type,
     ...metadata,
-    ...(trace.hasDefault && converted.valid
-      ? { default: converted.value }
+    ...(trace.hasDefault && converted.success
+      ? { default: converted.data }
       : allowImplicitDefault
         ? implicitDefaultForType(type)
         : {}),
@@ -895,7 +870,8 @@ async function normalizeSetting(
           !property.isKind(SyntaxKind.GetAccessor)
         )
           return false;
-        return definitionKeys.has(property.getName().replace(/^['"]|['"]$/g, ''));
+        const name = propertyKey(property.getNameNode(), context.evaluator);
+        return name !== undefined && definitionKeys.has(name);
       })
     );
   if (!isDefinition) {
@@ -956,10 +932,10 @@ async function normalizeSetting(
     ...(raw.restartNeeded === true ? { restartNeeded: true } : {}),
   };
   const defaultNode = objectPropertyInitializer(definitionNode, 'default');
-  const convertedDefault = jsonValue(raw.default);
+  const convertedDefault = JsonValueSchema.safeParse(raw.default);
   const hasDeclaredDefault = Object.hasOwn(raw, 'default');
-  const hasDefault = hasDeclaredDefault && convertedDefault.valid;
-  if (hasDeclaredDefault && !convertedDefault.valid) {
+  const hasDefault = hasDeclaredDefault && convertedDefault.success;
+  if (hasDeclaredDefault && !convertedDefault.success) {
     context.diagnostics.push(
       diagnostic(
         'unsupported-default-value',
@@ -1032,24 +1008,24 @@ async function normalizeSetting(
             const kind = component ? context.profile.controlComponents[component] : undefined;
             return kind ? [kind] : [];
           })[0];
-          const convertedDefault = jsonValue(executed.value);
-          const convertedWrite = jsonValue(writes.at(-1)?.value);
+          const convertedDefault = JsonValueSchema.safeParse(executed.value);
+          const convertedWrite = JsonValueSchema.safeParse(writes.at(-1)?.value);
           const type: SettingType =
             controlKind === 'boolean'
               ? { kind: 'boolean' }
               : controlKind === 'number'
                 ? { kind: 'float' }
-                : executed.hasDefault && convertedDefault.valid
-                  ? inferTypeFromValue(convertedDefault.value, contextualType)
-                  : convertedWrite.valid
-                    ? inferTypeFromValue(convertedWrite.value, contextualType)
+                : executed.hasDefault && convertedDefault.success
+                  ? inferTypeFromValue(convertedDefault.data, contextualType)
+                  : convertedWrite.success
+                    ? inferTypeFromValue(convertedWrite.data, contextualType)
                     : inferTypeFromValue(undefined, contextualType);
           return {
             name: key,
             type,
             ...metadata,
-            ...(executed.hasDefault && convertedDefault.valid
-              ? { default: convertedDefault.value }
+            ...(executed.hasDefault && convertedDefault.success
+              ? { default: convertedDefault.data }
               : !hasSourceDefault
                 ? implicitDefaultForType(type)
                 : {}),
@@ -1105,12 +1081,12 @@ async function normalizeSetting(
     optionType,
     hasDefault,
     hasDeclaredDefault: hasSourceDefault,
-    ...(hasDefault ? { defaultValue: convertedDefault.value } : {}),
+    ...(hasDefault ? { defaultValue: convertedDefault.data } : {}),
     options:
       contextualEnumValues && contextualEnumValues.length > 1
         ? contextualEnumValues.map((value) => ({
             value,
-            isDefault: hasDefault && convertedDefault.value === value,
+            isDefault: hasDefault && convertedDefault.data === value,
           }))
         : resolvedOptions,
     contextualType,
@@ -1179,11 +1155,10 @@ const enumValuesFromType = (
     )
       return values;
   }
-  const typeName = typeNode
-    .getText()
-    .split('.')
-    .at(-1)
-    ?.replace(/[^A-Za-z0-9_$].*$/, '');
+  const typeNameNode = typeNode.asKind(SyntaxKind.TypeReference)?.getTypeName();
+  const typeName = typeNameNode?.isKind(SyntaxKind.QualifiedName)
+    ? typeNameNode.getRight().getText()
+    : typeNameNode?.getText();
   return typeName ? profile.enumFallbacks[typeName] : undefined;
 };
 
@@ -1195,7 +1170,8 @@ const privateSettingsFromTypeLiteral = (
   for (const member of literal.getMembers()) {
     const property = member.asKind(SyntaxKind.PropertySignature);
     if (!property) continue;
-    const name = property.getName().replace(/^['"]|['"]$/g, '');
+    const name = propertyKey(property.getNameNode(), context.evaluator);
+    if (name === undefined) continue;
     const typeNode = property.getTypeNode();
     const nested = typeNode?.asKind(SyntaxKind.TypeLiteral);
     if (nested) {
@@ -1206,7 +1182,6 @@ const privateSettingsFromTypeLiteral = (
       output[name] = { name, type: { kind: 'attrs', nullable: false }, default: {} };
       continue;
     }
-    const text = typeNode.getText().replace(/\s+/g, ' ');
     const enumValues = enumValuesFromType(typeNode, context.session.checker, context.profile);
     if (enumValues?.length) {
       output[name] = {
@@ -1217,19 +1192,27 @@ const privateSettingsFromTypeLiteral = (
             : { kind: 'enum', values: enumValues },
         default: enumValues.includes(false) ? false : enumValues[0],
       };
-    } else if (/^(?:string\[\]|Array\s*<\s*string\s*>)/.test(text)) {
-      output[name] = { name, type: { kind: 'list', element: 'string' }, default: [] };
-    } else if (/^(?:Record\s*<|\{)/.test(text)) {
-      output[name] = { name, type: { kind: 'attrs', nullable: false }, default: {} };
     } else {
-      const type = context.session.checker.getTypeAtLocation(typeNode);
-      if (type.isBoolean() || text.includes('boolean'))
-        output[name] = { name, type: { kind: 'boolean' }, default: false };
-      else if (type.isNumber() || text.includes('number'))
-        output[name] = { name, type: { kind: 'integer' }, default: 0 };
-      else if (type.isArray() || type.isTuple())
-        output[name] = { name, type: { kind: 'list', element: 'attrs' }, default: [] };
-      else output[name] = { name, type: { kind: 'string', nullable: true }, default: null };
+      const checkedType = context.session.checker.getTypeAtLocation(typeNode);
+      const inferred = inferTypeFromValue(undefined, typeNode.compilerNode);
+      const type: SettingType = checkedType.isBoolean()
+        ? { kind: 'boolean' }
+        : checkedType.isNumber() || inferred.kind === 'float'
+          ? { kind: 'integer' }
+          : inferred.kind === 'attrs'
+            ? { kind: 'attrs', nullable: false }
+            : inferred.kind !== 'list' && (checkedType.isArray() || checkedType.isTuple())
+              ? { kind: 'list', element: 'attrs' }
+              : inferred;
+      output[name] = {
+        name,
+        type,
+        ...(type.kind === 'integer'
+          ? { default: 0 }
+          : type.kind === 'boolean'
+            ? { default: false }
+            : implicitDefaultForType(type)),
+      };
     }
   }
   return output;
@@ -1346,11 +1329,11 @@ const literalStringArgs = (call: CallExpression, evaluator: StaticEvaluator): st
 const extractRenames = (
   sourceFiles: readonly SourceFile[],
   context: PluginContext,
-  settings: ReadonlyDeep<Record<string, PluginSetting | PluginConfig>>
+  settings: Readonly<Record<string, PluginSetting | PluginConfig>>
 ): { settingRenames: SettingRename[]; pluginRenames: PluginRename[] } => {
   const activeSettingNames = new Set<string>();
   const collectActiveSettingNames = (
-    currentSettings: ReadonlyDeep<Record<string, PluginSetting | PluginConfig>>,
+    currentSettings: Readonly<Record<string, PluginSetting | PluginConfig>>,
     prefix = ''
   ): void => {
     for (const [key, setting] of Object.entries(currentSettings)) {
@@ -1557,7 +1540,7 @@ async function parsePluginsFromDirectory(
   return {
     plugins: Object.fromEntries(
       results.flatMap((result) => (result.entry ? [result.entry] : []))
-    ) as ReadonlyDeep<Record<string, PluginConfig>>,
+    ) as Readonly<Record<string, PluginConfig>>,
     settingRenames: results.flatMap((result) => result.settingRenames),
     pluginRenames: results.flatMap((result) => result.pluginRenames),
     diagnostics: results.flatMap((result) => result.diagnostics),
