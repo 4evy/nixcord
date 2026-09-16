@@ -1,4 +1,4 @@
-import type { ZodError, ZodSchema } from 'zod';
+import type { ZodSchema } from 'zod';
 import { fromZodError } from 'zod-validation-error';
 
 export function parseOrThrow<T>(
