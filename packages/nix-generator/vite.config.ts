@@ -10,6 +10,7 @@ export default createViteConfig({
     'change-case',
     'fs-extra',
     'pathe',
+    'zod',
   ],
   testTimeout: 20000,
   testPool: 'threads',
