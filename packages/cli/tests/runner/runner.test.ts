@@ -1,9 +1,8 @@
 import { dirname, join } from 'node:path';
-import type { ParsedPluginsResult, PluginConfig, Result } from '@nixcord/shared';
+import type { ParsedPluginsResult, PluginConfig } from '@nixcord/shared';
 import { CLI_CONFIG } from '@nixcord/shared';
 import { createFixture } from 'fs-fixture';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import type { GeneratePluginOptionsSummary } from '../../src/runner/index.js';
 import { runGeneratePluginOptions, validateParsedResults } from '../../src/runner/index.js';
 
 const mocks = vi.hoisted(() => ({
@@ -75,16 +74,6 @@ const createRepos = () =>
     },
   });
 
-function unwrapOk<T, E>(result: Result<T, E>): T {
-  if (result.ok) return result.value;
-  throw result.error;
-}
-
-function unwrapErr<T, E>(result: Result<T, E>): E {
-  if (!result.ok) return result.error;
-  throw new Error('Expected Err result');
-}
-
 describe('runGeneratePluginOptions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -126,9 +115,7 @@ describe('runGeneratePluginOptions', () => {
       logger,
     });
 
-    expect(result.ok).toBe(true);
-    const summary = unwrapOk<GeneratePluginOptionsSummary, Error>(result);
-    expect(summary).toEqual({
+    expect(result).toEqual({
       pluginsDir: join(dirname(outputPath), CLI_CONFIG.directories.output),
       sharedCount: 1,
       vencordOnlyCount: 1,
@@ -182,7 +169,7 @@ describe('runGeneratePluginOptions', () => {
       equicordOnly: {},
     });
 
-    const result = await runGeneratePluginOptions({
+    await runGeneratePluginOptions({
       vencordPath: vencordRepo,
       vencordPluginsDir: CLI_CONFIG.directories.vencordPlugins,
       equicordPluginsDir: CLI_CONFIG.directories.equicordPlugins,
@@ -191,7 +178,6 @@ describe('runGeneratePluginOptions', () => {
       logger,
     });
 
-    expect(result.ok).toBe(true);
     expect(logger.info).toHaveBeenCalledWith(
       expect.stringContaining('Found 1 plugins in Vencord src/plugins')
     );
@@ -248,9 +234,7 @@ describe('runGeneratePluginOptions', () => {
       logger,
     });
 
-    expect(result.ok).toBe(true);
-    const summary = unwrapOk<GeneratePluginOptionsSummary, Error>(result);
-    expect(summary.diagnosticSummary).toEqual({
+    expect(result.diagnosticSummary).toEqual({
       total: 3,
       byKind: [
         { name: 'component-only-setting-skipped', count: 2 },
@@ -267,7 +251,7 @@ describe('runGeneratePluginOptions', () => {
     });
   });
 
-  test('returns error result when validation fails', async () => {
+  test('rejects when validation fails', async () => {
     await using fixture = await createRepos();
     const logger = createLogger();
     const vencordRepo = fixture.getPath('vencord');
@@ -277,7 +261,7 @@ describe('runGeneratePluginOptions', () => {
       ...emptyResultFields,
     });
 
-    const result = await runGeneratePluginOptions({
+    const result = runGeneratePluginOptions({
       vencordPath: vencordRepo,
       vencordPluginsDir: CLI_CONFIG.directories.vencordPlugins,
       equicordPluginsDir: CLI_CONFIG.directories.equicordPlugins,
@@ -285,14 +269,13 @@ describe('runGeneratePluginOptions', () => {
       logger,
     });
 
-    expect(!result.ok).toBe(true);
-    expect(unwrapErr(result).message).toContain('settings');
+    await expect(result).rejects.toThrow('settings');
   });
 
   test('fails fast when vencord path is invalid', async () => {
     await using fixture = await createRepos();
     const logger = createLogger();
-    const result = await runGeneratePluginOptions({
+    const result = runGeneratePluginOptions({
       vencordPath: fixture.getPath('missing'),
       vencordPluginsDir: CLI_CONFIG.directories.vencordPlugins,
       equicordPluginsDir: CLI_CONFIG.directories.equicordPlugins,
@@ -300,8 +283,7 @@ describe('runGeneratePluginOptions', () => {
       logger,
     });
 
-    expect(!result.ok).toBe(true);
-    expect(unwrapErr(result).message).toContain('Vencord source path does not exist');
+    await expect(result).rejects.toThrow('Vencord source path does not exist');
     expect(mocks.parsePlugins).not.toHaveBeenCalled();
   });
 });

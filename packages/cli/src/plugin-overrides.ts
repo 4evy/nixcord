@@ -1,4 +1,5 @@
 import { CLI_CONFIG } from '@nixcord/shared';
+import { deepmergeCustom } from 'deepmerge-ts';
 import fse from 'fs-extra';
 import { resolve } from 'pathe';
 
@@ -7,25 +8,7 @@ type JsonObject = Record<string, unknown>;
 const isPlainObject = (value: unknown): value is JsonObject =>
   value !== null && typeof value === 'object' && !Array.isArray(value);
 
-const defineJsonProperty = (target: JsonObject, key: string, value: unknown): void => {
-  Object.defineProperty(target, key, {
-    value,
-    enumerable: true,
-    configurable: true,
-    writable: true,
-  });
-};
-
-const merge = (base: unknown, override: unknown): unknown => {
-  if (!isPlainObject(base) || !isPlainObject(override)) return override;
-
-  const result: JsonObject = Object.create(null) as JsonObject;
-  for (const [key, value] of Object.entries(base)) defineJsonProperty(result, key, value);
-  for (const [key, value] of Object.entries(override)) {
-    defineJsonProperty(result, key, key in result ? merge(result[key], value) : value);
-  }
-  return result;
-};
+const merge = deepmergeCustom({ mergeArrays: false, filterValues: false });
 
 const selectApplicableCommonPluginOverride = (
   generatedPlugin: unknown,
@@ -39,20 +22,11 @@ const selectApplicableCommonPluginOverride = (
   const generatedSettings = generatedPlugin.settings;
   if (!isPlainObject(generatedSettings)) return undefined;
 
-  const applicableSettings: JsonObject = Object.create(null) as JsonObject;
-  for (const [settingName, settingOverride] of Object.entries(overrideSettings)) {
-    if (Object.hasOwn(generatedSettings, settingName)) {
-      defineJsonProperty(applicableSettings, settingName, settingOverride);
-    }
-  }
-
-  const result: JsonObject = Object.create(null) as JsonObject;
-  for (const [key, value] of Object.entries(pluginOverride)) {
-    if (key !== 'settings') defineJsonProperty(result, key, value);
-  }
-  if (Object.keys(applicableSettings).length > 0) {
-    defineJsonProperty(result, 'settings', applicableSettings);
-  }
+  const applicableSettings = Object.fromEntries(
+    Object.entries(overrideSettings).filter(([name]) => Object.hasOwn(generatedSettings, name))
+  );
+  const { settings: _settings, ...result } = pluginOverride;
+  if (Object.keys(applicableSettings).length > 0) result.settings = applicableSettings;
 
   return Object.keys(result).length > 0 ? result : undefined;
 };
@@ -99,7 +73,7 @@ export const applyPluginOverrides = async (
             pluginOverride
           );
           if (applicablePluginOverride !== undefined) {
-            defineJsonProperty(applicableCommonOverride, pluginName, applicablePluginOverride);
+            applicableCommonOverride[pluginName] = applicablePluginOverride;
           }
         }
       }

@@ -1,5 +1,5 @@
 import { resolve } from 'node:path';
-import { CLI_CONFIG, Err, Ok } from '@nixcord/shared';
+import { CLI_CONFIG } from '@nixcord/shared';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { buildCli, CliExecutionError, handleCliError, runCli } from '../../src/cli.js';
 import { runGeneratePluginOptions } from '../../src/runner/index.js';
@@ -31,7 +31,7 @@ const summary = {
 describe('CLI contract', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(runGeneratePluginOptions).mockResolvedValue(Ok(summary));
+    vi.mocked(runGeneratePluginOptions).mockResolvedValue(summary);
     process.exitCode = undefined;
   });
 
@@ -128,7 +128,7 @@ describe('CLI contract', () => {
 
   test('turns runner failures into a CLI failure exit code', async () => {
     const stderr = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
-    vi.mocked(runGeneratePluginOptions).mockResolvedValue(Err(new Error('Runner failed')));
+    vi.mocked(runGeneratePluginOptions).mockRejectedValue(new Error('Runner failed'));
 
     await runCli(['node', 'cli.js']);
 

@@ -42,8 +42,6 @@ export class CliExecutionError extends Error {
   }
 }
 
-const stringParser = (input: string): string => input;
-
 export const buildCli = (): Application<CommandContext> => {
   const command = buildCommand<CliFlags, CliArgs>({
     docs: {
@@ -54,42 +52,42 @@ export const buildCli = (): Application<CommandContext> => {
       flags: {
         vencord: {
           kind: 'parsed',
-          parse: stringParser,
+          parse: String,
           brief: `Path to Vencord source directory (default: ${CLI_CONFIG.sources.vencord})`,
           placeholder: 'path',
           optional: true,
         },
         equicord: {
           kind: 'parsed',
-          parse: stringParser,
+          parse: String,
           brief: `Path to Equicord source directory (default: ${CLI_CONFIG.sources.equicord})`,
           placeholder: 'path',
           optional: true,
         },
         output: {
           kind: 'parsed',
-          parse: stringParser,
+          parse: String,
           brief: 'Output file path',
           placeholder: 'path',
           default: DEFAULT_OUTPUT,
         },
         overrides: {
           kind: 'parsed',
-          parse: stringParser,
+          parse: String,
           brief: 'Path to plugin option overrides JSON',
           placeholder: 'path',
           optional: true,
         },
         vencordPlugins: {
           kind: 'parsed',
-          parse: stringParser,
+          parse: String,
           brief: 'Relative path to Vencord plugins directory',
           placeholder: 'path',
           default: CLI_CONFIG.directories.vencordPlugins,
         },
         equicordPlugins: {
           kind: 'parsed',
-          parse: stringParser,
+          parse: String,
           brief: 'Relative path to Equicord plugins directory',
           placeholder: 'path',
           default: CLI_CONFIG.directories.equicordPlugins,
@@ -123,7 +121,7 @@ export const buildCli = (): Application<CommandContext> => {
         kind: 'tuple',
         parameters: [
           {
-            parse: stringParser,
+            parse: String,
             brief: 'Path to Vencord source directory',
             placeholder: 'vencord-path',
             optional: true,
@@ -166,13 +164,13 @@ export const buildCli = (): Application<CommandContext> => {
 
       const params: GeneratePluginOptionsParams = { ...baseParams, equicordPath };
 
-      const result = await runGeneratePluginOptions(params);
-
-      if (!result.ok) {
-        throw new CliExecutionError(result.error, validationResult.data.verbose);
-      }
-
-      logGeneratePluginOptionsSummary(logger, result.value);
+      const summary = await runGeneratePluginOptions(params).catch((error: unknown) => {
+        throw new CliExecutionError(
+          error instanceof Error ? error : new Error(String(error)),
+          validationResult.data.verbose
+        );
+      });
+      logGeneratePluginOptionsSummary(logger, summary);
     },
   });
 

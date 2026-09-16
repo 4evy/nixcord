@@ -7,15 +7,12 @@ import {
 } from '@nixcord/nix-generator';
 import type { ParsePluginsOptions } from '@nixcord/parser';
 import { categorizePlugins, extractMigrations, parsePlugins } from '@nixcord/parser';
-import type { Logger, ParseDiagnostic, Simplify } from '@nixcord/shared';
+import type { Logger, ParseDiagnostic } from '@nixcord/shared';
 import {
   CLI_CONFIG,
-  Err,
-  Ok,
   type ParsedPluginsResult,
   ParsedPluginsResultSchema,
   parseOrThrow,
-  type Result,
 } from '@nixcord/shared';
 import fse from 'fs-extra';
 import { dirname, join, normalize, resolve } from 'pathe';
@@ -52,9 +49,7 @@ const GeneratePluginOptionsParamsSchema = z.object({
   skipGitMigrations: z.boolean().optional(),
 });
 
-export type GeneratePluginOptionsParams = Simplify<
-  z.infer<typeof GeneratePluginOptionsParamsSchema>
->;
+export type GeneratePluginOptionsParams = z.infer<typeof GeneratePluginOptionsParamsSchema>;
 
 export interface GeneratePluginOptionsSummary {
   pluginsDir: string;
@@ -173,11 +168,8 @@ const writeOutputs = async ({
 
 const summarizeCounts = (values: readonly string[], limit: number): DiagnosticBucket[] =>
   Array.from(
-    values.reduce(
-      (counts, value) => counts.set(value, (counts.get(value) ?? 0) + 1),
-      new Map<string, number>()
-    ),
-    ([name, count]) => ({ name, count })
+    Map.groupBy(values, (value) => value),
+    ([name, items]) => ({ name, count: items.length })
   )
     .sort((left, right) => right.count - left.count || left.name.localeCompare(right.name))
     .slice(0, limit);
@@ -210,7 +202,7 @@ const summarizeDiagnostics = (
 
 export const runGeneratePluginOptions = async (
   rawParams: GeneratePluginOptionsParams
-): Promise<Result<GeneratePluginOptionsSummary, Error>> => {
+): Promise<GeneratePluginOptionsSummary> => {
   const parsedParams = GeneratePluginOptionsParamsSchema.parse(rawParams);
   const verbose = parsedParams.verbose ?? false;
   try {
@@ -399,10 +391,10 @@ export const runGeneratePluginOptions = async (
       await applyPluginOverrides(parsedParams.overridesPath, outputSummary.pluginsDir);
     }
 
-    return Ok(summary);
+    return summary;
   } catch (error) {
     const normalized =
       error instanceof Error ? error : new GeneratePluginOptionsError(String(error));
-    return Err(normalized);
+    throw normalized;
   }
 };
