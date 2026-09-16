@@ -12,6 +12,8 @@
       "tsconfig*.json",
       "*.ts",
       "scripts/**/*.ts",
+      "modules/lib/*.ts",
+      "modules/lib/tsconfig.json",
       "packages/*/package.json",
       "packages/*/tsconfig.json",
       "packages/*/vite.config.ts",

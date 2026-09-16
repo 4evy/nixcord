@@ -1,0 +1,9 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2022", "DOM"],
+    "noEmit": true,
+    "tsBuildInfoFile": "../../node_modules/.cache/legcord.tsbuildinfo"
+  },
+  "include": ["legcord-build.ts"]
+}

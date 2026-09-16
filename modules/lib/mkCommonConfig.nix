@@ -77,7 +77,18 @@ let
   legcordWeb = lib.attrsets.genAttrs [ "vencord" "equicord" ] (
     client:
     if cfg.legcord.enable && cfg.legcord.${client}.enable then
-      mkBrowserBuild { inherit cfg client; }
+      import ./legcord.nix { inherit lib pkgs; } {
+        inherit client themes;
+        browserBuild = mkBrowserBuild { inherit cfg client; };
+        settings = mkVencordCfg (
+          pluginKit.mkFullConfig {
+            inherit client;
+            inherit (cfg) extraConfig;
+            baseConfig = cfg.config;
+          }
+        );
+        inherit (cfg) quickCss;
+      }
     else
       null
   );

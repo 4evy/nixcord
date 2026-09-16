@@ -1,6 +1,7 @@
 {
   "files": [],
   "references": [
+    { "path": "modules/lib" },
     { "path": "packages/shared" },
     { "path": "packages/ast" },
     { "path": "packages/git-analyzer" },
