@@ -153,7 +153,12 @@ async function runSandboxed(payload: RunnerPayload, execute: SliceExecutor): Pro
       return props.children ?? null;
     };
     Object.defineProperty(result, 'name', { value: name });
-    return result;
+    // Discord components expose static presentation enums used in JSX props.
+    return Object.assign(result, {
+      Colors: { RED: 'red', BRAND: 'brand', PRIMARY: 'primary', GREEN: 'green' },
+      Sizes: { SMALL: 'small', MEDIUM: 'medium', LARGE: 'large' },
+      Looks: { FILLED: 'filled', OUTLINED: 'outlined', LINK: 'link' },
+    });
   };
 
   const OptionType = {
@@ -301,7 +306,7 @@ try {
     codeGeneration: { strings: false, wasm: false },
     name: 'nixcord-component-slice',
   });
-  const source = `(${runSandboxed.toString()})(${JSON.stringify(payload)}, async (__runtime, React) => {\n${payload.code}\n})`;
+  const source = `globalThis.VencordNative = { pluginHelpers: {} };\n(${runSandboxed.toString()})(${JSON.stringify(payload)}, async (__runtime, React) => {\n${payload.code}\n})`;
   const response = await new Script(source, { filename: 'component-slice.js' }).runInContext(
     context
   );
