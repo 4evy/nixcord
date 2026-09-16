@@ -1,6 +1,6 @@
+import { realpath } from 'node:fs/promises';
 import { REMOVAL_EXPIRY_DAYS, RENAME_EXPIRY_DAYS } from '@nixcord/shared';
 import { execFile } from 'child_process';
-import { realpath } from 'fs/promises';
 import { promisify } from 'util';
 
 const execFileAsync = promisify(execFile);
@@ -63,9 +63,7 @@ const getRemovedSettings = async (
   try {
     const [oldFile, newFile] = await Promise.all([
       execFileAsync('git', ['show', `${oldHash}:${filePath}`], { cwd: repoPath }),
-      execFileAsync('git', ['show', `${newHash}:${filePath}`], { cwd: repoPath }).catch(() => ({
-        stdout: '',
-      })),
+      execFileAsync('git', ['show', `${newHash}:${filePath}`], { cwd: repoPath }),
     ]);
     const oldSettings = extractDeclaredSettings(oldFile.stdout);
     const newSettings = extractDeclaredSettings(newFile.stdout);
@@ -136,23 +134,32 @@ const parseCommitHeader = (line: string): GitCommit | null => {
   return { hash, date };
 };
 
+// With -z, status and paths are separate NUL-delimited fields. Only the
+// status/header field has Git's formatting newline; filenames stay untouched.
 const forEachCommitEntry = (
   stdout: string,
-  visit: (line: string, currentCommit: GitCommit) => void
+  visit: (status: string, paths: string[], currentCommit: GitCommit) => void
 ): void => {
   let currentCommit: GitCommit | null = null;
-
-  for (const line of stdout.split('\n')) {
-    const trimmed = line.trim();
-    if (!trimmed) continue;
-
-    const commit = parseCommitHeader(trimmed);
+  const fields = stdout.split('\0');
+  for (let index = 0; index < fields.length; index++) {
+    const field = fields[index].replace(/^\n+/, '');
+    if (!field) continue;
+    const commit = parseCommitHeader(field);
     if (commit) {
       currentCommit = commit;
       continue;
     }
-
-    if (currentCommit) visit(trimmed, currentCommit);
+    if (!currentCommit || !/^[ACDMRTUXB][0-9]*$/.test(field)) {
+      throw new Error('Unexpected git log record');
+    }
+    const count = /^[RC]/.test(field) ? 2 : 1;
+    const paths = fields.slice(index + 1, index + 1 + count);
+    if (paths.length !== count || paths.some((path) => !path)) {
+      throw new Error('Incomplete git log record');
+    }
+    index += count;
+    visit(field, paths, currentCommit);
   }
 };
 
@@ -173,7 +180,11 @@ export const extractPluginRenames = async (
         '-M',
         '--diff-filter=R',
         '--name-status',
-        '--pretty=format:COMMIT:%H|%cI',
+        '-z',
+        '--no-color',
+        '--no-ext-diff',
+        '--no-textconv',
+        '--pretty=format:COMMIT:%H|%cI%x00',
         '--',
         ...globs,
       ],
@@ -183,13 +194,11 @@ export const extractPluginRenames = async (
 
     const renames: PluginRename[] = [];
 
-    forEachCommitEntry(renameResult.stdout, (line, currentCommit) => {
-      if (line.startsWith('R')) {
-        // R100\told/path\tnew/path  or  R095\told/path\tnew/path
-        const parts = line.split('\t');
-        if (parts.length >= 3) {
-          const oldPath = parts[1];
-          const newPath = parts[2];
+    forEachCommitEntry(renameResult.stdout, (status, paths, currentCommit) => {
+      if (status.startsWith('R')) {
+        if (paths.length === 2) {
+          const oldPath = paths[0];
+          const newPath = paths[1];
           const oldName = extractPluginDirName(oldPath, pluginsDirs);
           const newName = extractPluginDirName(newPath, pluginsDirs);
           if (oldName && newName && oldName !== newName) {
@@ -234,9 +243,14 @@ export const extractPluginDeletions = async (
       [
         'log',
         `--since=${days} days ago`,
+        '-M',
         '--diff-filter=D',
         '--name-status',
-        '--pretty=format:COMMIT:%H|%cI',
+        '-z',
+        '--no-color',
+        '--no-ext-diff',
+        '--no-textconv',
+        '--pretty=format:COMMIT:%H|%cI%x00',
         '--',
         ...globs,
       ],
@@ -250,9 +264,9 @@ export const extractPluginDeletions = async (
 
     const deletions: PluginDeletion[] = [];
 
-    forEachCommitEntry(deleteResult.stdout, (line, currentCommit) => {
-      if (line.startsWith('D\t')) {
-        const filePath = line.slice(2);
+    forEachCommitEntry(deleteResult.stdout, (status, paths, currentCommit) => {
+      if (status === 'D') {
+        const filePath = paths[0];
         const pluginName = extractPluginDirName(filePath, pluginsDirs);
         if (pluginName && !renamedOldNamesLower.has(pluginName.toLowerCase())) {
           deletions.push({
@@ -315,10 +329,15 @@ export const extractDeprecationsFromGit = async (
       [
         'log',
         `--since=${REMOVAL_EXPIRY_DAYS} days ago`,
+        '-M',
         '--diff-filter=M',
         `-G${declarationPattern}`,
-        '--name-only',
-        '--pretty=format:COMMIT:%H|%cI',
+        '--name-status',
+        '-z',
+        '--no-color',
+        '--no-ext-diff',
+        '--no-textconv',
+        '--pretty=format:COMMIT:%H|%cI%x00',
         '--',
         ...pathspecs,
       ],
@@ -330,7 +349,7 @@ export const extractDeprecationsFromGit = async (
   }
 
   const commits = new Map<string, { date: string; files: Set<string> }>();
-  forEachCommitEntry(logOutput, (file, commit) => {
+  forEachCommitEntry(logOutput, (_status, [file], commit) => {
     if (!TYPESCRIPT_FILE_PATTERN.test(file)) return;
     const current = commits.get(commit.hash) ?? { date: commit.date, files: new Set<string>() };
     current.files.add(file);
