@@ -1,31 +1,40 @@
 { pkgs, packages }:
-{
-  apps.update-plugins = {
+let
+  inherit (pkgs) lib;
+  pluginPackages = [
+    "equicord"
+    "vencord"
+  ];
+  mkApp = package: {
     type = "app";
-    program = pkgs.lib.meta.getExe (
-      pkgs.writeShellApplication {
-        name = "update-plugins";
-        runtimeInputs = [
-          pkgs.nix-update
-          pkgs.nix
-          pkgs.bun
-        ];
-        text = ''
-          ${pkgs.lib.escapeShellArgs packages.equicord.updateScript}
-          ${pkgs.lib.escapeShellArgs packages.vencord.updateScript}
-          for package in equicord vencord; do
-            dependency=$(nix eval --raw ".#$package.src" \
-              --apply 'src: "github:" + src.owner + "/" + src.repo + "#" + src.rev')
-            bun add --dev --lockfile-only --no-progress "$package@$dependency"
-          done
-        '';
-      }
-    );
+    program = lib.getExe package;
   };
+in
+{
+  apps.update-plugins = mkApp (
+    pkgs.writeShellApplication {
+      name = "update-plugins";
+      runtimeInputs = [
+        pkgs.jq
+        pkgs.nix-update
+        pkgs.nix
+        (pkgs.callPackage ../nodejs.nix { })
+      ];
+      text = ''
+        ${lib.concatMapStringsSep "\n" (
+          name: lib.escapeShellArgs packages.${name}.updateScript
+        ) pluginPackages}
+        for package in ${lib.escapeShellArgs pluginPackages}; do
+          dependency=$(nix eval --json ".#$package.src.urls" | \
+            jq -er 'first')
+          npm install --save-dev --package-lock-only --ignore-scripts "$package@$dependency"
+        done
+      '';
+    }
+  );
 
-  apps.generate = {
-    type = "app";
-    program = pkgs.lib.meta.getExe (
+  apps.generate =
+    (mkApp (
       pkgs.writeShellApplication {
         name = "generate-plugin-options";
         runtimeInputs = [
@@ -53,33 +62,28 @@
               git -C "$destination" checkout --detach FETCH_HEAD
             }
 
-            vencord_dir="$generate_tmp/vencord"
-            equicord_dir="$generate_tmp/equicord"
-            clone_source \
-              ${pkgs.lib.strings.escapeShellArg packages.vencord.src.owner} \
-              ${pkgs.lib.strings.escapeShellArg packages.vencord.src.repo} \
-              ${pkgs.lib.strings.escapeShellArg packages.vencord.src.rev} \
-              "$vencord_dir"
-            clone_source \
-              ${pkgs.lib.strings.escapeShellArg packages.equicord.src.owner} \
-              ${pkgs.lib.strings.escapeShellArg packages.equicord.src.repo} \
-              ${pkgs.lib.strings.escapeShellArg packages.equicord.src.rev} \
-              "$equicord_dir"
-
-            generated=$(nix build --impure --no-link --print-out-paths --expr "
+            ${lib.concatMapStringsSep "\n" (
+              name:
               let
-                flake = builtins.getFlake (toString ./.);
-                pkgs = import flake.inputs.nixpkgs-nixcord {
-                  system = \"${pkgs.stdenv.hostPlatform.system}\";
-                  config.allowUnfree = true;
-                };
+                src = packages.${name}.src;
               in
-              pkgs.callPackage ./pkgs/generate-options {
-                vencordSource = $vencord_dir;
-                equicordSource = $equicord_dir;
-                skipGitMigrations = false;
-              }
-            ")
+              ''
+                clone_source ${
+                  lib.escapeShellArgs [
+                    src.owner
+                    src.repo
+                    src.rev
+                  ]
+                } "$generate_tmp/${name}"
+              ''
+            ) pluginPackages}
+
+            generated=$(nix build --impure --no-link --print-out-paths \
+              --file ${../generate-with-git.nix} \
+              --argstr root "$PWD" \
+              --argstr system ${lib.escapeShellArg pkgs.stdenv.hostPlatform.system} \
+              --argstr vencordSource "$generate_tmp/vencord" \
+              --argstr equicordSource "$generate_tmp/equicord")
           else
             generated=$(nix build .#generate --no-link --print-out-paths)
           fi
@@ -90,13 +94,12 @@
           nixfmt ./modules/plugins/*.nix
         '';
       }
-    );
-    meta.description = "Regenerate nixcord plugin option files";
-  };
+    ))
+    // {
+      meta.description = "Regenerate nixcord plugin option files";
+    };
 
-  apps.update-goofcord = {
-    type = "app";
-    program = pkgs.lib.meta.getExe packages.goofcord.passthru.updateScript;
-    meta.description = "Refresh GoofCord's aarch64-darwin dependency snapshot";
+  apps.update-goofcord = (mkApp packages.goofcord.passthru.updateScript) // {
+    meta.description = "Refresh GoofCord's npm dependency cache";
   };
 }
