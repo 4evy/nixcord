@@ -159,6 +159,9 @@
   },
   "settingRemovals": {
     "betterCommands": {
+      "a": {
+        "date": "2026-09-02"
+      },
       "allowNewlinesInCommands": {
         "date": "2026-09-02"
       }
