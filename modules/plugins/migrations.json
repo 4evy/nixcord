@@ -5486,6 +5486,10 @@
   "settingRemovals": [
     [
       "betterCommands",
+      "a"
+    ],
+    [
+      "betterCommands",
       "allowNewlinesInCommands"
     ],
     [
