@@ -158,6 +158,11 @@
     }
   },
   "settingRemovals": {
+    "betterCommands": {
+      "allowNewlinesInCommands": {
+        "date": "2026-09-02"
+      }
+    },
     "betterGifPicker": {
       "keepOpen": {
         "date": "2026-08-06"
@@ -166,6 +171,11 @@
     "channelTabs": {
       "noPomeloNames": {
         "date": "2026-08-26"
+      }
+    },
+    "experiments": {
+      "toolbarDevMenu": {
+        "date": "2026-09-06"
       }
     },
     "voiceMessageTranscriber": {
