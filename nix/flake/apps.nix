@@ -27,6 +27,13 @@ in
         for package in ${lib.escapeShellArgs pluginPackages}; do
           dependency=$(nix eval --json ".#$package.src.urls" | \
             jq -er 'first')
+          # Upstream versions can have four components, which npm cannot compare
+          # when replacing a locked archive. Recreate only this package's entry,
+          # keeping the locked versions of its transitive dependencies
+          lockfile=$(mktemp)
+          jq --arg package "node_modules/$package" \
+            'del(.packages[$package])' package-lock.json > "$lockfile"
+          mv "$lockfile" package-lock.json
           npm install --save-dev --package-lock-only --ignore-scripts "$package@$dependency"
         done
       '';
