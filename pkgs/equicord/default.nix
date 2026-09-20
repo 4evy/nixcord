@@ -7,9 +7,9 @@
 }:
 let
   pnpm = callPackage ../pnpm { };
-  version = "1.15.6.0-2026-09-14";
-  rev = "56c4dd99b4560aff00e4a6e57da9626b8a910bd0";
-  hash = "sha256-EzBEAcvo1GxWJ/RrWGJegOGc6Cq06FkM5w5yCP/JAQ0=";
+  version = "1.15.6.0-2026-09-19";
+  rev = "957307d5f034028bb31ab0ac52ea1a6e90b6d43a";
+  hash = "sha256-MfriKmVQVWkstf+Q893htW1fW/gp2ruNSh18+NYKqjo=";
   pnpmDepsHash = "sha256-hBZHHB5kRkNqep5vWMMnwIblNCAOZvLotDjJUJd9iMU=";
   inherit (equicord.src) owner repo;
   src = fetchFromGitHub {
