@@ -7,9 +7,9 @@
 }:
 let
   pnpm = callPackage ../pnpm { };
-  version = "1.15.6-2026-09-16";
-  rev = "59a54286542651fff5ea53f0ce6cadf2a6aa7521";
-  hash = "sha256-j3gCRDBD64o4W+4a71ADCtP0BM8imbfyQV+uvEUtk2A=";
+  version = "1.15.7-2026-09-25";
+  rev = "a9d7a2243b3433e25951ad0bca9cc693349ab3c1";
+  hash = "sha256-Ioj8Ng5dpO54R298LUZ1EB91PTESIWKlWPn3B/cKNrg=";
   pnpmDepsHash = "sha256-LiAcWwGmZlpO+rr0tcMNpViBiBRhSHj+wvyHFIe32lw=";
   src = fetchFromGitHub {
     inherit (vencord.src) owner repo;

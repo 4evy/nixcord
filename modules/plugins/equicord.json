@@ -177,6 +177,132 @@
       }
     }
   },
+  "appleMusicRichPresence": {
+    "description": "Discord rich presence for your Apple Music! (Equicord-only)",
+    "settings": {
+      "activityType": {
+        "type": "types.enum",
+        "enumValues": [
+          0,
+          2
+        ],
+        "default": 0,
+        "description": "Which type of activity\n\nValues: 0 = Playing, 2 = Listening"
+      },
+      "statusDisplayType": {
+        "type": "types.enum",
+        "enumValues": [
+          "off",
+          "artist",
+          "track"
+        ],
+        "default": "off",
+        "description": "Show the track / artist name in the member list"
+      },
+      "refreshInterval": {
+        "type": "types.float",
+        "default": {
+          "__nixRaw": "5.0"
+        },
+        "description": "The interval between activity refreshes (seconds) (restart required)"
+      },
+      "enableTimestamps": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Whether or not to enable timestamps"
+      },
+      "enableButtons": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Whether or not to enable buttons"
+      },
+      "nameString": {
+        "type": "types.str",
+        "default": "Apple Music",
+        "description": "Activity name format string"
+      },
+      "detailsString": {
+        "type": "types.str",
+        "default": "{name}",
+        "description": "Activity details format string"
+      },
+      "stateString": {
+        "type": "types.str",
+        "default": "{artist} · {album}",
+        "description": "Activity state format string"
+      },
+      "detailsLink": {
+        "type": "types.enum",
+        "enumValues": [
+          "Album",
+          "Artist",
+          "Disabled"
+        ],
+        "default": "Album",
+        "description": "Activity details link"
+      },
+      "stateLink": {
+        "type": "types.enum",
+        "enumValues": [
+          "Album",
+          "Artist",
+          "Disabled"
+        ],
+        "default": "Artist",
+        "description": "Activity state link"
+      },
+      "largeImageType": {
+        "type": "types.enum",
+        "enumValues": [
+          "Album",
+          "Artist",
+          "Disabled"
+        ],
+        "default": "Album",
+        "description": "Activity assets large image type"
+      },
+      "largeTextString": {
+        "type": "types.str",
+        "default": "{album}",
+        "description": "Activity assets large text format string"
+      },
+      "largeImageLink": {
+        "type": "types.enum",
+        "enumValues": [
+          "Album",
+          "Artist",
+          "Disabled"
+        ],
+        "default": "Album",
+        "description": "Activity assets large image link"
+      },
+      "smallImageType": {
+        "type": "types.enum",
+        "enumValues": [
+          "Album",
+          "Artist",
+          "Disabled"
+        ],
+        "default": "Artist",
+        "description": "Activity assets small image type"
+      },
+      "smallTextString": {
+        "type": "types.str",
+        "default": "{artist}",
+        "description": "Activity assets small text format string"
+      },
+      "smallImageLink": {
+        "type": "types.enum",
+        "enumValues": [
+          "Album",
+          "Artist",
+          "Disabled"
+        ],
+        "default": "Artist",
+        "description": "Activity assets small image link"
+      }
+    }
+  },
   "atSomeone": {
     "description": "Mention someone randomly (Equicord-only)",
     "settings": {}
@@ -6903,6 +7029,18 @@
         "type": "types.bool",
         "default": false,
         "description": "Make Discord not consider using VP9 for streaming."
+      }
+    }
+  },
+  "summaries": {
+    "description": "Enables Discord's experimental Summaries feature on every server, displaying AI generated summaries of conversations (Equicord-only)",
+    "settings": {
+      "summaryExpiryThresholdDays": {
+        "type": "types.float",
+        "default": {
+          "__nixRaw": "3.0"
+        },
+        "description": "The time in days before a summary is removed. Note that only up to 50 summaries are kept per channel"
       }
     }
   },

@@ -114,6 +114,12 @@
     }
   },
   "removals": {
+    "appleMusic": {
+      "date": "2026-09-21"
+    },
+    "seeSummaries": {
+      "date": "2026-09-21"
+    },
     "soggy": {
       "date": "2026-08-27"
     }
