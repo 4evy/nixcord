@@ -24,7 +24,7 @@ let
     tag = "v${npmDepsVersion}";
     hash = "sha256-cg9NVL/dPIQ9xyMrUmWd42HxEsTSnhUGiqB7qaU2LuQ=";
   };
-  npmDepsHash = "sha256-4UYz+pD9oMp96wrNaVRPb5zk1hEsb+gjrcqoBYQrW3E=";
+  npmDepsHash = "sha256-U5PWC8koQ5LIeRZs/8ZrkyeRXHdxtjIZvxCxW//y788=";
   nodeBuildPatch = ./node-build.patch;
 
   nodeModules = buildNpmPackage {
@@ -67,7 +67,7 @@ let
       trap 'rm -rf -- "$work"' EXIT
       cp -R "$source/." "$work/"
       chmod -R u+w "$work"
-      cd "$work"
+      cd -P "$work"
       patch -p1 < "$root/pkgs/goofcord/node-build.patch"
       cp "$root/pkgs/goofcord/package-lock.json" package-lock.json
       npm install --package-lock-only --ignore-scripts --allow-remote=root --legacy-peer-deps --force
