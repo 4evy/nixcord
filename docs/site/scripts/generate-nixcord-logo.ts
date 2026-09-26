@@ -1,4 +1,5 @@
 import { mkdir, writeFile } from 'node:fs/promises';
+import { dirname, resolve } from 'node:path';
 import { union } from 'polyclip-ts';
 
 type Point = [x: number, y: number];
@@ -15,7 +16,7 @@ const logo = {
 } as const;
 const rendering = {
   decimalPlaces: 6,
-  output: new URL('../public/nixcord-logo.svg', import.meta.url),
+  output: resolve(import.meta.dirname, '../public/nixcord-logo.svg'),
 } as const;
 const fullTurn = 2 * Math.PI;
 
@@ -109,5 +110,5 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" role="
 </svg>
 `;
 const { output } = rendering;
-await mkdir(new URL('.', output), { recursive: true });
+await mkdir(dirname(output), { recursive: true });
 await writeFile(output, svg);
