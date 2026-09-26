@@ -2,39 +2,86 @@ name: Renovate
 
 on:
   schedule:
-    - cron: "37 10 * * 1" # Mondays at 10:37 UTC
+    - cron: "0 10 * * 1" # Mondays at 10:00 UTC
+      timezone: "Etc/UTC"
   workflow_dispatch:
 
 concurrency:
   # Serialize every workflow that can push to the same branch.
   group: repository-updates-${{ github.event.repository.default_branch }}
   cancel-in-progress: false
+  # Keep pending updates from different workflows instead of replacing them
+  queue: max
 
 permissions: {}
+
+# Build artifacts cross jobs; mutable Actions caches do not.
+cache-mode: none
+
+defaults:
+  run:
+    shell: bash
 
 jobs:
   renovate:
     name: Update dependencies directly
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    outputs:
+      base-sha: ${{ steps.base.outputs.sha }}
     permissions:
       contents: write # Push dependency update commits.
       pull-requests: read # Detect existing Renovate pull requests.
       statuses: write # Report Renovate commit status.
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          persist-credentials: false
+      - name: Record default branch before Renovate
+        id: base
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          ref=$(jq -rn --arg ref "$DEFAULT_BRANCH" '$ref | @uri')
+          sha=$(gh api "repos/$GH_REPO/git/ref/heads/$ref" --jq .object.sha)
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
 
       - name: Run Renovate
-        uses: renovatebot/github-action@dcfba84a42d1b5d5e49bf131b1bf53511851a123 # v46.3.1
+        uses: renovatebot/github-action@f3a31a786096ba6b40d0f0ffe11a494ef73bfa7c # v46.3.4
         with:
           token: ${{ github.token }}
-          # renovate: datasource=docker depName=ghcr.io/renovatebot/renovate
-          renovate-version: "44.93.5"
+          renovate-version: "44.115.10"
+          renovate-image: >-
+            ghcr.io/renovatebot/renovate@sha256:e262ed52b23dd8c545c80faf5b1ad5c95a07b3f198888de8d7b8928f45c307c7
         env:
           LOG_LEVEL: info
           RENOVATE_GIT_AUTHOR: "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
           RENOVATE_ONBOARDING: "false"
           RENOVATE_REPOSITORIES: '["${{ github.repository }}"]'
+
+  follow-up:
+    name: Validate dependency updates
+    needs: renovate
+    # Renovate can push a commit before a later update fails
+    if: ${{ !cancelled() && needs.renovate.outputs.base-sha != '' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: write # GITHUB_TOKEN commits do not trigger push workflows
+    steps:
+      - name: Dispatch checks and refreshes if the default branch changed
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          BASE_SHA: ${{ needs.renovate.outputs.base-sha }}
+        run: |
+          ref=$(jq -rn --arg ref "$DEFAULT_BRANCH" '$ref | @uri')
+          head=$(gh api "repos/$GH_REPO/git/ref/heads/$ref" --jq .object.sha)
+          if [[ "$head" == "$BASE_SHA" ]]; then
+            echo "::notice::No dependency commits to validate"
+            exit 0
+          fi
+          for workflow in check.yaml update-plugins.yaml github-pages.yaml; do
+            gh workflow run "$workflow" --ref "$DEFAULT_BRANCH"
+          done
