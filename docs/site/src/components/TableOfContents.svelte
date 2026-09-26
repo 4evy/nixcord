@@ -15,7 +15,7 @@ let {
 } = $props();
 
 const isMainToc = $derived(title != null);
-const tocTitle = $derived(title ?? 'In This Section');
+const tocTitle = $derived(title ?? 'In this section');
 const tocTitleId = $derived(`${items[0]?.href.replace(/^#/, '') ?? 'root'}-toc-title`);
 </script>
 

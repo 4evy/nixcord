@@ -1,41 +1,40 @@
 <script lang="ts">
 import { ModeWatcher } from 'mode-watcher';
-import { mainToc, revision } from './content';
+import { revision } from './content';
 import IntroductionSection from './components/IntroductionSection.svelte';
 import ManualNav from './components/ManualNav.svelte';
 import OptionsReference from './components/OptionsReference.svelte';
 import PrefaceSection from './components/PrefaceSection.svelte';
 import SettingsConverter from './components/SettingsConverter.svelte';
-import TableOfContents from './components/TableOfContents.svelte';
-import TitlePage from './components/TitlePage.svelte';
+
+import ArrowRight from '@lucide/svelte/icons/arrow-right';
 </script>
 
 <svelte:head>
   <title>Nixcord manual</title>
-  <meta name="description" content="Nixcord manual" />
+  <meta name="description" content="Install Discord clients and configure plugins and themes with Nixcord. Setup instructions, settings converter, and option reference." />
 </svelte:head>
 
 <ModeWatcher defaultMode="system" themeColors={{ light: '#f5f5f5', dark: '#0f1318' }} />
 
-<div class="min-h-screen bg-neutral-100 text-neutral-950 dark:bg-[#0f1318] dark:text-neutral-100">
-  <a
-    class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-sm focus:bg-white focus:px-3 focus:py-2 focus:text-[#0a3e68] focus:shadow-md focus:outline-3 focus:outline-offset-3 focus:outline-[#f6cf5e] dark:focus:bg-[#171d24] dark:focus:text-[#8ccff0]"
-    href="#content"
-  >
-    Skip to main content
-  </a>
-
-  <main
-    id="content"
-    class="book relative mx-auto min-h-screen max-w-[62rem] border-x border-neutral-300 bg-white px-5 py-8 text-[16px] shadow-[0_22px_70px_rgba(15,23,42,0.08)] sm:px-10 lg:px-16 max-sm:border-x-0 max-sm:px-4 max-sm:shadow-none dark:border-neutral-800 dark:bg-[#12171d] dark:shadow-[0_22px_70px_rgba(0,0,0,0.28)]"
-  >
-    <ManualNav />
-
-    <TitlePage id="nixcord-manual" title="Nixcord manual" subtitle={`Version ${revision}`} rule />
-    <TableOfContents title="Table of Contents" items={mainToc} />
+<div class="docs-shell">
+  <a class="skip-link" href="#content">Skip to main content</a>
+  <ManualNav />
+  <main id="content" class="book docs-content">
+    <header class="docs-intro">
+      <h1 id="nixcord-manual">Nixcord documentation</h1>
+      <p class="intro-description">Install Discord clients and configure plugins and themes with Home Manager, NixOS, or nix-darwin.</p>
+      <div class="intro-footer">
+        <nav class="intro-links" aria-label="Quick links">
+          <a href="#sec-options">Search options <ArrowRight size={15} aria-hidden="true" /></a>
+          <a href="#getting-started">Get started <ArrowRight size={15} aria-hidden="true" /></a>
+        </nav>
+        <p class="revision">Revision <a href={`https://github.com/4evy/nixcord/commit/${revision}`} title={revision}><code>{revision.slice(0, 8)}</code></a></p>
+      </div>
+    </header>
+    <OptionsReference />
+    <SettingsConverter />
     <PrefaceSection />
     <IntroductionSection />
-    <SettingsConverter />
-    <OptionsReference />
   </main>
 </div>

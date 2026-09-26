@@ -4,9 +4,12 @@
   "type": "module",
   "scripts": {
     "prepare-options": "mkdir -p public && nix build ../..#docs-json --out-link .options-json-result && rm -f public/options.json && install -m 0644 .options-json-result/share/doc/nixos/options.json public/options.json && unlink .options-json-result",
+    "predev": "npm run generate-logo",
     "dev": "vite --host 127.0.0.1",
+    "predev:options": "npm run generate-logo",
     "dev:options": "npm run prepare-options && vite --host 127.0.0.1",
-    "generate-logo": "node scripts/generate-nix-logo.ts",
+    "generate-logo": "node scripts/generate-nixcord-logo.ts",
+    "prebuild": "npm run generate-logo",
     "build": "vite build",
     "check": "tsc --noEmit --project tsconfig.json",
     "preview": "vite preview --host 127.0.0.1"

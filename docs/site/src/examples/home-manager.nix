@@ -6,7 +6,6 @@
   programs.nixcord = {
     enable = true;
 
-    # Explicitly enable Vencord for Discord.
     discord.vencord.enable = true;
 
     config.plugins = {

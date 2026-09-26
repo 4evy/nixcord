@@ -21,22 +21,22 @@ const optionCategoryMetadata: Record<
   core: {
     description: 'Module, client, package, theme, and extra configuration options.',
     id: 'options-core',
-    title: 'Core Nixcord Options',
+    title: 'Clients and configuration',
   },
   shared: {
     description: 'Plugin options available for both Vencord and Equicord clients.',
     id: 'options-shared',
-    title: 'Shared Plugin Options',
+    title: 'Shared plugins',
   },
   vencord: {
     description: 'Plugin options that only exist in Vencord.',
     id: 'options-vencord',
-    title: 'Vencord-only Plugin Options',
+    title: 'Vencord-only plugins',
   },
   equicord: {
     description: 'Plugin options that only exist in Equicord.',
     id: 'options-equicord',
-    title: 'Equicord-only Plugin Options',
+    title: 'Equicord-only plugins',
   },
 };
 

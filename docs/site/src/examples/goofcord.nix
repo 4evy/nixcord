@@ -1,13 +1,17 @@
 {
-  programs.nixcord.goofcord = {
+  programs.nixcord = {
     enable = true;
+    discord.enable = false;
+    goofcord = {
+      enable = true;
 
-    # Defaults to Vencord; use "equicord" for Equicord's larger plugin set.
-    clientMod = "vencord";
+      # Use "equicord" to build with Equicord instead.
+      clientMod = "vencord";
 
-    settings = {
-      minimizeToTray = true;
-      hardwareAcceleration = true;
+      settings = {
+        minimizeToTray = true;
+        hardwareAcceleration = true;
+      };
     };
   };
 }

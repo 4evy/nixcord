@@ -5,6 +5,8 @@
 
   programs.nixcord = {
     enable = true;
-    user = "your-username"; # Needed for system-level config
+    user = "your-username";
+    discord.vencord.enable = true;
+    config.plugins.hideMedia.enable = true;
   };
 }

@@ -13,8 +13,8 @@ function resolveRevision() {
   }
 }
 
-export default defineConfig(({ command }) => ({
-  base: command === 'build' ? '/nixcord/' : '/',
+export default defineConfig(({ command, isPreview }) => ({
+  base: command === 'build' || isPreview ? '/nixcord/' : '/',
   define: {
     __NIXCORD_REVISION__: JSON.stringify(resolveRevision()),
   },

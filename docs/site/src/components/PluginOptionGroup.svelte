@@ -1,8 +1,10 @@
 <script lang="ts">
-import { focusClass, optionCodeClass } from '../classes';
+import ChevronRight from '@lucide/svelte/icons/chevron-right';
+import { focusClass } from '../classes';
 import { getPluginOptionLabel } from '../options';
 import type { PluginOptionGroup } from '../types';
 import OptionDefinition from './OptionDefinition.svelte';
+import OptionName from './OptionName.svelte';
 
 let {
   filtering = false,
@@ -25,14 +27,8 @@ const groupHeadingId = $derived(`${groupId}-heading`);
 const countLabel = $derived(
   filtering && group.optionCount !== group.totalOptionCount
     ? `${group.optionCount} of ${group.totalOptionCount} options`
-    : `${group.totalOptionCount} options`
+    : `${group.totalOptionCount} ${group.totalOptionCount === 1 ? 'option' : 'options'}`
 );
-
-function handleSummaryKeydown(event: KeyboardEvent) {
-  if (event.key !== 'Enter' && event.key !== ' ') return;
-  event.preventDefault();
-  onToggle(!open);
-}
 </script>
 
 <li class="option-plugin-item my-0">
@@ -46,15 +42,11 @@ function handleSummaryKeydown(event: KeyboardEvent) {
       class={`option-plugin-summary grid min-h-14 cursor-pointer list-none grid-cols-[minmax(0,1fr)_auto] items-start gap-3 rounded-sm bg-neutral-50 px-4 py-3 transition-colors hover:bg-sky-50 [&::-webkit-details-marker]:hidden dark:bg-[#171d24] dark:hover:bg-[#1f2b35] ${
         open ? 'rounded-b-none border-b border-neutral-200 dark:border-neutral-700' : ''
       } ${focusClass}`}
-      onkeydown={handleSummaryKeydown}
     >
       <span class="flex min-w-0 items-start gap-2">
-        <span
-          class={`mt-0.5 shrink-0 text-[1.05rem] leading-none text-[#0a3e68] transition-transform dark:text-[#8ccff0] ${open ? 'rotate-90' : ''}`}
-          aria-hidden="true"
-        >›</span>
+        <ChevronRight size={16} class="disclosure-icon" aria-hidden="true" />
         <h4 id={groupHeadingId} class="my-0 min-w-0 text-[1rem] leading-snug font-semibold">
-          <code class={`option ${optionCodeClass}`}>{group.name}</code>
+          <OptionName name={group.name} />
         </h4>
       </span>
       <data

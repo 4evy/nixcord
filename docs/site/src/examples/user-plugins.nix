@@ -1,20 +1,21 @@
 {
   programs.nixcord = {
-    # Popular forges have short aliases
+    # Replace COMMIT with a full 40-character revision.
     userPlugins = {
-      githubPlugin = "github:someUser/githubPlugin/abc123def456...";
-      codebergPlugin = "codeberg:someUser/codebergPlugin/abc123def456...";
+      githubPlugin = "github:someUser/githubPlugin/COMMIT";
+      codebergPlugin = "codeberg:someUser/codebergPlugin/COMMIT";
 
-      # Every other or self-hosted forge uses a generic Git URL
-      selfHostedPlugin = "git+https://git.example.org/someUser/selfHostedPlugin.git?rev=abc123def456...";
+      # Use a Git URL for other hosts.
+      selfHostedPlugin = "git+https://git.example.org/someUser/selfHostedPlugin.git?rev=COMMIT";
 
-      # Local path (requires --impure with flakes)
+      # An absolute path string requires --impure with flakes.
       myLocalPlugin = "/home/user/projects/myPlugin";
 
-      # Nix path literal
+      # A path literal is resolved relative to this file.
       anotherPlugin = ./plugins/anotherPlugin;
     };
 
+    # Use the name declared by each plugin, which may differ from its repository.
     extraConfig.plugins = {
       githubPlugin.enable = true;
       codebergPlugin.enable = true;

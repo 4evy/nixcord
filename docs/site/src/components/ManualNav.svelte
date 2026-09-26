@@ -1,8 +1,15 @@
 <script lang="ts">
+import BookOpen from '@lucide/svelte/icons/book-open';
+import Terminal from '@lucide/svelte/icons/terminal';
+import ArrowLeftRight from '@lucide/svelte/icons/arrow-left-right';
+import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
+import ExternalLink from '@lucide/svelte/icons/external-link';
 import { onMount } from 'svelte';
 import { focusClass } from '../classes';
-import { mainToc } from '../content';
+import { introductionToc, mainToc, prefaceToc } from '../content';
 import ModeToggle from './ModeToggle.svelte';
+
+const sectionIcons = [SlidersHorizontal, ArrowLeftRight, BookOpen, Terminal];
 
 let activeHref = $state<string | null>(null);
 let navElement = $state<HTMLElement | null>(null);
@@ -10,12 +17,34 @@ let navScrollElement = $state<HTMLElement | null>(null);
 
 onMount(() => {
   const updateActiveSection = () => {
-    const offset = Math.max((navElement?.offsetHeight ?? 48) + 48, window.innerHeight * 0.4);
+    const offset = window.innerWidth >= 1024 ? 160 : (navElement?.offsetHeight ?? 64) + 48;
     let nextActiveHref: string | null = null;
+    let activeTop = -Infinity;
+    // A short final section cannot always reach the usual activation offset.
+    const atBottom = window.scrollY > 0 &&
+      window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2;
+    const activationOffset = atBottom ? window.innerHeight : offset;
 
-    for (const item of mainToc) {
+    const items =
+      window.innerWidth < 1024
+        ? mainToc
+        : mainToc.flatMap((item) => [
+            item,
+            ...(item.href === '#sec-preface'
+              ? prefaceToc
+              : item.href === '#sec-introduction'
+                ? introductionToc
+                : []),
+          ]);
+    for (const item of items) {
       const section = document.getElementById(item.href.slice(1));
-      if (section && section.getBoundingClientRect().top <= offset) nextActiveHref = item.href;
+      if (!section) continue;
+      const top = section.getBoundingClientRect().top;
+      // Navigation priority can differ from the document's reading order.
+      if (top <= activationOffset && top > activeTop) {
+        activeTop = top;
+        nextActiveHref = item.href;
+      }
     }
 
     if (activeHref === nextActiveHref) return;
@@ -27,10 +56,13 @@ onMount(() => {
   updateActiveSection();
   window.addEventListener('scroll', updateActiveSection, { passive: true });
   window.addEventListener('resize', updateActiveSection);
+  const resizeObserver = new ResizeObserver(updateActiveSection);
+  resizeObserver.observe(document.getElementById('content') ?? document.body);
 
   return () => {
     window.removeEventListener('scroll', updateActiveSection);
     window.removeEventListener('resize', updateActiveSection);
+    resizeObserver.disconnect();
   };
 });
 
@@ -43,7 +75,13 @@ function keepLinkVisible(href: string) {
   const navBounds = navScrollElement.getBoundingClientRect();
   const linkBounds = link.getBoundingClientRect();
 
-  if (linkBounds.left < navBounds.left) {
+  if (window.innerWidth >= 1024) {
+    if (linkBounds.top < navBounds.top) {
+      navScrollElement.scrollTop -= navBounds.top - linkBounds.top + 8;
+    } else if (linkBounds.bottom > navBounds.bottom) {
+      navScrollElement.scrollTop += linkBounds.bottom - navBounds.bottom + 8;
+    }
+  } else if (linkBounds.left < navBounds.left) {
     navScrollElement.scrollLeft -= navBounds.left - linkBounds.left + 8;
   } else if (linkBounds.right > navBounds.right) {
     navScrollElement.scrollLeft += linkBounds.right - navBounds.right + 8;
@@ -51,44 +89,38 @@ function keepLinkVisible(href: string) {
 }
 </script>
 
-<header
-  bind:this={navElement}
-  class="manual-nav sticky top-0 z-40 -mx-4 mb-7 border-y border-neutral-200 bg-white/95 px-4 shadow-[0_6px_18px_rgba(15,23,42,0.06)] backdrop-blur-sm sm:-mx-10 sm:px-10 lg:-mx-16 lg:px-16 dark:border-neutral-800 dark:bg-[#12171d]/95 dark:shadow-[0_6px_18px_rgba(0,0,0,0.2)]"
->
-  <div class="flex h-12 min-w-0 items-center gap-3">
-    <a
-      class={`shrink-0 rounded-sm font-semibold text-[#0a3e68] no-underline hover:text-[#268598] dark:text-[#8ccff0] dark:hover:text-[#bde8fa] ${focusClass}`}
-      href="#nixcord-manual"
-    >
-      Nixcord
+<header bind:this={navElement} class="manual-nav">
+  <div class="nav-brand">
+    <a class={`brand ${focusClass}`} href="#nixcord-manual">
+      <img src={`${import.meta.env.BASE_URL}nixcord-logo.svg`} alt="" width="30" height="30" />
+      Nixcord <span>docs</span>
     </a>
-
-    <nav
-      bind:this={navScrollElement}
-      class="min-w-0 flex-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-      aria-label="Manual sections"
-    >
-      <ul class="m-0 flex min-w-max list-none items-center gap-1 p-0">
-        {#each mainToc as item (item.href)}
-          <li class="m-0">
-            <a
-              class={`inline-flex min-h-8 items-center rounded-sm px-2.5 text-[0.84rem] font-medium no-underline transition-colors ${focusClass} ${
-                activeHref === item.href
-                  ? 'bg-sky-50 text-[#0a3e68] dark:bg-[#1f2b35] dark:text-[#bde8fa]'
-                  : 'text-neutral-600 hover:bg-neutral-50 hover:text-[#0a3e68] dark:text-neutral-400 dark:hover:bg-[#171d24] dark:hover:text-[#8ccff0]'
-              }`}
-              href={item.href}
-              aria-current={activeHref === item.href ? 'location' : undefined}
-            >
-              {item.label}
-            </a>
-          </li>
-        {/each}
-      </ul>
-    </nav>
-
-    <div class="shrink-0">
-      <ModeToggle />
-    </div>
+    <ModeToggle />
   </div>
+  <nav bind:this={navScrollElement} class="section-navigation" aria-label="Manual sections">
+    <p class="nav-label">Documentation</p>
+    <ul>
+      {#each mainToc as item, index (item.href)}
+        {@const Icon = sectionIcons[index]}
+        <li>
+          <a class={`nav-link ${focusClass}`} class:active={activeHref === item.href}
+            href={item.href} aria-current={activeHref === item.href ? 'location' : undefined}>
+            <Icon size={16} aria-hidden="true" />
+            {item.label}
+          </a>
+          {#if item.href === '#sec-preface' || item.href === '#sec-introduction'}
+            <ul class="nav-children">
+              {#each item.href === '#sec-preface' ? prefaceToc : introductionToc as child (child.href)}
+                <li><a class={`nav-link ${focusClass}`} class:active={activeHref === child.href}
+                  href={child.href} aria-current={activeHref === child.href ? 'location' : undefined}>
+                  {child.label}
+                </a></li>
+              {/each}
+            </ul>
+          {/if}
+        </li>
+      {/each}
+    </ul>
+  </nav>
+  <a class={`nav-source ${focusClass}`} href="https://github.com/4evy/nixcord">GitHub <ExternalLink size={15} aria-hidden="true" /></a>
 </header>

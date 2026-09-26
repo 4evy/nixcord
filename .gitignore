@@ -113,6 +113,7 @@ dist/
 build/
 coverage/
 docs/site/public/options.json
+docs/site/public/nixcord-logo.svg
 *.log
 .DS_Store
 tsconfig.tsbuildinfo

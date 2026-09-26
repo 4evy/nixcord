@@ -1,10 +1,14 @@
 <script lang="ts">
 import hljs from 'highlight.js/lib/core';
+import json from 'highlight.js/lib/languages/json';
 import nix from 'highlight.js/lib/languages/nix';
+import typescript from 'highlight.js/lib/languages/typescript';
 
 let { code, language = 'nix' }: { code: string; language?: string } = $props();
 
 hljs.registerLanguage('nix', nix);
+hljs.registerLanguage('json', json);
+hljs.registerLanguage('typescript', typescript);
 
 const highlighted = $derived(
   applyTokenClasses(hljs.highlight(code.trimEnd(), { language, ignoreIllegals: true }).value)

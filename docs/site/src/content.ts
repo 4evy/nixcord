@@ -12,25 +12,26 @@ declare const __NIXCORD_REVISION__: string;
 export const revision = __NIXCORD_REVISION__;
 
 export const mainToc = [
-  { href: '#sec-preface', label: 'Preface' },
-  { href: '#sec-introduction', label: 'Introduction' },
-  { href: '#sec-converter', label: 'Settings Converter' },
-  { href: '#sec-options', label: 'Configuration Options' },
+  { href: '#sec-options', label: 'Option reference' },
+  { href: '#sec-converter', label: 'Convert settings' },
+  { href: '#sec-preface', label: 'Before you start' },
+  { href: '#sec-introduction', label: 'Setup and configuration' },
 ];
 
 export const prefaceToc = [
   { href: '#prerequisites', label: 'Prerequisites' },
-  { href: '#reporting-issues', label: 'Reporting Issues' },
-  { href: '#contributing', label: 'Contributing' },
+  { href: '#reporting-issues', label: 'Report a problem' },
+  { href: '#contributing', label: 'Contribute' },
 ];
 
 export const introductionToc = [
-  { href: '#getting-started', label: 'Getting Started' },
-  { href: '#sec-configuration', label: 'Configuration' },
+  { href: '#getting-started', label: 'Install Nixcord' },
+  { href: '#without-flakes', label: 'Without flakes' },
+  { href: '#sec-configuration', label: 'Plugins and themes' },
   { href: '#sec-legcord', label: 'Legcord' },
   { href: '#sec-goofcord', label: 'GoofCord' },
-  { href: '#sec-user-plugins', label: 'Third-Party User Plugins' },
-  { href: '#sec-dorion', label: 'A Note on Dorion' },
+  { href: '#sec-user-plugins', label: 'Custom plugins' },
+  { href: '#sec-dorion', label: 'Dorion setup' },
 ];
 
 export {

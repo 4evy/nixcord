@@ -169,7 +169,8 @@ async function revealCurrentHash() {
     } else if (query && optionTarget.pluginName) {
       const pluginHasMatch = options.some(
         (option) =>
-          getPluginRoot(option.name) === optionTarget.pluginName && matchesOptionQuery(option, query)
+          getPluginRoot(option.name) === optionTarget.pluginName &&
+          matchesOptionQuery(option, query)
       );
       if (!pluginHasMatch) query = '';
     }
@@ -242,7 +243,9 @@ function alignHashTarget(target: HTMLElement | null) {
   if (!target) return;
 
   const stickyNavHeight =
-    document.querySelector<HTMLElement>('.manual-nav')?.getBoundingClientRect().height ?? 0;
+    window.innerWidth < 1024
+      ? (document.querySelector<HTMLElement>('.manual-nav')?.getBoundingClientRect().height ?? 0)
+      : 16;
   const targetTop = target.getBoundingClientRect().top + window.scrollY;
   window.scrollTo({ top: Math.max(0, targetTop - stickyNavHeight - 16) });
 }
@@ -273,12 +276,12 @@ function isReferenceHash(hash: string): boolean {
 </script>
 
 <section bind:this={referenceElement} class={topSectionClass} aria-labelledby="sec-options">
-  <TitlePage id="sec-options" title="Configuration Options" level={2} />
-  <p class={paragraphClass}>Here is the complete reference for every available option in Nixcord. This list is auto-generated directly from the source modules</p>
+  <TitlePage id="sec-options" title="Option reference" level={2} />
+  <p class="reference-description">Find a client setting or plugin. Open an option for its type, default, and example.</p>
 
   <section
     id="appendix-configuration-options"
-    class="variablelist mt-5 scroll-mt-20"
+    class="variablelist scroll-mt-20"
     aria-labelledby="appendix-configuration-options-heading"
   >
     <h3 id="appendix-configuration-options-heading" class="sr-only">Configuration options reference</h3>
@@ -288,7 +291,7 @@ function isReferenceHash(hash: string): boolean {
         class="my-3 max-w-[72ch] rounded-r-sm border-l-4 border-[#ff6700] bg-orange-50 px-4 py-3 text-neutral-950 dark:bg-[#2a1d18] dark:text-neutral-100"
         role="alert"
       >
-        <p class="m-0">Unable to load options.json: {optionsError}</p>
+        <p class="m-0">Could not load the option reference: {optionsError}</p>
         <button
           type="button"
           class={`mt-3 rounded-sm border border-neutral-300 bg-white px-3 py-1.5 text-sm font-semibold text-neutral-900 shadow-sm hover:bg-neutral-50 dark:border-neutral-700 dark:bg-[#12171d] dark:text-neutral-100 dark:hover:bg-[#171d24] ${focusClass}`}
@@ -307,10 +310,11 @@ function isReferenceHash(hash: string): boolean {
           class="my-4 rounded-r-sm border-l-4 border-neutral-300 bg-neutral-50 px-4 py-3 text-neutral-700 dark:border-neutral-600 dark:bg-[#171d24] dark:text-neutral-300"
           role="status"
         >
-          No options match this search{category === 'all' ? '.' : ' in the selected category.'}
+          No options match this search{category === 'all' ? '.' : ' in the selected category.'} Try a shorter search or choose All.
         </p>
       {:else}
         {#each sections as section (section.id)}
+          {#if !isFiltering || section.optionCount > 0}
           <OptionSection
             {section}
             filtering={isFiltering}
@@ -321,8 +325,10 @@ function isReferenceHash(hash: string): boolean {
             onPluginToggle={handlePluginToggle}
             onOptionToggle={handleOptionToggle}
           />
+          {/if}
         {/each}
       {/if}
     {/if}
   </section>
+  <p class="reference-source">Generated from the Nixcord modules and upstream plugin sources.</p>
 </section>

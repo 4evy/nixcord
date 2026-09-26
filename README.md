@@ -1,17 +1,13 @@
 <div align="center">
 
-<img src="https://repository-images.githubusercontent.com/818567152/b2e5b9af-ce34-430e-a2ec-e98e0d3470d8" alt="Nixcord" width="240">
+<img src="https://4evy.github.io/nixcord/nixcord-logo.svg" alt="Nixcord" width="240">
 
 # Nixcord
 
-**One Nix config for your Discord mods, themes, and clients.**
+Configure Discord clients, plugins, and themes with Nix.
 
-Manage [Vencord](https://github.com/Vendicated/Vencord),
-[Equicord](https://github.com/Equicord/Equicord),
-[Vesktop](https://github.com/Vencord/Vesktop),
-[GoofCord](https://github.com/Milkshiift/GoofCord),
-[Dorion](https://github.com/SpikeHD/Dorion), and
-[Legcord](https://github.com/Legcord/Legcord) from your Nix config.
+Nixcord provides Home Manager, NixOS, and nix-darwin modules for Discord with
+Vencord or Equicord, plus Vesktop, Equibop, GoofCord, Legcord, and Dorion.
 
 [![Flake Checks](https://github.com/4evy/nixcord/actions/workflows/check.yaml/badge.svg?branch=main)](https://github.com/4evy/nixcord/actions/workflows/check.yaml)
 [![Docs](https://github.com/4evy/nixcord/actions/workflows/github-pages.yaml/badge.svg?branch=main)](https://github.com/4evy/nixcord/actions/workflows/github-pages.yaml)
@@ -19,87 +15,84 @@ Manage [Vencord](https://github.com/Vendicated/Vencord),
 [![GitHub stars](https://img.shields.io/github/stars/4evy/nixcord?style=flat-square&logo=github)](https://github.com/4evy/nixcord/stargazers)
 [![Built with Nix](https://img.shields.io/badge/built%20with-Nix-5277C3?style=flat-square&logo=nixos&logoColor=white)](https://nixos.org/)
 
-[Quickstart](#quickstart) | [Without flakes](#without-flakes) | [Configuration](#configuration) |
-[Settings converter](#settings-converter) | [Options](https://4evy.github.io/nixcord/) |
-[User plugins](#third-party-user-plugins)
+[Get started](#quickstart) · [Without flakes](#without-flakes) ·
+[Configuration](#configuration) · [Manual and options](https://4evy.github.io/nixcord/)
 
 </div>
 
-<!-- prettier-ignore -->
-> [!IMPORTANT]
-> Configure plugins in your `.nix` file. Changes made in the client's
-> **Plugins** menu do not persist.
-
 ## Quickstart
 
-Add Nixcord to your `flake.nix` inputs:
+Start with an existing Home Manager, NixOS, or nix-darwin configuration.
+Add this input to its `flake.nix`:
 
 ```nix
-{
-  inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
-    nixcord.url = "github:4evy/nixcord";
-    # ...
-  };
-
-  # ...
-}
+inputs.nixcord.url = "github:4evy/nixcord";
 ```
 
-Import the module for your setup. Pass `inputs` through `extraSpecialArgs` for
-Home Manager or `specialArgs` for NixOS and nix-darwin.
+Pass `inputs` to your configuration modules: use
+`extraSpecialArgs = { inherit inputs; };` in `homeManagerConfiguration`, or
+`specialArgs = { inherit inputs; };` in `nixosSystem` or `darwinSystem`.
+For Home Manager inside a system configuration, use
+`home-manager.extraSpecialArgs = { inherit inputs; };`.
 
-### Home Manager (recommended)
+Then import **one** Nixcord module. Home Manager manages the current user's
+files and permissions; the system modules require a target username.
 
-Home Manager handles paths and permissions for your user.
+### Home Manager
+
+Add this to `home.nix`:
 
 ```nix
-# home.nix
-{ inputs, ... }: {
+{ inputs, ... }:
+{
   imports = [ inputs.nixcord.homeModules.nixcord ];
-  # ... config
+
+  programs.nixcord = {
+    enable = true;
+    discord.vencord.enable = true;
+    config.plugins.hideMedia.enable = true;
+  };
 }
 ```
 
 ### NixOS
 
-For system-wide configuration, specify the user whose settings you want to
-manage:
+Add this to your system configuration, replacing `your-username` with an
+existing user:
 
 ```nix
-# configuration.nix
-{ inputs, ... }: {
+{ inputs, ... }:
+{
   imports = [ inputs.nixcord.nixosModules.nixcord ];
 
   programs.nixcord = {
     enable = true;
-    user = "your-username"; # Needed for system-level config
-    # ... config
+    user = "your-username";
+    discord.vencord.enable = true;
+    config.plugins.hideMedia.enable = true;
   };
 }
 ```
 
-### nix-darwin (macOS)
+### nix-darwin
 
-For system-wide configuration on macOS, specify the user:
+Use the same configuration as the NixOS example, with this import:
 
 ```nix
-# darwin-configuration.nix
-{ inputs, ... }: {
-  imports = [ inputs.nixcord.darwinModules.nixcord ];
-
-  programs.nixcord = {
-    enable = true;
-    user = "your-username"; # Needed for system-level config
-    # ... config
-  };
-}
+imports = [ inputs.nixcord.darwinModules.nixcord ];
 ```
+
+Apply the configuration with your usual `home-manager switch`,
+`nixos-rebuild switch`, or `darwin-rebuild switch` command, then reopen Discord.
+The example installs Discord with Vencord and enables HideMedia.
+
+Keep plugin settings in Nix. Changes made in the client's Plugins menu may be
+blocked or replaced when you apply your configuration.
 
 ## Without flakes
 
-Use [npins](https://github.com/andir/npins) to pin Nixpkgs and Nixcord. From
-your Nix configuration directory, run:
+From your Nix configuration directory, pin Nixcord and Nixpkgs with
+[npins](https://github.com/andir/npins):
 
 ```sh
 nix-shell -p npins --run 'npins init --bare'
@@ -107,8 +100,8 @@ nix-shell -p npins --run 'npins add github NixOS nixpkgs --branch nixos-26.05 --
 nix-shell -p npins --run 'npins add github 4evy nixcord --branch main'
 ```
 
-Skip initialization if you already use npins. Commit the generated `npins`
-files. Then import Nixcord in your Home Manager configuration:
+Skip initialization if you already use npins, and skip any pin you already
+have. Import the pinned source in your Home Manager configuration:
 
 ```nix
 let
@@ -125,33 +118,33 @@ in
 }
 ```
 
-For NixOS or nix-darwin, use `nixcord.nixosModules.nixcord` or
-`nixcord.darwinModules.nixcord` and set `programs.nixcord.user`, as shown above.
-
-To update, run the following command, then review and commit the pin changes:
+For a system module, import `nixcord.nixosModules.nixcord` or
+`nixcord.darwinModules.nixcord` and set `programs.nixcord.user`.
+Apply your configuration as usual. Commit the generated `npins` files to keep
+these versions reproducible. To update them:
 
 ```sh
 nix-shell -p npins --run 'npins update nixpkgs nixcord'
 ```
 
+Review the pin changes before committing them.
+
 <details>
+<summary>Other sources and standalone packages</summary>
 
-<summary>Other sources, package sets, and standalone builds</summary>
+`default.nix` accepts a Nixcord source from channels, `fetchTarball`, or another
+pinning tool. It does not require flakes or read `flake.lock`.
 
-Nixcord's `default.nix` also accepts sources from channels, `fetchTarball`, or
-other pinning tools. It does not enable flakes or read `flake.lock`.
-
-Pass `nixpkgs` to select the source for standalone package outputs, or `pkgs` to
-reuse an existing package set with its configuration and overlays:
+Pass `nixpkgs` to select the source used for standalone packages, or `pkgs` to
+reuse a package set with its overlays and configuration:
 
 ```nix
 nixcord = import path-to-nixcord { inherit pkgs; };
 ```
 
-Do not use a module's `pkgs` argument to calculate its `imports`: that argument
-is resolved after imports are collected. Use a package set defined outside the
-module or a pinned source passed through `extraSpecialArgs`. For example, with
-[Nixtamal](https://nixtamal.toast.al/):
+When calculating a module's `imports`, use a source or package set defined
+outside the module. The module's own `pkgs` argument is resolved too late for
+this. For example, with [Nixtamal](https://nixtamal.toast.al/):
 
 ```nix
 { nixtamal, ... }:
@@ -164,8 +157,8 @@ in
 ```
 
 Passing `nixpkgs` creates a separate package set for `nixcord.packages`; it does
-not inherit Home Manager's overlays or package configuration. Passing `{}` uses
-Nixcord's bundled Nixpkgs pin. Nixcord modules use the host's package set.
+not inherit the host's overlays. Passing `{}` uses Nixcord's bundled Nixpkgs
+pin. By default, Nixcord modules build with the host's package set.
 
 The import exposes `homeModules`, `nixosModules`, `darwinModules`, `packages`,
 `overlay`, and `overlays.default`. The overlay adds packages under
@@ -175,200 +168,178 @@ The import exposes `homeModules`, `nixosModules`, `darwinModules`, `packages`,
 (pkgs.extend nixcord.overlay).nixcord.vencord
 ```
 
-You can also build packages or open a development shell from a Nixcord checkout:
-
-```sh
-nix-build -A vencord
-nix-build -A goofcord
-nix-build -A docs
-nix-shell
-```
+From a Nixcord checkout, you can also run `nix-build -A vencord`,
+`nix-build -A goofcord`, `nix-build -A docs`, or `nix-shell`.
 
 </details>
 
 ## Configuration
 
-Enable your client, then choose plugins and themes. Open the client to browse
-available plugins before adding them to your configuration:
+All examples below go under `programs.nixcord` in an imported Nixcord module.
+Keep `programs.nixcord.enable = true` and, for a system module, set `user`.
 
-```nix
-{
-  programs.nixcord = {
-    enable = true;
+### Choose a client
 
-    # Enable either Vencord or Equicord for Discord
-    discord.vencord.enable = true;      # Standard Vencord
-    # discord.equicord.enable = true;   # Equicord (has more plugins)
+Discord is enabled by default. Choose either `discord.vencord.enable = true`
+or `discord.equicord.enable = true`; you cannot enable both.
 
-    # Additional clients
-    vesktop.enable = true;
-    # goofcord.enable = true;
-    # dorion.enable = true;
-    # legcord.enable = true;
-
-    # Theming
-    quickCss = "/* css goes here */";
-    config = {
-      useQuickCss = true;
-      themeLinks = [
-        "https://raw.githubusercontent.com/link/to/some/theme.css"
-      ];
-      frameless = true;
-
-      plugins = {
-        hideMedia.enable = true;
-        ignoreActivities = {
-          enable = true;
-          ignorePlaying = true;
-          ignoredActivities = [
-            { id = "game-id"; name = "League of Legends"; type = 0; }
-          ];
-        };
-      };
-    };
-  };
-}
-```
-
-See the [options reference](https://4evy.github.io/nixcord/) for all settings.
-
-### Multiple Discord branches
-
-Stable, PTB, Canary, and Development can be installed at the same time. Every
-selected branch uses the same Vencord or Equicord configuration and Discord
-package options, including Krisp and OpenASAR:
+To use Vesktop instead of Discord:
 
 ```nix
 programs.nixcord = {
   enable = true;
-  discord = {
-    branches = [ "stable" "ptb" "canary" ];
-    equicord.enable = true;
-    krisp.enable = true;
-  };
+  discord.enable = false;
+  vesktop.enable = true;
 };
 ```
 
-The first configured branch is exposed through `finalPackage.discord`; all
-resulting packages are available by branch through
-`finalPackage.discordBranches`.
+Equibop uses Equicord; enable it with `equibop.enable = true`. You can enable
+multiple clients. Leave `discord.enable` on if you also want Discord installed.
+
+### Set plugins and themes
+
+Use `config.plugins` for options in the
+[reference](https://4evy.github.io/nixcord/#sec-options). Plugin option names
+can differ from their names in the client, so copy the Nix name from the
+reference.
+
+```nix
+programs.nixcord = {
+  config.plugins = {
+    hideMedia.enable = true;
+    ignoreActivities = {
+      enable = true;
+      ignorePlaying = true;
+    };
+  };
+
+  quickCss = "body { --font-primary: monospace; }";
+  config.useQuickCss = true;
+};
+```
+
+Add online theme URLs with `config.themeLinks`. For local themes, define
+`config.themes.myTheme = ./my-theme.css` and enable `"myTheme.css"` in
+`config.enabledThemes`.
+
+`config` supplies shared mod settings. Use `extraConfig` for settings missing
+from the reference, including custom plugins. Client-specific settings such
+as `vesktopConfig` override shared values for that client. Native client
+preferences belong in options such as `vesktop.settings` or `goofcord.settings`.
+
+### Multiple Discord branches
+
+Install Stable, PTB, Canary, or Development together:
+
+```nix
+programs.nixcord.discord = {
+  branches = [ "stable" "ptb" "canary" ];
+  equicord.enable = true;
+  krisp.enable = true;
+};
+```
+
+Replace the quickstart's Vencord selection with Equicord for this example.
+Every selected branch uses the same mod configuration and package options,
+including Krisp and OpenASAR. `finalPackage.discord` is the first branch;
+`finalPackage.discordBranches` contains all packages by branch name.
 
 ## Settings converter
 
-Convert an exported Vencord or Equicord `settings.json` to Nix with the
-[settings converter](https://4evy.github.io/nixcord/#sec-converter). Conversion
-runs in your browser.
+Paste an exported Vencord or Equicord settings backup into the
+[settings converter](https://4evy.github.io/nixcord/#sec-converter). It also
+accepts raw settings JSON or a plugins object. Conversion runs in your browser.
+Review the result, merge it into `programs.nixcord`, and apply your
+configuration.
 
 ## Legcord
 
-[Legcord](https://github.com/Legcord/Legcord) is a lightweight Discord client.
-Enable it with:
+Bundle Vencord with Legcord and configure its tray behavior:
 
 ```nix
-{
-  programs.nixcord.legcord = {
+programs.nixcord = {
+  enable = true;
+  discord.enable = false;
+  legcord = {
     enable = true;
-
-    # Optionally bundle Vencord or Equicord (also installs userPlugins)
     vencord.enable = true;
-    # equicord.enable = true;
-
     settings = {
       channel = "stable";
       tray = "dynamic";
       minimizeToTray = true;
-      mods = [ "vencord" ];
       doneSetup = true;
     };
   };
-}
+};
 ```
+
+Use `legcord.equicord.enable` instead for Equicord. Both bundles include
+`userPlugins` and use the shared mod settings.
 
 ## GoofCord
 
-[GoofCord](https://github.com/Milkshiift/GoofCord) uses Vencord by default.
-Nixcord bundles the mod and plugin settings with the client:
+GoofCord uses Vencord by default. To use Equicord:
 
 ```nix
-{
-  programs.nixcord.goofcord = {
+programs.nixcord = {
+  enable = true;
+  discord.enable = false;
+  goofcord = {
     enable = true;
-
-    # Defaults to Vencord; use "equicord" for Equicord
-    clientMod = "vencord";
-
+    clientMod = "equicord";
     settings = {
       minimizeToTray = true;
       hardwareAcceleration = true;
     };
   };
-}
+};
 ```
 
-Nixcord also adds Apple silicon macOS support to the Nixpkgs GoofCord package.
+Nixcord bundles the selected mod and applies your plugin settings. It also
+adds Apple silicon macOS support to the Nixpkgs GoofCord package.
 
 ## Third-party user plugins
 
-Add custom Vencord or Equicord plugins with `userPlugins`, then enable them in
-`extraConfig.plugins`.
-
-GitHub, GitLab, Codeberg, SourceHut, and Bitbucket have short aliases. Any other
-Git forge, including self-hosted instances, works through a
-`git+<url>?rev=<commit>` source. Remote sources must be pinned to a full
-40-character commit hash.
+`userPlugins` adds plugin source code to the mod build. Enable each plugin
+separately in `extraConfig.plugins`, using the name declared by the plugin.
+For a local plugin:
 
 ```nix
-{
-  programs.nixcord = {
-    # Popular forges have short aliases
-    userPlugins = {
-      githubPlugin = "github:someUser/githubPlugin/abc123def456...";
-      codebergPlugin = "codeberg:someUser/codebergPlugin/abc123def456...";
-
-      # Every other or self-hosted forge uses a generic Git URL
-      selfHostedPlugin = "git+https://git.example.org/someUser/selfHostedPlugin.git?rev=abc123def456...";
-
-      # Local path (requires --impure with flakes)
-      myLocalPlugin = "/home/user/projects/myPlugin";
-
-      # Nix path literal
-      anotherPlugin = ./plugins/anotherPlugin;
-    };
-
-    extraConfig.plugins = {
-      githubPlugin.enable = true;
-      codebergPlugin.enable = true;
-      selfHostedPlugin.enable = true;
-      myLocalPlugin.enable = true;
-      anotherPlugin.enable = true;
-    };
-  };
-}
+programs.nixcord = {
+  userPlugins.myPlugin = ./plugins/myPlugin;
+  extraConfig.plugins.MyPlugin.enable = true;
+};
 ```
+
+Replace `MyPlugin` with your plugin's declared name. Remote sources accept
+`github:owner/repo/COMMIT`, `gitlab:`, `codeberg:`, `sourcehut:`,
+and `bitbucket:` shorthands, or `git+https://forge.example/owner/repo.git?rev=COMMIT`.
+Replace `COMMIT` with a full 40-character commit hash; branches and tags are
+not accepted. An absolute path string such as `"/home/user/projects/myPlugin"`
+requires `--impure` when used with flakes. Nix path literals and derivations
+are also accepted.
 
 ## Dorion
 
-Launch Dorion and load Discord once before enabling the module. This creates the
-WebKit storage that Nixcord needs to apply Vencord settings.
+Dorion must load Discord once before Nixcord can apply its Vencord settings.
+That first launch creates the WebKit storage used by the mod.
 
-1. Run Dorion once before enabling Nixcord's Dorion module:
-   `nix run nixpkgs#dorion`
-2. Log in, wait for Discord to finish loading, then close it.
-3. Enable `dorion.enable = true` in your config and rebuild.
+1. Before enabling the Dorion module, run `nix run nixpkgs#dorion`.
+2. Log in, wait for Discord to load, then close Dorion.
+3. Set `programs.nixcord.enable = true` and
+   `programs.nixcord.dorion.enable = true`, then apply your configuration.
+   Set `programs.nixcord.discord.enable = false` if you only want Dorion.
 
-<!-- prettier-ignore -->
-> [!WARNING]
-> Upstream Dorion still marks Linux voice as unsupported because WebKitGTK
-> WebRTC support is incomplete. Voice/video may fail even after Nixcord is
-> configured.
+Linux voice and video depend on Dorion's WebKitGTK support and may fail even
+when Nixcord is configured. Check
+[Dorion's compatibility notes](https://github.com/SpikeHD/Dorion) before choosing
+it for calls.
 
-## Docs
+## Build the docs
 
-- **Web:** [4evy.github.io/nixcord](https://4evy.github.io/nixcord/)
-- **Build locally:** `nix build .#docs`
-- **JSON:** `nix build .#docs-json`
+- `nix build .#docs` builds the site.
+- `nix build .#docs-json` builds the option reference as JSON.
+- `npm run docs:dev:options` generates options and starts the local docs server.
 
-<!-- prettier-ignore -->
-> [!CAUTION]
-> Vencord and Equicord violate Discord's terms of service. Use them at your own
-> risk.
+Vencord and Equicord modify Discord in ways that violate its terms of service.
+See the [Vencord FAQ](https://vencord.dev/support/) before using them.

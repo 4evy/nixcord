@@ -2,37 +2,21 @@
   programs.nixcord = {
     enable = true;
 
-    # Choose your Discord mod client (enable at most one of these two)
-    discord.vencord.enable = true; # Standard Vencord
-    # discord.equicord.enable = true;   # Equicord (has more plugins)
+    # Choose one mod for Discord.
+    discord.vencord.enable = true;
+    # discord.equicord.enable = true;
 
-    # Or these
+    # Also install Vesktop. Disable discord.enable to use Vesktop alone.
     vesktop.enable = true;
-    # goofcord.enable = true;
-    # dorion.enable = true;
-    # legcord.enable = true;
 
-    # Theming
-    quickCss = "/* css goes here */";
+    quickCss = "body { --font-primary: monospace; }";
     config = {
       useQuickCss = true;
-      themeLinks = [
-        "https://raw.githubusercontent.com/link/to/some/theme.css"
-      ];
-      frameless = true;
-
       plugins = {
         hideMedia.enable = true;
         ignoreActivities = {
           enable = true;
           ignorePlaying = true;
-          ignoredActivities = [
-            {
-              id = "game-id";
-              name = "League of Legends";
-              type = 0;
-            }
-          ];
         };
       };
     };

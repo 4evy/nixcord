@@ -1,4 +1,5 @@
 <script lang="ts">
+import ChevronRight from '@lucide/svelte/icons/chevron-right';
 import { focusClass } from '../classes';
 import type { OptionSection } from '../types';
 import OptionDefinition from './OptionDefinition.svelte';
@@ -29,12 +30,6 @@ const countLabel = $derived(
     ? `${section.optionCount} of ${section.totalOptionCount} options`
     : `${section.totalOptionCount} options`
 );
-
-function handleSummaryKeydown(event: KeyboardEvent) {
-  if (event.key !== 'Enter' && event.key !== ' ') return;
-  event.preventDefault();
-  onToggle(!open);
-}
 </script>
 
 <details
@@ -45,16 +40,15 @@ function handleSummaryKeydown(event: KeyboardEvent) {
 >
   <summary
     class={`option-section-summary -mx-2 grid min-h-12 cursor-pointer list-none grid-cols-[minmax(0,1fr)_auto] items-start gap-3 rounded-sm px-2 py-2 text-[#0a3e68] transition-colors hover:bg-sky-50 hover:text-[#268598] [&::-webkit-details-marker]:hidden dark:text-[#8ccff0] dark:hover:bg-[#1f2b35] dark:hover:text-[#bde8fa] ${focusClass}`}
-    onkeydown={handleSummaryKeydown}
   >
     <span class="flex min-w-0 items-start gap-2">
-      <span
-        class={`mt-0.5 shrink-0 text-[1.05rem] leading-none text-[#0a3e68] transition-transform dark:text-[#8ccff0] ${open ? 'rotate-90' : ''}`}
-        aria-hidden="true"
-      >›</span>
-      <h3 class="option-section-heading my-0 min-w-0 text-[1.35rem] leading-snug font-semibold">
-        {section.title}
-      </h3>
+      <ChevronRight size={16} class="disclosure-icon" aria-hidden="true" />
+      <span class="min-w-0">
+        <h3 class="option-section-heading my-0 min-w-0 text-[1.35rem] leading-snug font-semibold">
+          {section.title}
+        </h3>
+        <span class="option-section-description">{section.description}</span>
+      </span>
     </span>
     <data
       class="rounded-sm border border-neutral-200 bg-white px-2 py-0.5 text-right text-[0.82rem] leading-5 text-neutral-600 dark:border-neutral-700 dark:bg-[#171d24] dark:text-neutral-400"
@@ -65,8 +59,6 @@ function handleSummaryKeydown(event: KeyboardEvent) {
   </summary>
 
   {#if open}
-    <p class="mt-2 mb-0 max-w-[72ch] text-neutral-700 dark:text-neutral-300">{section.description}</p>
-
     {#if section.optionCount === 0}
       <p class="my-4 rounded-r-sm border-l-4 border-neutral-300 bg-neutral-50 px-4 py-3 text-neutral-700 dark:border-neutral-600 dark:bg-[#171d24] dark:text-neutral-300">
         No matching options in this category.
