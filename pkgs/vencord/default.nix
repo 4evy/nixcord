@@ -10,7 +10,7 @@ let
   version = "1.15.7-2026-09-25";
   rev = "90aea0ddbbfbee16ce052b2c7ab610ffe957b4ca";
   hash = "sha256-mrGVJtszsGEdoiNtA2nn4QzsIK4Il1jwVs/8NU2EQbM=";
-  pnpmDepsHash = "sha256-LiAcWwGmZlpO+rr0tcMNpViBiBRhSHj+wvyHFIe32lw=";
+  pnpmDepsHash = "sha256-P1X36dnEDGpLAKzf8PTadrF/UfsFu5rA61byXiJx4wc=";
   src = fetchFromGitHub {
     inherit (vencord.src) owner repo;
     inherit rev hash;
