@@ -3,6 +3,8 @@
   goofcord,
   stdenv,
   buildNpmPackage,
+  fetchFromGitHub,
+  autoPatchelfHook,
   callPackage,
   patch,
   makeBinaryWrapper,
@@ -15,21 +17,27 @@
 }:
 let
   nodejs = callPackage ../../nix/nodejs.nix { };
-  npmDepsVersion = "2.2.1";
-  npmDepsHash = "sha256-n2TH161OXQmvJ28DdXHSzzbcqRaxCL1iDzaPLLOve/8=";
+  npmDepsVersion = "2.3.0";
+  src = fetchFromGitHub {
+    owner = "Milkshiift";
+    repo = "GoofCord";
+    tag = "v${npmDepsVersion}";
+    hash = "sha256-cg9NVL/dPIQ9xyMrUmWd42HxEsTSnhUGiqB7qaU2LuQ=";
+  };
+  npmDepsHash = "sha256-4UYz+pD9oMp96wrNaVRPb5zk1hEsb+gjrcqoBYQrW3E=";
   nodeBuildPatch = ./node-build.patch;
 
   nodeModules = buildNpmPackage {
     pname = "goofcord-modules";
     version = npmDepsVersion;
-    inherit (goofcord) src;
+    inherit src;
     inherit nodejs npmDepsHash;
     patches = [ nodeBuildPatch ];
     postPatch = "cp ${./package-lock.json} package-lock.json";
-    # arrpc still declares a TypeScript 5 peer. The patchcord JavaScript
-    # wrapper is needed at build time on Darwin despite its Linux-only binary.
+    # arrpc still declares a TypeScript 5 peer.
     npmInstallFlags = [
       "--ignore-scripts"
+      "--allow-remote=root"
       "--legacy-peer-deps"
       "--force"
     ];
@@ -52,6 +60,8 @@ let
     ];
     text = ''
       root="$PWD"
+      nix-update --flake --src-only \
+        --override-filename pkgs/goofcord/default.nix goofcord
       source=$(nix build --no-link --print-out-paths .#goofcord.src)
       work=$(mktemp -d)
       trap 'rm -rf -- "$work"' EXIT
@@ -60,7 +70,7 @@ let
       cd "$work"
       patch -p1 < "$root/pkgs/goofcord/node-build.patch"
       cp "$root/pkgs/goofcord/package-lock.json" package-lock.json
-      npm install --package-lock-only --ignore-scripts --legacy-peer-deps --force
+      npm install --package-lock-only --ignore-scripts --allow-remote=root --legacy-peer-deps --force
       cp package-lock.json "$root/pkgs/goofcord/package-lock.json"
       cd "$root"
       nix-update --flake --version=skip --no-src \
@@ -71,12 +81,14 @@ in
 goofcord.overrideAttrs (
   old:
   {
+    version = npmDepsVersion;
+    inherit src;
     patches = (old.patches or [ ]) ++ [ nodeBuildPatch ];
-    node-modules =
-      if goofcord.version != npmDepsVersion then
-        throw "GoofCord ${goofcord.version} needs an updated npm lockfile and Node build patch"
-      else
-        nodeModules;
+    node-modules = nodeModules;
+    env = builtins.removeAttrs (old.env or { }) [
+      "GOOFCORD_PATCHCORD_PATH"
+      "GOOFCORD_VENBIND_PATH"
+    ];
     nativeBuildInputs =
       builtins.filter (
         input:
@@ -85,7 +97,8 @@ goofcord.overrideAttrs (
           "nodejs"
         ])
       ) (old.nativeBuildInputs or [ ])
-      ++ [ nodejs ];
+      ++ [ nodejs ]
+      ++ lib.optional stdenv.hostPlatform.isLinux autoPatchelfHook;
     configurePhase = ''
       runHook preConfigure
       cp -R ${nodeModules} node_modules
@@ -159,15 +172,15 @@ goofcord.overrideAttrs (
     postFixup = (old.postFixup or "") + ''
       ${lib.meta.getExe rcodesign} sign \
         --code-signature-flags runtime \
-        --entitlements-xml-file ${goofcord.src}/build/entitlements.mac.plist \
+        --entitlements-xml-file ${src}/build/entitlements.mac.plist \
         --code-signature-flags 'Contents/Frameworks/GoofCord Helper.app:runtime' \
-        --entitlements-xml-file 'Contents/Frameworks/GoofCord Helper.app:${goofcord.src}/build/entitlements.mac.plist' \
+        --entitlements-xml-file 'Contents/Frameworks/GoofCord Helper.app:${src}/build/entitlements.mac.plist' \
         --code-signature-flags 'Contents/Frameworks/GoofCord Helper (Renderer).app:runtime' \
-        --entitlements-xml-file 'Contents/Frameworks/GoofCord Helper (Renderer).app:${goofcord.src}/build/entitlements.mac.plist' \
+        --entitlements-xml-file 'Contents/Frameworks/GoofCord Helper (Renderer).app:${src}/build/entitlements.mac.plist' \
         --code-signature-flags 'Contents/Frameworks/GoofCord Helper (GPU).app:runtime' \
-        --entitlements-xml-file 'Contents/Frameworks/GoofCord Helper (GPU).app:${goofcord.src}/build/entitlements.mac.plist' \
+        --entitlements-xml-file 'Contents/Frameworks/GoofCord Helper (GPU).app:${src}/build/entitlements.mac.plist' \
         --code-signature-flags 'Contents/Frameworks/GoofCord Helper (Plugin).app:runtime' \
-        --entitlements-xml-file 'Contents/Frameworks/GoofCord Helper (Plugin).app:${goofcord.src}/build/entitlements.mac.plist' \
+        --entitlements-xml-file 'Contents/Frameworks/GoofCord Helper (Plugin).app:${src}/build/entitlements.mac.plist' \
         "$out/Applications/GoofCord.app"
     '';
   }

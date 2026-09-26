@@ -422,7 +422,7 @@ in
       cfg = config.programs.nixcord;
     in
     assert cfg.goofcord.package.pname == pkgs.goofcord.pname;
-    assert cfg.goofcord.package.version == pkgs.goofcord.version;
+    assert cfg.goofcord.package.version == (pkgs.callPackage ../../../../pkgs/goofcord { }).version;
     assert cfg.goofcord.package.passthru.updateScript.name == "update-goofcord";
     assert builtins.elem pkgs.stdenv.hostPlatform.system cfg.finalPackage.goofcord.meta.platforms;
     true;

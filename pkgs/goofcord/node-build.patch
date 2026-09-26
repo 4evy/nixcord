@@ -5,7 +5,7 @@
 +import { readFile, writeFile } from "node:fs/promises";
  import path from "node:path";
  
- import ts from "typescript";
+ import ts from "typescriptOld";
  
 -const SCHEMA_PATH = path.join(import.meta.dir, "..", "src", "settingsSchema.ts");
 -const LANG_PATH = path.join(import.meta.dir, "..", "assets", "lang", "en-US.json");
@@ -87,68 +87,6 @@
  					};
  				}
  
---- a/build/nativeImport.ts
-+++ b/build/nativeImport.ts
-@@ -1,14 +1,15 @@
-+import { glob } from "node:fs/promises";
- import path from "node:path";
- 
--import type { BunPlugin, OnLoadArgs } from "bun";
-+import type { Plugin, OnLoadArgs } from "esbuild";
- 
- interface NativePluginOptions {
- 	targetPlatform?: string;
- 	targetArch?: string;
- }
- 
--export const nativeModulePlugin = (options: NativePluginOptions = {}): BunPlugin => ({
--	name: "bun-plugin-native-loader",
-+export const nativeModulePlugin = (options: NativePluginOptions = {}): Plugin => ({
-+	name: "node-plugin-native-loader",
- 	setup(build) {
- 		const namespace = "native-module-loader";
- 		const filter = /^native-module:/;
-@@ -25,14 +26,14 @@
- 			};
- 		});
- 
--		build.onLoad({ filter: /.*/, namespace }, async (args: OnLoadArgs): Promise<import("bun").OnLoadResult> => {
-+		build.onLoad({ filter: /.*/, namespace }, async (args: OnLoadArgs): Promise<import("esbuild").OnLoadResult> => {
- 			const [importerDir, globPattern] = args.path.split("\0");
- 
- 			const targetPlatform = options.targetPlatform || process.platform;
- 			const targetArch = options.targetArch || process.arch;
- 
--			const glob = new Bun.Glob(globPattern);
--			const files = await Array.fromAsync(glob.scan(importerDir));
-+			
-+			const files = await Array.fromAsync(glob(globPattern, { cwd: importerDir }));
- 
- 			const matchedFile = files.find((file) => {
- 				const lower = file.toLowerCase();
-@@ -43,19 +44,21 @@
- 				return {
- 					contents: "export default null;",
- 					loader: "js",
-+				resolveDir: importerDir,
- 				};
- 			}
- 
- 			const absolutePath = path.resolve(importerDir, matchedFile);
- 
- 			const contents = `
--                import path from ${JSON.stringify(absolutePath)} with { type: "file" };
-+                import path from ${JSON.stringify(absolutePath)} ;
-                 export default path;
-             `;
- 
- 			return {
- 				contents,
- 				loader: "js",
-+				resolveDir: importerDir,
- 			};
- 		});
- 	},
 --- a/build/genIpcHandlers.ts
 +++ b/build/genIpcHandlers.ts
 @@ -1,6 +1,6 @@
@@ -156,7 +94,7 @@
  
 -import { Glob } from "bun";
 +import { glob, readFile, writeFile } from "node:fs/promises";
- import ts from "typescript";
+ import ts from "typescriptOld";
  
  interface IpcFunctionInfo {
 @@ -38,12 +38,14 @@
@@ -222,16 +160,7 @@
  import fs from "node:fs";
  import path from "node:path";
  import { parseArgs } from "node:util";
-@@ -7,7 +9,7 @@
- import { genIpcHandlers } from "./genIpcHandlers.ts";
- import { genSettingsLangFile } from "./genSettingsLangFile.ts";
- import { globImporterPlugin } from "./globbyGlob.ts";
--import { nativeModulePlugin } from "./nativeImport";
-+import { nativeModulePlugin } from "./nativeImport.ts";
- 
- const ROOT_DIR = process.cwd();
- const OUT_DIR = path.join(ROOT_DIR, "ts-out");
-@@ -15,7 +17,7 @@
+@@ -14,7 +16,7 @@
  const ASSETS_DIR = path.join(ROOT_DIR, "assets");
  
  const { values } = parseArgs({
@@ -239,11 +168,12 @@
 +	args: process.argv.slice(2),
  	options: {
  		dev: { type: "boolean", short: "d" },
- 		platform: { type: "string" },
-@@ -34,6 +36,30 @@
+ 		onlyGenerators: { type: "boolean" },
+@@ -28,6 +30,30 @@
+ const IS_DEV = !!values.dev;
  
- console.log(pc.cyan(`\n🚀 Starting Build for target: ${TARGET_PLATFORM}-${TARGET_ARCH} ${IS_DEV ? "(Dev)" : "(Prod)"}\n`));
- 
+ console.log(pc.cyan(`\n🚀 Starting Build ${IS_DEV ? "(Dev)" : "(Prod)"}\n`));
++
 +// Preserve HTML imports as { index } while bundling their stylesheet assets.
 +const htmlPlugin = {
 +  name: "html-assets",
@@ -267,11 +197,10 @@
 +    });
 +  },
 +};
-+
+ 
  // 1. Generators
  if (!values.skipGenerators) {
- 	console.log(pc.blue("⚙️  Running generators..."));
-@@ -55,11 +81,11 @@
+@@ -50,11 +76,11 @@
  // 2. Type Checking
  if (!values.skipTypecheck) {
  	console.log(pc.blue("🔎 Running type check..."));
@@ -285,16 +214,16 @@
  	if (!success) {
  		console.error(pc.red("❌ Type check failed. Build aborted."));
  		process.exit(1);
-@@ -97,7 +123,7 @@
+@@ -92,7 +118,7 @@
  		outdir: OUT_DIR,
  		target: "node",
  		external: ["electron"],
--		plugins: [globImporterPlugin, nativeModulePlugin({ targetPlatform: TARGET_PLATFORM, targetArch: TARGET_ARCH })],
-+		plugins: [htmlPlugin, globImporterPlugin, nativeModulePlugin({ targetPlatform: TARGET_PLATFORM, targetArch: TARGET_ARCH })],
+-		plugins: [globImporterPlugin],
++		plugins: [htmlPlugin, globImporterPlugin],
  		splitting: true,
  	});
  }
-@@ -120,15 +146,15 @@
+@@ -115,15 +141,15 @@
  }
  
  async function buildPreloads() {
@@ -314,7 +243,7 @@
  				outdir: path.join(OUT_DIR, path.dirname(relativePath)),
  				target: "node",
  				format: "cjs",
-@@ -140,29 +166,34 @@
+@@ -135,27 +161,32 @@
  	return builds;
  }
  
@@ -368,25 +297,14 @@
 +    return false;
 +  }
  }
- 
- async function copyNativeModules() {
-@@ -194,7 +225,7 @@
- 
- 	const copyFile = async (src: string, dest: string) => {
- 		await fs.promises.access(src);
--		await Bun.write(dest, Bun.file(src));
-+		await fs.promises.copyFile(src, dest);
- 
- 		if (process.platform !== "win32") {
- 			await fs.promises.chmod(dest, 0o755);
 --- a/electron-builder.ts
 +++ b/electron-builder.ts
-@@ -81,7 +81,7 @@
- 		const currentArch = getArchString(context.arch);
- 		const currentPlatform = getPlatformString(context.packager.platform);
- 
--		const output = execSync(`bun run build --skipTypecheck --platform=${currentPlatform} --arch=${currentArch}`, {
-+		const output = execSync(`npm run build -- --skipTypecheck --platform=${currentPlatform} --arch=${currentArch}`, {
+@@ -85,7 +85,7 @@
+ 		},
+ 	],
+ 	beforePack: async (context) => {
+-		const output = execSync(`bun run build --skipTypecheck`, {
++		const output = execSync(`npm run build -- --skipTypecheck`, {
  			encoding: "utf-8",
  		});
  		console.log(output);
@@ -403,8 +321,8 @@
  		"packageLinux": "electron-builder --linux",
  		"packageWindows": "electron-builder --win",
  		"packageMac": "electron-builder --mac",
-@@ -26,14 +26,13 @@
- 		"check": "tsgo"
+@@ -26,14 +26,14 @@
+ 		"check": "tsc"
  	},
  	"dependencies": {
 -		"arrpc": "github:Milkshiift/arrpc",
@@ -412,29 +330,28 @@
 +		"arrpc": "https://github.com/Milkshiift/arrpc/archive/8b2b3fb7c64f1ba050d35620afb6bc3a9032ef5b.tar.gz",
 +		"electron-sync-store": "https://github.com/Milkshiift/electron-sync-store/archive/17fb5bc76dfa4822459dafff997f0e8878c51600.tar.gz",
  		"picocolors": "1.1.1",
- 		"preact": "^10.29.1",
+ 		"preact": "^10.29.7",
 -		"stegcloak": "github:Milkshiift/stegcloak-rs"
 +		"stegcloak": "https://github.com/Milkshiift/stegcloak-rs/archive/847c39e7ce790bfb491259c515c190b6d44431d9.tar.gz"
  	},
  	"devDependencies": {
--		"@types/bun": "1.3.13",
- 		"@types/node": "25.6.0",
- 		"@vencord/types": "1.14.1",
- 		"electron": "41.3.0",
-@@ -41,13 +40,14 @@
- 		"oxfmt": "^0.46.0",
- 		"oxlint": "^1.61.0",
- 		"oxlint-tsgolint": "^0.21.1",
--		"typescript": "6.0.3"
-+		"typescript": "6.0.3",
+-		"@types/bun": "1.3.14",
 +		"esbuild": "0.28.2",
-+		"patchcord": "https://github.com/Milkshiift/patchcord/archive/cb0d3d48f0c217e9621c48c576ec340fdfd9b9b7.tar.gz"
- 	},
- 	"peerDependencies": {
- 		"@typescript/native-preview": "^7.0.0-dev.20260425.1"
- 	},
- 	"optionalDependencies": {
+ 		"@types/node": "26.1.1",
+ 		"@vencord/types": "1.14.15",
+ 		"electron": "43.1.1",
+@@ -42,11 +42,9 @@
+ 		"oxlint": "^1.74.0",
+ 		"oxlint-tsgolint": "^0.25.0",
+ 		"typescript": "7.0.2",
+-		"typescriptOld": "npm:@typescript/typescript6@^6.0.2"
+-	},
+-	"optionalDependencies": {
 -		"patchcord": "github:Milkshiift/patchcord",
- 		"venbind": "0.1.7"
+-		"goofbind": "github:Milkshiift/goofbind"
++		"typescriptOld": "npm:@typescript/typescript6@^6.0.2",
++		"patchcord": "https://github.com/Milkshiift/patchcord/archive/cb0d3d48f0c217e9621c48c576ec340fdfd9b9b7.tar.gz",
++		"goofbind": "https://github.com/Milkshiift/goofbind/archive/703237071f61d1ceede8076b0015488773a7c4ae.tar.gz"
  	},
  	"trustedDependencies": [
+ 		"electron"
