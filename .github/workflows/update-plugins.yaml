@@ -1,4 +1,4 @@
-name: Update Plugins
+name: Update Discord and Plugins
 
 on:
   push:
@@ -9,11 +9,16 @@ on:
       - ".github/actions/install-nix/**"
       - ".github/scripts/update-message.py"
       - ".github/workflows/update-plugins.yaml"
+      - ".github/workflows/update-discord.yaml"
       - ".github/workflows/publish-update.yaml"
       - "package.json"
       - "package-lock.json"
+      - "packages/**"
+      - "flake.nix"
       - "flake.lock"
+      - "pkgs/default.nix"
       - "pkgs/generate-options/**"
+      - "pkgs/discord/**"
       - "pkgs/plugin-update.nix"
       - "pkgs/equicord/default.nix"
       - "pkgs/vencord/default.nix"
@@ -21,17 +26,29 @@ on:
       - "modules/lib/core.nix"
       - "modules/plugins/overrides.json"
       - "nix/flake/apps.nix"
+      - "nix/generate-with-git.nix"
+      - "nix/nodejs.nix"
       - "docs/site.nix"
   schedule:
-    - cron: "0 0 * * *" # Daily at 00:00 UTC
+    - cron: "0 * * * *"
+      timezone: "Etc/UTC"
   workflow_dispatch:
 
 concurrency:
   # Serialize every workflow that can push to the same branch.
   group: repository-updates-${{ github.ref_name }}
   cancel-in-progress: false
+  # Keep pending updates from different workflows instead of replacing them
+  queue: max
 
 permissions: {}
+
+# Build artifacts cross jobs; mutable Actions caches do not.
+cache-mode: none
+
+defaults:
+  run:
+    shell: bash
 
 env:
   NIXPKGS_EXPR: >-
@@ -43,8 +60,60 @@ env:
     in
 
 jobs:
+  update-discord:
+    name: Update Discord first
+    permissions:
+      actions: write # Dispatch validation and retry if the branch moves
+      contents: write # Publish verified Discord sources before updating plugins
+    uses: $/.github/workflows/update-discord.yaml
+
+  check-upstream:
+    name: Check upstream revisions
+    needs: update-discord
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      changed: ${{ steps.revisions.outputs.changed }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: github.event_name == 'schedule'
+        with:
+          ref: ${{ github.ref_name }}
+          persist-credentials: false
+
+      - name: Compare upstream commits with package pins
+        id: revisions
+        if: github.event_name == 'schedule'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          changed=false
+          for entry in equicord:Equicord/Equicord vencord:Vendicated/Vencord; do
+            package=${entry%%:*}
+            repository=${entry#*:}
+            pinned=$(sed -nE 's/^  rev = "([0-9a-f]{40})";$/\1/p' "pkgs/$package/default.nix")
+            upstream=$(gh api "repos/$repository/commits/main" --jq .sha)
+            if [[ ! "$pinned" =~ ^[0-9a-f]{40}$ || ! "$upstream" =~ ^[0-9a-f]{40}$ ]]; then
+              echo "::error::Invalid revision for $package"
+              exit 1
+            fi
+            if [[ "$pinned" != "$upstream" ]]; then
+              echo "$package has an upstream update: $pinned -> $upstream"
+              changed=true
+            fi
+          done
+          echo "changed=$changed" >> "$GITHUB_OUTPUT"
+          if [[ "$changed" == false ]]; then
+            echo "::notice::Upstream revisions match package pins; skipping plugin update"
+          fi
+
   update-plugins:
     name: Update and verify plugins
+    needs: check-upstream
+    if: github.event_name != 'schedule' || needs.check-upstream.outputs.changed == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     outputs:
@@ -53,12 +122,12 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.ref_name }}
           persist-credentials: false
 
-      - uses: ./.github/actions/install-nix
+      - uses: $/.github/actions/install-nix
 
       - name: Update Equicord and Vencord
         env:
@@ -90,17 +159,19 @@ jobs:
       - name: Export pnpm dependency stores
         run: |
           set -euo pipefail
-          paths=()
-          for package in equicord vencord; do
-            paths+=("$(nix build --no-link --print-out-paths --impure --expr \
-              "$NIXPKGS_EXPR (pkgs.callPackage ./pkgs/$package {}).pnpmDeps")")
-          done
+          # Realize both stores together so Nix can schedule them in parallel
+          nix build --no-link --print-out-paths --impure --expr \
+            "$NIXPKGS_EXPR"' map (path: (pkgs.callPackage path {}).pnpmDeps) [
+              ./pkgs/equicord ./pkgs/vencord
+            ]' > pnpm-deps.paths
+          mapfile -t paths < pnpm-deps.paths
           nix-store --export "${paths[@]}" > pnpm-deps.nar
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: pnpm-deps
           path: pnpm-deps.nar
+          if-no-files-found: error
           compression-level: 0
           retention-days: 1
 
@@ -131,7 +202,7 @@ jobs:
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: source-update
+          name: plugins-source-update
           path: source-update
           if-no-files-found: error
           retention-days: 1
@@ -153,14 +224,14 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ needs.update-plugins.outputs.base-sha }}
           persist-credentials: false
 
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: source-update
+          name: plugins-source-update
           path: source-update
 
       - name: Apply prepared plugin update
@@ -171,7 +242,7 @@ jobs:
           fi
           git add -- pkgs docs/site.nix package.json package-lock.json modules/plugins
 
-      - uses: ./.github/actions/install-nix
+      - uses: $/.github/actions/install-nix
 
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
@@ -253,7 +324,7 @@ jobs:
     permissions:
       actions: write # Dispatch validation and documentation for the bot commit.
       contents: write # Publish the verified update.
-    uses: ./.github/workflows/publish-update.yaml
+    uses: $/.github/workflows/publish-update.yaml
     with:
       kind: plugins
       base-sha: ${{ needs.update-plugins.outputs.base-sha }}

@@ -1,52 +1,60 @@
 name: Update Discord
 
 on:
-  schedule:
-    - cron: "0 4 * * *" # Daily at 04:00 UTC
-  workflow_dispatch:
-
-concurrency:
-  # Serialize every workflow that can push to the same branch.
-  group: repository-updates-${{ github.ref_name }}
-  cancel-in-progress: false
+  workflow_call:
 
 permissions: {}
 
-env:
-  NIXPKGS_EXPR: >-
-    let flake = builtins.getFlake (toString ./.);
-        pkgs = import flake.inputs.nixpkgs-nixcord {
-          system = builtins.currentSystem;
-          config.allowUnfree = true;
-        };
-    in
+# Build artifacts cross jobs; mutable Actions caches do not.
+cache-mode: none
+
+defaults:
+  run:
+    shell: bash
 
 jobs:
   update-discord:
     name: Update and verify Discord
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     outputs:
       base-sha: ${{ steps.prepare-update.outputs.base-sha }}
+      changed: ${{ steps.sources.outputs.changed }}
     permissions:
       contents: read
 
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.ref_name }}
           persist-credentials: false
 
-      - uses: ./.github/actions/install-nix
-
-      - name: Update sources
+      - name: Check Discord manifests and update sources
+        id: sources
         run: |
           set -euo pipefail
-          test -f pkgs/discord/data/sources.json
+          python3 pkgs/discord/scripts/update-sources.py
+          python3 - <<'PY'
+          import json
+          import os
+          import subprocess
+          from pathlib import Path
 
-          update_script=$(nix build --no-link --print-out-paths --impure --expr \
-            "$NIXPKGS_EXPR (pkgs.callPackage ./pkgs/discord {}).passthru.updateScript")
-          "$update_script/bin/discord-update"
+          path = "pkgs/discord/data/sources.json"
+          previous = json.loads(subprocess.check_output(["git", "show", f"HEAD:{path}"]))
+          current = json.loads(Path(path).read_text())
+          changed = previous != current
+          packages = []
+          for branch in ("stable", "ptb", "canary", "development"):
+              key = f"linux-{branch}"
+              if previous.get(key) != current.get(key):
+                  packages.append(".#discord" if branch == "stable" else f".#discord-{branch}")
+          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+              print(f"changed={str(changed).lower()}", file=output)
+              print(f"packages={' '.join(packages)}", file=output)
+          if not changed:
+              print("::notice::Discord manifests match pinned sources; skipping downloads and builds")
+          PY
 
       - name: Validate sources
         run: |
@@ -67,25 +75,30 @@ jobs:
             and all(.[]; validSource)
           ' pkgs/discord/data/sources.json
 
-      - name: Build all Discord channels
+      - uses: $/.github/actions/install-nix
+        if: steps.sources.outputs.packages != ''
+
+      - name: Build changed Discord channels
+        if: steps.sources.outputs.packages != ''
+        env:
+          DISCORD_PACKAGES: ${{ steps.sources.outputs.packages }}
         run: |
           set -euo pipefail
-          nix build --no-link --print-build-logs \
-            .#discord \
-            .#discord-ptb \
-            .#discord-canary \
-            .#discord-development
+          read -r -a packages <<< "$DISCORD_PACKAGES"
+          nix build --no-link --print-build-logs "${packages[@]}"
 
       - name: Prepare verified source update
         id: prepare-update
+        if: steps.sources.outputs.changed == 'true'
         run: |
           mkdir -p source-update
           git diff --binary --full-index -- pkgs/discord/data/sources.json > source-update/changes.patch
           echo "base-sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: steps.sources.outputs.changed == 'true'
         with:
-          name: source-update
+          name: discord-source-update
           path: source-update
           if-no-files-found: error
           retention-days: 1
@@ -93,10 +106,11 @@ jobs:
   publish:
     name: Publish verified Discord update
     needs: update-discord
+    if: needs.update-discord.outputs.changed == 'true'
     permissions:
       actions: write # Dispatch validation for the bot commit.
       contents: write # Publish the verified update.
-    uses: ./.github/workflows/publish-update.yaml
+    uses: $/.github/workflows/publish-update.yaml
     with:
       kind: discord
       base-sha: ${{ needs.update-discord.outputs.base-sha }}

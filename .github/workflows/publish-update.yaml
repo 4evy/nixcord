@@ -14,6 +14,13 @@ on:
 
 permissions: {}
 
+# Build artifacts cross jobs; mutable Actions caches do not.
+cache-mode: none
+
+defaults:
+  run:
+    shell: bash
+
 jobs:
   publish:
     name: Commit and dispatch follow-up workflows
@@ -23,14 +30,14 @@ jobs:
       actions: write # GITHUB_TOKEN commits do not trigger push workflows.
       contents: write # Commit the verified files with GitHub signing.
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ inputs.base-sha }}
           persist-credentials: false
 
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: source-update
+          name: ${{ inputs.kind }}-source-update
           path: source-update
 
       - name: Apply verified source update
@@ -103,12 +110,13 @@ jobs:
             exit 1
           fi
           case "$UPDATE_KIND" in
-            plugins) workflow=update-plugins.yaml ;;
-            discord) workflow=update-discord.yaml ;;
+            plugins|discord) workflow=update-plugins.yaml ;;
             *) echo "::error::Unknown update kind"; exit 1 ;;
           esac
           gh workflow run "$workflow" --ref "$REF_NAME"
           echo "::notice::Branch moved during validation; queued a fresh update"
+          # Stop this run so dependent jobs cannot continue with stale sources
+          exit 1
 
       - name: Check refreshed head commit
         if: steps.commit.outcome == 'success' && steps.commit.outputs.commit-hash != ''
