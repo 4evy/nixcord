@@ -5494,16 +5494,16 @@
       "allowNewlinesInCommands"
     ],
     [
-      "betterGifPicker",
-      "keepOpen"
-    ],
-    [
       "channelTabs",
       "noPomeloNames"
     ],
     [
       "voiceMessageTranscriber",
       "delete"
+    ],
+    [
+      "voiceMessageTranscriber",
+      "deleteModalFiles"
     ]
   ],
   "clientRenames": [

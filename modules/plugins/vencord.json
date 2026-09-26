@@ -521,6 +521,16 @@
       }
     }
   },
+  "noTrack": {
+    "description": "Disable Discord's tracking (analytics/'science'), metrics and Sentry crash reporting (Vencord-only)",
+    "settings": {
+      "disableAnalytics": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Disable Discord's tracking (analytics/'science') (restart required)"
+      }
+    }
+  },
   "oneko": {
     "description": "cat follow mouse (real) (Vencord-only)",
     "settings": {}

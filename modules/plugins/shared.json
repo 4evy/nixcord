@@ -876,16 +876,6 @@
       }
     }
   },
-  "noTrack": {
-    "description": "Disable Discord's tracking (analytics/'science'), metrics and Sentry crash reporting (Shared between Vencord and Equicord)",
-    "settings": {
-      "disableAnalytics": {
-        "type": "types.bool",
-        "default": true,
-        "description": "Disable Discord's tracking (analytics/'science') (restart required)"
-      }
-    }
-  },
   "noTypingAnimation": {
     "description": "Disables the CPU-intensive typing dots animation (Shared between Vencord and Equicord)",
     "settings": {}
