@@ -4,6 +4,7 @@ on:
   merge_group:
   pull_request:
   push:
+    branches: [main, dev]
   workflow_dispatch:
 
 concurrency:
@@ -11,6 +12,10 @@ concurrency:
   cancel-in-progress: true
 
 permissions: {}
+
+defaults:
+  run:
+    shell: bash
 
 jobs:
   workflow-quality:
@@ -20,19 +25,14 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - uses: ./.github/actions/install-nix
+      - uses: $/.github/actions/install-nix
 
       - name: Lint and security-audit GitHub Actions
-        run: >-
-          nix shell nixpkgs#yamllint nixpkgs#actionlint nixpkgs#zizmor nixpkgs#shellcheck
-          --command bash -c
-          'yamllint . && actionlint && zizmor --pedantic .github/workflows .github/actions
-          && shellcheck nix/benchmark-eval.sh nix/tests/benchmark-eval.sh
-          pkgs/discord/scripts/*.sh'
+        run: nix develop .#ci --command bash .github/scripts/check-workflows.sh
 
   javascript:
     name: JavaScript and documentation
@@ -41,11 +41,11 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - uses: ./.github/actions/setup-node
+      - uses: $/.github/actions/setup-node
 
       - name: Check TypeScript, docs, dead code, duplication, and formatting
         run: npm run check
@@ -60,11 +60,11 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - uses: ./.github/actions/install-nix
+      - uses: $/.github/actions/install-nix
 
       - name: Test evaluation benchmark CLI
         run: bash nix/tests/benchmark-eval.sh
@@ -73,12 +73,7 @@ jobs:
         run: nix-instantiate --eval --strict --expr '(import ./npins).nixpkgs'
 
       - name: Check Nix formatting
-        run: |
-          nix_files=()
-          while IFS= read -r -d '' file; do
-            [[ ! -f "$file" ]] || nix_files+=("$file")
-          done < <(git ls-files -z -- '*.nix')
-          nix shell nixpkgs#nixfmt --command nixfmt --check "${nix_files[@]}"
+        run: nix fmt -- --fail-on-change .
 
   renovate-config:
     name: Renovate configuration
@@ -87,11 +82,11 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - uses: ./.github/actions/setup-node
+      - uses: $/.github/actions/setup-node
         with:
           working-directory: .github/renovate
 
@@ -107,12 +102,12 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 1
           persist-credentials: false
 
-      - uses: ./.github/actions/install-nix
+      - uses: $/.github/actions/install-nix
 
       - name: Export pnpm dependency stores
         env:
@@ -125,17 +120,19 @@ jobs:
             in
         run: |
           set -euo pipefail
-          paths=()
-          for package in equicord vencord; do
-            paths+=("$(nix build --no-link --print-out-paths --impure --expr \
-              "$NIXPKGS_EXPR (pkgs.callPackage ./pkgs/$package {}).pnpmDeps")")
-          done
+          # Realize both stores together so Nix can schedule them in parallel
+          nix build --no-link --print-out-paths --impure --expr \
+            "$NIXPKGS_EXPR"' map (path: (pkgs.callPackage path {}).pnpmDeps) [
+              ./pkgs/equicord ./pkgs/vencord
+            ]' > pnpm-deps.paths
+          mapfile -t paths < pnpm-deps.paths
           nix-store --export "${paths[@]}" > pnpm-deps.nar
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: pnpm-deps
           path: pnpm-deps.nar
+          if-no-files-found: error
           compression-level: 0
           retention-days: 1
 
@@ -144,4 +141,20 @@ jobs:
     needs: prepare-pnpm-deps
     permissions:
       contents: read
-    uses: ./.github/workflows/nix-check.yaml
+    uses: $/.github/workflows/nix-check.yaml
+
+  required:
+    name: CI required
+    if: ${{ !cancelled() }}
+    needs: [workflow-quality, javascript, nix-quality, renovate-config, prepare-pnpm-deps, nix]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions: {}
+    cache-mode: none
+    steps:
+      - name: Require every check to pass
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          jq -r 'to_entries[] | "\(.key): \(.value.result)"' <<< "$RESULTS"
+          jq -e 'all(.[]; .result == "success")' <<< "$RESULTS"
