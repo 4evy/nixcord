@@ -16,11 +16,12 @@ enable_krisp=$8
 command_line_args=$9
 cc=${10}
 rcodesign=${11}
-entitlements=${12}
-app_data_dir_file=${13}
-mod_data_dir_file=${14}
-mod_data_env=${15}
-mod_data_suffix=${16}
+python3=${12}
+prepare_signing=${13}
+app_data_dir_file=${14}
+mod_data_dir_file=${15}
+mod_data_env=${16}
+mod_data_suffix=${17}
 
 launcher_cflags=(
   -std=c23
@@ -68,12 +69,5 @@ chmod +x "$app_executable"
 rm "$out/bin/$binary_name"
 ln -s "$app_executable" "$out/bin/$binary_name"
 
-"$rcodesign" sign \
-  --exclude "Contents/Resources/modules/**" \
-  --entitlements-xml-file "$entitlements" \
-  --entitlements-xml-file "Contents/MacOS/$binary_name.unwrapped:$entitlements" \
-  --entitlements-xml-file "Contents/Frameworks/$binary_name Helper.app:$entitlements" \
-  --entitlements-xml-file "Contents/Frameworks/$binary_name Helper (GPU).app:$entitlements" \
-  --entitlements-xml-file "Contents/Frameworks/$binary_name Helper (Plugin).app:$entitlements" \
-  --entitlements-xml-file "Contents/Frameworks/$binary_name Helper (Renderer).app:$entitlements" \
-  "$out/Applications/$binary_name.app"
+"$python3" "$prepare_signing" \
+  "$rcodesign" "$out/Applications/$binary_name.app" "$binary_name"

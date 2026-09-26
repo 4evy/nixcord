@@ -251,16 +251,8 @@ let
   };
 
   package = basePackage.override overrideArgs;
+  darwinSigningPython = python3.withPackages (ps: [ ps.pyyaml ]);
 
-  darwinEntitlements = builtins.toFile "discord-entitlements.plist" (
-    lib.generators.toPlist { escape = true; } {
-      "com.apple.security.cs.allow-jit" = true;
-      "com.apple.security.cs.allow-unsigned-executable-memory" = true;
-      "com.apple.security.cs.disable-library-validation" = true;
-      "com.apple.security.device.audio-input" = true;
-      "com.apple.security.device.camera" = true;
-    }
-  );
 in
 assert lib.asserts.assertMsg (
   basePackage != null
@@ -350,7 +342,8 @@ package.overrideAttrs (
           ${lib.strings.escapeShellArg commandLineArgsC} \
           ${stdenv.cc}/bin/cc \
           ${lib.meta.getExe rcodesign} \
-          ${darwinEntitlements} \
+          ${darwinSigningPython}/bin/python3 \
+          ${./scripts/prepare-darwin-signing.py} \
           ${appDataDirFile} \
           ${modDataDirFile} \
           ${
