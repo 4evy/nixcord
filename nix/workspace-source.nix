@@ -8,6 +8,7 @@ lib.fileset.toSource {
   root = ./..;
   fileset = lib.fileset.unions (
     [
+      ../.npmrc
       ../package.json
       ../package-lock.json
     ]

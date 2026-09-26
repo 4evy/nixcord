@@ -17,7 +17,7 @@
     "@nixcord/git-analyzer": "1.0.0",
     "@nixcord/shared": "1.0.0",
     "change-case": "^5.4.4",
-    "fs-extra": "^11.4.0",
+    "fs-extra": "^11.4.1",
     "pathe": "^2.0.3",
     "zod": "^4.6.5"
   },

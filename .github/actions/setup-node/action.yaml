@@ -19,6 +19,16 @@ runs:
         cache: npm
         cache-dependency-path: ${{ inputs.working-directory }}/package-lock.json
 
+    - name: Install pinned npm
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: | # zizmor: ignore[adhoc-packages]
+        package_manager=$(node -p 'require("./package.json").packageManager || ""')
+        if [[ "$package_manager" == npm@* ]]; then
+          # The package manager is pinned exactly in package.json.
+          npm install --global --ignore-scripts "$package_manager"
+        fi
+
     - name: Install workspace dependencies
       shell: bash
       working-directory: ${{ inputs.working-directory }}
