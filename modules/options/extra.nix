@@ -9,7 +9,7 @@ let
         lib.options.mkOption {
           type = jsonAttrs;
           default = { };
-          description = "Additional config merged into `programs.nixcord.config` for ${target}.";
+          description = "Free-form mod settings for ${target}. These override matching values in `programs.nixcord.config`; client-specific values also override `extraConfig`.";
         }
       )
       {
@@ -30,7 +30,9 @@ in
       lib.options.mkOption {
         type = lib.types.attrsOf (lib.types.coercedTo lib.types.str coerce lib.types.path);
         description = ''
-          User plugins to fetch and install. Any required JSON config must be enabled in `extraConfig`.
+          Plugin sources to include in the Vencord or Equicord build. Enable each
+          plugin in `extraConfig.plugins` using its declared name. Remote sources
+          require a full 40-character commit hash; branches and tags are rejected.
 
           Accepts:
           - Generic Git URLs for any forge: `git+https://forge.example/owner/repo.git?rev=commitHash`
@@ -60,12 +62,12 @@ in
       };
       pluginRenames = lib.options.mkOption {
         type = lib.types.attrsOf lib.types.str;
-        description = "Plugin option names to rename while generating JSON.";
+        description = "Nix plugin option names mapped to upstream plugin names in the generated JSON.";
         default = { };
       };
       settingRenames = lib.options.mkOption {
         type = lib.types.attrsOf (lib.types.attrsOf lib.types.str);
-        description = "Setting names to rename while generating JSON.";
+        description = "Nix setting names mapped to upstream JSON keys, grouped by plugin or settings context.";
         default = { };
       };
     };

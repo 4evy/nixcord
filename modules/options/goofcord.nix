@@ -41,17 +41,19 @@ in
         "equicord"
       ];
       default = "vencord";
-      description = "Vencord-based client mod to bundle with GoofCord.";
+      description = "Mod to build and bundle with GoofCord: Vencord or Equicord.";
     };
 
     settings = lib.options.mkOption {
       type = lib.types.attrsOf jsonFormat.type;
       default = { };
       description = ''
-        Settings to be written to GoofCord's settings.json. Entries in `settings.assets` are
-        required to be local-path or URL strings and are merged with `extraAssets`; `extraAssets`
-        and Nixcord's managed assets take precedence. The internal `managedFiles` setting is
-        managed by Nixcord.
+        Native GoofCord preferences written to `settings.json`. Put plugin
+        settings in `config.plugins` or `goofcordConfig.plugins`.
+
+        Values in `settings.assets` must be local-path or URL strings.
+        `extraAssets` overrides matching entries, and Nixcord's bundled assets
+        override both. Nixcord also sets `managedFiles` to track those assets.
       '';
     };
 

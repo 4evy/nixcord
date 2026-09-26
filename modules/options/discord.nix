@@ -25,7 +25,7 @@ in
     enable = lib.options.mkOption {
       type = lib.types.bool;
       default = true;
-      description = "Whether to enable Discord. Disable to only install Vesktop.";
+      description = "Whether to manage Discord. Set to false when you only want an alternative client such as Vesktop or GoofCord.";
       example = false;
     };
     installPackage = lib.options.mkOption {
@@ -65,7 +65,7 @@ in
     };
     configDir = lib.options.mkOption {
       type = lib.types.path;
-      description = "Config directory for Discord.";
+      description = "Settings directory for the first branch in `discord.branches`.";
     };
     appDataDir = lib.options.mkOption {
       type = lib.types.nullOr (lib.types.addCheck lib.types.str (lib.strings.hasPrefix "/"));
@@ -95,14 +95,14 @@ in
       '';
     };
     vencord = {
-      enable = lib.options.mkEnableOption "Vencord for Discord (non-Vesktop)";
+      enable = lib.options.mkEnableOption "Vencord for Discord";
       package = lib.options.mkPackageOption pkgs "Vencord" { default = "vencord"; } // {
         default = selectedNixcordPkgs.vencord or vencordPackage;
         defaultText = lib.options.literalExpression "pkgs.callPackage ../../pkgs/vencord { }";
       };
     };
     equicord = {
-      enable = lib.options.mkEnableOption "Equicord (alternative to Vencord)";
+      enable = lib.options.mkEnableOption "Equicord for Discord";
       package = lib.options.mkPackageOption pkgs "Equicord" { default = "equicord"; } // {
         default = selectedNixcordPkgs.equicord or equicordPackage;
         defaultText = lib.options.literalExpression "pkgs.callPackage ../../pkgs/equicord { }";
@@ -113,18 +113,18 @@ in
       default = false;
       example = true;
       description = ''
-        Whether to acknowledge and silence the warning shown when Discord is
-        enabled without Vencord or Equicord.
+        Suppress the warning about running Discord without Vencord or Equicord.
+        Use this when you intentionally want Discord without a mod.
       '';
     };
-    openASAR.enable = lib.options.mkEnableOption "OpenASAR for Discord (non-Vesktop)" // {
+    openASAR.enable = lib.options.mkEnableOption "OpenASAR for Discord" // {
       default = true;
     };
     krisp.enable = lib.options.mkEnableOption "Krisp noise cancellation";
     commandLineArgs = lib.options.mkOption {
       type = lib.types.listOf lib.types.str;
       default = [ ];
-      description = "Additional command line arguments to pass to Discord.";
+      description = "Extra arguments passed to Discord at launch. Each list item is one argument.";
       example = [
         "--enable-features=VaapiVideoDecoder,MiddleClickAutoscroll"
         "--ozone-platform-hint=auto"
@@ -134,7 +134,7 @@ in
     settings = lib.options.mkOption {
       type = lib.types.attrsOf jsonFormat.type;
       default = { };
-      description = "Settings to be placed in Discord's settings.json. Set atomically; the entire attrset replaces any previous definition.";
+      description = "Native Discord preferences written to `settings.json`. Put mod and plugin settings in `programs.nixcord.config`.";
       example = {
         openasar.setup = true;
       };

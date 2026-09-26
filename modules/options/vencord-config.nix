@@ -23,7 +23,7 @@ in
     quickCss = lib.options.mkOption {
       type = lib.types.str;
       default = "";
-      description = "Quick CSS to inject into the client.";
+      description = "CSS written to the client's Quick CSS file. Set `config.useQuickCss = true` to load it.";
     };
     config = {
       notifyAboutUpdates = lib.options.mkEnableOption "update notifications";
@@ -33,7 +33,7 @@ in
       themeLinks = lib.options.mkOption {
         type = lib.types.listOf lib.types.str;
         default = [ ];
-        description = "A list of URLs to online Vencord themes.";
+        description = "URLs of online themes to load.";
         example = [ "https://raw.githubusercontent.com/rose-pine/discord/main/rose-pine.theme.css" ];
       };
       themes = lib.options.mkOption {
@@ -45,20 +45,21 @@ in
         );
         default = { };
         description = ''
-          Themes to add. Enable them by setting
-          `programs.nixcord.config.enabledThemes` to `[ "THEME_NAME.css" ]`.
+          Named themes, each supplied as CSS text or a Nix path. A theme named
+          `myTheme` is written as `myTheme.css`; add that filename to
+          `programs.nixcord.config.enabledThemes` to load it.
         '';
       };
       enabledThemes = lib.options.mkOption {
         type = lib.types.listOf lib.types.str;
         default = [ ];
-        description = "A list of themes to enable from the themes directory.";
+        description = "Theme filenames to load from the themes directory, including the `.css` extension.";
         example = [ "my-theme.css" ];
       };
       enabledThemeLinks = lib.options.mkOption {
         type = lib.types.listOf lib.types.str;
         default = [ ];
-        description = "A list of online Vencord theme URLs to enable.";
+        description = "Online theme URLs marked as enabled in the mod settings.";
         example = [ "https://raw.githubusercontent.com/rose-pine/discord/main/rose-pine.theme.css" ];
       };
       enableReactDevtools = lib.options.mkEnableOption "React developer tools";

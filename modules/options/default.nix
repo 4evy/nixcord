@@ -15,39 +15,39 @@
   options.programs.nixcord = {
     user = lib.options.mkOption {
       type = lib.types.nonEmptyStr;
-      description = "Target username for file ownership.";
+      description = "User whose client settings Nixcord manages. Home Manager supplies this automatically; set it explicitly for NixOS or nix-darwin.";
     };
 
     homeDirectory = lib.options.mkOption {
       type = lib.types.path;
-      description = "Home directory for the target user.";
+      description = "Home directory of the user named by `programs.nixcord.user`.";
     };
 
     xdgConfigHome = lib.options.mkOption {
       type = lib.types.path;
-      description = "XDG config home directory.";
+      description = "Base directory for client configuration on Linux, normally the target user's `.config` directory.";
     };
 
-    enable = lib.options.mkEnableOption "nixcord (Discord with Vencord/Equicord)";
+    enable = lib.options.mkEnableOption "Nixcord client and plugin management";
 
     useGlobalPkgs = lib.options.mkOption {
       type = lib.types.bool;
       default = true;
       example = false;
       description = ''
-        Whether to build Nixcord-provided packages with the package set passed
-        to the module instead of Nixcord's pinned package set.
+        Build Nixcord-provided packages with the host's Nixpkgs package set.
+        This reuses the package set already evaluated by Home Manager, NixOS,
+        or nix-darwin.
 
-        Keeping this enabled reuses the package set that Home Manager, NixOS,
-        or nix-darwin has already evaluated. Disabling it evaluates Nixcord's
-        pinned package set as an additional Nixpkgs instance, which is more
-        isolated but substantially increases evaluation time and memory use.
+        Set to false to use Nixcord's pinned package set when supplied by the
+        module entry point. Evaluating a second Nixpkgs instance uses more
+        time and memory.
       '';
     };
 
     configDir = lib.options.mkOption {
       type = lib.types.path;
-      description = "Config directory for the selected client (Vencord or Equicord).";
+      description = "Settings directory for Discord's selected mod, Vencord or Equicord. Other clients have their own `configDir` options.";
     };
 
     finalPackage = {
