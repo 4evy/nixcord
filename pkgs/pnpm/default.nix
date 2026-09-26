@@ -1,9 +1,15 @@
-{ pnpm_11 }:
+{ pnpm_12 }:
 
-# pnpm changes its store metadata between minor releases. Keep dependency
-# fetching and offline builds on the same version across Nixpkgs inputs.
+# Keep dependency fetching and offline builds on the same pnpm release.
 # Regenerate both clients' pnpmDepsHash values when updating this version.
-pnpm_11.override {
-  version = "11.25.0";
-  hash = "sha256-M90HSPJ+eRbE8ci2lDRhmD40U7BrvaYxKmKAEwtIgeU=";
-}
+(pnpm_12.override {
+  version = "12.6.0";
+  srcHash = "sha256-EUDEhOW1KlMPMvFlybj0hU/XoUJSBymQ2n9Hn7G5rMc=";
+  cargoHash = "sha256-kXQFesQU66QpBItjyynqFb+DjeMOe/n30mju7A1Svvs=";
+}).overrideAttrs
+  (old: {
+    # Use Nix's vendored Cargo sources instead of pnpm's local source directory.
+    postPatch = (old.postPatch or "") + ''
+      sed -i '/# >>> pnpm-managed cargo sources >>>/,/# <<< pnpm-managed cargo sources <<</d' .cargo/config.toml
+    '';
+  })
