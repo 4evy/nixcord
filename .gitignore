@@ -117,3 +117,7 @@ docs/site/public/nixcord-logo.svg
 *.log
 .DS_Store
 tsconfig.tsbuildinfo
+
+# Generated social preview
+docs/site/public/nixcord-social-preview.png
+docs/site/public/nixcord-social-preview.svg

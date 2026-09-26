@@ -4,15 +4,16 @@
   "type": "module",
   "scripts": {
     "prepare-options": "mkdir -p public && nix build ../..#docs-json --out-link .options-json-result && rm -f public/options.json && install -m 0644 .options-json-result/share/doc/nixos/options.json public/options.json && unlink .options-json-result",
-    "predev": "npm run generate-logo",
+    "predev": "npm run generate-social-preview",
     "dev": "vite --host 127.0.0.1",
-    "predev:options": "npm run generate-logo",
+    "predev:options": "npm run generate-social-preview",
     "dev:options": "npm run prepare-options && vite --host 127.0.0.1",
     "generate-logo": "node scripts/generate-nixcord-logo.ts",
-    "prebuild": "npm run generate-logo",
+    "prebuild": "npm run generate-social-preview",
     "build": "vite build",
     "check": "tsc --noEmit --project tsconfig.json",
-    "preview": "vite preview --host 127.0.0.1"
+    "preview": "vite preview --host 127.0.0.1",
+    "generate-social-preview": "npm run generate-logo && node scripts/generate-social-preview.ts"
   },
   "dependencies": {
     "@lucide/svelte": "^1.48.0",
@@ -25,6 +26,7 @@
     "vite": "^8.3.1"
   },
   "devDependencies": {
+    "@resvg/resvg-js": "2.6.2",
     "@typescript/native": "npm:typescript@7.0.2",
     "fs-fixture": "2.16.0",
     "polyclip-ts": "0.16.8",
