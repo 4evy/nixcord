@@ -312,6 +312,16 @@ package.overrideAttrs (
         ${lib.meta.getExe asar} pack nixcord-host-asar "$host_asar"
         rm -r nixcord-host-asar
       ''
+      + lib.strings.optionalString stdenvNoCC.hostPlatform.isDarwin ''
+        # Desktop core supplies the module installation path to these caches
+        # Redirect only their data API; keep native code and signatures intact
+        for module in discord_intents discord_notifications; do
+          cat >> "${modulesDir}/$module/index.js" <<JS
+
+        require('${./scripts/redirect-module-data.cjs}')(module.exports, '$module');
+        JS
+        done
+      ''
       + lib.strings.optionalString hasKrispModule ''
         rm -rf "${modulesDir}/discord_krisp"
         mkdir -p "${modulesDir}/discord_krisp"
