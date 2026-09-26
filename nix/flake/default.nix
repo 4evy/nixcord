@@ -22,7 +22,12 @@ let
       checks = (import ./checks.nix { inherit inputs pkgs packages; }).checks // {
         treefmt = treefmt.config.build.check inputs.self;
       };
-      devShells.default = import ../dev-shell.nix { inherit pkgs; };
+      devShells = {
+        default = import ../dev-shell.nix { inherit pkgs; };
+        ci = import ../ci-shell.nix {
+          pkgs = import inputs.nixpkgs-ci { inherit system; };
+        };
+      };
       formatter = treefmt.config.build.wrapper;
     };
   perSystem = lib.genAttrs [
