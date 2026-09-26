@@ -53,8 +53,7 @@ export const CLI_CONFIG = {
   },
 } as const;
 
-// Fail fast if someone edits CLI_CONFIG incorrectly; catching schema drift here keeps prod
-// builds from spitting half-written Nix files before Equicord/Vencord extraction even runs
+// Reject invalid CLI configuration before generation can leave partial output.
 CliConfigSchema.parse(CLI_CONFIG);
 
 export type CliConfig = z.infer<typeof CliConfigSchema>;

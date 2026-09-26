@@ -259,9 +259,8 @@ let
     ];
 
   mkCopyCommands =
-    # Keep this function on the already-filtered specs.  Reconstructing the
-    # specs here creates a second copy of the same option-dependent traversal
-    # during NixOS evaluation; Nix only memoizes values, not equivalent calls.
+    # Reuse the filtered specs to avoid traversing the options twice.
+    # Nix memoizes values, not repeated calls with equivalent arguments.
     fileSpecs:
     let
       mkCopy =

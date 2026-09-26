@@ -83,17 +83,14 @@ export function generateDeprecatedJson(data: DeprecatedData): string {
     output.renames[name] = { to: entry.to, date: entry.date! };
   }
 
-  // Removals (sorted)
   for (const [name, entry] of sortedEntries(data.removals)) {
     output.removals[name] = { date: entry.date };
   }
 
-  // Setting renames (sorted)
   for (const [pluginName, settings] of sortedEntries(data.settingRenames)) {
     output.settingRenames[pluginName] = Object.fromEntries(sortedEntries(settings));
   }
 
-  // Removed settings (sorted)
   for (const [pluginName, settings] of sortedEntries(data.settingRemovals ?? {})) {
     output.settingRemovals[pluginName] = Object.fromEntries(sortedEntries(settings));
   }
@@ -102,8 +99,7 @@ export function generateDeprecatedJson(data: DeprecatedData): string {
 }
 
 /**
- * Remove circular rename pairs (A -> B and B -> A both present).
- * These arise from ping-pong renames in git history and cancel each other out.
+ * Remove A -> B / B -> A pairs left by reversals in Git history.
  */
 function removeCircularRenames(renames: Record<string, DeprecatedRenameEntry>): void {
   const toRemove = new Set<string>();
@@ -157,10 +153,8 @@ export async function updateDeprecatedPlugins(
   const existing = await readDeprecatedJson(deprecatedPath);
   const normalize = normalizePluginName ?? ((n: string) => n);
 
-  // Prune stale persisted entries before merging migrations discovered in the
-  // current sources. An upstream migratePluginSettings() call is intentionally
-  // dated when it is observed, so an entry that is still declared upstream
-  // must be able to replace its expired persisted copy in the same run.
+  // Prune expired history first so migrations still declared upstream can
+  // replace their expired entries with the current observation date.
   for (const [name, entry] of Object.entries(existing.renames)) {
     if (!entry.date || isExpired(entry.date, RENAME_EXPIRY_DAYS)) {
       delete existing.renames[name];
@@ -205,7 +199,6 @@ export async function updateDeprecatedPlugins(
     existing.settingRemovals[pluginName] = settings;
   }
 
-  // Remove circular rename pairs (ping-pong renames that cancel each other out)
   removeCircularRenames(existing.renames);
 
   if (activePluginNames && normalizePluginName) {
@@ -224,8 +217,8 @@ export async function updateDeprecatedPlugins(
   }
   removeSelfRenames(existing.renames, normalize);
 
-  // Don't include removals for plugins that are also in renames (they were renamed, not deleted)
-  // Use case-insensitive comparison since git may report different casings for the same plugin
+  // A rename must not also remove the plugin. Compare names without case
+  // because Git history may contain different spellings.
   const renameKeysLower = new Map(Object.keys(existing.renames).map((k) => [k.toLowerCase(), k]));
   for (const name of Object.keys(existing.removals)) {
     if (existing.renames[name] || renameKeysLower.has(name.toLowerCase())) {
@@ -233,7 +226,7 @@ export async function updateDeprecatedPlugins(
     }
   }
 
-  // Remove removals for plugins that are still active (git may see a file move as a deletion)
+  // An active plugin may appear deleted in Git after a file move.
   if (activePluginNames) {
     const normalizedActiveNames = new Set([...activePluginNames].map(normalize));
     for (const name of Object.keys(existing.removals)) {
@@ -271,9 +264,8 @@ export async function updateDeprecatedPlugins(
     existing.settingRenames = deduped;
   }
 
-  // Resolve stale circular pairs using the current schema. This cleans up
-  // pairs produced when older generators interpreted an upstream migration
-  // call in the wrong direction.
+  // Use the current schema to resolve circular pairs left by older generators
+  // that read an upstream migration in the wrong direction.
   if (activePlugins) {
     const activeSettingsByPlugin = new Map(
       Object.entries(activePlugins).map(([name, config]) => [

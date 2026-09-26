@@ -25,10 +25,6 @@ interface SettingNamePair {
   current: string;
 }
 
-/**
- * Collect all leaf setting names from a plugin config (flattened).
- * Always includes "enable".
- */
 function normalizeSettingPath(
   path: string,
   normalizer: (name: string) => string = toNixIdentifier
@@ -43,6 +39,7 @@ function normalizePathParts(
   return path.split('.').map(normalizer);
 }
 
+/** Collect leaf setting paths, including each config's "enable" option. */
 function collectSettingNames(
   config: Readonly<PluginConfig>,
   normalizer: (name: string) => string = toNixIdentifier
@@ -173,9 +170,8 @@ export function generateMigrationsData(
   // Build lookup of active plugin nix identifiers to skip conflicting migrations
   const activeNixNames = new Set(Object.keys(allPlugins).map((k) => toNixIdentifier(k)));
 
-  // Pre-filter setting rename entries, deduplicating by Nix identifier
-  // Multiple source names (e.g. "platformIndicators" and "PlatformIndicators")
-  // can map to the same Nix identifier, so we merge their settings.
+  // Merge settings when source names such as "platformIndicators" and
+  // "PlatformIndicators" normalize to the same Nix identifier.
   const settingRenamesByNixName = new Map<string, Record<string, string>>();
   for (const [pluginName, settings] of sortedEntries(deprecated.settingRenames ?? {})) {
     const nixName = toNixIdentifier(pluginName);
@@ -236,7 +232,7 @@ export function generateMigrationsData(
     const targetPlugin = pluginsByNixName.get(newNixName);
 
     if (!targetPlugin) {
-      // Target plugin not found in parsed data - just forward enable
+      // Without a target schema, only the enable option can be forwarded.
       if (!oldNameIsActive) {
         migrations.renames.push(mkRenameEntry(oldName, newName, 'enable'));
       }
@@ -263,9 +259,8 @@ export function generateMigrationsData(
       }
     }
   }
-  // Build a lookup from nix identifier to ALL setting names across all plugin versions.
-  // A plugin may exist in both vencord and equicord with different settings;
-  // we need the union of all settings to detect conflicts correctly.
+  // Check conflicts against both clients' settings. A shared plugin name can
+  // have different settings in Vencord and Equicord.
   const allSettingsByNixName = new Map<string, Set<string>>();
   migrations.identifierRenames = generateIdentifierRenames(sources);
   for (const source of sources) {
@@ -294,7 +289,6 @@ export function generateMigrationsData(
   );
   if (settingRemovals.length > 0) migrations.settingRemovals = settingRemovals;
 
-  // Generate setting rename migrations
   for (const [nixName, settings] of settingRenameEntries) {
     // Filter out renames where the old setting name still exists on the active plugin,
     // as mkRenamedOptionModule would conflict with the existing option declaration.

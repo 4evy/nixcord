@@ -41,13 +41,10 @@ const OPTION_TYPES: Readonly<Record<number, OptionTypeName>> = {
 };
 
 const COMMON_PROFILE = {
-  // Mirrors the upstream plugin-list generators: ordinary plugins use a
-  // directory index, while required internal plugins are individual files in
-  // _core. The sibling _api trees are implementation dependencies rather than
-  // user-facing plugins and are intentionally excluded by these globs.
+  // Match upstream discovery: directory indexes for ordinary plugins and files
+  // in _core for required plugins. Exclude _api implementation dependencies.
   entryGlobs: ['*/index.{ts,tsx}', '_core/*.{ts,tsx}'],
-  // These plugins exist in both trees but expose client-branded descriptions,
-  // so sharing one side's generated schema would be misleading to the other.
+  // Keep separate schemas where the description names a specific client.
   clientSpecificPlugins: ['Settings'],
   apiModules: ['@api/Settings', '@utils/types'],
   apiDeclarations: {

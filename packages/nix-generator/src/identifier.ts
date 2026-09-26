@@ -44,10 +44,8 @@ function finalizeIdentifier(
 }
 
 /**
- * Legacy public Nix identifier normalization.
- *
- * Kept for compatibility migration generation because older nixcord releases
- * intentionally preserved acronym-heavy upstream names.
+ * Reproduce older Nixcord option names when generating compatibility migrations.
+ * Older releases preserved upstream acronym casing.
  */
 export function toLegacyNixIdentifier(name: string): string {
   const {
@@ -81,9 +79,8 @@ function normalizePluralAcronyms(segment: string): string {
 }
 
 /**
- * Sanitize and convert a name to a valid public Nix identifier.
- * Uses acronym-aware word splitting so upstream names like ClearURLs become
- * clearUrls instead of the change-case output clearUrLs.
+ * Convert upstream names to Nix identifiers, keeping acronyms together:
+ * ClearURLs becomes clearUrls, rather than clearUrLs.
  */
 export function toNixIdentifier(name: string): string {
   name = name.replace(PLUS_PATTERN, ' Plus ');

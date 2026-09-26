@@ -712,9 +712,8 @@ const rawObjectFromAst = (
     if (result.known) output[key] = result.value;
     else recordUnresolvedAstValue(unresolved, { node: initializer, path, reason: result.reason });
   }
-  // `visited` is a recursion stack, not a global deduplication set. The same definition object may
-  // legitimately be reused by multiple settings; keeping it marked after this branch returns would
-  // cause every later reference to lose its default and metadata.
+  // Remove each definition from `visited` when this branch returns. Settings can
+  // share a definition; leaving it marked would discard later defaults and metadata.
   visited.delete(visitKey);
   return output;
 };

@@ -130,8 +130,7 @@ export const buildCli = (): Application<CommandContext> => {
       },
     },
     async func(flags, vencordArg) {
-      // Run the options through Zod before we touch the filesystem; this mirrors how we catch
-      // typos like `--vencrod` in our release scripts before the Equicord/Vencord paths are read.
+      // Validate options before reading sources or writing generated files.
       const validationResult = CliOptionsSchema.safeParse(flags);
       if (!validationResult.success) {
         const zodError = fromZodError(validationResult.error);

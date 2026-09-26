@@ -104,8 +104,8 @@ const extractDeclaredSettings = (source: string, filePath: string): Set<string> 
 };
 
 /**
- * Extract plugin directory name from a file path like "src/plugins/foo/index.ts"
- * Returns the directory name (e.g. "foo") or null if the path doesn't match.
+ * Return the plugin directory ("foo" in "src/plugins/foo/index.ts"),
+ * or null when the path is not a plugin entry point.
  */
 const extractPluginDirName = (filePath: string, pluginsDirs: string[]): string | null => {
   for (const dir of pluginsDirs) {
@@ -121,9 +121,6 @@ const extractPluginDirName = (filePath: string, pluginsDirs: string[]): string |
   return null;
 };
 
-/**
- * Build glob patterns for git commands targeting plugin index files.
- */
 const buildPluginGlobs = (pluginsDirs: string[]): string[] => {
   return pluginsDirs.flatMap((dir) => [`:(glob)${dir}/*/index.ts`, `:(glob)${dir}/*/index.tsx`]);
 };
@@ -214,7 +211,7 @@ export const extractPluginRenames = async (
       }
     });
 
-    // Deduplicate: keep the most recent rename per old -> new pair
+    // Keep the newest occurrence of each old -> new rename pair.
     const seen = new Map<string, PluginRename>();
     for (const rename of renames) {
       const key = `${rename.oldName}->${rename.newName}`;
@@ -259,7 +256,7 @@ export const extractPluginDeletions = async (
     );
     if (!deleteResult.stdout.trim()) return [];
 
-    // Also get renames so we can exclude renamed files from deletions
+    // Renamed files must not produce removal migrations.
     const renames = await extractPluginRenames(repoPath, pluginsDirs, days);
     const renamedOldNamesLower = new Set(renames.map((r) => r.oldName.toLowerCase()));
 
@@ -279,7 +276,7 @@ export const extractPluginDeletions = async (
       }
     });
 
-    // Deduplicate: keep the most recent deletion per plugin name
+    // Keep the newest deletion for each plugin name.
     const seen = new Map<string, PluginDeletion>();
     for (const deletion of deletions) {
       const existing = seen.get(deletion.pluginName);

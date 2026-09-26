@@ -308,10 +308,8 @@ export const runGeneratePluginOptions = async (
     try {
       const pluginsDir = getPluginsDir(parsedParams.outputPath);
 
-      // Run migration extraction on both repos when git history is available.
-      // Nix package builds intentionally pass --skip-git-migrations so source
-      // fetches do not need leaveDotGit=true. CI can run this against ordinary
-      // git clones and commit the resulting deprecated.json/migrations.json.
+      // Nix builds skip Git migrations so fetched sources need no .git directory.
+      // CI extracts them from full clones and saves the migration JSON.
       const vencordMigrations = parsedParams.skipGitMigrations
         ? { renames: [], deletions: [] }
         : await extractMigrations(resolvedVencordPath, [parsedParams.vencordPluginsDir]);
@@ -347,20 +345,18 @@ export const runGeneratePluginOptions = async (
         ],
       };
 
-      // Collect setting renames from both parsed results
       const allSettingRenames = [
         ...(vencordResult.settingRenames ?? []),
         ...(equicordResult?.settingRenames ?? []),
       ];
 
-      // Combine all parsed plugins for the migrations generator
       const allPlugins = {
         ...categorized.generic,
         ...categorized.vencordOnly,
         ...categorized.equicordOnly,
       };
 
-      // Build set of active plugin names to filter false-positive removals
+      // Active plugins may appear deleted after a file move; exclude those removals.
       const activePluginNames = new Set(Object.keys(allPlugins));
 
       const deprecated = await updateDeprecatedPlugins(

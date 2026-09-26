@@ -688,9 +688,8 @@ export async function executeComponentSlice(
         });
       }
     });
-    // Loading Node and the isolated runner can be slow on cold or constrained
-    // builders. Start the caller-provided execution budget only after the
-    // runner is ready to evaluate the dependency slice.
+    // Exclude Node and runner startup from the execution budget so cold or slow
+    // builders still get the full time allowed for evaluating the slice.
     startupTimer = setTimeout(() => {
       child.kill('SIGKILL');
       finish({

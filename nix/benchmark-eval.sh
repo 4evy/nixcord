@@ -3,9 +3,8 @@
 
 # Compare representative Nixcord module evaluations with a Git revision.
 #
-# This follows nixpkgs' lib/fileset/benchmark.sh approach: perform one warmup,
-# interleave repeated measurements of the two trees, and compare structural
-# evaluator statistics in addition to wall-clock-sensitive CPU time.
+# Follow nixpkgs' lib/fileset/benchmark.sh: warm up once, alternate the two
+# trees, and compare evaluator statistics as well as CPU time.
 
 set -euo pipefail
 
@@ -168,11 +167,9 @@ if ((check_ifd)); then
   printf 'IFD-free evaluation passed.\n\n'
 fi
 
-# Force the module outputs users consume rather than timing a shallow module
-# import. The three scenarios cover Home Manager's file/activation output and
-# NixOS and nix-darwin activation-script outputs. Keeping this expression in
-# the benchmark also lets it evaluate an older worktree without depending on
-# benchmark files being present in that revision.
+# Evaluate Home Manager files and activation output, plus NixOS and Darwin
+# activation scripts. A shallow import would leave that work unevaluated.
+# Keep the expression here so it also runs against revisions without this benchmark.
 read -r -d '' expression <<'EOF' || true
 let
   source = builtins.getEnv "NIXCORD_EVAL_SOURCE";

@@ -1,4 +1,4 @@
-# Computes the shared state used by every platform module.
+# Build packages, settings, and file specifications for all platform modules.
 {
   config,
   lib,
@@ -93,7 +93,7 @@ let
       null
   );
 
-  # Merge user legcord settings with auto-configured mods and noBundleUpdates.
+  # Bundled Legcord mods must use the Nix-built files and skip bundle updates.
   legcordAttrs =
     let
       inherit (cfg) legcord;
@@ -183,8 +183,8 @@ let
     "NixcordQuickCSS.css"
     "NixcordThemes.css"
 
-    # GoofCord's default asset names. Seeding these into managedFiles lets its
-    # asset manager remove stale downloads when adopting an existing profile.
+    # Include GoofCord's default asset names so its asset manager can remove
+    # old downloads when Nixcord takes over an existing profile.
     "PreVencord.js"
     "PostVencord.js"
     "Vencord.js"

@@ -20,9 +20,8 @@ const themes = await Promise.all(
   )
 );
 
-// Legcord executes this bundle in Discord's page context. Seed the browser
-// stores before loading the mod so its initial settings and theme reads see
-// the declarative values, including on the first launch of a new profile.
+// Legcord runs this bundle in Discord's page. Seed settings and themes before
+// loading the mod so a new profile uses the configured values on its first read.
 async function bootstrap({ client, settings, quickCss, themes }: BootstrapConfig): Promise<void> {
   function writeStore(
     database: string,

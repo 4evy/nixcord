@@ -1,6 +1,6 @@
-// Nix owns the installed Discord host and module versions. Disable downloads,
-// but keep answering updater requests: the splash screen and desktop core wait
-// for completion events, so simply returning can leave startup stuck.
+// Nix supplies Discord and its modules, so disable updater downloads.
+// Still emit completion events: the splash screen and desktop core wait for
+// them and would otherwise hang at startup.
 // Checks report zero updates; installation requests check installed metadata.
 // Keep localModulesRoot/standaloneModules unset in stock build_info.json:
 // upstream isInstalled bypasses metadata/version checks in those modes.

@@ -42,9 +42,9 @@ type ReactRuntime = {
 type SliceExecutor = (runtime: Runtime, react: ReactRuntime) => Promise<void>;
 
 /**
- * This function is stringified and evaluated wholly inside a context with no host objects.
- * Keep it self-contained: closing over runner-module values would expose host-realm objects to
- * the component slice and make constructor-based context escapes possible.
+ * This function runs from its stringified source in an isolated context.
+ * Keep it self-contained: references to host objects would let the evaluated
+ * component escape through their constructors.
  */
 async function runSandboxed(payload: RunnerPayload, execute: SliceExecutor): Promise<string> {
   const safeStringify = JSON.stringify.bind(JSON);

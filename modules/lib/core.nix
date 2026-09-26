@@ -47,8 +47,8 @@ let
   };
 
   # mkNormalizeName :: string -> (string -> value -> string)
-  # Builds a context-specific converter for Nix option names using
-  # specialRenames, settingRenames, pluginRenames, upperNames, and lowerPluginTitles.
+  # Convert Nix option names to upstream JSON keys using the current plugin
+  # or settings context and the configured rename rules.
   mkNormalizeName =
     context:
     let
@@ -93,8 +93,7 @@ let
 
   mkVencordCfg = mkVencordCfgInner "";
 
-  # mkFinalPackages :: { cfg, vencord, equicord } -> { discord, discordBranches, vesktop, equibop, goofcord, dorion, legcord }
-  # Builds the final patched packages for each client.
+  # Apply the selected mods and package options to each client.
   mkFinalPackages =
     {
       cfg,

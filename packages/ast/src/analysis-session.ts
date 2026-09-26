@@ -18,8 +18,8 @@ export interface AnalysisSession {
 }
 
 /**
- * Creates a fully-loaded, immutable analysis view. Callers provide the complete file set up front;
- * adding or removing files after this function returns is deliberately not part of the API.
+ * Load the complete file set into an immutable analysis view.
+ * To add or remove files, create a new session.
  */
 export async function createAnalysisSession(
   options: AnalysisSessionOptions
