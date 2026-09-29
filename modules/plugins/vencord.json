@@ -357,6 +357,10 @@
     "description": "Puts your favorite emoji first in the emoji autocomplete. (Vencord-only)",
     "settings": {}
   },
+  "fixDiscordCss": {
+    "description": "Fixes Discord's css lag (Vencord-only)",
+    "settings": {}
+  },
   "fixYoutubeEmbeds": {
     "description": "Bypasses youtube videos being blocked from display on Discord (for example by UMG) (Vencord-only)",
     "settings": {}

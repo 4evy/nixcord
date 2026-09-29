@@ -110,6 +110,7 @@
     "fileUpload": "FileUpload",
     "findReply": "FindReply",
     "fixCodeblockGap": "FixCodeblockGap",
+    "fixDiscordCss": "FixDiscordCss",
     "fixFileExtensions": "FixFileExtensions",
     "fixImagesQuality": "FixImagesQuality",
     "fixSpotifyEmbeds": "FixSpotifyEmbeds",

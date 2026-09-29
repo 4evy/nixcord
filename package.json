@@ -39,7 +39,7 @@
     "equicord": "https://github.com/Equicord/Equicord/archive/c507c762b696b90a946df57f30f63ff68da6b03f.tar.gz",
     "fallow": "3.29.0",
     "typescript": "npm:@typescript/typescript6@6.0.2",
-    "vencord": "https://github.com/Vendicated/Vencord/archive/a581197a274d96d29d7c5a8989410acb53320029.tar.gz",
+    "vencord": "https://github.com/Vendicated/Vencord/archive/7f0c10cc29fd789f2f4828ae3dc947623e837920.tar.gz",
     "vite": "8.3.1",
     "vitest": "5.0.2"
   },
