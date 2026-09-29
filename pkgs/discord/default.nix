@@ -44,13 +44,16 @@ let
   };
 
   basePackage = variantPackages.${branch} or null;
-  basePackageOverride = if basePackage != null then basePackage.override or null else null;
+  # Newer nixpkgs branch packages forward arguments through a variadic wrapper
+  # Inspect the stable package to discover the shared package interface
+  basePackageOverride = discord.override or null;
   basePackageOverrideArgs =
     if lib.trivial.isFunction basePackageOverride then
       lib.trivial.functionArgs basePackageOverride
     else
       { };
   basePackageSupportsFHSEnv = basePackageOverrideArgs ? useFHSEnv;
+  basePackageSupportsSource = basePackageOverrideArgs ? source;
   binaryName =
     if stdenvNoCC.hostPlatform.isLinux then
       {
@@ -232,13 +235,13 @@ let
 
   overrideArgs = {
     inherit
-      source
       withVencord
       withEquicord
       withOpenASAR
       ;
     commandLineArgs = if stdenvNoCC.hostPlatform.isDarwin then "" else commandLineArgsString;
   }
+  // lib.attrsets.optionalAttrs basePackageSupportsSource { inherit source; }
   // lib.attrsets.optionalAttrs (vencord != null) { inherit vencord; }
   // lib.attrsets.optionalAttrs (equicord != null) { inherit equicord; }
   // lib.attrsets.optionalAttrs (openasar != null) {
@@ -250,7 +253,17 @@ let
     useFHSEnv = false;
   };
 
-  package = basePackage.override overrideArgs;
+  configuredPackage = basePackage.override overrideArgs;
+  # The metadata-based wrapper no longer accepts source, but its underlying
+  # platform package does
+  package =
+    if basePackageSupportsSource then
+      configuredPackage
+    else
+      configuredPackage.unwrappedDiscord.override {
+        inherit source moduleSrcs;
+        stageModules = lib.meta.getExe stageModules;
+      };
   darwinSigningPython = python3.withPackages (ps: [ ps.pyyaml ]);
 
 in
@@ -282,6 +295,7 @@ package.overrideAttrs (
         moduleSrcs
         moduleVersions
         ;
+      stageModules = lib.meta.getExe stageModules;
       nixcordCommandLineArgsList = true;
       nixcordUsesFHSEnv = false;
       nixcordKrispPatch = hasKrispModule;
