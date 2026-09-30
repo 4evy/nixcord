@@ -298,6 +298,10 @@
     "description": "Removes the gap between codeblocks and text below it (Shared between Vencord and Equicord)",
     "settings": {}
   },
+  "fixDiscordCss": {
+    "description": "Fixes Discord's css lag (Shared between Vencord and Equicord)",
+    "settings": {}
+  },
   "fixImagesQuality": {
     "description": "Improves quality of images by loading them at their original resolution (Shared between Vencord and Equicord)",
     "settings": {
