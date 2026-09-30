@@ -4,6 +4,7 @@
   stdenv,
   buildNpmPackage,
   fetchFromGitHub,
+  patchelf,
   autoPatchelfHook,
   callPackage,
   patch,
@@ -32,6 +33,7 @@ let
     version = npmDepsVersion;
     inherit src;
     inherit nodejs npmDepsHash;
+    nativeBuildInputs = [ patchelf ];
     patches = [ nodeBuildPatch ];
     postPatch = "cp ${./package-lock.json} package-lock.json";
     # arrpc still declares a TypeScript 5 peer.
