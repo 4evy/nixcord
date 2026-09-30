@@ -7,6 +7,7 @@
 }:
 let
   pnpm = callPackage ../pnpm { };
+  fetchDeps = callPackage ../pnpm/fetch-deps.nix { inherit fetchPnpmDeps; };
   version = "1.15.9-2026-09-29";
   rev = "7f0c10cc29fd789f2f4828ae3dc947623e837920";
   hash = "sha256-LuIwFUAJOoV8Su0g1tvhvXhMEJbkpM2BCCOWzQR4JIA=";
@@ -33,7 +34,7 @@ in
         patches
         postPatch
         ;
-      pnpmDeps = fetchPnpmDeps {
+      pnpmDeps = fetchDeps {
         inherit (oldAttrs) pname;
         inherit
           pnpm
