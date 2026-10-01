@@ -18,14 +18,14 @@
 }:
 let
   nodejs = callPackage ../../nix/nodejs.nix { };
-  npmDepsVersion = "2.3.0";
+  npmDepsVersion = "2.3.1";
   src = fetchFromGitHub {
     owner = "Milkshiift";
     repo = "GoofCord";
     tag = "v${npmDepsVersion}";
-    hash = "sha256-cg9NVL/dPIQ9xyMrUmWd42HxEsTSnhUGiqB7qaU2LuQ=";
+    hash = "sha256-958TIiBsXYTfYaQdNKeVJspdSE1vIYMX/wScfqekTBU=";
   };
-  npmDepsHash = "sha256-Zdz7ww8umPb/g/7gTHCZetAt9sOr/pCqXWHG6y5Ol3k=";
+  npmDepsHash = "sha256-QXRgCs8D0xKtlueaJddnlFsaRR41a6WAfQvfcwO0X9g=";
   nodeBuildPatch = ./node-build.patch;
 
   nodeModules = buildNpmPackage {
@@ -108,7 +108,19 @@ goofcord.overrideAttrs (
       patchShebangs --build node_modules
       runHook postConfigure
     '';
-    buildPhase = builtins.replaceStrings [ "bun run build" ] [ "npm run build" ] old.buildPhase;
+    buildPhase =
+      builtins.replaceStrings
+        [
+          "bun run build"
+          "node node_modules/electron-builder/out/cli/cli.js"
+          "-c.npmRebuild=false"
+        ]
+        [
+          "npm run build"
+          "node_modules/.bin/electron-builder"
+          "-c.nativeModules.npmRebuild=false"
+        ]
+        old.buildPhase;
     meta = (old.meta or { }) // {
       platforms = lib.platforms.linux ++ [ "aarch64-darwin" ];
     };

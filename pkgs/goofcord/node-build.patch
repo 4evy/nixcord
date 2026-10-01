@@ -299,7 +299,7 @@
  }
 --- a/electron-builder.ts
 +++ b/electron-builder.ts
-@@ -85,7 +85,7 @@
+@@ -87,7 +87,7 @@
  		},
  	],
  	beforePack: async (context) => {
@@ -310,7 +310,7 @@
  		console.log(output);
 --- a/package.json
 +++ b/package.json
-@@ -15,8 +15,8 @@
+@@ -16,8 +16,8 @@
  	"type": "module",
  	"main": "ts-out/main.js",
  	"scripts": {
@@ -321,7 +321,7 @@
  		"packageLinux": "electron-builder --linux",
  		"packageWindows": "electron-builder --win",
  		"packageMac": "electron-builder --mac",
-@@ -26,27 +26,25 @@
+@@ -27,14 +27,14 @@
  		"check": "tsc"
  	},
  	"dependencies": {
@@ -330,33 +330,24 @@
 +		"arrpc": "https://github.com/Milkshiift/arrpc/archive/8b2b3fb7c64f1ba050d35620afb6bc3a9032ef5b.tar.gz",
 +		"electron-sync-store": "https://github.com/Milkshiift/electron-sync-store/archive/17fb5bc76dfa4822459dafff997f0e8878c51600.tar.gz",
  		"picocolors": "1.1.1",
--		"preact": "^10.29.7",
+ 		"preact": "^11.0.0",
 -		"stegcloak": "github:Milkshiift/stegcloak-rs"
-+		"preact": "^11.0.0",
 +		"stegcloak": "https://github.com/Milkshiift/stegcloak-rs/archive/847c39e7ce790bfb491259c515c190b6d44431d9.tar.gz"
  	},
  	"devDependencies": {
--		"@types/bun": "1.3.14",
--		"@types/node": "26.1.1",
--		"@vencord/types": "1.14.15",
--		"electron": "43.1.1",
+-		"@types/bun": "1.4.2",
 +		"esbuild": "0.28.2",
-+		"@types/node": "26.6.3",
-+		"@vencord/types": "1.15.1",
-+		"electron": "44.5.1",
- 		"electron-builder": "26.15.3",
--		"oxfmt": "^0.59.0",
--		"oxlint": "^1.74.0",
--		"oxlint-tsgolint": "^0.25.0",
-+		"oxfmt": "^0.71.0",
-+		"oxlint": "^1.86.0",
-+		"oxlint-tsgolint": "^7.0.2003",
+ 		"@types/node": "26.6.3",
+ 		"@vencord/types": "1.15.1",
+ 		"electron": "44.5.1",
+@@ -44,10 +44,8 @@
+ 		"oxlint-tsgolint": "^7.0.2003",
  		"typescript": "7.0.2",
 -		"typescriptOld": "npm:@typescript/typescript6@^6.0.2"
 -	},
 -	"optionalDependencies": {
--		"patchcord": "github:Milkshiift/patchcord",
--		"goofbind": "github:Milkshiift/goofbind"
+-		"goofbind": "github:Milkshiift/goofbind",
+-		"patchcord": "github:Milkshiift/patchcord"
 +		"typescriptOld": "npm:@typescript/typescript6@^6.0.2",
 +		"patchcord": "https://github.com/Milkshiift/patchcord/archive/cb0d3d48f0c217e9621c48c576ec340fdfd9b9b7.tar.gz",
 +		"goofbind": "https://github.com/Milkshiift/goofbind/archive/703237071f61d1ceede8076b0015488773a7c4ae.tar.gz"
