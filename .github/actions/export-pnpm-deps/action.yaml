@@ -1,0 +1,37 @@
+name: Export pnpm dependencies
+description: Build and upload the portable plugin dependency stores
+
+runs:
+  using: composite
+  steps:
+    - name: Export pnpm dependency stores
+      shell: bash
+      env:
+        NIXPKGS_EXPR: >-
+          let flake = builtins.getFlake (toString ./.);
+              pkgs = import flake.inputs.nixpkgs-nixcord {
+                system = builtins.currentSystem;
+                config.allowUnfree = true;
+              };
+          in
+      run: |
+        set -euo pipefail
+        # Realize both stores together so Nix can schedule them in parallel
+        nix build --no-link --print-out-paths --impure --expr \
+          "$NIXPKGS_EXPR"' map (path: (pkgs.callPackage path {}).pnpmDeps) [
+            ./pkgs/equicord ./pkgs/vencord
+          ]' > pnpm-deps.paths
+        mapfile -t paths < pnpm-deps.paths
+        if [[ ${#paths[@]} -ne 2 ]]; then
+          echo "::error::Expected exactly two plugin dependency stores"
+          exit 1
+        fi
+        nix-store --export "${paths[@]}" > pnpm-deps.nar
+
+    - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: pnpm-deps
+        path: pnpm-deps.nar
+        if-no-files-found: error
+        compression-level: 0
+        retention-days: 1

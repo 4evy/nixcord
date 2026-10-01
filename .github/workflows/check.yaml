@@ -97,6 +97,7 @@ jobs:
 
   prepare-pnpm-deps:
     name: Prepare pnpm dependencies
+    needs: [workflow-quality, javascript, nix-quality, renovate-config]
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
@@ -109,32 +110,7 @@ jobs:
 
       - uses: $/.github/actions/install-nix
 
-      - name: Export pnpm dependency stores
-        env:
-          NIXPKGS_EXPR: >-
-            let flake = builtins.getFlake (toString ./.);
-                pkgs = import flake.inputs.nixpkgs-nixcord {
-                  system = builtins.currentSystem;
-                  config.allowUnfree = true;
-                };
-            in
-        run: |
-          set -euo pipefail
-          # Realize both stores together so Nix can schedule them in parallel
-          nix build --no-link --print-out-paths --impure --expr \
-            "$NIXPKGS_EXPR"' map (path: (pkgs.callPackage path {}).pnpmDeps) [
-              ./pkgs/equicord ./pkgs/vencord
-            ]' > pnpm-deps.paths
-          mapfile -t paths < pnpm-deps.paths
-          nix-store --export "${paths[@]}" > pnpm-deps.nar
-
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: pnpm-deps
-          path: pnpm-deps.nar
-          if-no-files-found: error
-          compression-level: 0
-          retention-days: 1
+      - uses: $/.github/actions/export-pnpm-deps
 
   nix:
     name: Nix
