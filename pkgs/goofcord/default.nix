@@ -25,7 +25,7 @@ let
     tag = "v${npmDepsVersion}";
     hash = "sha256-cg9NVL/dPIQ9xyMrUmWd42HxEsTSnhUGiqB7qaU2LuQ=";
   };
-  npmDepsHash = "sha256-U5PWC8koQ5LIeRZs/8ZrkyeRXHdxtjIZvxCxW//y788=";
+  npmDepsHash = "sha256-Zdz7ww8umPb/g/7gTHCZetAt9sOr/pCqXWHG6y5Ol3k=";
   nodeBuildPatch = ./node-build.patch;
 
   nodeModules = buildNpmPackage {

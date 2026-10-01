@@ -321,7 +321,7 @@
  		"packageLinux": "electron-builder --linux",
  		"packageWindows": "electron-builder --win",
  		"packageMac": "electron-builder --mac",
-@@ -26,14 +26,14 @@
+@@ -26,27 +26,25 @@
  		"check": "tsc"
  	},
  	"dependencies": {
@@ -330,19 +330,27 @@
 +		"arrpc": "https://github.com/Milkshiift/arrpc/archive/8b2b3fb7c64f1ba050d35620afb6bc3a9032ef5b.tar.gz",
 +		"electron-sync-store": "https://github.com/Milkshiift/electron-sync-store/archive/17fb5bc76dfa4822459dafff997f0e8878c51600.tar.gz",
  		"picocolors": "1.1.1",
- 		"preact": "^10.29.7",
+-		"preact": "^10.29.7",
 -		"stegcloak": "github:Milkshiift/stegcloak-rs"
++		"preact": "^11.0.0",
 +		"stegcloak": "https://github.com/Milkshiift/stegcloak-rs/archive/847c39e7ce790bfb491259c515c190b6d44431d9.tar.gz"
  	},
  	"devDependencies": {
 -		"@types/bun": "1.3.14",
+-		"@types/node": "26.1.1",
+-		"@vencord/types": "1.14.15",
+-		"electron": "43.1.1",
 +		"esbuild": "0.28.2",
- 		"@types/node": "26.1.1",
- 		"@vencord/types": "1.14.15",
- 		"electron": "43.1.1",
-@@ -42,11 +42,9 @@
- 		"oxlint": "^1.74.0",
- 		"oxlint-tsgolint": "^0.25.0",
++		"@types/node": "26.6.3",
++		"@vencord/types": "1.15.1",
++		"electron": "44.5.1",
+ 		"electron-builder": "26.15.3",
+-		"oxfmt": "^0.59.0",
+-		"oxlint": "^1.74.0",
+-		"oxlint-tsgolint": "^0.25.0",
++		"oxfmt": "^0.71.0",
++		"oxlint": "^1.86.0",
++		"oxlint-tsgolint": "^7.0.2003",
  		"typescript": "7.0.2",
 -		"typescriptOld": "npm:@typescript/typescript6@^6.0.2"
 -	},
