@@ -118,13 +118,6 @@ jobs:
           # Stop this run so dependent jobs cannot continue with stale sources
           exit 1
 
-      - name: Check refreshed head commit
-        if: steps.commit.outcome == 'success' && steps.commit.outputs.commit-hash != ''
-        env:
-          GH_TOKEN: ${{ github.token }}
-          REF_NAME: ${{ github.ref_name }}
-        run: gh workflow run check.yaml --ref "$REF_NAME"
-
       - name: Rebuild published documentation
         if: >-
           steps.commit.outcome == 'success' && steps.commit.outputs.commit-hash != '' &&

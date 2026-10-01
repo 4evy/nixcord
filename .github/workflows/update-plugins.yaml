@@ -298,3 +298,30 @@ jobs:
     with:
       kind: plugins
       base-sha: ${{ needs.update-plugins.outputs.base-sha }}
+
+  check-updated-head:
+    name: Check the final updated revision
+    needs: [update-discord, check-upstream, update-plugins, verify-platforms, publish]
+    # A Discord commit still needs checks if plugin verification fails or is cancelled
+    if: ${{ always() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: write # Bot commits do not trigger push workflows
+    steps:
+      - name: Dispatch checks after all update stages finish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          REF_NAME: ${{ github.ref_name }}
+          START_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          ref=$(jq -rn --arg ref "$REF_NAME" '$ref | @uri')
+          head=$(gh api "repos/$GH_REPO/git/ref/heads/$ref" --jq .object.sha)
+          if [[ "$head" == "$START_SHA" ]]; then
+            echo "::notice::No new revision to check"
+            exit 0
+          fi
+          gh workflow run check.yaml --ref "$REF_NAME"
