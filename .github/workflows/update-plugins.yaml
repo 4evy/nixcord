@@ -22,6 +22,7 @@ on:
       - "pkgs/generate-options/**"
       - "pkgs/discord/**"
       - "pkgs/plugin-update.nix"
+      - "pkgs/pnpm/**"
       - "pkgs/equicord/default.nix"
       - "pkgs/vencord/default.nix"
       - "pkgs/goofcord/**"
