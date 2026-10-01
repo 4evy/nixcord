@@ -1,9 +1,9 @@
 {
   "private": true,
   "devDependencies": {
-    "renovate": "44.115.10"
+    "renovate": "44.126.0"
   },
   "engines": {
-    "node": "^24.11.0"
+    "node": "^24.21.0"
   }
 }
