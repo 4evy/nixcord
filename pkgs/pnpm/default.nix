@@ -6,23 +6,23 @@
   pnpm_12,
 }:
 let
-  version = "12.6.0";
+  version = "12.8.1";
   sources = {
     x86_64-linux = {
       platform = "linux-x64-musl";
-      hash = "bf23d242a6c7a4d42b21bf1d93bff9d6a473cf8b6a7a990c6ed3094228513048";
+      hash = "f0a2db13d0a1b63c0053a5ddcfbf5c454b040e7ef54ca8771750e2cb55b86693";
     };
     aarch64-linux = {
       platform = "linux-arm64-musl";
-      hash = "61e5a2b9aa8c1ebb73ea22203021531f88b8aff9499b68be03f695d9377928c1";
+      hash = "27ad77bdf5368c1747f46fff0d0ee213ed6185aaf69e13342964f5f7cc3f8714";
     };
     aarch64-darwin = {
       platform = "darwin-arm64";
-      hash = "1030f38e14fa2e6c87fe6ab0313a3bf3b794a961504f4439bad2ca2110d3583e";
+      hash = "8eeeae4cd714b2f1755750d303f5b1bcfe23d95ed7245536305d0c3877c5ce41";
     };
     x86_64-darwin = {
       platform = "darwin-x64";
-      hash = "baee033929fd76bdf0193ea35aad6efa7ac2931b96f2780328d244c70174306a";
+      hash = "8cbc5a840b4bcd8c0da878e6616a832d88e98a8acbedf1736310b395467f4a13";
     };
   };
   source = sources.${stdenvNoCC.hostPlatform.system};
