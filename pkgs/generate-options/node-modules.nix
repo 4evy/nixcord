@@ -2,6 +2,6 @@
 fetchNpmDeps {
   name = "nixcord-npm-deps";
   src = import ../../nix/workspace-source.nix { inherit lib; };
-  hash = "sha256-Iw0L9ilGZ9CJI5Bsum6s2VW5Tfi2l/oCpCXFrUcFO4o=";
+  hash = "sha256-fZ0kvIs7mwnU8oiO6cjjrI3GN9ynkanpvGhP71eh42g=";
   fetcherVersion = 2;
 }

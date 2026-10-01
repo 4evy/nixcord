@@ -32,19 +32,19 @@
     "build:packages": "npm run build --workspace packages && tsc --build --emitDeclarationOnly --force"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.14",
+    "@biomejs/biome": "2.5.15",
     "@types/fs-extra": "11.0.4",
     "@types/node": "26.6.3",
     "@typescript/native": "npm:typescript@7.0.2",
     "equicord": "https://github.com/Equicord/Equicord/archive/ab9b98472acb281cc7ec4d2c7a612219993bb3cb.tar.gz",
-    "fallow": "3.29.0",
+    "fallow": "3.31.0",
     "typescript": "npm:@typescript/typescript6@6.0.2",
     "vencord": "https://github.com/Vendicated/Vencord/archive/7f0c10cc29fd789f2f4828ae3dc947623e837920.tar.gz",
     "vite": "8.3.1",
-    "vitest": "5.0.2"
+    "vitest": "5.0.3"
   },
   "engines": {
     "node": "26.10.0"
   },
-  "packageManager": "npm@12.1.0"
+  "packageManager": "npm@12.2.0"
 }

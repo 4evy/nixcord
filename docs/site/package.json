@@ -16,7 +16,7 @@
     "generate-social-preview": "npm run generate-logo && node scripts/generate-social-preview.ts"
   },
   "dependencies": {
-    "@lucide/svelte": "^1.48.0",
+    "@lucide/svelte": "^1.49.0",
     "@sveltejs/vite-plugin-svelte": "^7.3.1",
     "@tailwindcss/vite": "^4.3.3",
     "highlight.js": "^11.12.0",

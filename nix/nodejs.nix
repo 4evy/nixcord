@@ -16,7 +16,7 @@ let
     version = npmVersion;
     src = fetchurl {
       url = "https://registry.npmjs.org/npm/-/npm-${npmVersion}.tgz";
-      hash = "sha256-8I5nTjHrmZMd8il6pVwnS/m+vZBnna1X/b6Wg5B6MyU=";
+      hash = "sha256-Zma0iBazm4bD/rrHtRpO5N5sXKWJw4KtgAS2sRP4Znc=";
     };
     nativeBuildInputs = lib.optional stdenvNoCC.hostPlatform.isDarwin patchutils;
     buildInputs = [ nodejs-slim_26 ];
