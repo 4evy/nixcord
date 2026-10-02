@@ -91,13 +91,20 @@ let
       "$out/Applications/${binaryName}.app/Contents/Resources";
 
   # TypeScript 7 has no compatible compiler API. Use the latest 6.x API for
-  # the patcher, independently of the repository's native tsc CLI.
+  # the stock Discord bundle patcher, independently of the repository's native
+  # tsc CLI
   typescript = fetchzip {
     name = "typescript-6.0.3";
     url = "https://registry.npmjs.org/typescript/-/typescript-6.0.3.tgz";
     hash = "sha256-3+cPVJRyySKkVrRsOld6ShMzHwOP7UFFy0mrq3ZoBKA=";
   };
-  patchUpdater = "${lib.meta.getExe nodejs} ${./scripts/patch-updater.cts} ${typescript}/lib/typescript.js";
+  patchStockUpdater = writeShellApplication {
+    name = "patch-discord-updater";
+    text = ''
+      exec ${lib.meta.getExe nodejs} ${./scripts/patch-updater.cts} \
+        ${typescript}/lib/typescript.js "$@"
+    '';
+  };
 
   sourceSet = import ./lib/sources.nix {
     inherit
@@ -211,26 +218,10 @@ let
     else
       "require('path').join(process.env.DISCORD_USER_DATA_DIR || require('path').join(require('os').userInfo().homedir, 'Library', 'Application Support'), '${configDirName}', '${version}', 'modules', 'discord_krisp')";
 
-  pinnedOpenasar = openasar.overrideAttrs (old: {
-    postPatch = (old.postPatch or "") + ''
-      # Match stock Discord: the environment names the base, not one branch's
-      # profile. Staging, Krisp, and the declarative settings use that contract.
-      substituteInPlace src/paths.js \
-        --replace-fail \
-          "process.env.DISCORD_USER_DATA_DIR ?? join(app.getPath('appData'), appDir)" \
-          "join(process.env.DISCORD_USER_DATA_DIR ?? app.getPath('appData'), appDir)"
-      substituteInPlace src/bootstrap.js \
-        --replace-fail \
-          "if (Constants.USE_NEW_UPDATER && updater.tryInitUpdater(" \
-          "if (!buildInfo.disableUpdater && Constants.USE_NEW_UPDATER && updater.tryInitUpdater("
-      # Match stock Discord's Linux workaround for Wayland startup hangs.
-      # Add it to OpenASAR's flags so its preset cannot overwrite the switch.
-      substituteInPlace src/cmdSwitches.js \
-        --replace-fail \
-          "let c = {};" \
-          "if (process.platform === 'linux') flags.push('--disable-features=WaylandWpColorManagerV1'); let c = {};"
-      ${patchUpdater} openasar src/updater/moduleUpdater.js
-    '';
+  # Use Nixcord's data directory and staged modules, preserve stock Discord's
+  # Wayland workaround, and keep updater completion events compatible
+  patchedOpenasar = openasar.overrideAttrs (old: {
+    patches = (old.patches or [ ]) ++ [ ./patches/openasar.patch ];
   });
 
   overrideArgs = {
@@ -245,7 +236,7 @@ let
   // lib.attrsets.optionalAttrs (vencord != null) { inherit vencord; }
   // lib.attrsets.optionalAttrs (equicord != null) { inherit equicord; }
   // lib.attrsets.optionalAttrs (openasar != null) {
-    openasar = if withOpenASAR then pinnedOpenasar else openasar;
+    openasar = if withOpenASAR then patchedOpenasar else openasar;
   }
   // lib.attrsets.optionalAttrs (stdenvNoCC.hostPlatform.isLinux && basePackageSupportsFHSEnv) {
     # Keep nixcord's patched, non-FHS package even when nixpkgs defaults to an
@@ -321,7 +312,7 @@ package.overrideAttrs (
       + lib.strings.optionalString (!withOpenASAR) ''
         host_asar="${resourcesDir}/${if withVencord || withEquicord then "_app.asar" else "app.asar"}"
         ${lib.meta.getExe asar} extract "$host_asar" nixcord-host-asar
-        ${patchUpdater} stock nixcord-host-asar/bundle.js
+        ${lib.meta.getExe patchStockUpdater} nixcord-host-asar/bundle.js
         rm "$host_asar"
         ${lib.meta.getExe asar} pack nixcord-host-asar "$host_asar"
         rm -r nixcord-host-asar

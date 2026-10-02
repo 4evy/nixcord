@@ -1,0 +1,123 @@
+diff --git a/src/bootstrap.js b/src/bootstrap.js
+--- a/src/bootstrap.js
++++ b/src/bootstrap.js
+@@ -113,6 +113,6 @@ const startUpdate = () => {
+
+   const startMin = process.argv?.includes?.('--start-minimized');
+-  if (Constants.USE_NEW_UPDATER && updater.tryInitUpdater(buildInfo, Constants.NEW_UPDATE_ENDPOINT, Constants.USE_RUST_BSPATCH)) {
++  if (!buildInfo.disableUpdater && Constants.USE_NEW_UPDATER && updater.tryInitUpdater(buildInfo, Constants.NEW_UPDATE_ENDPOINT, Constants.USE_RUST_BSPATCH)) {
+     const inst = updater.getUpdater();
+
+     inst.on('host-updated', () => autoStart.update(() => {}));
+diff --git a/src/cmdSwitches.js b/src/cmdSwitches.js
+--- a/src/cmdSwitches.js
++++ b/src/cmdSwitches.js
+@@ -14,6 +14,7 @@ module.exports = () => {
+   if (process.platform === 'linux' && settings.get('openH264Enabled', true))
+     flags.push('--enable-libopenh264', '--openh264-library-path=' + join(paths.getAssetCachePath(), 'openh264', 'libopenh264-2.5.1-linux64.7.so'));
+
++  if (process.platform === 'linux') flags.push('--disable-features=WaylandWpColorManagerV1');
+   let c = {};
+   for (const x of flags) {
+     if (!x) continue;
+diff --git a/src/paths.js b/src/paths.js
+--- a/src/paths.js
++++ b/src/paths.js
+@@ -18,7 +18,7 @@ exports.cleanOldVersions = () => {}; // stub for now
+
+ exports.init = () => {
+   const appDir = 'discord' + (buildInfo.releaseChannel === 'stable' ? '' : buildInfo.releaseChannel); // Clean channel naming up later to util?
+-  userData = process.env.DISCORD_USER_DATA_DIR ?? join(app.getPath('appData'), appDir);
++  userData = join(process.env.DISCORD_USER_DATA_DIR ?? app.getPath('appData'), appDir);
+   userDataVersioned = join(userData, buildInfo.version);
+
+   exeDir = dirname(app.getPath('exe'));
+diff --git a/src/updater/moduleUpdater.js b/src/updater/moduleUpdater.js
+--- a/src/updater/moduleUpdater.js
++++ b/src/updater/moduleUpdater.js
+@@ -49,8 +49,8 @@ const redirs = url => new Promise(res => get(url, r => { // Minimal wrapper arou
+
+ exports.init = (endpoint, { releaseChannel, version }) => {
+   const local = buildInfo.localModulesRoot;
+-  skipHost = settings.get('SKIP_HOST_UPDATE');
+-  skipModule = settings.get('SKIP_MODULE_UPDATE') || local != null;
++  skipHost = true;
++  skipModule = true;
+
+   basePath = local != null ? local : join(paths.getUserDataVersioned(), 'modules');
+   manifestPath = join(basePath, 'installed.json');
+@@ -243,47 +243,38 @@ const finishInstall = (name, ver, success) => {
+ };
+
+
+-exports.checkForUpdates = async () => {
+-  log('Modules', 'Checking');
+-
+-  const done = (e = {}) => events.emit('checked', e);
+-
+-  if (last > Date.now() - 10000) return done();
+-
+-  let p = [];
+-  if (!skipHost) {
+-    p.push(new Promise((res) => host.once('update-not-available', res)));
+-    host.checkForUpdates();
+-  }
+-
+-  if (!skipModule) p.push(checkModules());
+-
+-  done({
+-    count: (await Promise.all(p)).pop()
++exports.checkForUpdates = async () => {
++  // initOld checks before launchSplash creates the window. Yield so its
++  // completion handler can launch the main window instead of returning
++  await Promise.resolve();
++  events.emit(exports.CHECKING_FOR_UPDATES);
++  events.emit(exports.UPDATE_CHECK_FINISHED, {
++    succeeded: true, updateCount: 0, manualRequired: false
+   });
++  // OpenASAR's splash uses its own completion event
++  events.emit('checked', { failed: false, count: 0 });
+ };
+
+ exports.quitAndInstallUpdates = () => host.quitAndInstall();
+
+-exports.isInstalled = (n, v) => installed[n] && (skipModule || !(v && installed[n].installedVersion !== v));
++exports.isInstalled = (name, version) =>
++  Object.hasOwn(installed, name) && installed[name].installedVersion > 0
++  && (version == null || installed[name].installedVersion === version);
+ exports.getInstalled = () => ({ ...installed });
+
+ const commitManifest = () => fs.writeFileSync(manifestPath, JSON.stringify(installed, null, 2));
+
+-exports.install = (name, def, { version } = {}) => {
+-  if (exports.isInstalled(name, version)) {
+-    if (!def) events.emit('installed-module', {
+-      name,
+-      succeeded: true
+-    });
+-
+-    return;
+-  }
+-
+-  if (def) {
+-    installed[name] = { installedVersion: 0 };
+-    return commitManifest();
+-  }
+-
+-  downloadModule(name, version ?? remote[name] ?? 0);
++exports.install = (name, defer, options) => {
++  if (defer) return;
++  process.nextTick(() => events.emit('installed-module', {
++    type: 'installed-module', name, current: 1, total: 1,
++    succeeded: exports.isInstalled(name, options?.version)
++  }));
+-};
+\ No newline at end of file
++};
++
++// Desktop core otherwise interprets event objects as positional arguments
++exports.supportsEventObjects = true;
++exports.CHECKING_FOR_UPDATES = 'checking-for-updates';
++exports.UPDATE_CHECK_FINISHED = 'update-check-finished';
++exports.DOWNLOADING_MODULE_PROGRESS = 'downloading-module-progress';
++exports.DOWNLOADING_MODULES_FINISHED = 'downloading-modules-finished';

@@ -1,28 +1,27 @@
-// Nix supplies Discord and its modules, so disable updater downloads.
+// Nix supplies Discord and its modules, so disable updater downloads
 // Still emit completion events: the splash screen and desktop core wait for
-// them and would otherwise hang at startup.
-// Checks report zero updates; installation requests check installed metadata.
+// them and would otherwise hang at startup
+// Checks report zero updates; installation requests check installed metadata
 // Keep localModulesRoot/standaloneModules unset in stock build_info.json:
-// upstream isInstalled bypasses metadata/version checks in those modes.
+// upstream isInstalled bypasses metadata/version checks in those modes
 //
 // Node strips the types; Nix supplies the compiler API by absolute store path:
-//   node patch-updater.cts <typescript.js> <stock|openasar> <extracted-file.js>
+//   node patch-updater.cts <typescript.js> <extracted-file.js>
 import type * as TS from 'typescript';
 
 const fs: typeof import('node:fs') = require('node:fs');
-const [compilerPath, mode, filename] = process.argv.slice(2);
-if (!compilerPath || !filename || (mode !== 'stock' && mode !== 'openasar')) {
-  throw new Error('Usage: patch-updater.cts <typescript.js> <stock|openasar> <file>');
+const [compilerPath, filename] = process.argv.slice(2);
+if (!compilerPath || !filename) {
+  throw new Error('Usage: patch-updater.cts <typescript.js> <extracted-file.js>');
 }
 const ts: typeof TS = require(compilerPath);
 
 type Predicate<T extends TS.Node> = (node: TS.Node) => node is T;
 type PatchPlan = {
   scope: TS.Node;
-  flags: Record<string, boolean>; // Inside exports.init.
+  flags: Record<string, boolean>;
   requiredExports?: readonly string[];
   exports: Record<string, string>;
-  append?: Record<string, string | boolean>;
 };
 
 function parse(name: string, source: string): TS.SourceFile {
@@ -84,87 +83,50 @@ function exported(root: TS.Node, name: string): TS.Expression {
   return value(root, `exports.${name}`);
 }
 
-// Selectors must match exactly once so upstream changes fail the build.
-const plans: Record<'stock' | 'openasar', () => PatchPlan> = {
-  stock: () => ({
-    // Webpack's numeric factory IDs change. Locate the object method containing
-    // this logger filename instead, then restrict export searches to it.
-    scope: one(
-      find(
-        file,
-        (node): node is TS.MethodDeclaration =>
-          ts.isMethodDeclaration(node) &&
-          ts.isObjectLiteralExpression(node.parent) &&
-          find(
-            node,
-            (child): child is TS.StringLiteral =>
-              ts.isStringLiteral(child) && child.text === 'legacyModulesUpdater.log'
-          ).length > 0
-      ),
-      'legacy updater factory'
+// Selectors must match exactly once so upstream changes fail the build
+const plan: PatchPlan = {
+  // Webpack's numeric factory IDs change. Locate the object method containing
+  // this logger filename instead, then restrict export searches to it
+  scope: one(
+    find(
+      file,
+      (node): node is TS.MethodDeclaration =>
+        ts.isMethodDeclaration(node) &&
+        ts.isObjectLiteralExpression(node.parent) &&
+        find(
+          node,
+          (child): child is TS.StringLiteral =>
+            ts.isStringLiteral(child) && child.text === 'legacyModulesUpdater.log'
+        ).length > 0
     ),
-    flags: { updatable: false, hostUpdatable: false },
-    requiredExports: ['isInstalled'],
-    exports: {
-      // Upstream leaves checkingForUpdates set when both paths are skipped.
-      // Complete every check without entering that state machine.
-      checkForUpdates: `function() {
-        exports.events.append({ type: exports.CHECKING_FOR_UPDATES });
-        exports.events.append({
-          type: exports.UPDATE_CHECK_FINISHED,
-          succeeded: true, updateCount: 0, manualRequired: false
-        });
-      }`,
-      // The !updatable branch leaves ensureModule unresolved. Report missing
-      // packaged versions as failures instead of attempting a download.
-      install: `function(name, defer, options) {
-        if (defer) return;
-        exports.events.append({
-          type: exports.INSTALLED_MODULE, name, current: 1, total: 1,
-          succeeded: Boolean(exports.isInstalled(name, options?.version))
-        });
-      }`,
-      // Never apply downloads left over from an unmanaged profile.
-      installPendingUpdates: `function() {
-        exports.events.append({ type: exports.NO_PENDING_UPDATES });
-      }`,
-    },
-  }),
-  openasar: () => ({
-    scope: file,
-    flags: { skipHost: true, skipModule: true },
-    exports: {
-      isInstalled: `(name, version) =>
-        Object.hasOwn(installed, name) && installed[name].installedVersion > 0
-        && (version == null || installed[name].installedVersion === version)`,
-      install: `(name, defer, options) => {
-        if (defer) return;
-        process.nextTick(() => events.emit('installed-module', {
-          type: 'installed-module', name, current: 1, total: 1,
-          succeeded: exports.isInstalled(name, options?.version)
-        }));
-      }`,
-      checkForUpdates: `async () => {
-        // initOld checks before launchSplash creates the window. Yield so its
-        // completion handler can launch the main window instead of returning.
-        await Promise.resolve();
-        events.emit(exports.CHECKING_FOR_UPDATES);
-        events.emit(exports.UPDATE_CHECK_FINISHED, {
-          succeeded: true, updateCount: 0, manualRequired: false
-        });
-        // OpenASAR's splash uses its own completion event.
-        events.emit('checked', { failed: false, count: 0 });
-      }`,
-    },
-    // Desktop core otherwise interprets event objects as positional arguments.
-    append: {
-      supportsEventObjects: true,
-      CHECKING_FOR_UPDATES: 'checking-for-updates',
-      UPDATE_CHECK_FINISHED: 'update-check-finished',
-      DOWNLOADING_MODULE_PROGRESS: 'downloading-module-progress',
-      DOWNLOADING_MODULES_FINISHED: 'downloading-modules-finished',
-    },
-  }),
+    'legacy updater factory'
+  ),
+  flags: { updatable: false, hostUpdatable: false },
+  requiredExports: ['isInstalled'],
+  exports: {
+    // Upstream leaves checkingForUpdates set when both paths are skipped
+    // Complete every check without entering that state machine
+    checkForUpdates: `function() {
+      exports.events.append({ type: exports.CHECKING_FOR_UPDATES });
+      exports.events.append({
+        type: exports.UPDATE_CHECK_FINISHED,
+        succeeded: true, updateCount: 0, manualRequired: false
+      });
+    }`,
+    // The !updatable branch leaves ensureModule unresolved. Report missing
+    // packaged versions as failures instead of attempting a download
+    install: `function(name, defer, options) {
+      if (defer) return;
+      exports.events.append({
+        type: exports.INSTALLED_MODULE, name, current: 1, total: 1,
+        succeeded: Boolean(exports.isInstalled(name, options?.version))
+      });
+    }`,
+    // Never apply downloads left over from an unmanaged profile
+    installPendingUpdates: `function() {
+      exports.events.append({ type: exports.NO_PENDING_UPDATES });
+    }`,
+  },
 };
 
 function expression(source: string): TS.Expression {
@@ -184,15 +146,10 @@ function expression(source: string): TS.Expression {
   return result;
 }
 
-function literal(value: string | boolean): TS.Expression {
-  return typeof value === 'string'
-    ? ts.factory.createStringLiteral(value)
-    : value
-      ? ts.factory.createTrue()
-      : ts.factory.createFalse();
+function literal(value: boolean): TS.Expression {
+  return value ? ts.factory.createTrue() : ts.factory.createFalse();
 }
 
-const plan = plans[mode]();
 const replacements = new Map<TS.Node, TS.Expression>();
 const init = exported(plan.scope, 'init');
 for (const name of plan.requiredExports ?? []) exported(plan.scope, name);
@@ -202,14 +159,6 @@ for (const [name, enabled] of Object.entries(plan.flags)) {
 for (const [name, source] of Object.entries(plan.exports)) {
   replacements.set(exported(plan.scope, name), expression(source));
 }
-const additions = Object.entries(plan.append ?? {}).map(([name, value]) =>
-  ts.factory.createExpressionStatement(
-    ts.factory.createAssignment(
-      ts.factory.createPropertyAccessExpression(ts.factory.createIdentifier('exports'), name),
-      literal(value)
-    )
-  )
-);
 
 // Reject overlapping patches: replacing an outer function can hide a selected
 // node inside it, leaving that replacement unapplied.
@@ -225,14 +174,10 @@ const printer = ts.createPrinter(
     },
   }
 );
-const result = printer.printFile(
-  ts.factory.updateSourceFile(file, [...file.statements, ...additions])
-);
+const result = printer.printFile(file);
 if (remaining.size) throw new Error('Overlapping or unapplied updater patches');
 // Validate before writing. Syntax/selector checks cannot prove that an upstream
 // release still uses the same event protocol; inspect callers when updating it.
 parse(filename, result);
 fs.writeFileSync(filename, result);
-console.log(
-  `Patched ${mode} updater: ${replacements.size} expressions, ${additions.length} exports`
-);
+console.log(`Patched stock updater: ${replacements.size} expressions`);
