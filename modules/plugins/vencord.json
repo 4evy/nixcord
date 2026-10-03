@@ -134,6 +134,11 @@
   "customRpc": {
     "description": "Add a fully customisable Rich Presence (Game status) to your Discord profile (Vencord-only)",
     "settings": {
+      "enablePresence": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Whether to show the presence"
+      },
       "appId": {
         "type": "types.nullOr types.str",
         "default": null

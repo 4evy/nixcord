@@ -4009,6 +4009,17 @@
     {
       "from": [
         "CustomRPC",
+        "enablePresence"
+      ],
+      "to": [
+        "customRpc",
+        "enablePresence"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "CustomRPC",
         "endTime"
       ],
       "to": [
