@@ -80,12 +80,10 @@ stdenv.mkDerivation (
 
       extractDistro "$src" "$out/${builtins.dirOf layout.appDir}"
 
-      ${lib.concatStringsSep "\n" (
-        lib.mapAttrsToList (name: src: ''
-          mkdir -p "$out/${layout.modulesDir}/${name}"
-          extractDistro ${src} "$out/${layout.modulesDir}/${name}"
-        '') moduleSrcs
-      )}
+      ${lib.strings.concatMapAttrsStringSep "\n" (name: src: ''
+        mkdir -p "$out/${layout.modulesDir}/${name}"
+        extractDistro ${src} "$out/${layout.modulesDir}/${name}"
+      '') moduleSrcs}
 
       # Finder and the CLI enter the native launcher installed during fixup
       mkdir -p "$out/bin"

@@ -157,12 +157,10 @@ stdenv.mkDerivation (
       brotli -d < $src | tar xf - --strip-components=1 -C "$out/${layout.appDir}"
       chmod +x "$out/${layout.executable}"
 
-      ${lib.concatStringsSep "\n" (
-        lib.mapAttrsToList (name: src: ''
-          mkdir -p "$out/${layout.modulesDir}/${name}"
-          brotli -d < ${src} | tar xf - --strip-components=1 -C "$out/${layout.modulesDir}/${name}"
-        '') moduleSrcs
-      )}
+      ${lib.strings.concatMapAttrsStringSep "\n" (name: src: ''
+        mkdir -p "$out/${layout.modulesDir}/${name}"
+        brotli -d < ${src} | tar xf - --strip-components=1 -C "$out/${layout.modulesDir}/${name}"
+      '') moduleSrcs}
 
       mkdir -p "$out/${layout.modulesDir}/discord_krisp/KMS/logs"
 
