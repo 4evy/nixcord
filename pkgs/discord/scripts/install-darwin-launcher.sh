@@ -42,7 +42,7 @@ launcher_cflags=(
   -Werror
 )
 
-app_executable="$out/Applications/$binary_name.app/Contents/MacOS/$binary_name"
+app_executable=${target%.unwrapped}
 app_executable_unwrapped="$app_executable.unwrapped"
 mv "$app_executable" "$app_executable_unwrapped"
 
@@ -62,10 +62,5 @@ substituteInPlace nixcord-discord-launcher.c \
 "$cc" "${launcher_cflags[@]}" -Os -o "$app_executable" nixcord-discord-launcher.c
 chmod +x "$app_executable"
 
-# The upstream CLI wrapper runs helpers against the old, protected profile.
-# Finder and the CLI must both enter the same native launcher first.
-rm "$out/bin/$binary_name"
-ln -s "$app_executable" "$out/bin/$binary_name"
-
 "$python3" "$prepare_signing" \
-  "$rcodesign" "$out/Applications/$binary_name.app" "$binary_name"
+  "$rcodesign" "${app_executable%/Contents/MacOS/*}" "$binary_name"

@@ -5,7 +5,9 @@
 let
   inherit (pkgs) lib;
 
-  discordAvailable = lib.meta.availableOn pkgs.stdenv.hostPlatform pkgs.discord;
+  discordAvailable = lib.meta.availableOn pkgs.stdenv.hostPlatform (
+    pkgs.callPackage ./discord/metadata.nix { }
+  );
   discordVariants = {
     discord = { };
     discord-ptb.branch = "ptb";

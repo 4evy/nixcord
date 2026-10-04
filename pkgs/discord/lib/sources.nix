@@ -20,11 +20,7 @@ let
 
   krispSourceMeta = source.modules.discord_krisp or null;
 
-  krispSrc =
-    if withKrisp && krispSourceMeta != null then
-      fetchurl { inherit (krispSourceMeta) url hash; }
-    else
-      null;
+  krispSrc = if withKrisp && krispSourceMeta != null then moduleSrcs.discord_krisp else null;
 in
 {
   inherit

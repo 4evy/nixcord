@@ -4,45 +4,57 @@
   packages,
 }:
 let
-  discordAvailable = pkgs.lib.meta.availableOn pkgs.stdenv.hostPlatform pkgs.discord;
-  discordIntegrationChecks = pkgs.lib.attrsets.optionalAttrs discordAvailable {
-    discord-with-vencord = pkgs.callPackage ../../pkgs/discord {
+  discordAvailable = pkgs.lib.meta.availableOn pkgs.stdenv.hostPlatform (
+    pkgs.callPackage ../../pkgs/discord/metadata.nix { }
+  );
+  discordVariants = {
+    discord-with-vencord = {
       withVencord = true;
-      inherit (packages) vencord;
     };
-    discord-with-vencord-openasar = pkgs.callPackage ../../pkgs/discord {
+    discord-with-vencord-openasar = {
       withVencord = true;
       withOpenASAR = true;
-      inherit (packages) vencord openasar;
     };
-    discord-with-equicord = pkgs.callPackage ../../pkgs/discord {
+    discord-with-equicord = {
       withEquicord = true;
-      inherit (packages) equicord;
     };
-    discord-with-krisp = pkgs.callPackage ../../pkgs/discord {
+    discord-with-krisp = {
       withKrisp = true;
     };
-    discord-multiple-branches-with-equicord-krisp =
-      let
-        branches = [
-          "stable"
-          "ptb"
-          "canary"
-        ];
-      in
-      pkgs.buildEnv {
-        name = "nixcord-discord-multiple-branches-with-equicord-krisp";
-        paths = map (
-          branch:
-          (pkgs.callPackage ../../pkgs/discord {
-            inherit branch;
-            withEquicord = true;
-            withKrisp = true;
-            inherit (packages) equicord;
-          })
-        ) branches;
-      };
   };
+  discordIntegrationChecks = pkgs.lib.attrsets.optionalAttrs discordAvailable (
+    pkgs.lib.mapAttrs (
+      _: args:
+      pkgs.callPackage ../../pkgs/discord (
+        {
+          inherit (packages) vencord equicord openasar;
+        }
+        // args
+      )
+    ) discordVariants
+    // {
+      discord-multiple-branches-with-equicord-krisp =
+        let
+          branches = [
+            "stable"
+            "ptb"
+            "canary"
+          ];
+        in
+        pkgs.buildEnv {
+          name = "nixcord-discord-multiple-branches-with-equicord-krisp";
+          paths = map (
+            branch:
+            (pkgs.callPackage ../../pkgs/discord {
+              inherit branch;
+              withEquicord = true;
+              withKrisp = true;
+              inherit (packages) equicord;
+            })
+          ) branches;
+        };
+    }
+  );
   nonFlake = import ../.. { inherit pkgs; };
   nonFlakeNixos = import (pkgs.lib.path.append pkgs.path "nixos/lib/eval-config.nix") {
     system = "x86_64-linux";

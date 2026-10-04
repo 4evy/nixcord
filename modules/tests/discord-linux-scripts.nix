@@ -1,10 +1,5 @@
 { pkgs }:
 
-let
-  discordAvailable = pkgs.lib.meta.availableOn pkgs.stdenv.hostPlatform pkgs.discord;
-  nixcordDiscord = if discordAvailable then pkgs.callPackage ../../pkgs/discord { } else null;
-in
-
 pkgs.runCommand "discord-linux-scripts-check"
   {
     nativeBuildInputs = [
@@ -14,14 +9,6 @@ pkgs.runCommand "discord-linux-scripts-check"
   ''
     set -euo pipefail
 
-    ${pkgs.lib.strings.optionalString discordAvailable ''
-      # The non-FHS nixpkgs launcher runs nixcord's staging helper so the Krisp
-      # deployer keeps ownership of its writable module.
-      test -x ${nixcordDiscord.stageModules}
-      test ! -d ${nixcordDiscord.stageModules}
-      grep -F -- ${pkgs.lib.strings.escapeShellArg "${nixcordDiscord.stageModules} ${nixcordDiscord}/opt/Discord/modules"} \
-        ${nixcordDiscord}/opt/Discord/Discord
-    ''}
 
     store="$PWD/store-modules"
     export DISCORD_CONFIG_DIR_NAME=discord

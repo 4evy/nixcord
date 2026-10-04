@@ -34,18 +34,17 @@ in
       description = "Whether to install the final Discord package.";
     };
     package = lib.options.mkPackageOption pkgs "Discord" { default = "discord"; } // {
-      default = pkgs.callPackage ../../pkgs/discord (
-        {
-          openasar = selectedNixcordPkgs.openasar or openasarPackage;
-        }
-        //
-          lib.attrsets.optionalAttrs
-            (pkgs.stdenvNoCC.hostPlatform.isLinux && lib.strings.versionOlder lib.trivial.version "25")
-            {
-              libgbm = pkgs.mesa;
-            }
-      );
+      default = pkgs.callPackage ../../pkgs/discord {
+        openasar = selectedNixcordPkgs.openasar or openasarPackage;
+      };
       defaultText = lib.options.literalExpression "pkgs.callPackage ../../pkgs/discord { }";
+      description = ''
+        The Discord package to install. By default, Nixcord packages the pinned
+        Discord host and native modules directly rather than overriding
+        nixpkgs' Discord package. It supports x86_64 Linux without an FHS
+        environment and Apple silicon macOS with a signed native launcher.
+        Host and module updates are managed by Nix, not Discord's updater.
+      '';
     };
     branches = lib.options.mkOption {
       type = lib.types.nonEmptyListOf branchType;
