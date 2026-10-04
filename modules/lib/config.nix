@@ -21,7 +21,16 @@ let
   mkDorionConfigAttrs =
     cfg:
     lib.trivial.pipe cfg.dorion [
-      (attrs: lib.attrsets.removeAttrs attrs [ "extraSettings" ])
+      (
+        attrs:
+        lib.attrsets.removeAttrs attrs [
+          "enable"
+          "installPackage"
+          "package"
+          "configDir"
+          "extraSettings"
+        ]
+      )
       (lib.attrsets.mapAttrs' (name: value: lib.attrsets.nameValuePair (toSnakeCase name) value))
       (attrs: { autoupdate = false; } // attrs)
       (attrs: attrs // cfg.dorion.extraSettings)
