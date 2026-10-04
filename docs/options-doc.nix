@@ -122,7 +122,11 @@ let
   evaluatedModules = lib.modules.evalModules {
     modules = [
       ../modules/options
-      { _module.check = false; }
+      {
+        # Legacy option shims emit host warnings; documentation only needs their
+        # declarations, so sink warnings while checking every other definition
+        options.warnings = lib.options.mkSinkUndeclaredOptions { };
+      }
     ];
     class = "homeManager";
     specialArgs = { inherit pkgs; };
