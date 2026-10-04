@@ -1,4 +1,5 @@
 {
+  lib,
   equicord,
   fetchFromGitHub,
   fetchPnpmDeps,
@@ -7,6 +8,8 @@
 }:
 let
   pnpm = callPackage ../pnpm { };
+  pnpmArgument =
+    if lib.trivial.functionArgs equicord.override ? pnpm_10_latest then "pnpm_10_latest" else "pnpm_10";
   fetchDeps = callPackage ../pnpm/fetch-deps.nix { inherit fetchPnpmDeps; };
   version = "1.15.9.0-2026-10-03";
   rev = "1489c0e2a4435d854d7343a5cfb0abb894772318";
@@ -28,7 +31,7 @@ let
 in
 (equicord.override {
   inherit buildWebExtension;
-  pnpm_10 = pnpm;
+  ${pnpmArgument} = pnpm;
 }).overrideAttrs
   (
     oldAttrs:
