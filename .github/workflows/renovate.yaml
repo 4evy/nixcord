@@ -49,9 +49,9 @@ jobs:
         uses: renovatebot/github-action@6d26fcf0275dc65624cbc3d51fe78bc773f98321 # v46.3.6
         with:
           token: ${{ github.token }}
-          renovate-version: "44.126.0"
+          renovate-version: "44.132.5"
           renovate-image: >-
-            ghcr.io/renovatebot/renovate@sha256:b07b6fe34bd80fe2ce035e2053d63a0205e5f99ba3ee799447e0439f2c728002
+            ghcr.io/renovatebot/renovate@sha256:2c801b47ce82c349453e554188abe4fa0b51bde333cfea54e67ad8a88d525087
         env:
           LOG_LEVEL: info
           RENOVATE_GIT_AUTHOR: "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
