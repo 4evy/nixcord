@@ -5,7 +5,7 @@ export default defineConfig({
     lib: {
       entry: {
         index: 'src/index.ts',
-        'execution-runner': 'src/execution-runner.ts',
+        runner: 'src/runner.ts',
       },
       formats: ['es'],
     },

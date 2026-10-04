@@ -11,8 +11,8 @@
       "import": "./dist/index.js"
     },
     "./execution-runner": {
-      "types": "./src/execution-runner.ts",
-      "import": "./dist/execution-runner.js"
+      "types": "./src/runner.ts",
+      "import": "./dist/runner.js"
     }
   },
   "main": "./dist/index.js",

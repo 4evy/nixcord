@@ -18,8 +18,13 @@ export interface AnalysisSession {
 }
 
 /**
- * Load the complete file set into an immutable analysis view.
- * To add or remove files, create a new session.
+ * Load the complete file set into an immutable analysis view
+ *
+ * Standard library declarations stay loaded so the checker can resolve arrays and tuples instead
+ * of treating them as empty objects. Keep nodes, symbols, and emit on the compiler bundled
+ * with ts-morph; TypeScript 7 native AST nodes are a separate API, not a drop-in replacement
+ *
+ * To add or remove files, create a new session
  */
 export async function createAnalysisSession(
   options: AnalysisSessionOptions
@@ -29,7 +34,6 @@ export async function createAnalysisSession(
   const project = new Project({
     skipAddingFilesFromTsConfig: true,
     skipFileDependencyResolution: false,
-    skipLoadingLibFiles: true,
     tsConfigFilePath: tsConfigPath && existsSync(tsConfigPath) ? tsConfigPath : undefined,
     compilerOptions: {
       target: ts.ScriptTarget.ES2022,

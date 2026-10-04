@@ -1,7 +1,7 @@
 import { Project } from 'ts-morph';
 import { describe, expect, test } from 'vitest';
-import { traceComponentSetting } from '../../../src/component-trace.js';
 import { StaticEvaluator } from '../../../src/evaluator.js';
+import { traceComponentSetting } from '../../../src/trace.js';
 
 const trace = (source: string, settingKey: string) => {
   const project = new Project({ useInMemoryFileSystem: true });

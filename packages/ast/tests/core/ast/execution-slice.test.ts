@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Project, SyntaxKind } from 'ts-morph';
 import { describe, expect, test } from 'vitest';
-import { executeComponentSlice } from '../../../src/execution-slice.js';
+import { executeComponentSlice } from '../../../src/execute.js';
 
 describe('executed component slices', () => {
   test('captures persistent settings reads without executing unrelated plugin initialization', async () => {

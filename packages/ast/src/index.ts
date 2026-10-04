@@ -1,14 +1,4 @@
 export type {
-  AnalysisSession,
-  AnalysisSessionOptions,
-} from './analysis-session.js';
-export { createAnalysisSession } from './analysis-session.js';
-export type {
-  ComponentControlEvidence,
-  ComponentTrace,
-} from './component-trace.js';
-export { traceComponentSetting, traceStoreSetting } from './component-trace.js';
-export type {
   EvaluationEvidence,
   EvaluationResult,
   StaticEvaluatorOptions,
@@ -20,6 +10,16 @@ export type {
   SliceExecutionOptions,
   SliceExecutionResult,
   SliceTraceEvent,
-} from './execution-slice.js';
-export { executeComponentSlice } from './execution-slice.js';
-export { resolvedDeclaration, unwrapExpression } from './node-helpers.js';
+} from './execute.js';
+export { executeComponentSlice } from './execute.js';
+export { resolvedDeclaration, unwrapExpression } from './nodes.js';
+export type {
+  AnalysisSession,
+  AnalysisSessionOptions,
+} from './session.js';
+export { createAnalysisSession } from './session.js';
+export type {
+  ComponentControlEvidence,
+  ComponentTrace,
+} from './trace.js';
+export { traceComponentSetting, traceStoreSetting } from './trace.js';
