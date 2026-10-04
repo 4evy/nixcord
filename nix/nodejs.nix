@@ -11,6 +11,17 @@ let
   manifest = lib.trivial.importJSON ../package.json;
   npmVersion = lib.strings.removePrefix "npm@" manifest.packageManager;
   nodePatches = path + "/pkgs/development/web/nodejs";
+  nodejsSlim =
+    if stdenvNoCC.hostPlatform.system == "aarch64-linux" && nodejs-slim_26.version == "26.10.0" then
+      nodejs-slim_26.overrideAttrs (old: {
+        # V8's ARM NEON memcpy uses CHAR_BIT without including its header
+        postPatch = (old.postPatch or "") + ''
+          substituteInPlace deps/v8/src/base/memcopy.h \
+            --replace-fail '#include <atomic>' $'#include <atomic>\n#include <climits>'
+        '';
+      })
+    else
+      nodejs-slim_26;
   npm = stdenvNoCC.mkDerivation {
     pname = "npm";
     version = npmVersion;
@@ -19,7 +30,7 @@ let
       hash = "sha256-Zma0iBazm4bD/rrHtRpO5N5sXKWJw4KtgAS2sRP4Znc=";
     };
     nativeBuildInputs = lib.optional stdenvNoCC.hostPlatform.isDarwin patchutils;
-    buildInputs = [ nodejs-slim_26 ];
+    buildInputs = [ nodejsSlim ];
     # Preserve Nixpkgs' offline npm and sandboxed node-gyp behavior.
     patches = [ (nodePatches + "/node-npm-build-npm-package-logic.patch") ];
     patchFlags = [ "-p3" ];
@@ -44,7 +55,7 @@ assert lib.assertMsg (
   nodejs-slim_26.version == manifest.engines.node
 ) "Update nixpkgs-nixcord to provide the Node version pinned in package.json";
 nodejs_26.override {
-  nodejs-slim = nodejs-slim_26 // {
+  nodejs-slim = nodejsSlim // {
     inherit npm;
   };
 }
