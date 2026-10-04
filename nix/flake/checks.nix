@@ -4,6 +4,16 @@
   packages,
 }:
 let
+  # Host modules follow inputs.nixpkgs; the independently pinned Nixcord package
+  # set may target a different release, which nix-darwin rejects as a host
+  hostPkgs =
+    if inputs.nixpkgs.outPath == inputs.nixpkgs-nixcord.outPath then
+      pkgs
+    else
+      import inputs.nixpkgs {
+        inherit (pkgs.stdenv.hostPlatform) system;
+        config.allowUnfree = true;
+      };
   discordAvailable = pkgs.lib.meta.availableOn pkgs.stdenv.hostPlatform (
     pkgs.callPackage ../../pkgs/discord/metadata.nix { }
   );
@@ -76,15 +86,16 @@ in
     // {
       non-flake-interface = nonFlakeInterface;
       hm-writable-files = import ../../modules/tests/hm-writable-files.nix {
-        inherit pkgs;
+        pkgs = hostPkgs;
         inherit (inputs) home-manager;
       };
       module-integration = import ../../modules/tests/module-integration.nix {
-        inherit pkgs;
+        pkgs = hostPkgs;
         inherit (inputs) home-manager nix-darwin;
       };
       flake-interface = import ../../modules/tests/flake-interface.nix {
-        inherit pkgs inputs;
+        pkgs = hostPkgs;
+        inherit inputs;
         inherit (inputs) self;
       };
     };

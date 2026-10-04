@@ -34,9 +34,10 @@ in
       description = "Whether to install the final Discord package.";
     };
     package = lib.options.mkPackageOption pkgs "Discord" { default = "discord"; } // {
-      default = pkgs.callPackage ../../pkgs/discord {
-        openasar = selectedNixcordPkgs.openasar or openasarPackage;
-      };
+      default =
+        selectedNixcordPkgs.discord or (pkgs.callPackage ../../pkgs/discord {
+          openasar = selectedNixcordPkgs.openasar or openasarPackage;
+        });
       defaultText = lib.options.literalExpression "pkgs.callPackage ../../pkgs/discord { }";
       description = ''
         The Discord package to install. By default, Nixcord packages the pinned
