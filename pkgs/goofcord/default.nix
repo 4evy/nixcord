@@ -82,25 +82,40 @@ let
 in
 goofcord.overrideAttrs (
   old:
+  let
+    nativeBuildInputs = builtins.filter (
+      input:
+      !(builtins.elem (input.pname or "") [
+        "bun"
+        "nodejs"
+      ])
+    ) (old.nativeBuildInputs or [ ]);
+    env = builtins.removeAttrs (old.env or { }) [
+      "GOOFCORD_PATCHCORD_PATH"
+      "GOOFCORD_VENBIND_PATH"
+    ];
+  in
   {
     version = npmDepsVersion;
     inherit src;
     patches = (old.patches or [ ]) ++ [ nodeBuildPatch ];
     node-modules = nodeModules;
-    env = builtins.removeAttrs (old.env or { }) [
-      "GOOFCORD_PATCHCORD_PATH"
-      "GOOFCORD_VENBIND_PATH"
-    ];
+    env =
+      env
+      // lib.attrsets.optionalAttrs stdenv.hostPlatform.isDarwin {
+        CSC_IDENTITY_AUTO_DISCOVERY = "false";
+      };
     nativeBuildInputs =
-      builtins.filter (
-        input:
-        !(builtins.elem (input.pname or "") [
-          "bun"
-          "nodejs"
-        ])
-      ) (old.nativeBuildInputs or [ ])
+      lib.lists.subtractLists (lib.lists.optionals stdenv.hostPlatform.isDarwin [
+        copyDesktopItems
+        makeShellWrapper
+      ]) nativeBuildInputs
       ++ [ nodejs ]
-      ++ lib.optional stdenv.hostPlatform.isLinux autoPatchelfHook;
+      ++ lib.lists.optional stdenv.hostPlatform.isLinux autoPatchelfHook
+      ++ lib.lists.optionals stdenv.hostPlatform.isDarwin [
+        makeBinaryWrapper
+        rcodesign
+      ];
     configurePhase = ''
       runHook preConfigure
       cp -R ${nodeModules} node_modules
@@ -131,37 +146,7 @@ goofcord.overrideAttrs (
     };
   }
   // lib.attrsets.optionalAttrs stdenv.hostPlatform.isDarwin {
-    nativeBuildInputs =
-      lib.lists.subtractLists
-        [
-          copyDesktopItems
-          makeShellWrapper
-        ]
-        (
-          builtins.filter (
-            input:
-            !(builtins.elem (input.pname or "") [
-              "bun"
-              "nodejs"
-            ])
-          ) (old.nativeBuildInputs or [ ])
-        )
-      ++ [
-        nodejs
-        makeBinaryWrapper
-        rcodesign
-      ];
-
     desktopItems = [ ];
-
-    env =
-      lib.attrsets.removeAttrs (old.env or { }) [
-        "GOOFCORD_PATCHCORD_PATH"
-        "GOOFCORD_VENBIND_PATH"
-      ]
-      // {
-        CSC_IDENTITY_AUTO_DISCOVERY = "false";
-      };
 
     postPatch = (old.postPatch or "") + ''
       # Disable code signing on macOS, as nixpkgs does for other Electron clients.
