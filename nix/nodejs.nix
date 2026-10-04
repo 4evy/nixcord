@@ -8,8 +8,8 @@
   patchutils,
 }:
 let
-  manifest = builtins.fromJSON (builtins.readFile ../package.json);
-  npmVersion = builtins.elemAt (builtins.split "@" manifest.packageManager) 2;
+  manifest = lib.trivial.importJSON ../package.json;
+  npmVersion = lib.strings.removePrefix "npm@" manifest.packageManager;
   nodePatches = path + "/pkgs/development/web/nodejs";
   npm = stdenvNoCC.mkDerivation {
     pname = "npm";

@@ -1,8 +1,10 @@
 { lib }:
 let
   # Workspaces are explicit, dependency-ordered paths in the root manifest.
-  manifest = builtins.fromJSON (builtins.readFile ../package.json);
-  packageManifests = map (workspace: ../. + "/${workspace}/package.json") manifest.workspaces;
+  manifest = lib.trivial.importJSON ../package.json;
+  packageManifests = map (
+    workspace: lib.path.append ../. "${workspace}/package.json"
+  ) manifest.workspaces;
 in
 lib.fileset.toSource {
   root = ./..;
