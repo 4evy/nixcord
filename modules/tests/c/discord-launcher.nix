@@ -36,7 +36,6 @@ let
     {
       name,
       enableKrisp,
-      prepareData ? trueBin,
       stageModules ? trueBin,
       appDataDir ? "",
       modDataDir ? "",
@@ -62,7 +61,6 @@ let
 
       cp ${../../../pkgs/discord/src/discord-launcher.c} ${name}.c
       substituteInPlace ${name}.c \
-        --replace-fail "@prepare_data@" "${prepareData}" \
         --replace-fail "@app_data_dir_file@" ${pkgs.writeText "launcher-app-data-dir" appDataDir} \
         --replace-fail "@mod_data_dir_file@" ${pkgs.writeText "launcher-mod-data-dir" modDataDir} \
         --replace-fail "@mod_data_env@" ${lib.strings.escapeShellArg modDataEnv} \
@@ -123,11 +121,11 @@ pkgs.runCommand "discord-launcher-c-check"
   ''
     unset DISCORD_USER_DATA_DIR VENCORD_USER_DATA_DIR EQUICORD_USER_DATA_DIR
 
-    cat > failing-prepare-data <<'EOF'
+    cat > failing-stage-modules <<'EOF'
     #!${pkgs.runtimeShell}
     exit 23
     EOF
-    chmod +x failing-prepare-data
+    chmod +x failing-stage-modules
 
     cat > check-environment <<'EOF'
     #!${pkgs.runtimeShell}
@@ -140,7 +138,6 @@ pkgs.runCommand "discord-launcher-c-check"
     ${compileAndSmoke {
       name = "discord-launcher-full";
       enableKrisp = true;
-      prepareData = "$PWD/check-environment";
       stageModules = "$PWD/check-environment";
       modDataEnv = "VENCORD_USER_DATA_DIR";
       expectedModDir = "$HOME/Library/Application Support/Vencord";
@@ -171,7 +168,7 @@ pkgs.runCommand "discord-launcher-c-check"
     ${compileAndSmoke {
       name = "discord-launcher-helper-failure";
       enableKrisp = false;
-      prepareData = "$PWD/failing-prepare-data";
+      stageModules = "$PWD/failing-stage-modules";
       expectedStatus = 23;
     }}
 
@@ -198,85 +195,6 @@ pkgs.runCommand "discord-launcher-c-check"
       exit 1
     fi
     test ! -e discord-launcher-minimal.args
-
-    # TODO(2026-09-21): Remove with the temporary profile migration helper.
-    ${pkgs.python3.interpreter} - <<'PY'
-    import os
-    from pathlib import Path
-    import runpy
-    import subprocess
-    import sys
-    import tempfile
-
-    migration_script = "${../../../pkgs/discord/scripts/migrate-darwin-profile.py}"
-    migrate = runpy.run_path(migration_script)["migrate"]
-
-    def expect_failure(source, destination):
-        try:
-            migrate(source, destination)
-        except (OSError, RuntimeError):
-            pass
-        else:
-            raise AssertionError("migration should have failed")
-        assert not destination.exists(), "failed migration published a profile"
-
-    with tempfile.TemporaryDirectory() as temporary:
-        root = Path(temporary)
-        old = root / "old"
-        new = root / "new" / "discord"
-        old.mkdir()
-        (old / "session").write_text("preserved")
-        (old / "internal").symlink_to(old / "session")
-        (old / "SingletonLock").symlink_to(f"localhost-{os.getpid()}")
-        expect_failure(old, new)
-        (old / "SingletonLock").unlink()
-
-        (old / "session").chmod(0)
-        try:
-            expect_failure(old, new)
-        finally:
-            (old / "session").chmod(0o600)
-        assert not list(new.parent.glob(".discord-migration-*"))
-
-        if sys.platform == "darwin":
-            subprocess.run(["/usr/bin/xattr", "-w", "user.nixcord-test", "old", str(old / "session")], check=True)
-        migrate(old, new)
-        assert (new / "session").read_text() == "preserved"
-        assert (old / "session").read_text() == "preserved"
-        assert (new / "internal").readlink() == new / "session"
-        if sys.platform == "darwin":
-            attributes = subprocess.check_output(["/usr/bin/xattr", str(new / "session")], text=True)
-            assert "user.nixcord-test" not in attributes
-
-        (new / "session").write_text("new session")
-        old.chmod(0)
-        try:
-            migrate(old, new)
-            assert (new / "session").read_text() == "new session"
-        finally:
-            old.chmod(0o700)
-
-        fresh = root / "new" / "discordptb"
-        migrate(root / "missing", fresh)
-        assert fresh.is_dir()
-        assert not (root / "missing").exists()
-
-        broken = root / "broken"
-        broken.symlink_to(root / "missing")
-        expect_failure(broken, root / "broken-destination")
-
-        concurrent_source = root / "concurrent-source"
-        concurrent_destination = root / "concurrent-destination"
-        concurrent_source.mkdir()
-        for index in range(20):
-            (concurrent_source / str(index)).write_text(str(index))
-        copies = [subprocess.Popen([
-            sys.executable, migration_script, str(concurrent_source), str(concurrent_destination)
-        ]) for _ in range(2)]
-        assert all(copy.wait(timeout=30) == 0 for copy in copies)
-        for index in range(20):
-            assert (concurrent_destination / str(index)).read_text() == str(index)
-    PY
 
     touch "$out"
   ''

@@ -7,21 +7,20 @@ fi
 
 binary_name=$1
 launcher_c=$2
-prepare_data=$3
-stage_modules=$4
-modules_dir=$5
-deploy_krisp=$6
-target=$7
-enable_krisp=$8
-command_line_args=$9
-cc=${10}
-rcodesign=${11}
-python3=${12}
-prepare_signing=${13}
-app_data_dir_file=${14}
-mod_data_dir_file=${15}
-mod_data_env=${16}
-mod_data_suffix=${17}
+stage_modules=$3
+modules_dir=$4
+deploy_krisp=$5
+target=$6
+enable_krisp=$7
+command_line_args=$8
+cc=$9
+rcodesign=${10}
+python3=${11}
+prepare_signing=${12}
+app_data_dir_file=${13}
+mod_data_dir_file=${14}
+mod_data_env=${15}
+mod_data_suffix=${16}
 
 launcher_cflags=(
   -std=c23
@@ -49,7 +48,6 @@ mv "$app_executable" "$app_executable_unwrapped"
 
 cp "$launcher_c" nixcord-discord-launcher.c
 substituteInPlace nixcord-discord-launcher.c \
-  --replace-fail "@prepare_data@" "$prepare_data" \
   --replace-fail "@app_data_dir_file@" "$app_data_dir_file" \
   --replace-fail "@mod_data_dir_file@" "$mod_data_dir_file" \
   --replace-fail "@mod_data_env@" "$mod_data_env" \

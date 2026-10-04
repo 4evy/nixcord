@@ -41,23 +41,16 @@
       writableHomeActivations = lib.attrsets.genAttrs' fileSpecsByWritable.right (
         spec:
         lib.attrsets.nameValuePair "nixcord-${spec.name}" (
-          lib.hm.dag.entryAfter
-            (
-              [ "writeBoundary" ]
-              ++ lib.lists.optional (
-                cfg.discord.enable && pkgs.stdenvNoCC.hostPlatform.isDarwin
-              ) "disableDiscordUpdates"
-            )
-            ''
-              dest=${lib.strings.escapeShellArg spec.dest}
-              src=${lib.strings.escapeShellArg spec.src}
-              if [ -L "$dest" ]; then
-                run rm "$dest"
-              elif [ -e "$dest" ]; then
-                run chmod u+w "$dest" 2>/dev/null || true
-              fi
-              run ${install} -Dm644 "$src" "$dest"
-            ''
+          lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+            dest=${lib.strings.escapeShellArg spec.dest}
+            src=${lib.strings.escapeShellArg spec.src}
+            if [ -L "$dest" ]; then
+              run rm "$dest"
+            elif [ -e "$dest" ]; then
+              run chmod u+w "$dest" 2>/dev/null || true
+            fi
+            run ${install} -Dm644 "$src" "$dest"
+          ''
         )
       );
 

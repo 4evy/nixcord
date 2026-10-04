@@ -9,7 +9,6 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#define PREPARE_DATA "@prepare_data@"
 #define MOD_DATA_ENV "@mod_data_env@"
 #define MOD_DATA_SUFFIX "@mod_data_suffix@"
 #define STAGE_MODULES "@stage_modules@"
@@ -56,7 +55,6 @@ static const struct {
   bool enabled;
   char *const *argv;
 } helpers[] = {
-    {.enabled = true, .argv = (char *const[]){(char[]){PREPARE_DATA}, nullptr}},
     {.enabled = true,
      .argv = (char *const[]){(char[]){STAGE_MODULES}, (char[]){MODULES_DIR},
                              nullptr}},

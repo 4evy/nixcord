@@ -112,7 +112,7 @@ in
       ''
     ) branches;
 
-  "Darwin profile overrides reach every branch and migration precedes settings" =
+  "Darwin profile overrides reach every branch" =
     if !pkgs.stdenvNoCC.hostPlatform.isDarwin then
       true
     else
@@ -135,11 +135,6 @@ in
           args = customCfg.finalPackage.discordBranches.${branch}.passthru.nixcordOverrideArgs;
         in
         args.appDataDir == "/tmp/custom profiles" && args.modDataDir == "/tmp/custom mod settings"
-      ) branches;
-      assert lib.lists.all (
-        branch:
-        builtins.elem "disableDiscordUpdates"
-          custom.home.activation."nixcord-discord-${branch}-settings".after
       ) branches;
       true;
 

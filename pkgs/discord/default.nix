@@ -184,15 +184,6 @@ let
       ;
   };
 
-  prepareData = writeShellApplication {
-    name = "discord-prepare-data";
-    text = ''
-      exec ${python3.interpreter} ${./scripts/migrate-darwin-profile.py} \
-        "$HOME/Library/Application Support/${configDirName}" \
-        "''${DISCORD_USER_DATA_DIR:?}/${configDirName}"
-    '';
-  };
-
   commandLineArgsString =
     if builtins.isList commandLineArgs then
       lib.strings.escapeShellArgs commandLineArgs
@@ -348,7 +339,6 @@ package.overrideAttrs (
         source ${./scripts/install-darwin-launcher.sh} \
           ${lib.strings.escapeShellArg binaryName} \
           ${./src/discord-launcher.c} \
-          ${lib.meta.getExe prepareData} \
           ${lib.meta.getExe stageModules} \
           "${modulesDir}" \
           ${lib.strings.escapeShellArg (lib.strings.optionalString hasDeployKrisp (lib.meta.getExe deployKrisp))} \
