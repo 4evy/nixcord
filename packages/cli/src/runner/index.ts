@@ -17,7 +17,7 @@ import {
 import fse from 'fs-extra';
 import { dirname, join, normalize, resolve } from 'pathe';
 import * as z from 'zod';
-import { applyPluginOverrides } from '../plugin-overrides.js';
+import { applyPluginOverrides } from '../overrides.js';
 import { oraPromise } from './spinner.js';
 
 type SourceLabel = 'Vencord' | 'Equicord';

@@ -1,7 +1,7 @@
 import { CLI_CONFIG } from '@nixcord/shared';
 import { createFixture } from 'fs-fixture';
 import { describe, expect, test } from 'vitest';
-import { applyPluginOverrides } from '../src/plugin-overrides.js';
+import { applyPluginOverrides } from '../src/overrides.js';
 
 describe('applyPluginOverrides', () => {
   test('deep-merges category overrides into generated plugin JSON', async () => {

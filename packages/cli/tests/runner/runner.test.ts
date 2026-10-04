@@ -37,7 +37,7 @@ vi.mock('../../src/runner/spinner.js', () => ({
   oraPromise: mocks.oraPromise,
 }));
 
-vi.mock('../../src/plugin-overrides.js', () => ({
+vi.mock('../../src/overrides.js', () => ({
   applyPluginOverrides: mocks.applyPluginOverrides,
 }));
 
