@@ -52,7 +52,7 @@ default = 0;`;
         <span class="result-label">Returns a number</span>
         <code>0</code>
       </div>
-      <p>Use the parser's <a class={`link ${linkClass}`} href={`${sourceRoot}packages/parser/src/parse-plugins.ts`}>scalarFromNode</a>
+      <p>Use the parser's <a class={`link ${linkClass}`} href={`${sourceRoot}packages/parser/src/settings/infer.ts`}>scalarFromNode</a>
         helper. It evaluates the expression and leaves unresolved values out instead of substituting their names.</p>
     </section>
   </div>
@@ -71,7 +71,7 @@ default = 0;`;
       <dt>Collect</dt>
       <dd>
         <code>enumValues: [0, 1], default: 0</code>
-        <p><a class={`link ${linkClass}`} href={`${sourceRoot}packages/parser/src/setting-rules.ts`}>selectRule</a>
+        <p><a class={`link ${linkClass}`} href={`${sourceRoot}packages/parser/src/settings/rules.ts`}>selectRule</a>
           collects the dropdown values and selected default.
           The <a class={`link ${linkClass}`} href={`${sourceRoot}packages/nix-generator/src/generator.ts`}>JSON generator</a>
           preserves them as numbers.</p>

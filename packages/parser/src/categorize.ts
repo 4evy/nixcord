@@ -1,5 +1,5 @@
 import type { ParsedPluginsResult, PluginConfig } from '@nixcord/shared';
-import { SOURCE_PROFILES } from './source-profiles.js';
+import { SOURCE_PROFILES } from './profiles.js';
 
 const PLUGIN_RENAME_MAP: Record<string, string> = { oneko: 'CursorBuddy' };
 const CLIENT_SPECIFIC_PLUGINS = new Set(

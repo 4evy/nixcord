@@ -1,6 +1,6 @@
 import type { SettingListElement, SettingScalar, SettingType, SettingValue } from '@nixcord/shared';
 import { ts } from 'ts-morph';
-import type { OptionTypeName } from './source-profiles.js';
+import type { OptionTypeName } from '../profiles.js';
 
 export interface SelectOption {
   readonly value: SettingScalar;

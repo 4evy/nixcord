@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { applySettingRule } from '../../src/setting-rules.js';
+import { applySettingRule } from '../../src/settings/rules.js';
 
 describe('declarative setting rules', () => {
   test.each([
