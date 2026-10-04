@@ -1,6 +1,6 @@
 import type { PluginConfig } from '@nixcord/shared';
 import { describe, expect, test } from 'vitest';
-import { generateParseRulesModule } from '../src/parse-rules.js';
+import { generateParseRulesModule } from '../src/rules.js';
 
 describe('generateParseRulesModule()', () => {
   const shared: Readonly<Record<string, PluginConfig>> = {

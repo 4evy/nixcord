@@ -3,7 +3,7 @@ import { createFixture } from 'fs-fixture';
 import { describe, expect, test } from 'vitest';
 import { updateDeprecatedPlugins } from '../src/deprecated.js';
 import { toNixIdentifier } from '../src/identifier.js';
-import { generateMigrationsData } from '../src/migrations-generator.js';
+import { generateMigrationsData } from '../src/migrations.js';
 
 const mkPlugin = (description = ''): Readonly<PluginConfig> => ({
   name: 'TestPlugin',
