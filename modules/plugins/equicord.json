@@ -1352,7 +1352,13 @@
   },
   "customRpc": {
     "description": "Add a fully customisable Rich Presence (Game status) to your Discord profile (Equicord-only)",
-    "settings": {}
+    "settings": {
+      "enablePresence": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Whether to show the presence"
+      }
+    }
   },
   "customSounds": {
     "description": "Customize Discord's sounds. (Equicord-only)",

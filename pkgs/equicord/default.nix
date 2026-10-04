@@ -8,9 +8,9 @@
 let
   pnpm = callPackage ../pnpm { };
   fetchDeps = callPackage ../pnpm/fetch-deps.nix { inherit fetchPnpmDeps; };
-  version = "1.15.9.0-2026-09-29";
-  rev = "ab9b98472acb281cc7ec4d2c7a612219993bb3cb";
-  hash = "sha256-hk2/djNmbwIBwVAJ1bj3ayurj85EPfMUgmAr1SpYlvw=";
+  version = "1.15.9.0-2026-10-03";
+  rev = "1489c0e2a4435d854d7343a5cfb0abb894772318";
+  hash = "sha256-utAAobxSmcmM8ZiM0y6E5OtvEpKDOtq5eP3KSu22saM=";
   pnpmDepsHash = "sha256-pU/oxNJ9epA75Pth/b7mO67NavS8wy2BI/wuKKgnCpM=";
   inherit (equicord.src) owner repo;
   src = fetchFromGitHub {
