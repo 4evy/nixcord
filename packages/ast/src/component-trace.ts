@@ -11,6 +11,7 @@ export interface ComponentControlEvidence {
 
 export interface ComponentTrace {
   readonly persistent: boolean;
+  // Includes the current setting, unresolved keys, and whole-store access
   readonly storeReferenced: boolean;
   readonly hasDefault: boolean;
   readonly defaultValue?: StaticValue;
@@ -292,6 +293,8 @@ interface StoreEvidence {
 
 const referencesSettingsStore = (
   node: Node,
+  settingKey: string,
+  evaluator: StaticEvaluator,
   checker: TypeChecker,
   settingsBindings: readonly Node[]
 ): boolean =>
@@ -300,14 +303,23 @@ const referencesSettingsStore = (
     if (
       store?.getName() === 'store' &&
       isSettingsObject(store.getExpression(), checker, settingsBindings)
-    )
-      return true;
+    ) {
+      // Other settings do not justify executing this component, but unresolved
+      // keys and references to the whole store still need execution fallback
+      const path = storePath(store.getParentOrThrow(), evaluator, checker, settingsBindings);
+      return !path?.length || path[0] === settingKey;
+    }
     const call = candidate.asKind(SyntaxKind.CallExpression);
     const property = call?.getExpression().asKind(SyntaxKind.PropertyAccessExpression);
-    return Boolean(
-      property?.getName() === 'use' &&
-        isSettingsObject(property.getExpression(), checker, settingsBindings)
-    );
+    if (
+      property?.getName() !== 'use' ||
+      !isSettingsObject(property.getExpression(), checker, settingsBindings)
+    )
+      return false;
+    const keys = call?.getArguments()[0];
+    if (!keys) return true;
+    const result = evaluator.evaluate(keys);
+    return !result.known || !Array.isArray(result.value) || result.value.includes(settingKey);
   });
 
 const jsxCallbackAttribute = (node: Node): string | undefined => {
@@ -570,7 +582,9 @@ export function traceStoreSetting(
 
   return {
     persistent,
-    storeReferenced: roots.some((root) => referencesSettingsStore(root, checker, settingsBindings)),
+    storeReferenced: roots.some((root) =>
+      referencesSettingsStore(root, settingKey, evaluator, checker, settingsBindings)
+    ),
     hasDefault,
     ...(hasDefault ? { defaultValue } : {}),
     controls: [],
@@ -686,7 +700,7 @@ export function traceComponentSetting(
     true
   );
   const storeReferenced = targets.some((target) =>
-    referencesSettingsStore(target, checker, settingsBindings)
+    referencesSettingsStore(target, settingKey, evaluator, checker, settingsBindings)
   );
 
   const evidence = [
