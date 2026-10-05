@@ -6,7 +6,7 @@
   quickCss,
   themes,
 }:
-pkgs.runCommand "nixcord-legcord-${client}"
+pkgs.runCommand "legcord-${client}"
   {
     nativeBuildInputs = [ pkgs.nodejs ];
     spec = builtins.toJSON {

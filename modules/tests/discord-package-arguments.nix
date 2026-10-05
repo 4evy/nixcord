@@ -47,23 +47,23 @@ pkgs.runCommand "discord-package-arguments-test" { nativeBuildInputs = [ pkgs.ni
       grep -F -- "$2" actual.err
     }
     expect_error 'withVencord = true; withEquicord = true;' \
-      'nixcord Discord: Vencord and Equicord cannot both be enabled'
+      'Discord: Vencord and Equicord cannot both be enabled'
     expect_error 'branch = "unknown";' \
-      "nixcord Discord: branch 'unknown' is unavailable on this platform"
+      "Discord: branch 'unknown' is unavailable on this platform"
     expect_error 'appDataDir = "relative/path";' \
-      'nixcord Discord: appDataDir must be an absolute Darwin path'
+      'Discord: appDataDir must be an absolute Darwin path'
     expect_error 'modDataDir = "relative/path";' \
-      'nixcord Discord: modDataDir must be an absolute Darwin path'
+      'Discord: modDataDir must be an absolute Darwin path'
     expect_error 'withOpenASAR = true; openasar = null;' \
-      'nixcord Discord: OpenASAR requires an openasar package'
+      'Discord: OpenASAR requires an openasar package'
     expect_error "" \
-      "nixcord Discord: unsupported platform 'aarch64-linux'" \
+      "Discord: unsupported platform 'aarch64-linux'" \
       aarch64-linux
     ${pkgs.lib.strings.optionalString pkgs.stdenvNoCC.hostPlatform.isLinux ''
       expect_error 'appDataDir = "/tmp/discord";' \
-        'nixcord Discord: appDataDir must be an absolute Darwin path'
+        'Discord: appDataDir must be an absolute Darwin path'
       expect_error 'modDataDir = "/tmp/vencord";' \
-        'nixcord Discord: modDataDir must be an absolute Darwin path'
+        'Discord: modDataDir must be an absolute Darwin path'
     ''}
     ${pkgs.lib.strings.optionalString pkgs.stdenvNoCC.hostPlatform.isDarwin ''
       evaluate 'appDataDir = "/tmp/Discord Data"; modDataDir = "/tmp/Mod Data";' > /dev/null

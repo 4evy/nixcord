@@ -7,11 +7,11 @@ let
       config.home.file.${path}.source
     else
       let
-        specs = builtins.filter (spec: spec.dest == path) config._nixcordTest.common.fileSpecs;
+        specs = builtins.filter (spec: spec.dest == path) config._moduleTest.common.fileSpecs;
         spec = lib.lists.findSingle (
           spec: spec.writable
         ) (throw "missing writable file ${path}") (throw "duplicate writable file ${path}") specs;
-        activation = config.home.activation."nixcord-${spec.name}".data;
+        activation = config.home.activation.${spec.name}.data;
       in
       assert lib.strings.hasInfix (builtins.unsafeDiscardStringContext (
         lib.strings.escapeShellArg spec.src
@@ -23,9 +23,9 @@ let
     config: name:
     let
       spec =
-        lib.lists.findSingle (spec: "nixcord-${spec.name}" == name) (throw "missing activation ${name}")
+        lib.lists.findSingle (spec: spec.name == name) (throw "missing activation ${name}")
           (throw "duplicate activation ${name}")
-          config._nixcordTest.common.fileSpecs;
+          config._moduleTest.common.fileSpecs;
     in
     homeFileSource config spec.dest;
 

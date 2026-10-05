@@ -7,16 +7,16 @@ let
   matrix = import ../fixtures/regression-matrix/scenarios.nix { inherit lib; };
   scenarioNames = builtins.attrNames matrix.scenarios;
 
-  nixcordModule = modulePath: {
+  withClientPackages = modulePath: {
     imports = [ modulePath ];
-    _module.args.nixcordPkgs = { };
+    _module.args.clientPackages = { };
   };
 
   inputs = {
     nixcord = {
-      homeModules.nixcord = nixcordModule ../../hm;
-      nixosModules.nixcord = nixcordModule ../../nixos;
-      darwinModules.nixcord = nixcordModule ../../darwin;
+      homeModules.nixcord = withClientPackages ../../hm;
+      nixosModules.nixcord = withClientPackages ../../nixos;
+      darwinModules.nixcord = withClientPackages ../../darwin;
     };
   };
 

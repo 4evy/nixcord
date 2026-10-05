@@ -2,14 +2,14 @@
   config,
   lib,
   pkgs,
-  nixcordPkgs ? { },
+  clientPackages ? { },
   ...
 }:
 let
 
   jsonFormat = pkgs.formats.json { };
   goofcordPackage = if pkgs ? goofcord then pkgs.callPackage ../../pkgs/goofcord { } else null;
-  selectedNixcordPkgs = if config.programs.nixcord.useGlobalPkgs then { } else nixcordPkgs;
+  selectedClientPackages = if config.programs.nixcord.useGlobalPkgs then { } else clientPackages;
 in
 {
   options.programs.nixcord.goofcord = {
@@ -26,7 +26,7 @@ in
         nullable = true;
       }
       // {
-        default = selectedNixcordPkgs.goofcord or goofcordPackage;
+        default = selectedClientPackages.goofcord or goofcordPackage;
         defaultText = lib.options.literalExpression "pkgs.callPackage ../../pkgs/goofcord { }";
       };
 

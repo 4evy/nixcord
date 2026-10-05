@@ -108,7 +108,7 @@ let
       discordCommandLineArgs = lib.lists.unique cfg.discord.commandLineArgs;
       discordPackageSupportsKrisp = packageSupportsOverride cfg.discord.package "withKrisp";
       discordCommandLineArgsValue =
-        if cfg.discord.package.passthru.nixcordCommandLineArgsList or false then
+        if cfg.discord.package.passthru.commandLineArgsAsList or false then
           discordCommandLineArgs
         else
           lib.strings.escapeShellArgs discordCommandLineArgs;
@@ -201,18 +201,18 @@ let
         else
           cfg.goofcord.package.overrideAttrs (old: {
             postInstall = (old.postInstall or "") + ''
-              nixcordSupportDir="$out/share/nixcord/goofcord"
-              mkdir -p "$nixcordSupportDir"
+              supportDir="$out/share/goofcord"
+              mkdir -p "$supportDir"
 
               cat assets/preVencord.js ${lib.strings.escapeShellArg goofcordSettingsBootstrap} \
-                > "$nixcordSupportDir/preVencord.js"
-              cp assets/postVencord.js "$nixcordSupportDir/postVencord.js"
+                > "$supportDir/preVencord.js"
+              cp assets/postVencord.js "$supportDir/postVencord.js"
               cp ${lib.strings.escapeShellArg "${goofcordBrowserBuild}/browser.js"} \
-                "$nixcordSupportDir/clientMod.js"
+                "$supportDir/clientMod.js"
               cp ${lib.strings.escapeShellArg "${goofcordBrowserBuild}/browser.css"} \
-                "$nixcordSupportDir/clientMod.css"
-              cp ${lib.strings.escapeShellArg goofcordQuickCss} "$nixcordSupportDir/quickCss.css"
-              cp ${lib.strings.escapeShellArg goofcordThemes} "$nixcordSupportDir/themes.css"
+                "$supportDir/clientMod.css"
+              cp ${lib.strings.escapeShellArg goofcordQuickCss} "$supportDir/quickCss.css"
+              cp ${lib.strings.escapeShellArg goofcordThemes} "$supportDir/themes.css"
             '';
           });
 

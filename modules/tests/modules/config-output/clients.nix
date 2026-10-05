@@ -8,15 +8,15 @@ let
     recursiveUpdate
     ;
   inherit (testLib) lib pkgs;
-  stubDiscordPackage = pkgs.runCommand "nixcord-discord-stub" { } "mkdir $out" // {
-    passthru.nixcordCommandLineArgsList = true;
+  stubDiscordPackage = pkgs.runCommand "discord-stub" { } "mkdir $out" // {
+    passthru.commandLineArgsAsList = true;
     override =
       lib.trivial.setFunctionArgs
         (
           args:
-          pkgs.runCommand "nixcord-discord-final-stub" { } "mkdir $out"
+          pkgs.runCommand "discord-final-stub" { } "mkdir $out"
           // {
-            passthru.nixcordOverrideArgs = args;
+            passthru.overrideArgs = args;
           }
         )
         {
@@ -30,61 +30,57 @@ let
           withVencord = true;
         };
   };
-  stubDiscordPackageWithoutKrisp =
-    pkgs.runCommand "nixcord-discord-no-krisp-stub" { } "mkdir $out"
-    // {
-      passthru.nixcordCommandLineArgsList = true;
-      override =
-        lib.trivial.setFunctionArgs
-          (
-            args:
-            assert !(args ? withKrisp);
-            pkgs.runCommand "nixcord-discord-no-krisp-final-stub" { } "mkdir $out"
-            // {
-              passthru.nixcordOverrideArgs = args;
-            }
-          )
-          {
-            branch = true;
-            commandLineArgs = true;
-            equicord = true;
-            vencord = true;
-            withEquicord = true;
-            withOpenASAR = true;
-            withVencord = true;
-          };
-    };
-  stubDiscordPackageWithStringArgs =
-    pkgs.runCommand "nixcord-discord-string-args-stub" { } "mkdir $out"
-    // {
-      override =
-        lib.trivial.setFunctionArgs
-          (
-            args:
-            pkgs.runCommand "nixcord-discord-string-args-final-stub" { } "mkdir $out"
-            // {
-              passthru.nixcordOverrideArgs = args;
-            }
-          )
-          {
-            branch = true;
-            commandLineArgs = true;
-            equicord = true;
-            vencord = true;
-            withEquicord = true;
-            withOpenASAR = true;
-            withVencord = true;
-          };
-    };
-  stubVesktopPackage = pkgs.runCommand "nixcord-vesktop-stub" { } "mkdir $out" // {
+  stubDiscordPackageWithoutKrisp = pkgs.runCommand "discord-no-krisp-stub" { } "mkdir $out" // {
+    passthru.commandLineArgsAsList = true;
+    override =
+      lib.trivial.setFunctionArgs
+        (
+          args:
+          assert !(args ? withKrisp);
+          pkgs.runCommand "discord-no-krisp-final-stub" { } "mkdir $out"
+          // {
+            passthru.overrideArgs = args;
+          }
+        )
+        {
+          branch = true;
+          commandLineArgs = true;
+          equicord = true;
+          vencord = true;
+          withEquicord = true;
+          withOpenASAR = true;
+          withVencord = true;
+        };
+  };
+  stubDiscordPackageWithStringArgs = pkgs.runCommand "discord-string-args-stub" { } "mkdir $out" // {
+    override =
+      lib.trivial.setFunctionArgs
+        (
+          args:
+          pkgs.runCommand "discord-string-args-final-stub" { } "mkdir $out"
+          // {
+            passthru.overrideArgs = args;
+          }
+        )
+        {
+          branch = true;
+          commandLineArgs = true;
+          equicord = true;
+          vencord = true;
+          withEquicord = true;
+          withOpenASAR = true;
+          withVencord = true;
+        };
+  };
+  stubVesktopPackage = pkgs.runCommand "vesktop-stub" { } "mkdir $out" // {
     override =
       args:
-      pkgs.runCommand "nixcord-vesktop-final-stub" { } "mkdir $out"
+      pkgs.runCommand "vesktop-final-stub" { } "mkdir $out"
       // {
-        passthru.nixcordOverrideArgs = args;
+        passthru.overrideArgs = args;
       };
   };
-  stubEquicordPackage = pkgs.runCommand "nixcord-equicord-stub" { } "mkdir -p $out/equibop" // {
+  stubEquicordPackage = pkgs.runCommand "equicord-stub" { } "mkdir -p $out/equibop" // {
     overrideAttrs =
       f:
       let
@@ -93,21 +89,21 @@ let
           postInstall = "";
         };
       in
-      pkgs.runCommand "nixcord-equicord-final-stub" { } "mkdir -p $out/equibop" // attrs;
+      pkgs.runCommand "equicord-final-stub" { } "mkdir -p $out/equibop" // attrs;
   };
   stubEquibopPackage = lib.customisation.makeOverridable (
     {
       withMiddleClickScroll ? false,
     }:
-    pkgs.runCommand "nixcord-equibop-stub" {
-      passthru.nixcordWithMiddleClickScroll = withMiddleClickScroll;
+    pkgs.runCommand "equibop-stub" {
+      passthru.withMiddleClickScroll = withMiddleClickScroll;
     } "mkdir $out"
     // {
       postPatch = "";
       postFixup = "";
     }
   ) { };
-  stubGoofcordPackage = pkgs.runCommandLocal "nixcord-goofcord-stub" { } "mkdir $out";
+  stubGoofcordPackage = pkgs.runCommandLocal "goofcord-stub" { } "mkdir $out";
 in
 {
   "vencord is disabled by default" =
@@ -116,7 +112,7 @@ in
         enable = true;
         discord.package = stubDiscordPackage;
       };
-      overrideArgs = config.programs.nixcord.finalPackage.discord.passthru.nixcordOverrideArgs;
+      overrideArgs = config.programs.nixcord.finalPackage.discord.passthru.overrideArgs;
     in
     assert !config.programs.nixcord.discord.vencord.enable;
     assert !config.programs.nixcord.discord.equicord.enable;
@@ -131,7 +127,7 @@ in
         discord.package = stubDiscordPackage;
         discord.equicord.enable = true;
       };
-      overrideArgs = config.programs.nixcord.finalPackage.discord.passthru.nixcordOverrideArgs;
+      overrideArgs = config.programs.nixcord.finalPackage.discord.passthru.overrideArgs;
     in
     assert !config.programs.nixcord.discord.vencord.enable;
     assert !overrideArgs.withVencord;
@@ -162,7 +158,7 @@ in
       settingsJson = testLib.output.homeFileSource config "/home/testuser/.config/discord/settings.json";
     in
     assert !(builtins.hasAttr "/home/testuser/.config/discord/settings.json" config.home.file);
-    assert config.home.activation ? nixcord-discord-settings;
+    assert config.home.activation ? discord-settings;
     ''
       ${testLib.output.json settingsJson ''.BACKGROUND_COLOR == "#2c2d32" and .SKIP_HOST_UPDATE == true and .SKIP_MODULE_UPDATE == true and .USE_NEW_UPDATER == false''}
     '';
@@ -182,7 +178,7 @@ in
           };
         }
       );
-      overrideArgs = config.programs.nixcord.finalPackage.discord.passthru.nixcordOverrideArgs;
+      overrideArgs = config.programs.nixcord.finalPackage.discord.passthru.overrideArgs;
     in
     assert overrideArgs.commandLineArgs == lib.strings.escapeShellArgs commandLineArgs;
     true;
@@ -198,7 +194,7 @@ in
           };
         }
       );
-      overrideArgs = config.programs.nixcord.finalPackage.discord.passthru.nixcordOverrideArgs;
+      overrideArgs = config.programs.nixcord.finalPackage.discord.passthru.overrideArgs;
     in
     assert !(overrideArgs ? withKrisp);
     assert overrideArgs.withEquicord == true;
@@ -214,7 +210,7 @@ in
           };
         }
       );
-      overrideArgs = config.programs.nixcord.finalPackage.discord.passthru.nixcordOverrideArgs;
+      overrideArgs = config.programs.nixcord.finalPackage.discord.passthru.overrideArgs;
     in
     assert overrideArgs.withKrisp == true;
     true;
@@ -244,7 +240,7 @@ in
           autoscroll.enable = true;
         };
       };
-      overrideArgs = config.programs.nixcord.finalPackage.vesktop.passthru.nixcordOverrideArgs;
+      overrideArgs = config.programs.nixcord.finalPackage.vesktop.passthru.overrideArgs;
     in
     assert overrideArgs.withSystemVencord == false;
     assert overrideArgs.withMiddleClickScroll == true;
@@ -263,7 +259,7 @@ in
         };
       };
       inherit (config.programs.nixcord.finalPackage) equibop;
-      inherit (config._nixcordTest.common.packages) equicord;
+      inherit (config._moduleTest.common.packages) equicord;
       postPatch = builtins.unsafeDiscardStringContext equibop.postPatch;
       equicordAsar = builtins.unsafeDiscardStringContext "${equicord}/equibop.asar";
     in
@@ -302,7 +298,7 @@ in
         };
       };
     in
-    assert config.programs.nixcord.finalPackage.equibop.passthru.nixcordWithMiddleClickScroll;
+    assert config.programs.nixcord.finalPackage.equibop.passthru.withMiddleClickScroll;
     true;
 
   "goofcord uses local system mod assets and injects declarative settings" =
@@ -327,7 +323,7 @@ in
             assets = {
               FromSettings = "https://example.invalid/from-settings.js";
               Precedence = "https://example.invalid/from-settings-precedence.js";
-              NixcordClientMod = "https://example.invalid/attempted-override.js";
+              ClientMod = "https://example.invalid/attempted-override.js";
             };
           };
           extraAssets = {
@@ -337,10 +333,10 @@ in
         };
       };
       cfg = config.programs.nixcord;
-      goofcordJson = testLib.output.homeActivationSource config "nixcord-goofcord-settings";
-      modSettings = builtins.fromJSON config._nixcordTest.common.configs.goofcordModSettings;
-      bootstrap = config._nixcordTest.common.configs.goofcordSettingsBootstrapText;
-      fileNames = map (spec: spec.name) config._nixcordTest.common.fileSpecs;
+      goofcordJson = testLib.output.homeActivationSource config "goofcord-settings";
+      modSettings = builtins.fromJSON config._moduleTest.common.configs.goofcordModSettings;
+      bootstrap = config._moduleTest.common.configs.goofcordSettingsBootstrapText;
+      fileNames = map (spec: spec.name) config._moduleTest.common.fileSpecs;
     in
     assert toString cfg.finalPackage.goofcord != toString stubGoofcordPackage;
     assert modSettings.plugins.AlwaysAnimate.enabled == true;
@@ -361,9 +357,9 @@ in
         and .assets.Custom == "https://example.invalid/custom.js"
         and .assets.FromSettings == "https://example.invalid/from-settings.js"
         and .assets.Precedence == "https://example.invalid/from-extra-assets.js"
-        and (.assets.NixcordPreVencord | startswith("/nix/store/"))
-        and (.assets.NixcordClientMod | endswith("/clientMod.js"))
-        and (.managedFiles | contains(["NixcordPreVencord.js", "NixcordPostVencord.js", "NixcordClientMod.js", "NixcordClientModStyles.css", "NixcordQuickCSS.css", "NixcordThemes.css", "PreVencord.js", "PostVencord.js", "Vencord.js", "VencordStyles.css", "Equicord.js", "EquicordStyles.css"]))
+        and (.assets.PreVencord | startswith("/nix/store/"))
+        and (.assets.ClientMod | endswith("/clientMod.js"))
+        and (.managedFiles | contains(["PreVencord.js", "PostVencord.js", "ClientMod.js", "ClientModStyles.css", "QuickCSS.css", "Themes.css", "NixcordPreVencord.js", "NixcordPostVencord.js", "NixcordClientMod.js", "NixcordClientModStyles.css", "NixcordQuickCSS.css", "NixcordThemes.css", "Vencord.js", "VencordStyles.css", "Equicord.js", "EquicordStyles.css"]))
       ''}
     '';
 
@@ -384,7 +380,7 @@ in
           ${firstVencordOnly}.enable = true;
         };
       };
-      common = config._nixcordTest.common;
+      common = config._moduleTest.common;
       modSettings = builtins.fromJSON common.configs.goofcordModSettings;
       equicordPluginKey = builtins.head (
         builtins.attrNames (common.mkVencordCfg { plugins.${firstEquicordOnly}.enable = true; }).plugins
@@ -409,7 +405,7 @@ in
     assert toString config.programs.nixcord.dorion.package == toString pkgs.dorion;
     true;
 
-  "goofcord defaults to the Nixcord package" =
+  "goofcord defaults to the bundled package" =
     let
       config = testLib.eval.hm {
         enable = true;

@@ -18,5 +18,5 @@ in
     visible = false;
     description = "REMOVED: Plugin '${pluginName}' was removed upstream.";
   };
-  config.warnings = lib.lists.optional pluginEnabled "Plugin '${pluginName}' has been removed upstream. Please remove it from your nixcord configuration. This shim will be removed soon.";
+  config.warnings = lib.lists.optional pluginEnabled "Plugin '${pluginName}' has been removed upstream. Please remove it from your configuration. This shim will be removed soon.";
 }

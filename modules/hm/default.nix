@@ -40,7 +40,7 @@
       );
       writableHomeActivations = lib.attrsets.genAttrs' fileSpecsByWritable.right (
         spec:
-        lib.attrsets.nameValuePair "nixcord-${spec.name}" (
+        lib.attrsets.nameValuePair spec.name (
           lib.hm.dag.entryAfter [ "writeBoundary" ] ''
             dest=${lib.strings.escapeShellArg spec.dest}
             src=${lib.strings.escapeShellArg spec.src}

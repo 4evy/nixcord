@@ -10,10 +10,10 @@ let
       discord.enable = false;
       vesktop.enable = true;
       equibop.enable = true;
-      extraConfig.nixcordCoexistence = "global";
-      vesktopConfig.nixcordCoexistence = "vesktop";
-      equibopConfig.nixcordCoexistence = "equibop";
-      goofcordConfig.nixcordCoexistence = "goofcord-${clientMod}";
+      extraConfig.clientCoexistence = "global";
+      vesktopConfig.clientCoexistence = "vesktop";
+      equibopConfig.clientCoexistence = "equibop";
+      goofcordConfig.clientCoexistence = "goofcord-${clientMod}";
       quickCss = "body { color: rebeccapurple; }";
       config = {
         useQuickCss = true;
@@ -37,8 +37,8 @@ let
   vencord = evalGoofcord "vencord";
   equicord = evalGoofcord "equicord";
 
-  vencordFiles = vencord._nixcordTest.common.files;
-  equicordFiles = equicord._nixcordTest.common.files;
+  vencordFiles = vencord._moduleTest.common.files;
+  equicordFiles = equicord._moduleTest.common.files;
   vencordPackage = vencord.programs.nixcord.finalPackage.goofcord;
 in
 pkgs.runCommand "goofcord-support-test" { nativeBuildInputs = [ pkgs.jq ]; } ''
@@ -63,8 +63,8 @@ pkgs.runCommand "goofcord-support-test" { nativeBuildInputs = [ pkgs.jq ]; } ''
     grep -Fq "$settings_key" "$support/preVencord.js"
     grep -Fq 'AlwaysAnimate' "$support/preVencord.js"
 
-    test "$(jq -r '.assets.NixcordPreVencord' "$settings")" = "$support/preVencord.js"
-    test "$(jq -r '.assets.NixcordClientMod' "$settings")" = "$support/clientMod.js"
+    test "$(jq -r '.assets.PreVencord' "$settings")" = "$support/preVencord.js"
+    test "$(jq -r '.assets.ClientMod' "$settings")" = "$support/clientMod.js"
   }
 
   check_support \
@@ -86,14 +86,14 @@ pkgs.runCommand "goofcord-support-test" { nativeBuildInputs = [ pkgs.jq ]; } ''
       config:
       let
         cfg = config.programs.nixcord;
-        support = config._nixcordTest.common.files.goofcordSupport;
+        support = config._moduleTest.common.files.goofcordSupport;
       in
       ''
-        ${testLib.output.json (testLib.output.homeFileSource config "${cfg.vesktop.configDir}/settings/settings.json") ''.nixcordCoexistence == "vesktop"''}
-        ${testLib.output.json (testLib.output.homeFileSource config "${cfg.equibop.configDir}/settings/settings.json") ''.nixcordCoexistence == "equibop"''}
-        grep -Fq ${pkgs.lib.strings.escapeShellArg ''\"nixcordCoexistence\":\"goofcord-${cfg.goofcord.clientMod}\"''} \
+        ${testLib.output.json (testLib.output.homeFileSource config "${cfg.vesktop.configDir}/settings/settings.json") ''.clientCoexistence == "vesktop"''}
+        ${testLib.output.json (testLib.output.homeFileSource config "${cfg.equibop.configDir}/settings/settings.json") ''.clientCoexistence == "equibop"''}
+        grep -Fq ${pkgs.lib.strings.escapeShellArg ''\"clientCoexistence\":\"goofcord-${cfg.goofcord.clientMod}\"''} \
           ${support}/preVencord.js
-        if grep -Fq -e '\"nixcordCoexistence\":\"vesktop\"' -e '\"nixcordCoexistence\":\"equibop\"' \
+        if grep -Fq -e '\"clientCoexistence\":\"vesktop\"' -e '\"clientCoexistence\":\"equibop\"' \
           ${support}/preVencord.js; then
           echo 'Desktop client configuration leaked into Goofcord' >&2
           exit 1

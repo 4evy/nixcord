@@ -155,32 +155,32 @@ let
             {
               name = "pre-vencord";
               src = supportPath "preVencord.js";
-              dest = "NixcordPreVencord.js";
+              dest = "PreVencord.js";
             }
             {
               name = "post-vencord";
               src = supportPath "postVencord.js";
-              dest = "NixcordPostVencord.js";
+              dest = "PostVencord.js";
             }
             {
               name = "client-mod-js";
               src = supportPath "clientMod.js";
-              dest = "NixcordClientMod.js";
+              dest = "ClientMod.js";
             }
             {
               name = "client-mod-css";
               src = supportPath "clientMod.css";
-              dest = "NixcordClientModStyles.css";
+              dest = "ClientModStyles.css";
             }
             {
               name = "quick-css";
               src = supportPath "quickCss.css";
-              dest = "NixcordQuickCSS.css";
+              dest = "QuickCSS.css";
             }
             {
               name = "themes";
               src = supportPath "themes.css";
-              dest = "NixcordThemes.css";
+              dest = "Themes.css";
             }
           ];
 
@@ -347,10 +347,7 @@ let
     in
     lib.attrsets.mapAttrs (
       _: spec:
-      if spec.enable then
-        jsonFormat.generate "nixcord-${spec.name}.json" (mkVencordCfg spec.value)
-      else
-        null
+      if spec.enable then jsonFormat.generate "${spec.name}.json" (mkVencordCfg spec.value) else null
     ) settingSpecs;
 
   mkThemeFile =
@@ -359,7 +356,7 @@ let
     if builtins.isPath value || lib.strings.isStorePath value then
       value
     else
-      pkgs.writeText "nixcord-theme-${name}.css" value;
+      pkgs.writeText "theme-${name}.css" value;
 in
 {
   inherit

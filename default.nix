@@ -27,7 +27,7 @@ let
       _file = location;
       key = location;
       imports = [ module ];
-      _module.args.nixcordPkgs = import ./pkgs {
+      _module.args.clientPackages = import ./pkgs {
         inherit pkgs revision;
       };
     };

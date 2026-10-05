@@ -6,9 +6,9 @@
 let
   inherit (pkgs) lib;
   isDarwin = pkgs.stdenv.hostPlatform.isDarwin;
-  home = if isDarwin then "/Users/nixcord-test" else "/home/nixcord-test";
+  home = if isDarwin then "/Users/test" else "/home/test";
   package = lib.customisation.makeOverridable (
-    _: pkgs.writeShellScriptBin "nixcord-integration-client" "exit 0"
+    _: pkgs.writeShellScriptBin "integration-client" "exit 0"
   ) { };
   settings = {
     enable = true;
@@ -23,7 +23,7 @@ let
     quickCss = "body { color: purple; }";
     config.useQuickCss = true;
   };
-  moduleArgs._module.args.nixcordPkgs = { };
+  moduleArgs._module.args.clientPackages = { };
   hm =
     enabled:
     home-manager.lib.homeManagerConfiguration {
@@ -33,7 +33,7 @@ let
         moduleArgs
         {
           home = {
-            username = "nixcord-test";
+            username = "test";
             homeDirectory = home;
             stateVersion = "26.05";
           };
@@ -54,15 +54,15 @@ let
         nixpkgs.pkgs = pkgs;
         programs.nixcord = settings // {
           enable = enabled;
-          user = "nixcord-test";
+          user = "test";
         };
-        users.users.nixcord-test.home = home;
+        users.users.test.home = home;
         system.stateVersion = if isDarwin then 6 else "26.05";
       }
     ]
     ++ lib.optionals (!isDarwin) [
       {
-        users.users.nixcord-test.isNormalUser = true;
+        users.users.test.isNormalUser = true;
         boot.loader.grub.devices = [ "nodev" ];
         fileSystems."/" = {
           device = "none";
@@ -97,7 +97,7 @@ let
   enabledPackage = hmEnabled.config.programs.nixcord.finalPackage.vesktop;
   hasClient = packages: builtins.any (p: toString p == toString enabledPackage) packages;
   ownsFile = path: lib.strings.hasInfix "vesktop" path;
-  ownsActivation = name: lib.strings.hasPrefix "nixcord-" name;
+  ownsActivation = name: lib.strings.hasPrefix "vesktop-" name;
 in
 assert assertionsPass hmEnabled;
 assert assertionsPass hmDisabled;
@@ -110,9 +110,9 @@ assert !(hasClient systemDisabled.config.environment.systemPackages);
 assert !(builtins.any ownsFile disabledHomeFiles);
 assert !(builtins.any ownsActivation (builtins.attrNames hmDisabled.config.home.activation));
 assert
-  !(lib.strings.hasInfix "nixcord-vesktop" (builtins.unsafeDiscardStringContext disabledScript));
-assert lib.strings.hasInfix "nixcord-vesktop" (builtins.unsafeDiscardStringContext enabledScript);
-pkgs.runCommand "nixcord-module-integration" { nativeBuildInputs = [ pkgs.jq ]; } ''
+  !(lib.strings.hasInfix "vesktop-settings" (builtins.unsafeDiscardStringContext disabledScript));
+assert lib.strings.hasInfix "vesktop-settings" (builtins.unsafeDiscardStringContext enabledScript);
+pkgs.runCommand "module-integration" { nativeBuildInputs = [ pkgs.jq ]; } ''
   jq -e '.integration == "client"' \
     '${hmEnabled.activationPackage}/home-files/${clientDir}/settings.json'
   jq -e '.plugins.AlwaysAnimate.enabled == true' \
@@ -120,6 +120,6 @@ pkgs.runCommand "nixcord-module-integration" { nativeBuildInputs = [ pkgs.jq ]; 
   diff -u <(printf '%s' 'body { color: purple; }') \
     '${hmEnabled.activationPackage}/home-files/${clientDir}/settings/quickCss.css'
   # Inspect the assembled script without activating a system during the build.
-  grep -F 'nixcord-vesktop' ${pkgs.writeText "system-activation" enabledScript}
+  grep -F 'vesktop-settings' ${pkgs.writeText "system-activation" enabledScript}
   touch "$out"
 ''

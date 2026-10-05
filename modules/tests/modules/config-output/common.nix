@@ -21,8 +21,8 @@ in
 
   discordModSettingsSource =
     config:
-    if config.home.activation ? nixcord-vencord-settings then
-      testLib.output.homeActivationSource config "nixcord-vencord-settings"
+    if config.home.activation ? vencord-settings then
+      testLib.output.homeActivationSource config "vencord-settings"
     else
-      testLib.output.homeActivationSource config "nixcord-equicord-settings";
+      testLib.output.homeActivationSource config "equicord-settings";
 }

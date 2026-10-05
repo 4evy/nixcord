@@ -24,7 +24,7 @@ let
       ]
       ++ extraModules;
     };
-  marker = pkgs.runCommand "nixcord-flake-interface-marker" { } "touch $out";
+  marker = pkgs.runCommand "flake-interface-marker" { } "touch $out";
   withPackages =
     packages:
     (import "${self.outPath}/flake.nix").outputs (
@@ -113,9 +113,8 @@ let
       {
         programs.nixcord.useGlobalPkgs = false;
         home = {
-          username = "nixcord-test";
-          homeDirectory =
-            if pkgs.stdenv.hostPlatform.isDarwin then "/Users/nixcord-test" else "/home/nixcord-test";
+          username = "test";
+          homeDirectory = if pkgs.stdenv.hostPlatform.isDarwin then "/Users/test" else "/home/test";
           stateVersion = "26.05";
         };
       }
@@ -147,7 +146,7 @@ testLib.run.tests "flake-interface" (
   moduleTests
   // {
     "explicit system takes precedence over the consuming package set" =
-      explicitSystem._module.args.nixcordPkgs.vencord.drvPath
+      explicitSystem._module.args.clientPackages.vencord.drvPath
       == self.packages.x86_64-linux.vencord.drvPath;
     "real Home Manager receives pinned packages" =
       hm.config.programs.nixcord.discord.vencord.package.drvPath
@@ -158,7 +157,7 @@ testLib.run.tests "flake-interface" (
     "unsupported systems fail when pinned packages are requested" =
       !(builtins.tryEval (
         (eval self "homeModules" [ { _module.args.system = "unsupported-system"; } ])
-        ._module.args.nixcordPkgs
+        ._module.args.clientPackages
       )).success;
     "unsupported systems can use the consuming package set" =
       (eval self "homeModules" [

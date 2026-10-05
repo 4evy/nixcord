@@ -47,7 +47,7 @@ let
     enable = true;
     quickCss = ''
       :root {
-        --nixcord-regression: #5865f2;
+        --regression: #5865f2;
       }
     '';
 
@@ -175,8 +175,8 @@ let
       enabledThemeLinks = [ "https://example.invalid/regression.theme.css" ];
       enabledThemes = [ "regression.css" ];
       themes.regression = ''
-        .nixcord-regression {
-          color: var(--nixcord-regression);
+        .regression {
+          color: var(--regression);
         }
       '';
       plugins = {

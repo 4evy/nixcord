@@ -15,7 +15,7 @@ let
   binaryName = if isLinux then lib.strings.replaceString " " "" desktopName else desktopName;
 in
 assert lib.asserts.assertMsg (builtins.hasAttr branch branches)
-  "nixcord Discord: branch '${branch}' is unavailable on this platform";
+  "Discord: branch '${branch}' is unavailable on this platform";
 {
   inherit binaryName desktopName;
   pname = if branch == "stable" then "discord" else "discord-${branch}";

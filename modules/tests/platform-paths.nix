@@ -11,7 +11,7 @@ let
         stub
         (import module)
         {
-          _module.args.nixcordPkgs = { };
+          _module.args.clientPackages = { };
           programs.nixcord = {
             enable = true;
             discord.vencord.enable = true;

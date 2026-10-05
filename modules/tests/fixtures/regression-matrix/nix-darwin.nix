@@ -9,7 +9,7 @@
 let
   pluginRoot = args.pluginRoot or ../../../plugins;
   matrix = import ./scenarios.nix { inherit lib pluginRoot; };
-  goofcordPackage = pkgs.runCommandLocal "nixcord-regression-goofcord" { } "mkdir $out";
+  goofcordPackage = pkgs.runCommandLocal "regression-goofcord" { } "mkdir $out";
 in
 {
   imports = [

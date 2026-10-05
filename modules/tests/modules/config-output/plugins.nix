@@ -5,7 +5,7 @@ let
   inherit (common) baseConfig discordModSettingsSource recursiveUpdate;
   inherit (testLib) lib pkgs;
   localPlugin = ../../../../packages/parser/tests/fixtures/equicord/src/plugins/shared-plugin;
-  stubEquicordPackage = pkgs.runCommand "nixcord-equicord-stub" { } "mkdir $out" // {
+  stubEquicordPackage = pkgs.runCommand "equicord-stub" { } "mkdir $out" // {
     overrideAttrs =
       f:
       let
@@ -14,7 +14,7 @@ let
           postInstall = "";
         };
       in
-      pkgs.runCommand "nixcord-equicord-final-stub" { } "mkdir $out" // attrs;
+      pkgs.runCommand "equicord-final-stub" { } "mkdir $out" // attrs;
   };
 in
 {
@@ -209,7 +209,7 @@ in
           userPlugins.BetterAudioDefaults = builtins.unsafeDiscardStringContext (toString localPlugin);
         }
       );
-      postPatch = builtins.unsafeDiscardStringContext config._nixcordTest.common.packages.equicord.postPatch;
+      postPatch = builtins.unsafeDiscardStringContext config._moduleTest.common.packages.equicord.postPatch;
       storePlugin = builtins.unsafeDiscardStringContext "${localPlugin}";
     in
     assert lib.strings.hasInfix "cp -r ${storePlugin} src/userplugins/BetterAudioDefaults" postPatch;
@@ -229,7 +229,7 @@ in
           userPlugins.packagedPlugin = pluginPackage;
         }
       );
-      postPatch = builtins.unsafeDiscardStringContext config._nixcordTest.common.packages.equicord.postPatch;
+      postPatch = builtins.unsafeDiscardStringContext config._moduleTest.common.packages.equicord.postPatch;
       packagePath = builtins.unsafeDiscardStringContext "${pluginPackage}";
     in
     assert lib.strings.hasInfix "cp -r ${packagePath} src/userplugins/packagedPlugin" postPatch;

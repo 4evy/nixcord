@@ -6,15 +6,15 @@
 
 {
   hm =
-    nixcordConfig:
+    moduleConfig:
     let
       evaluated = lib.modules.evalModules {
         modules = [
           stubs.hm
           (import ../../hm/default.nix)
           {
-            _module.args.nixcordPkgs = { };
-            programs.nixcord = nixcordConfig;
+            _module.args.clientPackages = { };
+            programs.nixcord = moduleConfig;
           }
         ];
         specialArgs = { inherit pkgs; };
@@ -22,24 +22,24 @@
     in
     evaluated.config
     // {
-      _nixcordTest.common = import ../../lib/mkCommonConfig.nix {
+      _moduleTest.common = import ../../lib/mkCommonConfig.nix {
         inherit (evaluated) config options;
         inherit lib pkgs;
       };
     };
 
   nixos =
-    nixcordConfig:
+    moduleConfig:
     (lib.modules.evalModules {
       modules = [
         stubs.nixos
         (import ../../nixos/default.nix)
         {
-          _module.args.nixcordPkgs = { };
+          _module.args.clientPackages = { };
           programs.nixcord = {
             user = "testuser";
           }
-          // nixcordConfig;
+          // moduleConfig;
 
           users.users.testuser = {
             name = "testuser";
@@ -54,17 +54,17 @@
     }).config;
 
   darwin =
-    nixcordConfig:
+    moduleConfig:
     (lib.modules.evalModules {
       modules = [
         stubs.darwin
         (import ../../darwin/default.nix)
         {
-          _module.args.nixcordPkgs = { };
+          _module.args.clientPackages = { };
           programs.nixcord = {
             user = "testuser";
           }
-          // nixcordConfig;
+          // moduleConfig;
 
           users.users.testuser = {
             name = "testuser";

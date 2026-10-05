@@ -19,8 +19,8 @@ testLib.run.tests "darwin-activation-stage-test" {
   "Dorion activation runs in nix-darwin's applications stage" =
     testLib.lib.strings.hasInfix "VencordSettings" applications;
 
-  "Nixcord does not create activation stages ignored by nix-darwin" =
-    !(activationScripts ? nixcord-disableDiscordUpdates)
-    && !(activationScripts ? nixcord-fixDiscordModules)
-    && !(activationScripts ? nixcord-setupDorionVencordSettings);
+  "The module does not create activation stages ignored by nix-darwin" =
+    !(activationScripts ? disableDiscordUpdates)
+    && !(activationScripts ? fixDiscordModules)
+    && !(activationScripts ? setupDorionVencordSettings);
 }

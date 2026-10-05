@@ -6,7 +6,7 @@ let
     config: pluginName:
     builtins.head (
       builtins.attrNames
-        (config._nixcordTest.common.mkVencordCfg {
+        (config._moduleTest.common.mkVencordCfg {
           plugins.${pluginName}.enable = true;
         }).plugins
     );
@@ -75,7 +75,7 @@ in
           lowerThing.enable = true;
         };
       };
-      settingsJson = testLib.output.homeActivationSource config "nixcord-vencord-settings";
+      settingsJson = testLib.output.homeActivationSource config "vencord-settings";
     in
     ''
       ${testLib.output.json settingsJson ''

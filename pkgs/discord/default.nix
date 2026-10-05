@@ -91,19 +91,19 @@ let
 in
 assert lib.asserts.assertMsg (lib.meta.availableOn stdenv.hostPlatform {
   inherit meta;
-}) "nixcord Discord: unsupported platform '${stdenv.hostPlatform.system}'";
+}) "Discord: unsupported platform '${stdenv.hostPlatform.system}'";
 assert lib.asserts.assertMsg (
   builtins.length enabledMods <= 1
-) "nixcord Discord: Vencord and Equicord cannot both be enabled";
+) "Discord: Vencord and Equicord cannot both be enabled";
 assert lib.asserts.assertMsg (
   appDataDir == null || (stdenv.hostPlatform.isDarwin && lib.strings.hasPrefix "/" appDataDir)
-) "nixcord Discord: appDataDir must be an absolute Darwin path";
+) "Discord: appDataDir must be an absolute Darwin path";
 assert lib.asserts.assertMsg (
   modDataDir == null || (stdenv.hostPlatform.isDarwin && lib.strings.hasPrefix "/" modDataDir)
-) "nixcord Discord: modDataDir must be an absolute Darwin path";
+) "Discord: modDataDir must be an absolute Darwin path";
 assert lib.asserts.assertMsg (
   !withOpenASAR || openasar != null
-) "nixcord Discord: OpenASAR requires an openasar package for updater and data directory patching";
+) "Discord: OpenASAR requires an openasar package for updater and data directory patching";
 stdenv.mkDerivation (
   finalAttrs:
   let
@@ -159,8 +159,8 @@ stdenv.mkDerivation (
       inherit source moduleSrcs moduleVersions;
       updateScript = callPackage ./sources/update { };
       stageModules = finalAttrs.stageModules;
-      nixcordCommandLineArgsList = true;
-      nixcordKrispPatch = hasKrispModule;
+      commandLineArgsAsList = true;
+      krispPatched = hasKrispModule;
     };
   }
 )

@@ -93,7 +93,7 @@ in
         To acknowledge and silence this warning, set programs.nixcord.discord.silenceNoModClientWarning to true.
       ''
       ++ lib.lists.optional discordKrispUnsupported ''
-        programs.nixcord.discord.krisp.enable is enabled, but the selected Discord package does not expose nixcord's withKrisp patch override. Krisp patching will be skipped for this package.
+        programs.nixcord.discord.krisp.enable is enabled, but the selected Discord package does not expose the withKrisp patch override. Krisp patching will be skipped for this package.
       '';
 
     assertions = mkAssertions cfg pluginKit ++ [

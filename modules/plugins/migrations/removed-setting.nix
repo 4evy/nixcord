@@ -27,5 +27,5 @@ in
   );
   config.warnings =
     lib.lists.optional (settingValue != null)
-      "Plugin setting '${settingName}' has been removed upstream and is ignored. Please remove it from your nixcord configuration. This shim will be removed soon.";
+      "Plugin setting '${settingName}' has been removed upstream and is ignored. Please remove it from your configuration. This shim will be removed soon.";
 }

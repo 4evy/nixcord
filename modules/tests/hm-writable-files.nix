@@ -2,14 +2,14 @@
 
 let
   testLib = import ./lib { inherit pkgs; };
-  destinationRoot = "/tmp/nixcord-hm-writable-files-test";
+  destinationRoot = "/tmp/hm-writable-files-test";
   config = testLib.eval.hm {
     enable = true;
     discord.vencord.enable = true;
     configDir = "${destinationRoot}/Vencord";
     config.plugins.alwaysAnimate.enable = true;
   };
-  activation = config.home.activation.nixcord-vencord-settings.data;
+  activation = config.home.activation.vencord-settings.data;
   destination = "${destinationRoot}/Vencord/settings/settings.json";
 in
 pkgs.runCommand "hm-writable-files-test"

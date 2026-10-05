@@ -10,7 +10,7 @@ in
       config = testLib.eval.hm baseConfig;
     in
     assert !(builtins.hasAttr "/home/testuser/.config/Vencord/settings/settings.json" config.home.file);
-    assert config.home.activation ? nixcord-vencord-settings;
+    assert config.home.activation ? vencord-settings;
     true;
 
   "quickCss creates a css file when enabled and non-empty" =

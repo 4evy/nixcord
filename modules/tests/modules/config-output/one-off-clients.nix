@@ -48,7 +48,7 @@ in
           };
         };
       };
-      settingsJson = testLib.output.homeActivationSource config "nixcord-legcord-settings";
+      settingsJson = testLib.output.homeActivationSource config "legcord-settings";
     in
     ''
       ${testLib.output.json settingsJson ''.channel == "canary" and .doneSetup == true and .mods == ["shelter", "vencord"] and .noBundleUpdates == ["shelter", "vencord"]''}
@@ -79,13 +79,13 @@ in
 
   "development branch selects its config directory and reaches the Discord override" =
     let
-      stubDiscordPackage = testLib.pkgs.runCommand "nixcord-discord-branch-stub" { } "mkdir $out" // {
-        passthru.nixcordCommandLineArgsList = true;
+      stubDiscordPackage = testLib.pkgs.runCommand "discord-branch-stub" { } "mkdir $out" // {
+        passthru.commandLineArgsAsList = true;
         override =
           args:
-          testLib.pkgs.runCommand "nixcord-discord-branch-final-stub" { } "mkdir $out"
+          testLib.pkgs.runCommand "discord-branch-final-stub" { } "mkdir $out"
           // {
-            passthru.nixcordOverrideArgs = args;
+            passthru.overrideArgs = args;
           };
       };
       config = testLib.eval.hm {
@@ -97,7 +97,7 @@ in
         };
       };
       cfg = config.programs.nixcord;
-      overrideArgs = cfg.finalPackage.discord.passthru.nixcordOverrideArgs;
+      overrideArgs = cfg.finalPackage.discord.passthru.overrideArgs;
     in
     assert lib.strings.hasSuffix "/discorddevelopment" (toString cfg.discord.configDir);
     assert overrideArgs.branch == "development";

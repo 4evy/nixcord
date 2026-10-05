@@ -2,7 +2,7 @@
   config,
   lib,
   pkgs,
-  nixcordPkgs ? { },
+  clientPackages ? { },
   ...
 }:
 let
@@ -17,7 +17,7 @@ let
   vencordPackage = pkgs.callPackage ../../pkgs/vencord { };
   equicordPackage = pkgs.callPackage ../../pkgs/equicord { };
   openasarPackage = pkgs.openasar;
-  selectedNixcordPkgs = if config.programs.nixcord.useGlobalPkgs then { } else nixcordPkgs;
+  selectedClientPackages = if config.programs.nixcord.useGlobalPkgs then { } else clientPackages;
 
 in
 {
@@ -35,8 +35,8 @@ in
     };
     package = lib.options.mkPackageOption pkgs "Discord" { default = "discord"; } // {
       default =
-        selectedNixcordPkgs.discord or (pkgs.callPackage ../../pkgs/discord {
-          openasar = selectedNixcordPkgs.openasar or openasarPackage;
+        selectedClientPackages.discord or (pkgs.callPackage ../../pkgs/discord {
+          openasar = selectedClientPackages.openasar or openasarPackage;
         });
       defaultText = lib.options.literalExpression "pkgs.callPackage ../../pkgs/discord { }";
       description = ''
@@ -97,14 +97,14 @@ in
     vencord = {
       enable = lib.options.mkEnableOption "Vencord for Discord";
       package = lib.options.mkPackageOption pkgs "Vencord" { default = "vencord"; } // {
-        default = selectedNixcordPkgs.vencord or vencordPackage;
+        default = selectedClientPackages.vencord or vencordPackage;
         defaultText = lib.options.literalExpression "pkgs.callPackage ../../pkgs/vencord { }";
       };
     };
     equicord = {
       enable = lib.options.mkEnableOption "Equicord for Discord";
       package = lib.options.mkPackageOption pkgs "Equicord" { default = "equicord"; } // {
-        default = selectedNixcordPkgs.equicord or equicordPackage;
+        default = selectedClientPackages.equicord or equicordPackage;
         defaultText = lib.options.literalExpression "pkgs.callPackage ../../pkgs/equicord { }";
       };
     };

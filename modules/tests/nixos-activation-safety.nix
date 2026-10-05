@@ -9,15 +9,15 @@ let
     discord.vencord.enable = true;
   };
 
-  generatedScript = config.system.activationScripts.nixcord-writeFiles.text;
-  nixcordActivationNames = [
-    "nixcord-disableDiscordUpdates"
-    "nixcord-fixDiscordModules"
-    "nixcord-writeFiles"
+  generatedScript = config.system.activationScripts.writeDiscordClientFiles.text;
+  activationNames = [
+    "disableDiscordUpdates"
+    "fixDiscordModules"
+    "writeDiscordClientFiles"
   ];
   activationsRunAfterUsers = lib.lists.all (
     name: builtins.elem "users" config.system.activationScripts.${name}.deps
-  ) nixcordActivationNames;
+  ) activationNames;
   harmlessScript =
     builtins.replaceStrings
       [
@@ -41,13 +41,13 @@ pkgs.runCommand "nixos-activation-safety-test" { } ''
   ${harmlessScript}
 
   case "$-" in
-    *e*) echo "Nixcord leaked errexit into the shared activation shell" >&2; exit 1 ;;
+    *e*) echo "Client activation leaked errexit into the shared activation shell" >&2; exit 1 ;;
   esac
   case "$-" in
-    *u*) echo "Nixcord leaked nounset into the shared activation shell" >&2; exit 1 ;;
+    *u*) echo "Client activation leaked nounset into the shared activation shell" >&2; exit 1 ;;
   esac
   if shopt -qo pipefail; then
-    echo "Nixcord leaked pipefail into the shared activation shell" >&2
+    echo "Client activation leaked pipefail into the shared activation shell" >&2
     exit 1
   fi
 

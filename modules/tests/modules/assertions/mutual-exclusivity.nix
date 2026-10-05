@@ -57,7 +57,7 @@ in
         discord.enable = false;
         goofcord = {
           enable = true;
-          package = testLib.pkgs.runCommandLocal "nixcord-goofcord-assets-stub" { } "mkdir $out" // {
+          package = testLib.pkgs.runCommandLocal "goofcord-assets-stub" { } "mkdir $out" // {
             src = testLib.pkgs.emptyDirectory;
           };
           settings.assets = [ "https://example.invalid/not-an-attribute-set.js" ];
@@ -78,7 +78,7 @@ in
         discord.enable = false;
         goofcord = {
           enable = true;
-          package = testLib.pkgs.runCommandLocal "nixcord-goofcord-asset-value-stub" { } "mkdir $out" // {
+          package = testLib.pkgs.runCommandLocal "goofcord-asset-value-stub" { } "mkdir $out" // {
             src = testLib.pkgs.emptyDirectory;
           };
           settings.assets.Invalid = 42;

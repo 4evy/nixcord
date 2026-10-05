@@ -53,7 +53,7 @@ let
 
   jsonFormat = pkgs.formats.json { };
 
-  quickCss = pkgs.writeText "nixcord-quickcss.css" cfg.quickCss;
+  quickCss = pkgs.writeText "quickcss.css" cfg.quickCss;
 
   settings = mkSettingsFiles {
     inherit
@@ -72,7 +72,7 @@ let
   dorionAttrs = mkDorionConfigAttrs cfg;
 
   dorionConfig =
-    if cfg.dorion.enable then jsonFormat.generate "nixcord-dorion-config.json" dorionAttrs else null;
+    if cfg.dorion.enable then jsonFormat.generate "dorion-config.json" dorionAttrs else null;
 
   legcordWeb = lib.attrsets.genAttrs [ "vencord" "equicord" ] (
     client:
@@ -109,7 +109,7 @@ let
     legcord.settings // autoSettings // { doneSetup = true; };
 
   legcordSettings =
-    if cfg.legcord.enable then jsonFormat.generate "nixcord-legcord-config.json" legcordAttrs else null;
+    if cfg.legcord.enable then jsonFormat.generate "legcord-config.json" legcordAttrs else null;
 
   goofcordCanUseSystemMod = cfg.goofcord.enable && cfg.goofcord.package != null;
 
@@ -135,7 +135,7 @@ let
     );
   '';
 
-  goofcordSettingsBootstrap = pkgs.writeText "nixcord-goofcord-settings-bootstrap.js" goofcordSettingsBootstrapText;
+  goofcordSettingsBootstrap = pkgs.writeText "goofcord-settings-bootstrap.js" goofcordSettingsBootstrapText;
 
   enabledGoofcordThemePaths = lib.trivial.pipe (goofcordFullConfig.enabledThemes or [ ]) [
     (map (lib.strings.removeSuffix ".css"))
@@ -143,21 +143,18 @@ let
     (map (name: themes.${name}))
   ];
 
-  goofcordThemeSeparator = pkgs.writeText "nixcord-goofcord-theme-separator" "\n";
+  goofcordThemeSeparator = pkgs.writeText "goofcord-theme-separator" "\n";
 
   goofcordThemes =
     if enabledGoofcordThemePaths == [ ] then
-      pkgs.writeText "nixcord-goofcord-themes.css" ""
+      pkgs.writeText "goofcord-themes.css" ""
     else
-      pkgs.concatText "nixcord-goofcord-themes.css" (
+      pkgs.concatText "goofcord-themes.css" (
         lib.strings.intersperse goofcordThemeSeparator enabledGoofcordThemePaths
       );
 
   goofcordQuickCss =
-    if isQuickCssUsed cfg.goofcordConfig then
-      quickCss
-    else
-      pkgs.writeText "nixcord-goofcord-quickcss.css" "";
+    if isQuickCssUsed cfg.goofcordConfig then quickCss else pkgs.writeText "goofcord-quickcss.css" "";
 
   finalPackages = mkFinalPackages {
     inherit
@@ -172,26 +169,27 @@ let
   };
 
   goofcordSupport =
-    if goofcordCanUseSystemMod then "${finalPackages.goofcord}/share/nixcord/goofcord" else null;
+    if goofcordCanUseSystemMod then "${finalPackages.goofcord}/share/goofcord" else null;
 
-  goofcordManagedFiles = [
-    # Assets managed by this module.
-    "NixcordPreVencord.js"
-    "NixcordPostVencord.js"
-    "NixcordClientMod.js"
-    "NixcordClientModStyles.css"
-    "NixcordQuickCSS.css"
-    "NixcordThemes.css"
-
-    # Include GoofCord's default asset names so its asset manager can remove
-    # old downloads when Nixcord takes over an existing profile.
+  goofcordManagedAssetFiles = [
     "PreVencord.js"
     "PostVencord.js"
-    "Vencord.js"
-    "VencordStyles.css"
-    "Equicord.js"
-    "EquicordStyles.css"
+    "ClientMod.js"
+    "ClientModStyles.css"
+    "QuickCSS.css"
+    "Themes.css"
   ];
+
+  # Track previous names so GoofCord removes old copies before loading assets
+  goofcordManagedFiles =
+    goofcordManagedAssetFiles
+    ++ map (name: "Nixcord${name}") goofcordManagedAssetFiles
+    ++ [
+      "Vencord.js"
+      "VencordStyles.css"
+      "Equicord.js"
+      "EquicordStyles.css"
+    ];
 
   goofcordSettingsAssets =
     if builtins.isAttrs (cfg.goofcord.settings.assets or { }) then
@@ -207,19 +205,19 @@ let
         goofcordSettingsAssets
         // cfg.goofcord.extraAssets
         // lib.attrsets.optionalAttrs (goofcordSupport != null) {
-          NixcordPreVencord = "${goofcordSupport}/preVencord.js";
-          NixcordPostVencord = "${goofcordSupport}/postVencord.js";
-          NixcordClientMod = "${goofcordSupport}/clientMod.js";
-          NixcordClientModStyles = "${goofcordSupport}/clientMod.css";
-          NixcordQuickCSS = "${goofcordSupport}/quickCss.css";
-          NixcordThemes = "${goofcordSupport}/themes.css";
+          PreVencord = "${goofcordSupport}/preVencord.js";
+          PostVencord = "${goofcordSupport}/postVencord.js";
+          ClientMod = "${goofcordSupport}/clientMod.js";
+          ClientModStyles = "${goofcordSupport}/clientMod.css";
+          QuickCSS = "${goofcordSupport}/quickCss.css";
+          Themes = "${goofcordSupport}/themes.css";
         };
       managedFiles = goofcordManagedFiles;
     };
 
   goofcordSettings =
     if goofcordSupport != null then
-      jsonFormat.generate "nixcord-goofcord-settings.json" goofcordAttrs
+      jsonFormat.generate "goofcord-settings.json" goofcordAttrs
     else
       null;
 

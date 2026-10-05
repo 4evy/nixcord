@@ -16,8 +16,8 @@ let
       appDataDir ? null,
       modDataDir ? null,
     }:
-    pkgs.runCommand "nixcord-discord-${branch}-final-stub" {
-      passthru.nixcordOverrideArgs = {
+    pkgs.runCommand "discord-${branch}-final-stub" {
+      passthru.overrideArgs = {
         inherit
           branch
           commandLineArgs
@@ -31,7 +31,7 @@ let
           modDataDir
           ;
       };
-      passthru.nixcordCommandLineArgsList = true;
+      passthru.commandLineArgsAsList = true;
     } "mkdir $out"
   ) { };
 
@@ -41,7 +41,7 @@ let
     "canary"
   ];
 
-  nixcordConfig = {
+  moduleConfig = {
     enable = true;
     discord = {
       inherit branches;
@@ -53,7 +53,7 @@ let
     };
   };
 
-  config = testLib.eval.hm nixcordConfig;
+  config = testLib.eval.hm moduleConfig;
   cfg = config.programs.nixcord;
   packages = cfg.finalPackage.discordBranches;
   configBase =
@@ -79,7 +79,7 @@ in
     assert lib.lists.all (
       branch:
       let
-        args = packages.${branch}.passthru.nixcordOverrideArgs;
+        args = packages.${branch}.passthru.overrideArgs;
       in
       args.branch == branch
       && args.withEquicord
@@ -99,9 +99,9 @@ in
     true;
 
   "multiple Discord branches each receive managed host settings" =
-    assert config.home.activation ? nixcord-discord-stable-settings;
-    assert config.home.activation ? nixcord-discord-ptb-settings;
-    assert config.home.activation ? nixcord-discord-canary-settings;
+    assert config.home.activation ? discord-stable-settings;
+    assert config.home.activation ? discord-ptb-settings;
+    assert config.home.activation ? discord-canary-settings;
     lib.strings.concatMapStringsSep "\n" (
       branch:
       testLib.output.json (testLib.output.homeFileSource config "${configDirs.${branch}}/settings.json") ''
@@ -118,10 +118,10 @@ in
     else
       let
         custom = testLib.eval.hm (
-          nixcordConfig
+          moduleConfig
           // {
             configDir = "/tmp/custom mod settings";
-            discord = nixcordConfig.discord // {
+            discord = moduleConfig.discord // {
               appDataDir = "/tmp/custom profiles";
             };
           }
@@ -132,7 +132,7 @@ in
       assert lib.lists.all (
         branch:
         let
-          args = customCfg.finalPackage.discordBranches.${branch}.passthru.nixcordOverrideArgs;
+          args = customCfg.finalPackage.discordBranches.${branch}.passthru.overrideArgs;
         in
         args.appDataDir == "/tmp/custom profiles" && args.modDataDir == "/tmp/custom mod settings"
       ) branches;
@@ -198,16 +198,14 @@ in
 
   "multiple Discord branches are installed by NixOS and nix-darwin modules" =
     let
-      nixos = testLib.eval.nixos nixcordConfig;
-      darwin = testLib.eval.darwin nixcordConfig;
+      nixos = testLib.eval.nixos moduleConfig;
+      darwin = testLib.eval.darwin moduleConfig;
     in
     assert builtins.length nixos.environment.systemPackages == 3;
     assert builtins.length darwin.environment.systemPackages == 3;
     assert
-      map (package: package.passthru.nixcordOverrideArgs.branch) nixos.environment.systemPackages
-      == branches;
+      map (package: package.passthru.overrideArgs.branch) nixos.environment.systemPackages == branches;
     assert
-      map (package: package.passthru.nixcordOverrideArgs.branch) darwin.environment.systemPackages
-      == branches;
+      map (package: package.passthru.overrideArgs.branch) darwin.environment.systemPackages == branches;
     true;
 }

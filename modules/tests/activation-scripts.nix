@@ -2,7 +2,7 @@
 
 let
   inherit (pkgs) lib;
-  testRoot = "/tmp/nixcord-activation-scripts-test";
+  testRoot = "/tmp/activation-scripts-test";
   cfg = {
     user = "testuser";
     homeDirectory =

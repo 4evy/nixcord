@@ -7,6 +7,6 @@ in
   inherit failures;
 
   hmMessages =
-    nixcordConfig: builtins.map (assertion: assertion.message) (failures (eval.hm nixcordConfig));
-  hmWarnings = nixcordConfig: (eval.hm nixcordConfig).warnings;
+    moduleConfig: builtins.map (assertion: assertion.message) (failures (eval.hm moduleConfig));
+  hmWarnings = moduleConfig: (eval.hm moduleConfig).warnings;
 }

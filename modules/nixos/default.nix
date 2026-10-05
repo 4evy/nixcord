@@ -72,26 +72,26 @@
         environment.systemPackages = packages.installed;
       }
       (lib.modules.mkIf cfg.discord.enable {
-        system.activationScripts.nixcord-disableDiscordUpdates = {
+        system.activationScripts.disableDiscordUpdates = {
           deps = [ "users" ];
           text = activationScripts.disableDiscordUpdates;
           supportsDryActivation = false;
         };
-        system.activationScripts.nixcord-fixDiscordModules = {
+        system.activationScripts.fixDiscordModules = {
           deps = [ "users" ];
           text = activationScripts.fixDiscordModules;
           supportsDryActivation = false;
         };
       })
       (lib.modules.mkIf cfg.dorion.enable {
-        system.activationScripts.nixcord-setupDorionVencordSettings = {
+        system.activationScripts.setupDorionVencordSettings = {
           deps = [ "users" ];
           text = activationScripts.setupDorionVencordSettings;
           supportsDryActivation = false;
         };
       })
       (lib.modules.mkIf (fileSpecs != [ ]) {
-        system.activationScripts.nixcord-writeFiles = {
+        system.activationScripts.writeDiscordClientFiles = {
           deps = [ "users" ];
           # NixOS concatenates activation snippets in one shell, so keep this
           # snippet's strict shell options from affecting later snippets.
