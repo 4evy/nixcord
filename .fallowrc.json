@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
   "entry": ["vite.config.shared.ts", "pkgs/discord/patching/updater/main.cts", "pkgs/discord/platforms/darwin/modules/redirect.cjs", "modules/lib/legcord-build.ts"],
-  "ignoreDependencies": ["@typescript/native", "electron", "equicord", "renovate", "vencord"],
+  "ignoreDependencies": ["@typescript/native", "electron", "equicord", "renovate", "ts-morph", "vencord"],
   "audit": {
     "gate": "all"
   },

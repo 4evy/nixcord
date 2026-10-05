@@ -5,102 +5,26 @@
 // Keep localModulesRoot/standaloneModules unset in stock build_info.json:
 // upstream isInstalled bypasses metadata/version checks in those modes
 //
-// Node strips the types; Nix supplies the compiler API by absolute store path:
-//   node patch-updater.cts <typescript.js> <extracted-file.js>
-import type * as TS from 'typescript';
+// Node strips the types; Nix supplies ts-morph by absolute store path
+import type { Rule } from '../bundle.cts';
 
-const fs: typeof import('node:fs') = require('node:fs');
-const [compilerPath, filename] = process.argv.slice(2);
-if (!compilerPath || !filename) {
-  throw new Error('Usage: patch-updater.cts <typescript.js> <extracted-file.js>');
+const bundle: import('../bundle.cts').Bundle = require('../bundle.cts');
+const [morphPath, filename] = process.argv.slice(2);
+if (!morphPath || !filename) {
+  throw new Error('Usage: updater/main.cts <ts-morph.js> <extracted-file.js>');
 }
-const ts: typeof TS = require(compilerPath);
-
-type Predicate<T extends TS.Node> = (node: TS.Node) => node is T;
-type PatchPlan = {
-  scope: TS.Node;
-  flags: Record<string, boolean>;
-  requiredExports?: readonly string[];
-  exports: Record<string, string>;
-};
-
-function parse(name: string, source: string): TS.SourceFile {
-  const file = ts.createSourceFile(name, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
-  const options: TS.CompilerOptions = { allowJs: true, noLib: true, noResolve: true };
-  const host = ts.createCompilerHost(options);
-  host.getSourceFile = (path) => (path === name ? file : undefined);
-  const diagnostics = ts.createProgram([name], options, host).getSyntacticDiagnostics(file);
-  if (diagnostics.length) throw new Error(ts.formatDiagnostics(diagnostics, host));
-  return file;
-}
-
-function find<T extends TS.Node>(root: TS.Node, predicate: Predicate<T>): T[] {
-  const matches: T[] = [];
-  function visit(node: TS.Node): void {
-    if (predicate(node)) matches.push(node);
-    ts.forEachChild(node, visit);
-  }
-  visit(root);
-  return matches;
-}
-
-function one<T>(nodes: readonly T[], description: string): T {
-  if (nodes.length !== 1) {
-    throw new Error(`${filename}: expected one ${description}, found ${nodes.length}`);
-  }
-  return nodes[0];
-}
-
-const file = parse(filename, fs.readFileSync(filename, 'utf8'));
-// Computed properties are intentionally unsupported: changed upstream syntax
-// should prompt a review of the selector and event protocol.
-function referenceName(node: TS.Node): string | undefined {
-  if (ts.isIdentifier(node)) return node.text;
-  if (ts.isPropertyAccessExpression(node)) {
-    const receiver = referenceName(node.expression);
-    if (receiver !== undefined) return `${receiver}.${node.name.text}`;
-  }
-  return undefined;
-}
-
-function value(root: TS.Node, name: string): TS.Expression {
-  const node = one(
-    find(
-      root,
-      (node): node is TS.BinaryExpression | TS.VariableDeclaration =>
-        (ts.isBinaryExpression(node) &&
-          node.operatorToken.kind === ts.SyntaxKind.EqualsToken &&
-          referenceName(node.left) === name) ||
-        (ts.isVariableDeclaration(node) && referenceName(node.name) === name)
-    ),
-    `${name} value`
-  );
-  const result = ts.isVariableDeclaration(node) ? node.initializer : node.right;
-  if (!result) throw new Error(`Missing ${name} initializer`);
-  return result;
-}
-function exported(root: TS.Node, name: string): TS.Expression {
-  return value(root, `exports.${name}`);
-}
-
+const { Node, factory, values, one, apply } = bundle(morphPath, filename);
 // Selectors must match exactly once so upstream changes fail the build
-const plan: PatchPlan = {
-  // Webpack's numeric factory IDs change. Locate the object method containing
-  // this logger filename instead, then restrict export searches to it
-  scope: one(
-    find(
-      file,
-      (node): node is TS.MethodDeclaration =>
-        ts.isMethodDeclaration(node) &&
-        ts.isObjectLiteralExpression(node.parent) &&
-        find(
-          node,
-          (child): child is TS.StringLiteral =>
-            ts.isStringLiteral(child) && child.text === 'legacyModulesUpdater.log'
-        ).length > 0
-    ),
-    'legacy updater factory'
-  ),
+const scope = factory(
+  (node) =>
+    node.forEachDescendant((child) =>
+      Node.isStringLiteral(child) && child.getLiteralValue() === 'legacyModulesUpdater.log'
+        ? true
+        : undefined
+    ) === true,
+  'legacy updater factory'
+);
+const plan = {
   flags: { updatable: false, hostUpdatable: false },
   requiredExports: ['isInstalled'],
   exports: {
@@ -129,55 +53,25 @@ const plan: PatchPlan = {
   },
 };
 
-function expression(source: string): TS.Expression {
-  const snippet = parse('replacement.js', `(${source});`);
-  const statement = one(snippet.statements, 'replacement statement');
-  if (!ts.isExpressionStatement(statement) || !ts.isParenthesizedExpression(statement.expression)) {
-    throw new Error('Replacement must be an expression');
-  }
-  // These nodes belong to a different source file. Mark them synthetic so the
-  // printer doesn't reuse positions or comments from the original bundle.
-  function synthesize(node: TS.Node): void {
-    ts.setTextRange(node, { pos: -1, end: -1 });
-    ts.forEachChild(node, synthesize);
-  }
-  const result = statement.expression.expression;
-  synthesize(result);
-  return result;
-}
-
-function literal(value: boolean): TS.Expression {
-  return value ? ts.factory.createTrue() : ts.factory.createFalse();
-}
-
-const replacements = new Map<TS.Node, TS.Expression>();
-const init = exported(plan.scope, 'init');
-for (const name of plan.requiredExports ?? []) exported(plan.scope, name);
-for (const [name, enabled] of Object.entries(plan.flags)) {
-  replacements.set(value(init, name), literal(enabled));
-}
-for (const [name, source] of Object.entries(plan.exports)) {
-  replacements.set(exported(plan.scope, name), expression(source));
-}
-
-// Reject overlapping patches: replacing an outer function can hide a selected
-// node inside it, leaving that replacement unapplied.
-const remaining = new Set(replacements.keys());
-const printer = ts.createPrinter(
-  {},
-  {
-    substituteNode: (_hint, node) => {
-      const replacement = replacements.get(node);
-      if (!replacement) return node;
-      remaining.delete(node);
-      return replacement;
-    },
-  }
-);
-const result = printer.printFile(file);
-if (remaining.size) throw new Error('Overlapping or unapplied updater patches');
-// Validate before writing. Syntax/selector checks cannot prove that an upstream
-// release still uses the same event protocol; inspect callers when updating it.
-parse(filename, result);
-fs.writeFileSync(filename, result);
-console.log(`Patched stock updater: ${replacements.size} expressions`);
+const init = one(values(scope, 'exports.init'), 'updater init export');
+const rules: Rule[] = [
+  ...plan.requiredExports.map((name) => ({
+    name: `${name} export`,
+    select: () => values(scope, `exports.${name}`),
+    expected: 1,
+  })),
+  ...Object.entries(plan.flags).map(([name, enabled]) => ({
+    name: `${name} flag`,
+    select: () => values(init, name),
+    expected: 1,
+    replacement: String(enabled),
+  })),
+  ...Object.entries(plan.exports).map(([name, source]) => ({
+    name: `${name} export`,
+    select: () => values(scope, `exports.${name}`),
+    expected: 1,
+    replacement: source,
+  })),
+];
+const count = apply(rules);
+console.log(`Patched stock updater: ${count} expressions`);

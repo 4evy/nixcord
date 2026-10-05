@@ -1,0 +1,8 @@
+{
+  "name": "discord-patch-tools",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "ts-morph": "28.0.0"
+  }
+}
