@@ -7,7 +7,7 @@ import { executeComponentSlice } from '../../../src/execute.js';
 
 describe('executed component slices', () => {
   test('captures persistent settings reads without executing unrelated plugin initialization', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'nixcord-slice-'));
+    const root = await mkdtemp(join(tmpdir(), 'slice-'));
     try {
       const project = new Project({ useInMemoryFileSystem: true });
       const source = project.createSourceFile(
@@ -35,7 +35,7 @@ describe('executed component slices', () => {
   });
 
   test('stubs React hooks imported from upstream webpack modules', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'nixcord-slice-hooks-'));
+    const root = await mkdtemp(join(tmpdir(), 'slice-hooks-'));
     try {
       const project = new Project({ useInMemoryFileSystem: true });
       const source = project.createSourceFile(
@@ -70,7 +70,7 @@ describe('executed component slices', () => {
   });
 
   test('stubs common pure helpers used by upstream components', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'nixcord-slice-helpers-'));
+    const root = await mkdtemp(join(tmpdir(), 'slice-helpers-'));
     try {
       const project = new Project({ useInMemoryFileSystem: true });
       const source = project.createSourceFile(
@@ -104,7 +104,7 @@ describe('executed component slices', () => {
   });
 
   test('kills a non-terminating slice and reports a diagnostic result', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'nixcord-slice-'));
+    const root = await mkdtemp(join(tmpdir(), 'slice-'));
     try {
       const project = new Project({ useInMemoryFileSystem: true });
       const source = project.createSourceFile(
@@ -124,7 +124,7 @@ describe('executed component slices', () => {
   });
 
   test('limits trace events for the requested setting', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'nixcord-slice-events-'));
+    const root = await mkdtemp(join(tmpdir(), 'slice-events-'));
     try {
       const project = new Project({ useInMemoryFileSystem: true });
       const source = project.createSourceFile(
@@ -151,7 +151,7 @@ describe('executed component slices', () => {
   });
 
   test('keeps declarations from different source modules in separate scopes', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'nixcord-slice-modules-'));
+    const root = await mkdtemp(join(tmpdir(), 'slice-modules-'));
     try {
       const project = new Project({ useInMemoryFileSystem: true });
       project.createSourceFile(
@@ -189,7 +189,7 @@ describe('executed component slices', () => {
   });
 
   test('keeps component-local declarations inside their original function scope', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'nixcord-slice-locals-'));
+    const root = await mkdtemp(join(tmpdir(), 'slice-locals-'));
     try {
       const project = new Project({ useInMemoryFileSystem: true });
       const source = project.createSourceFile(
@@ -225,7 +225,7 @@ describe('executed component slices', () => {
   });
 
   test('executes an imported component through a circular settings dependency', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'nixcord-slice-cycle-'));
+    const root = await mkdtemp(join(tmpdir(), 'slice-cycle-'));
     try {
       const project = new Project({ useInMemoryFileSystem: true });
       project.createSourceFile(
@@ -261,7 +261,7 @@ describe('executed component slices', () => {
   });
 
   test('initializes a local component before its enclosing settings declaration', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'nixcord-slice-settings-cycle-'));
+    const root = await mkdtemp(join(tmpdir(), 'slice-settings-cycle-'));
     try {
       const project = new Project({ useInMemoryFileSystem: true });
       const source = project.createSourceFile(
@@ -289,7 +289,7 @@ describe('executed component slices', () => {
   });
 
   test('exports an enclosing settings stub before loading an imported component cycle', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'nixcord-slice-inline-cycle-'));
+    const root = await mkdtemp(join(tmpdir(), 'slice-inline-cycle-'));
     try {
       const project = new Project({ useInMemoryFileSystem: true });
       project.createSourceFile(
@@ -335,7 +335,7 @@ describe('executed component slices', () => {
   });
 
   test('stubs an enclosing settings binding used by an inline component method', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'nixcord-slice-inline-settings-'));
+    const root = await mkdtemp(join(tmpdir(), 'slice-inline-settings-'));
     try {
       const project = new Project({ useInMemoryFileSystem: true });
       const source = project.createSourceFile(
@@ -369,7 +369,7 @@ describe('executed component slices', () => {
   });
 
   test('loads JSX component imports used by an inline settings component', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'nixcord-slice-inline-jsx-'));
+    const root = await mkdtemp(join(tmpdir(), 'slice-inline-jsx-'));
     try {
       const project = new Project({ useInMemoryFileSystem: true });
       const source = project.createSourceFile(
@@ -405,7 +405,7 @@ describe('executed component slices', () => {
   });
 
   test('does not treat a sibling path with the same prefix as part of the allowed root', async () => {
-    const parent = await mkdtemp(join(tmpdir(), 'nixcord-slice-boundary-'));
+    const parent = await mkdtemp(join(tmpdir(), 'slice-boundary-'));
     const root = join(parent, 'plugin');
     const sibling = join(parent, 'plugin-escape');
     await Promise.all([mkdir(root), mkdir(sibling)]);
@@ -436,7 +436,7 @@ describe('executed component slices', () => {
   });
 
   test('does not expose host filesystem globals to executed component code', async () => {
-    const parent = await mkdtemp(join(tmpdir(), 'nixcord-slice-sandbox-'));
+    const parent = await mkdtemp(join(tmpdir(), 'slice-sandbox-'));
     const root = join(parent, 'plugin');
     const marker = join(parent, 'outside-root.txt');
     await mkdir(root);
@@ -460,7 +460,7 @@ describe('executed component slices', () => {
   });
 
   test('blocks constructor-based escapes from the execution context', async () => {
-    const parent = await mkdtemp(join(tmpdir(), 'nixcord-slice-constructor-'));
+    const parent = await mkdtemp(join(tmpdir(), 'slice-constructor-'));
     const root = join(parent, 'plugin');
     const marker = join(parent, 'constructor-escape.txt');
     await mkdir(root);

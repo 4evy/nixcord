@@ -47,7 +47,7 @@ const runnerPath = (): string => {
 };
 
 const transpileSlice = (code: string): string => {
-  const source = `const __nixcordExecuteSlice = async (__runtime: unknown, React: unknown) => {\n${code}\n};`;
+  const source = `const __executeSlice = async (__runtime: unknown, React: unknown) => {\n${code}\n};`;
   const output = ts.transpileModule(source, {
     compilerOptions: {
       target: ts.ScriptTarget.ES2022,
@@ -55,7 +55,7 @@ const transpileSlice = (code: string): string => {
       jsx: ts.JsxEmit.React,
     },
   }).outputText;
-  return `${output}\nreturn __nixcordExecuteSlice(__runtime, React);`;
+  return `${output}\nreturn __executeSlice(__runtime, React);`;
 };
 
 export async function executeComponentSlice(
@@ -78,7 +78,7 @@ export async function executeComponentSlice(
     settingKey: options.settingKey,
     maxTraceEvents,
   });
-  const readyMarker = Buffer.from('__NIXCORD_SLICE_READY__\n');
+  const readyMarker = Buffer.from('__SLICE_READY__\n');
   const startupTimeoutMs = 30_000;
 
   return await new Promise<SliceExecutionResult>((resolveResult) => {

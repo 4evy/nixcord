@@ -82,13 +82,13 @@ export function buildSlice(
 
   const allNodes = [...declarations, target];
   const uniqueName = uniqueNameFactory(allNodes);
-  const factoriesName = uniqueName('__nixcordSliceFactories');
-  const cacheName = uniqueName('__nixcordSliceCache');
-  const requireName = uniqueName('__nixcordSliceRequire');
-  const exportsParameter = uniqueName('__nixcordSliceExports');
-  const requireParameter = uniqueName('__nixcordSliceImport');
-  const targetName = uniqueName('__nixcordSliceTarget');
-  const targetExport = uniqueName('__nixcordSliceTargetExport');
+  const factoriesName = uniqueName('__sliceFactories');
+  const cacheName = uniqueName('__sliceCache');
+  const requireName = uniqueName('__sliceRequire');
+  const exportsParameter = uniqueName('__sliceExports');
+  const requireParameter = uniqueName('__sliceImport');
+  const targetName = uniqueName('__sliceTarget');
+  const targetExport = uniqueName('__sliceTargetExport');
 
   const moduleNodes = new Map<string, Node[]>();
   moduleNodes.set(target.getSourceFile().getFilePath(), []);
@@ -103,7 +103,7 @@ export function buildSlice(
   const defaultNames = new Map<string, string>();
   for (const declaration of declarations) {
     if (declaration.isKind(SyntaxKind.ExportAssignment))
-      defaultNames.set(declarationKey(declaration), uniqueName('__nixcordSliceDefault'));
+      defaultNames.set(declarationKey(declaration), uniqueName('__sliceDefault'));
   }
 
   const lines = [
@@ -152,7 +152,7 @@ export function buildSlice(
     const declarationLines = selected.map((declaration) =>
       executableText(
         declaration,
-        defaultNames.get(declarationKey(declaration)) ?? '__nixcordUnusedDefault'
+        defaultNames.get(declarationKey(declaration)) ?? '__unusedDefault'
       )
     );
     const exportLines = [...exportedNames(sourceFile, declarationKeys, defaultNames, checker)].map(

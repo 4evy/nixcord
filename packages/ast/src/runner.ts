@@ -281,7 +281,7 @@ async function runSandboxed(payload: RunnerPayload, execute: SliceExecutor): Pro
   }
 }
 
-process.stdout.write('__NIXCORD_SLICE_READY__\n');
+process.stdout.write('__SLICE_READY__\n');
 
 try {
   const payload = (await json(process.stdin)) as RunnerPayload;
@@ -296,7 +296,7 @@ try {
   });
   const context = createContext(sandbox, {
     codeGeneration: { strings: false, wasm: false },
-    name: 'nixcord-component-slice',
+    name: 'component-slice',
   });
   const source = `globalThis.VencordNative = { pluginHelpers: {} };\n(${runSandboxed.toString()})(${JSON.stringify(payload)}, async (__runtime, React) => {\n${payload.code}\n})`;
   const response = await new Script(source, { filename: 'component-slice.js' }).runInContext(
