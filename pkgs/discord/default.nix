@@ -147,6 +147,8 @@ stdenv.mkDerivation (
           krispRuntimePath
           ;
         patchStockUpdater = callPackage ./patching/updater { };
+        patchLauncher = callPackage ./patching/launcher { };
+        launcherPath = "$out/${layout.executable}";
         openasar = patchedOpenasar;
         resourcesDir = "$out/${layout.resourcesDir}";
         modulesDir = "$out/${layout.modulesDir}";
