@@ -4,10 +4,10 @@
   packages,
 }:
 let
-  # Host modules follow inputs.nixpkgs; the independently pinned Nixcord package
+  # Host modules follow inputs.nixpkgs; the independently pinned client package
   # set may target a different release, which nix-darwin rejects as a host
   hostPkgs =
-    if inputs.nixpkgs.outPath == inputs.nixpkgs-nixcord.outPath then
+    if inputs.nixpkgs.outPath == inputs.nixpkgs-packages.outPath then
       pkgs
     else
       import inputs.nixpkgs {
@@ -52,7 +52,7 @@ let
           ];
         in
         pkgs.buildEnv {
-          name = "nixcord-discord-multiple-branches-with-equicord-krisp";
+          name = "discord-multiple-branches-with-equicord-krisp";
           paths = map (
             branch:
             (pkgs.callPackage ../../pkgs/discord {
@@ -77,7 +77,7 @@ let
     assert nonFlake ? nixosModules;
     assert nonFlake ? darwinModules;
     assert !nonFlakeNixos.config.programs.nixcord.enable;
-    pkgs.runCommandLocal "nixcord-non-flake-interface" { } "touch $out";
+    pkgs.runCommandLocal "non-flake-interface" { } "touch $out";
 in
 {
   checks =

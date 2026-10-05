@@ -14,7 +14,7 @@ pkgs.mkShellNoCC {
   ];
 
   shellHook = ''
-    echo "nixcord development shell"
+    echo "Development shell"
     echo "Run 'npm ci' once, then 'npm run check' and 'nix flake check'."
     echo "Run './nix/benchmark-eval.sh [GIT_REF]' to compare evaluator cost and check IFD."
   '';

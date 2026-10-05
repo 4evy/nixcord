@@ -7,8 +7,8 @@ runs:
     - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
       with:
         name: pnpm-deps
-        path: ${{ runner.temp }}/nixcord-pnpm-deps
+        path: ${{ runner.temp }}/pnpm-deps
 
     - name: Import pnpm dependency stores
       shell: bash
-      run: nix-store --import < "$RUNNER_TEMP/nixcord-pnpm-deps/pnpm-deps.nar"
+      run: nix-store --import < "$RUNNER_TEMP/pnpm-deps/pnpm-deps.nar"

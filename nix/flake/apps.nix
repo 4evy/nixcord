@@ -50,7 +50,7 @@ in
           pkgs.nixfmt
         ];
         text = ''
-          if [[ "''${NIXCORD_GENERATE_WITH_GIT:-0}" == "1" ]]; then
+          if [[ "''${GENERATE_WITH_GIT:-0}" == "1" ]]; then
             generate_tmp=$(mktemp -d)
             cleanup() {
               rm -rf -- "$generate_tmp"
@@ -103,7 +103,7 @@ in
       }
     ))
     // {
-      meta.description = "Regenerate nixcord plugin option files";
+      meta.description = "Regenerate plugin option files";
     };
 
   apps.update-goofcord = (mkApp packages.goofcord.passthru.updateScript) // {

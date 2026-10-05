@@ -3,7 +3,7 @@
 # Fetch the locked official NixOS zstd archive, not the moving channel URL
 let
   lock = builtins.fromJSON (builtins.readFile ../flake.lock);
-  input = lock.nodes.${lock.root}.inputs.nixpkgs-nixcord;
+  input = lock.nodes.${lock.root}.inputs.nixpkgs-packages;
   source = lock.nodes.${input}.locked;
 in
 assert source.type == "tarball";

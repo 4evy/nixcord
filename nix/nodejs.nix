@@ -53,7 +53,7 @@ in
 # Updating npm must not invalidate the cached Node/V8 compilation.
 assert lib.assertMsg (
   nodejs-slim_26.version == manifest.engines.node
-) "Update nixpkgs-nixcord to provide the Node version pinned in package.json";
+) "Update nixpkgs-packages to provide the Node version pinned in package.json";
 nodejs_26.override {
   nodejs-slim = nodejsSlim // {
     inherit npm;

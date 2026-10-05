@@ -132,7 +132,7 @@ jobs:
 
       - name: Refresh shared npm dependencies and generate plugin options
         env:
-          NIXCORD_GENERATE_WITH_GIT: "1"
+          GENERATE_WITH_GIT: "1"
         run: |
           set -euo pipefail
           system=$(nix eval --impure --raw --expr builtins.currentSystem)
@@ -227,7 +227,7 @@ jobs:
         env:
           EXPECTED_HOST_SYSTEM: ${{ matrix.system }}
           EXPECTED_SYSTEM: ${{ matrix.system }}
-          NIXCORD_GENERATE_WITH_GIT: "1"
+          GENERATE_WITH_GIT: "1"
         run: |
           set -euo pipefail
           actual_host_system=$(nix eval --impure --raw --expr builtins.currentSystem)

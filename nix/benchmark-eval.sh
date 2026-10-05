@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 # shellcheck shell=bash
 
-# Compare representative Nixcord module evaluations with a Git revision.
+# Compare representative module evaluations with a Git revision
 #
 # Follow nixpkgs' lib/fileset/benchmark.sh: warm up once, alternate the two
 # trees, and compare evaluator statistics as well as CPU time.
 
 set -euo pipefail
 
-runs=${NIXCORD_EVAL_RUNS:-5}
-system=${NIXCORD_EVAL_SYSTEM:-}
+runs=${EVAL_RUNS:-5}
+system=${EVAL_SYSTEM:-}
 compare_ref=HEAD
 check_ifd=1
 
@@ -133,7 +133,7 @@ if ! compare_commit=$(git -C "$repo" rev-parse --verify --quiet --end-of-options
   exit 2
 fi
 
-work=$(mktemp -d "${TMPDIR:-/tmp}/nixcord-eval.XXXXXX")
+work=$(mktemp -d "${TMPDIR:-/tmp}/module-eval.XXXXXX")
 comparison="$work/comparison"
 comparison_added=0
 
@@ -172,10 +172,10 @@ fi
 # Keep the expression here so it also runs against revisions without this benchmark.
 read -r -d '' expression <<'EOF' || true
 let
-  source = builtins.getEnv "NIXCORD_EVAL_SOURCE";
+  source = builtins.getEnv "EVAL_SOURCE";
   sourcePath = builtins.toPath source;
-  scenario = builtins.getEnv "NIXCORD_EVAL_SCENARIO";
-  system = builtins.getEnv "NIXCORD_EVAL_SYSTEM";
+  scenario = builtins.getEnv "EVAL_SCENARIO";
+  system = builtins.getEnv "EVAL_SYSTEM";
   flake = builtins.getFlake source;
   pkgs = import flake.inputs.nixpkgs {
     inherit system;
@@ -272,7 +272,7 @@ else if scenario == "nix-darwin" then
     activation = lib.attrsets.mapAttrs (_: entry: entry.text or entry) darwinConfig.system.activationScripts;
   }
 else
-  throw "unknown Nixcord evaluation benchmark scenario: ${scenario}"
+  throw "unknown evaluation benchmark scenario: ${scenario}"
 EOF
 
 scenarios=(home-manager nixos nix-darwin)
@@ -318,9 +318,9 @@ run_evaluation() {
   local stats="$work/$scenario-$label-$run.json"
   local samples="$work/$scenario-$label.jsonl"
 
-  if ! NIXCORD_EVAL_SOURCE="$source" \
-    NIXCORD_EVAL_SCENARIO="$scenario" \
-    NIXCORD_EVAL_SYSTEM="$system" \
+  if ! EVAL_SOURCE="$source" \
+    EVAL_SCENARIO="$scenario" \
+    EVAL_SYSTEM="$system" \
     NIX_SHOW_STATS=1 \
     NIX_SHOW_STATS_PATH="$stats" \
     nix --option warn-dirty false eval \

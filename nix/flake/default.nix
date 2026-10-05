@@ -1,6 +1,6 @@
 { inputs }:
 let
-  inherit (inputs.nixpkgs-nixcord) lib;
+  inherit (inputs.nixpkgs-packages) lib;
   revision = lib.findFirst (rev: rev != null) "main" [
     (inputs.self.rev or null)
     (inputs.self.dirtyRev or null)
@@ -9,7 +9,7 @@ let
   forSystem =
     system:
     let
-      pkgs = import inputs.nixpkgs-nixcord {
+      pkgs = import inputs.nixpkgs-packages {
         inherit system;
         config.allowUnfree = true;
       };

@@ -9,7 +9,7 @@ runs:
       env:
         NIXPKGS_EXPR: >-
           let flake = builtins.getFlake (toString ./.);
-              pkgs = import flake.inputs.nixpkgs-nixcord {
+              pkgs = import flake.inputs.nixpkgs-packages {
                 system = builtins.currentSystem;
                 config.allowUnfree = true;
               };

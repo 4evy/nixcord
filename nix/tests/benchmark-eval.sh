@@ -5,7 +5,7 @@ set -euo pipefail
 
 script_dir=$(CDPATH='' cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)
 benchmark="$script_dir/../benchmark-eval.sh"
-missing_ref=refs/nixcord-benchmark-test/does-not-exist
+missing_ref=refs/benchmark-test/does-not-exist
 failures=0
 
 check() {
@@ -47,21 +47,21 @@ check excessive-runs 2 'Run count must be an integer from 1 through 1000' \
 check huge-runs 2 'Run count must be an integer from 1 through 1000' \
   bash "$benchmark" --runs 999999999999999999999999
 check leading-zero-runs 2 'does not resolve to a commit' \
-  env NIXCORD_EVAL_SYSTEM=x86_64-linux bash "$benchmark" --runs 0008 "$missing_ref"
+  env EVAL_SYSTEM=x86_64-linux bash "$benchmark" --runs 0008 "$missing_ref"
 check equals-options 2 'does not resolve to a commit' \
   bash "$benchmark" --runs=001 --system=x86_64-linux "$missing_ref"
 check invalid-ref 2 'does not resolve to a commit' \
-  env NIXCORD_EVAL_SYSTEM=x86_64-linux bash "$benchmark" "$missing_ref"
+  env EVAL_SYSTEM=x86_64-linux bash "$benchmark" "$missing_ref"
 check dash-prefixed-ref 2 'does not resolve to a commit' \
-  env NIXCORD_EVAL_SYSTEM=x86_64-linux bash "$benchmark" -- --not-a-ref
+  env EVAL_SYSTEM=x86_64-linux bash "$benchmark" -- --not-a-ref
 check missing-commands 127 'required command(s) not found: git jq nix' \
-  env -i PATH=/nonexistent NIXCORD_EVAL_SYSTEM=x86_64-linux \
+  env -i PATH=/nonexistent EVAL_SYSTEM=x86_64-linux \
   /bin/bash --noprofile --norc "$benchmark" HEAD
 
 old_pwd=$PWD
 cd /tmp
 check invocation-outside-repository 2 'does not resolve to a commit' \
-  env NIXCORD_EVAL_SYSTEM=x86_64-linux bash "$benchmark" "$missing_ref"
+  env EVAL_SYSTEM=x86_64-linux bash "$benchmark" "$missing_ref"
 cd "$old_pwd"
 
 if (( failures > 0 )); then

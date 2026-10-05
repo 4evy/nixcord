@@ -7,7 +7,7 @@
 }:
 let
   flake = builtins.getFlake root;
-  pkgs = import flake.inputs.nixpkgs-nixcord {
+  pkgs = import flake.inputs.nixpkgs-packages {
     inherit system;
     config.allowUnfree = true;
   };

@@ -3,7 +3,7 @@
 
   inputs = {
     nixpkgs.url = "https://channels.nixos.org/nixos-26.05/nixexprs.tar.zst";
-    nixpkgs-nixcord.url = "https://channels.nixos.org/nixpkgs-unstable/nixexprs.tar.zst";
+    nixpkgs-packages.url = "https://channels.nixos.org/nixpkgs-unstable/nixexprs.tar.zst";
     nixpkgs-ci.url = "https://channels.nixos.org/nixpkgs-unstable/nixexprs.tar.zst";
     home-manager = {
       url = "github:nix-community/home-manager/release-26.05";
