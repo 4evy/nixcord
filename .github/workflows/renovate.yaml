@@ -26,7 +26,7 @@ jobs:
   renovate:
     name: Update dependencies directly
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 360
     outputs:
       base-sha: ${{ steps.base.outputs.sha }}
     permissions:
@@ -64,7 +64,7 @@ jobs:
     # Renovate can push a commit before a later update fails
     if: ${{ !cancelled() && needs.renovate.outputs.base-sha != '' }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
+    timeout-minutes: 360
     permissions:
       contents: read
       actions: write # GITHUB_TOKEN commits do not trigger push workflows

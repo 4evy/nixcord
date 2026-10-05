@@ -25,7 +25,7 @@ jobs:
   publish:
     name: Commit and dispatch follow-up workflows
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 360
     permissions:
       actions: write # GITHUB_TOKEN commits do not trigger push workflows.
       contents: write # Commit the verified files with GitHub signing.

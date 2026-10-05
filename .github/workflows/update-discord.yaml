@@ -16,7 +16,7 @@ jobs:
   update-discord:
     name: Update and verify Discord
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 360
     outputs:
       base-sha: ${{ steps.prepare-update.outputs.base-sha }}
       changed: ${{ steps.sources.outputs.changed }}

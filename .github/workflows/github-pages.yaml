@@ -35,7 +35,7 @@ jobs:
   build:
     name: Build documentation
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 360
     permissions:
       contents: read
     steps:
@@ -65,7 +65,7 @@ jobs:
     if: github.ref_name == github.event.repository.default_branch
     needs: build
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 360
     permissions:
       pages: write # Deploy the built site to GitHub Pages.
       id-token: write # Authenticate the Pages deployment.

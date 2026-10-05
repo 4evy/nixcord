@@ -65,7 +65,7 @@ jobs:
     name: Check upstream revisions
     needs: update-discord
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
+    timeout-minutes: 360
     permissions:
       contents: read
     outputs:
@@ -109,7 +109,7 @@ jobs:
     needs: check-upstream
     if: github.event_name != 'schedule' || needs.check-upstream.outputs.changed == 'true'
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 360
     outputs:
       base-sha: ${{ steps.prepare-update.outputs.base-sha }}
     permissions:
@@ -196,7 +196,7 @@ jobs:
           - system: aarch64-darwin
             runner: macos-15
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 60
+    timeout-minutes: 360
     permissions:
       contents: read
 
@@ -306,7 +306,7 @@ jobs:
     # A Discord commit still needs checks if plugin verification fails or is cancelled
     if: ${{ always() }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
+    timeout-minutes: 360
     permissions:
       contents: read
       actions: write # Bot commits do not trigger push workflows

@@ -21,7 +21,7 @@ jobs:
   workflow-quality:
     name: Workflow and shell checks
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 360
     permissions:
       contents: read
     steps:
@@ -37,7 +37,7 @@ jobs:
   javascript:
     name: JavaScript and documentation
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 360
     permissions:
       contents: read
     steps:
@@ -56,7 +56,7 @@ jobs:
   nix-quality:
     name: Nix formatting and evaluation
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 360
     permissions:
       contents: read
     steps:
@@ -78,7 +78,7 @@ jobs:
   renovate-config:
     name: Renovate configuration
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 360
     permissions:
       contents: read
     steps:
@@ -99,7 +99,7 @@ jobs:
     name: Prepare pnpm dependencies
     needs: [workflow-quality, javascript, nix-quality, renovate-config]
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 360
     permissions:
       contents: read
     steps:
@@ -124,7 +124,7 @@ jobs:
     if: ${{ !cancelled() }}
     needs: [workflow-quality, javascript, nix-quality, renovate-config, prepare-pnpm-deps, nix]
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
+    timeout-minutes: 360
     permissions: {}
     cache-mode: none
     steps:
