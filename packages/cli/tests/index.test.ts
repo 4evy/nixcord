@@ -15,7 +15,7 @@ delete env.NODE_ENV;
 delete env.VITEST;
 
 beforeAll(async () => {
-  temporary = await mkdtemp(join(root, 'node_modules/.nixcord-cli-test-'));
+  temporary = await mkdtemp(join(root, 'node_modules/.cli-test-'));
   await build({
     configFile: join(root, 'packages/cli/vite.config.ts'),
     logLevel: 'silent',

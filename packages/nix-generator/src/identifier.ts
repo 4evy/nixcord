@@ -44,7 +44,7 @@ function finalizeIdentifier(
 }
 
 /**
- * Reproduce older Nixcord option names when generating compatibility migrations.
+ * Reproduce older option names when generating compatibility migrations
  * Older releases preserved upstream acronym casing.
  */
 export function toLegacyNixIdentifier(name: string): string {

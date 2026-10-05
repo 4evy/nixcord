@@ -14,7 +14,7 @@ let
   sources = import ./sources.nix { inherit lib; };
 in
 buildNpmPackage {
-  pname = "nixcord-plugin-options";
+  pname = "plugin-options";
   version = "generated";
 
   __structuredAttrs = true;
@@ -109,7 +109,7 @@ buildNpmPackage {
   '';
 
   meta = {
-    description = "Generate nixcord Vencord and Equicord plugin option files";
+    description = "Generate Vencord and Equicord plugin option files";
     homepage = "https://github.com/4evy/nixcord";
     license = lib.licenses.mit;
     platforms = lib.platforms.unix;

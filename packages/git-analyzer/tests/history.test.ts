@@ -15,7 +15,7 @@ const roots: string[] = [];
 const dirs = ['src/plugins', 'src/equicordplugins'];
 
 async function repository() {
-  const root = await mkdtemp(join(tmpdir(), 'nixcord-history-'));
+  const root = await mkdtemp(join(tmpdir(), 'history-'));
   roots.push(root);
   const git = async (...args: string[]) =>
     (
@@ -25,7 +25,7 @@ async function repository() {
       })
     ).stdout.trim();
   await git('init', '--initial-branch=main');
-  await git('config', 'user.name', 'Nixcord test');
+  await git('config', 'user.name', 'Test user');
   await git('config', 'user.email', 'test@example.invalid');
   const write = async (path: string, text: string) => {
     await mkdir(dirname(join(root, path)), { recursive: true });
