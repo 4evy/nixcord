@@ -126,20 +126,20 @@ diff --git a/src/autoStart.js b/src/autoStart.js
 +++ b/src/autoStart.js
 @@ -5,1 +5,1 @@
 -const exec = app.getPath('exe');
-+const exec = require('./utils/buildInfo').nixcordLauncher;
++const exec = require('./utils/buildInfo').launcherPath;
 diff --git a/src/firstRun.js b/src/firstRun.js
 --- a/src/firstRun.js
 +++ b/src/firstRun.js
 @@ -8,1 +8,1 @@
 -const exec = process.execPath;
-+const exec = require('./utils/buildInfo').nixcordLauncher;
++const exec = require('./utils/buildInfo').launcherPath;
 diff --git a/src/config/index.js b/src/config/index.js
 --- a/src/config/index.js
 +++ b/src/config/index.js
 @@ -8,1 +8,4 @@
 -  app.relaunch();
 +  app.relaunch({
-+    execPath: require('../utils/buildInfo').nixcordLauncher,
++    execPath: require('../utils/buildInfo').launcherPath,
 +    args: process.argv.slice(1)
 +  });
 diff --git a/src/updater/moduleUpdater.js b/src/updater/moduleUpdater.js
@@ -148,6 +148,6 @@ diff --git a/src/updater/moduleUpdater.js b/src/updater/moduleUpdater.js
 @@ -89,1 +89,4 @@
 -      app.relaunch();
 +      app.relaunch({
-+        execPath: buildInfo.nixcordLauncher,
++        execPath: buildInfo.launcherPath,
 +        args: process.argv.slice(1)
 +      });

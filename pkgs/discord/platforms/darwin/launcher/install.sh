@@ -46,8 +46,8 @@ app_executable=${target%.unwrapped}
 app_executable_unwrapped="$app_executable.unwrapped"
 mv "$app_executable" "$app_executable_unwrapped"
 
-cp "$launcher_c" nixcord-discord-launcher.c
-substituteInPlace nixcord-discord-launcher.c \
+cp "$launcher_c" discord-launcher.c
+substituteInPlace discord-launcher.c \
   --replace-fail "@app_data_dir_file@" "$app_data_dir_file" \
   --replace-fail "@mod_data_dir_file@" "$mod_data_dir_file" \
   --replace-fail "@mod_data_env@" "$mod_data_env" \
@@ -59,7 +59,7 @@ substituteInPlace nixcord-discord-launcher.c \
   --replace-fail "@enable_krisp@" "$enable_krisp" \
   --replace-fail "@command_line_args@" "$command_line_args"
 
-"$cc" "${launcher_cflags[@]}" -Os -o "$app_executable" nixcord-discord-launcher.c
+"$cc" "${launcher_cflags[@]}" -Os -o "$app_executable" discord-launcher.c
 chmod +x "$app_executable"
 
 "$python3" "$prepare_signing" \

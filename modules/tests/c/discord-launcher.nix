@@ -94,7 +94,7 @@ let
         ${
           if expectedStatus == 0 then
             ''
-              ./${name} --nixcord-c-launcher-smoke
+              ./${name} --c-launcher-smoke
               diff -u <(printf '%s\n' ${lib.strings.escapeShellArgs expectedArgs}) ${name}.args
               diff -u <(printf '%s\n' "${expectedDataDir}") ${name}.data-dir
               diff -u <(printf '%s\n' "${expectedModDir}") ${name}.mod-dir
@@ -102,7 +102,7 @@ let
           else
             ''
               set +e
-              ./${name} --nixcord-c-launcher-smoke
+              ./${name} --c-launcher-smoke
               status=$?
               set -e
               test "$status" -eq ${toString expectedStatus}
@@ -151,7 +151,7 @@ pkgs.runCommand "discord-launcher-c-check"
         ""
       ];
       expectedArgs = [
-        "--nixcord-c-launcher-smoke"
+        "--c-launcher-smoke"
         "--enable-blink-features=MiddleClickAutoscroll"
         "--ozone-platform-hint=auto"
         "--enable-wayland-ime"
@@ -163,7 +163,7 @@ pkgs.runCommand "discord-launcher-c-check"
     ${compileAndSmoke {
       name = "discord-launcher-minimal";
       enableKrisp = false;
-      expectedArgs = [ "--nixcord-c-launcher-smoke" ];
+      expectedArgs = [ "--c-launcher-smoke" ];
     }}
     ${compileAndSmoke {
       name = "discord-launcher-helper-failure";
@@ -175,19 +175,19 @@ pkgs.runCommand "discord-launcher-c-check"
     ${compileAndSmoke {
       name = "discord-launcher-configured";
       enableKrisp = false;
-      appDataDir = "/tmp/nixcord données";
+      appDataDir = "/tmp/client données";
       modDataDir = "/tmp/Equicord settings";
       modDataEnv = "EQUICORD_USER_DATA_DIR";
-      expectedDataDir = "/tmp/nixcord données";
+      expectedDataDir = "/tmp/client données";
       expectedModDir = "/tmp/Equicord settings";
-      expectedArgs = [ "--nixcord-c-launcher-smoke" ];
+      expectedArgs = [ "--c-launcher-smoke" ];
     }}
 
     DISCORD_USER_DATA_DIR="$TMPDIR/inherited data" ./discord-launcher-minimal
     grep -Fx "$TMPDIR/inherited data" discord-launcher-minimal.data-dir
     DISCORD_USER_DATA_DIR="$TMPDIR/ignored" EQUICORD_USER_DATA_DIR="$TMPDIR/ignored" \
       ./discord-launcher-configured
-    grep -Fx '/tmp/nixcord données' discord-launcher-configured.data-dir
+    grep -Fx '/tmp/client données' discord-launcher-configured.data-dir
     grep -Fx '/tmp/Equicord settings' discord-launcher-configured.mod-dir
     rm discord-launcher-minimal.args
     if DISCORD_USER_DATA_DIR=relative ./discord-launcher-minimal; then

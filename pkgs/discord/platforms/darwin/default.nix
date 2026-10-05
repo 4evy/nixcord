@@ -36,14 +36,14 @@ let
             path.symlink_to(member.linkname)
   '';
 
-  appDataDirFile = writeText "nixcord-app-data-dir" (lib.trivial.defaultTo "" appDataDir);
-  modDataDirFile = writeText "nixcord-mod-data-dir" (lib.trivial.defaultTo "" modDataDir);
+  appDataDirFile = writeText "discord-app-data-dir" (lib.trivial.defaultTo "" appDataDir);
+  modDataDirFile = writeText "discord-mod-data-dir" (lib.trivial.defaultTo "" modDataDir);
   commandLineArgsList = if builtins.isList commandLineArgs then commandLineArgs else [ ];
 
   # Embed bytes directly: escapeC only supports printable ASCII
   commandLineArgsC = lib.strings.concatMapStrings (arg: ''
     (char[]){
-    #embed "${writeText "nixcord-command-line-argument" arg}" suffix(,)
+    #embed "${writeText "discord-command-line-argument" arg}" suffix(,)
       0
     },
   '') commandLineArgsList;
