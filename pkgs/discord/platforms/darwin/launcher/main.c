@@ -17,7 +17,7 @@
 #define TARGET "@target@"
 #define ENABLE_KRISP @enable_krisp@
 
-static_assert(__STDC_VERSION__ >= 202311L, "discord-launcher.c requires C23");
+static_assert(__STDC_VERSION__ >= 202311L, "main.c requires C23");
 
 extern char **environ;
 

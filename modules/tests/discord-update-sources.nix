@@ -6,6 +6,6 @@ pkgs.runCommand "discord-update-sources-check"
   }
   ''
     python3 ${./scripts/test-discord-update-sources.py} \
-      ${../../pkgs/discord/scripts/update-sources.py}
+      ${../../pkgs/discord/sources/update/main.py}
     touch "$out"
   ''

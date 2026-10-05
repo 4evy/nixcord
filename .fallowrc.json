@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
-  "entry": ["vite.config.shared.ts", "pkgs/discord/scripts/patch-updater.cts", "pkgs/discord/scripts/redirect-module-data.cjs", "modules/lib/legcord-build.ts"],
+  "entry": ["vite.config.shared.ts", "pkgs/discord/patching/updater/main.cts", "pkgs/discord/platforms/darwin/modules/redirect.cjs", "modules/lib/legcord-build.ts"],
   "ignoreDependencies": ["@typescript/native", "electron", "equicord", "renovate", "vencord"],
   "audit": {
     "gate": "all"

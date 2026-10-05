@@ -2,7 +2,7 @@
 
 let
   inherit (pkgs) lib;
-  patchStockUpdater = pkgs.callPackage ../../pkgs/discord/lib/patch-stock-updater.nix { };
+  patchStockUpdater = pkgs.callPackage ../../pkgs/discord/patching/updater/default.nix { };
   vencord = pkgs.writeTextDir "patcher.js" ''
     require('node:fs').writeFileSync(process.env.MOD_MARKER, __filename);
   '';
@@ -23,7 +23,7 @@ let
       resourcesDir = "$out/${name}/Discord App/resources";
       modulesDir = "$out/${name}/Discord App/modules";
       hostName = if mod == null then "app.asar" else "_app.asar";
-      installer = import ../../pkgs/discord/lib/install.nix {
+      installer = import ../../pkgs/discord/install.nix {
         inherit
           lib
           patchStockUpdater
@@ -36,7 +36,7 @@ let
           ;
         inherit (pkgs) python3 asar;
         openasar = "./openasar.asar";
-        patchVoiceKrispPy = ../../pkgs/discord/patches/krisp/patch-voice-krisp.py;
+        patchVoiceKrispPy = ../../pkgs/discord/krisp/patch/voice.py;
         krispRuntimePath = "require('path').join(process.env.TEST_MODULES, 'discord_krisp')";
       };
     in

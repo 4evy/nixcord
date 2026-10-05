@@ -25,7 +25,7 @@ def main() -> None:
         pathlib.Path(sys.argv[1])
         if len(sys.argv) > 1
         else pathlib.Path(__file__).parents[3]
-        / "pkgs/discord/scripts/update-sources.py"
+        / "pkgs/discord/sources/update/main.py"
     )
     updater = load_updater(str(updater_path))
 

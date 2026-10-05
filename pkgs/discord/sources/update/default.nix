@@ -2,12 +2,11 @@
   writeShellApplication,
   cacert,
   python3,
-  updateSourcesPy,
 }:
 writeShellApplication {
   name = "discord-update";
   runtimeEnv = {
-    DISCORD_UPDATE_SOURCES_PY = updateSourcesPy;
+    DISCORD_UPDATE_SOURCES_PY = ./main.py;
     SSL_CERT_FILE = "${cacert}/etc/ssl/certs/ca-bundle.crt";
   };
   runtimeInputs = [
@@ -16,6 +15,6 @@ writeShellApplication {
   ];
   text = ''
     # shellcheck disable=SC1091
-    source ${../scripts/update-sources.sh}
+    source ${./run.sh}
   '';
 }

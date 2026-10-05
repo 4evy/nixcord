@@ -16,4 +16,5 @@ actionlint \
   -ignore 'unexpected key "cache-mode" for "(workflow|job)" section'
 zizmor --strict-collection --pedantic .github/workflows .github/actions
 shellcheck .github/scripts/*.sh nix/benchmark-eval.sh nix/tests/benchmark-eval.sh \
-  pkgs/discord/scripts/*.sh
+  pkgs/discord/{modules,krisp}/*.sh \
+  pkgs/discord/sources/update/*.sh pkgs/discord/platforms/darwin/launcher/*.sh

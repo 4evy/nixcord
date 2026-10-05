@@ -6,7 +6,7 @@
   withKrisp,
 }:
 let
-  sources = lib.trivial.importJSON ../data/sources.json;
+  sources = lib.trivial.importJSON ./sources.json;
 
   platformName = if stdenvNoCC.hostPlatform.isLinux then "linux" else "osx";
   variantKey = "${platformName}-${branch}";

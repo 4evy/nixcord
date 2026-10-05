@@ -16,7 +16,7 @@ in
 writeShellApplication {
   name = "patch-discord-updater";
   text = ''
-    exec ${lib.meta.getExe nodejs} ${../scripts/patch-updater.cts} \
+    exec ${lib.meta.getExe nodejs} ${./main.cts} \
       ${typescript}/lib/typescript.js "$@"
   '';
 }

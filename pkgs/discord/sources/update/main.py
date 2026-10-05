@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Refresh pkgs/discord/data/sources.json with the latest Discord builds.
+"""Refresh pkgs/discord/sources/sources.json with the latest Discord builds.
 
 Adapted from upstream nixpkgs (NixOS/nixpkgs PR #506089). Honors the
 DISCORD_BRANCHES env var (comma-separated) for targeted refreshes without
@@ -141,8 +141,8 @@ def find_sources_json() -> str:
         return explicit
     script_dir = os.path.dirname(os.path.abspath(__file__))
     candidates = [
-        os.path.join(script_dir, "..", "data", "sources.json"),
-        "pkgs/discord/data/sources.json",
+        os.path.join(script_dir, "..", "sources.json"),
+        "pkgs/discord/sources/sources.json",
         "sources.json",
     ]
     for c in candidates:
@@ -150,12 +150,12 @@ def find_sources_json() -> str:
             return os.path.abspath(c)
     cwd = os.path.abspath(os.getcwd())
     while cwd != "/":
-        candidate = os.path.join(cwd, "pkgs", "discord", "data", "sources.json")
+        candidate = os.path.join(cwd, "pkgs", "discord", "sources", "sources.json")
         if os.path.isfile(candidate):
             return candidate
         cwd = os.path.dirname(cwd)
     raise SystemExit(
-        "Error: could not find pkgs/discord/data/sources.json "
+        "Error: could not find pkgs/discord/sources/sources.json "
         "(set SOURCES_JSON to override)"
     )
 

@@ -76,8 +76,8 @@ fi
 
 for module in ${DISCORD_STAGED_MODULES:-}; do
   if [[ "$module" = discord_krisp ]]; then
-    # The dedicated Krisp deployer owns this writable module and its repair
-    # watcher. Keep it in the manifest/prune allow-list, but do not stage it here.
+    # The Krisp deployer owns this writable module and its repair watcher
+    # Keep it in the manifest and prune allow-list without staging it here
     continue
   fi
 

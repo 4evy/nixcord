@@ -59,7 +59,7 @@ jobs:
           UPDATE_KIND: ${{ inputs.kind }}
         run: |
           case "$UPDATE_KIND" in
-            discord) paths=(pkgs/discord/data/sources.json) ;;
+            discord) paths=(pkgs/discord/sources/sources.json) ;;
             plugins)
               paths=(
                 pkgs/equicord/default.nix pkgs/vencord/default.nix

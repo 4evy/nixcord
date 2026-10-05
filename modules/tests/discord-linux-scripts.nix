@@ -32,7 +32,7 @@ pkgs.runCommand "discord-linux-scripts-check"
     printf 'hash\n' > "$linux_modules/discord_krisp/.nix-krisp-hash"
     printf '{"KEEP":true}\n' > "$linux_config/settings.json"
 
-    bash ${../../pkgs/discord/scripts/stage-modules.sh} "$store"
+    bash ${../../pkgs/discord/modules/stage.sh} "$store"
 
     for module in discord_desktop_core discord_voice; do
       test -L "$linux_modules/$module"
@@ -62,7 +62,7 @@ pkgs.runCommand "discord-linux-scripts-check"
     printf 'writable krisp data\n' > "$darwin_module_data/discord_krisp/module.node"
     printf '{"KEEP":true}\n' > "$darwin_config/settings.json"
 
-    bash ${../../pkgs/discord/scripts/stage-modules.sh} "$store"
+    bash ${../../pkgs/discord/modules/stage.sh} "$store"
 
     for module in discord_desktop_core discord_voice; do
       test -L "$darwin_modules/$module"

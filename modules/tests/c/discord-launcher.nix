@@ -59,7 +59,7 @@ let
       EOF
       chmod +x ${name}-target
 
-      cp ${../../../pkgs/discord/src/discord-launcher.c} ${name}.c
+      cp ${../../../pkgs/discord/platforms/darwin/launcher/main.c} ${name}.c
       substituteInPlace ${name}.c \
         --replace-fail "@app_data_dir_file@" ${pkgs.writeText "launcher-app-data-dir" appDataDir} \
         --replace-fail "@mod_data_dir_file@" ${pkgs.writeText "launcher-mod-data-dir" modDataDir} \
