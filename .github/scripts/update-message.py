@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.14
 """Describe the final workflow payload using short subjects and concrete details.
 
 Lead with package/channel updates, then summarize supporting changes. Name small

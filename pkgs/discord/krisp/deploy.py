@@ -1,4 +1,4 @@
-#!@pythonInterpreter@
+#!/usr/bin/env python3.14
 """Deploy pre-patched Krisp module to Discord's user-data directory."""
 
 import hashlib
@@ -8,22 +8,22 @@ import pwd
 import shutil
 import sys
 from pathlib import Path
-from shutil import COPY_BUFSIZE
 from threading import Event, Lock
 
 from watchdog.events import (
+    EVENT_TYPE_CLOSED_NO_WRITE,
+    EVENT_TYPE_OPENED,
     DirCreatedEvent,
     DirDeletedEvent,
     DirModifiedEvent,
     DirMovedEvent,
-    EVENT_TYPE_CLOSED_NO_WRITE,
-    EVENT_TYPE_OPENED,
     FileClosedEvent,
     FileCreatedEvent,
     FileDeletedEvent,
-    FileSystemEventHandler,
     FileModifiedEvent,
     FileMovedEvent,
+    FileSystemEvent,
+    FileSystemEventHandler,
 )
 from watchdog.observers import Observer
 
@@ -36,7 +36,7 @@ CONFIG_DIR = "@configDirName@"
 # overwrote our files, so the caller redeploys from KRISP_STORE.
 MARKER = ".nix-krisp-hash"
 PARENT_CHECK_INTERVAL = 1
-WATCHED_EVENTS = [
+WATCHED_EVENTS: list[type[FileSystemEvent]] = [
     DirCreatedEvent,
     DirDeletedEvent,
     DirModifiedEvent,
@@ -63,11 +63,8 @@ def modules_dir() -> Path:
 
 
 def _file_hash(path: Path) -> str:
-    h = hashlib.sha256()
     with open(path, "rb") as f:
-        for chunk in iter(lambda: f.read(COPY_BUFSIZE), b""):
-            h.update(chunk)
-    return h.hexdigest()
+        return hashlib.file_digest(f, "sha256").hexdigest()
 
 
 KRISP_HASH = hashlib.sha256(
@@ -141,7 +138,7 @@ def register(manifest: Path, create: bool) -> None:
             if manifest.exists()
             else {}
         )
-    except (json.JSONDecodeError, OSError):
+    except json.JSONDecodeError, OSError:
         data = {}
     if data.get("discord_krisp", {}).get("installedVersion") != 1:
         data["discord_krisp"] = {"installedVersion": 1}
@@ -161,7 +158,7 @@ def remove_incomplete_manifest(mdir: Path, manifest: Path) -> None:
         return
     try:
         data = json.loads(manifest.read_text(encoding="utf-8"))
-    except (json.JSONDecodeError, OSError):
+    except json.JSONDecodeError, OSError:
         return
     if set(data) == {"discord_krisp"}:
         manifest.unlink()

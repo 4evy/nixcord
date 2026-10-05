@@ -1,4 +1,5 @@
-"""Carry usable upstream signing settings into Nixcord's ad-hoc signature."""
+#!/usr/bin/env python3.14
+"""Carry usable upstream signing settings into the launcher's ad-hoc signature"""
 
 import plistlib
 import re
@@ -124,26 +125,34 @@ def main() -> None:
             plist.write_bytes(
                 plistlib.dumps(carry_entitlements(entitlements, executable))
             )
-            command.extend((
-                "--entitlements-xml-file",
-                f"{bundle}:{plist}" if bundle else str(plist),
-            ))
-            if bundle is None:
-                command.extend((
+            command.extend(
+                (
                     "--entitlements-xml-file",
-                    f"{relative_executable}:{plist}",
-                ))
+                    f"{bundle}:{plist}" if bundle else str(plist),
+                )
+            )
+            if bundle is None:
+                command.extend(
+                    (
+                        "--entitlements-xml-file",
+                        f"{relative_executable}:{plist}",
+                    )
+                )
             if flags:
                 flag_text = ",".join(flags)
-                command.extend((
-                    "--code-signature-flags",
-                    f"{bundle or relative_executable}:{flag_text}",
-                ))
-                if bundle is None:
-                    command.extend((
+                command.extend(
+                    (
                         "--code-signature-flags",
-                        f"Contents/MacOS/{binary_name}:{flag_text}",
-                    ))
+                        f"{bundle or relative_executable}:{flag_text}",
+                    )
+                )
+                if bundle is None:
+                    command.extend(
+                        (
+                            "--code-signature-flags",
+                            f"Contents/MacOS/{binary_name}:{flag_text}",
+                        )
+                    )
         subprocess.run([*command, str(app)], check=True)
 
 

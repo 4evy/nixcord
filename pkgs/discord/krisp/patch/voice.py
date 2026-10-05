@@ -1,10 +1,9 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.14
 """Point Discord's voice module at the Nix-managed Krisp module."""
 
 import json
 import sys
 from pathlib import Path
-
 
 SETUP_KRISP = """VoiceEngine.setupKrispPath = function () {
     const krispPath = discordNative?.nativeModules?.getModulePath('discord_krisp');

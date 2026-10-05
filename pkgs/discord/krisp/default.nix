@@ -2,7 +2,7 @@
   lib,
   stdenvNoCC,
   brotli,
-  python3,
+  python314,
   runCommand,
   darwin ? null,
   withKrisp,
@@ -14,10 +14,11 @@
 let
   hasKrispSrc = withKrisp && krispSrc != null;
   krispPlatform = if stdenvNoCC.hostPlatform.isDarwin then "darwin" else "linux";
-  krispPython = python3.withPackages (ps: [
+  krispPython = python314.withPackages (ps: [
     ps.lief
     ps.capstone
   ]);
+  deployPython = python314.withPackages (ps: [ ps.watchdog ]);
 
   patchKrispPy = ./patch/binary.py;
   patchKrispModulePy = ./patch/module.py;
@@ -59,11 +60,14 @@ let
         dir = "bin";
         isExecutable = true;
         replacements = {
-          pythonInterpreter = (python3.withPackages (ps: [ ps.watchdog ])).interpreter;
           krispPath = "${krispModule}";
           discordVersion = version;
           inherit configDirName;
         };
+        postBuild = ''
+          substituteInPlace "$target" \
+            --replace-fail '#!/usr/bin/env python3.14' '#!${deployPython.interpreter}'
+        '';
         meta.mainProgram = "deploy-krisp.py";
       }
     else

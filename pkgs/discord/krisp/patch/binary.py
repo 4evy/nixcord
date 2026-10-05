@@ -1,5 +1,4 @@
-#!/usr/bin/env nix-shell
-#!nix-shell -i python3 -p "python3.withPackages (ps: [ ps.lief ps.capstone ])"
+#!/usr/bin/env python3.14
 """
 Patch discord_krisp.node to bypass its signature verification
 
@@ -46,16 +45,14 @@ Useful commands for poking at a binary yourself:
 import mmap
 import sys
 from bisect import bisect_right
+from collections.abc import Iterator
 from dataclasses import dataclass
-from typing import Iterator, TypeVar
 
 import capstone
 import lief
 
-T = TypeVar("T")
 
-
-def _first(gen: Iterator[T], err: str) -> T:
+def _first[T](gen: Iterator[T], err: str) -> T:
     """Return first item from gen, or raise SystemExit with err."""
     if (result := next(gen, None)) is None:
         raise SystemExit(err)
@@ -112,7 +109,7 @@ class FunctionStarts:
         binary,
         start: int | None = None,
         end: int | None = None,
-    ) -> "FunctionStarts":
+    ) -> FunctionStarts:
         addrs = tuple(
             sorted(
                 f.address
@@ -221,6 +218,8 @@ def _walk_unique_callers(
 
 def patch_elf(mm: mmap.mmap, path: str) -> None:
     binary = lief.ELF.parse(path)
+    if binary is None:
+        raise SystemExit(f"Error: could not parse ELF binary {path}")
     text = binary.get_section(".text")
     if text is None:
         raise SystemExit("Error: .text not found")
@@ -240,17 +239,21 @@ def patch_elf(mm: mmap.mmap, path: str) -> None:
     _apply_patch(mm, func_off, ARCHS[_X86_64].return_true, "ELF")
 
 
-def patch_macho_slice(mm: mmap.mmap, binary: "lief.MachO.Binary") -> None:
+def patch_macho_slice(mm: mmap.mmap, binary: lief.MachO.Binary) -> None:
     """Trace _SecStaticCodeCreateWithPath up the call chain and patch the
     last uniquely-reachable function."""
     arch = ARCHS[binary.header.cpu_type]
     base = binary.fat_offset
 
     text = binary.get_section("__text")
+    if text is None:
+        raise SystemExit("Error: __text not found")
     text_vm, text_sz, text_off = text.virtual_address, text.size, text.offset
     fstart = base + text_off
 
     stubs = binary.get_section("__stubs")
+    if stubs is None:
+        raise SystemExit("Error: __stubs not found")
 
     target = _macho_import_stub(binary, stubs, ANCHOR_IMPORT)
 
@@ -275,7 +278,11 @@ def main() -> None:
             patch_elf(mm, path)
         else:
             fat = lief.MachO.parse(path)
+            if fat is None:
+                raise SystemExit(f"Error: could not parse Mach-O binary {path}")
             for binary in fat:
+                if binary is None:
+                    raise SystemExit("Error: could not parse Mach-O slice")
                 patch_macho_slice(mm, binary)
 
 

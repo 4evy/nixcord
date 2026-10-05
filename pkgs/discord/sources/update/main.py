@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.14
 """Refresh pkgs/discord/sources/sources.json with the latest Discord builds.
 
 Adapted from upstream nixpkgs (NixOS/nixpkgs PR #506089). Honors the
@@ -14,7 +14,6 @@ import sys
 import urllib.request
 from dataclasses import asdict, dataclass, field
 from enum import StrEnum
-from typing import List
 
 # The distributions API rejects requests that don't send a Discord-Updater
 # User-Agent.
@@ -110,7 +109,7 @@ def fetch_distro_source(variant: Variant) -> DistroSource:
 
 
 # Discord now ships all tracked branches and platforms through the distro API.
-ALL_VARIANTS: List[Variant] = [
+ALL_VARIANTS: list[Variant] = [
     Variant(Platform.LINUX, Branch.STABLE),
     Variant(Platform.LINUX, Branch.PTB),
     Variant(Platform.LINUX, Branch.CANARY),
@@ -122,7 +121,7 @@ ALL_VARIANTS: List[Variant] = [
 ]
 
 
-def selected_variants() -> List[Variant]:
+def selected_variants() -> list[Variant]:
     raw = os.environ.get("DISCORD_BRANCHES", "").strip()
     if not raw:
         return ALL_VARIANTS

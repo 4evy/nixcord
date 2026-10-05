@@ -1,11 +1,10 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.14
 """Post-process Discord's Krisp module for use from Nix builds."""
 
 import sys
 from pathlib import Path
 
 import lief
-
 
 INIT_CALL = "KrispModule._initialize(initializationParams);"
 INIT_GUARD = "process.env.NIXPKGS_KRISP_INITIALIZED"
@@ -30,11 +29,15 @@ def patch_index(path: Path) -> None:
 
 
 def patch_linux_external_init(path: Path) -> None:
-    elf = lief.parse(str(path))
+    elf = lief.ELF.parse(str(path))
+    if elf is None:
+        raise RuntimeError(f"could not parse ELF binary {path}")
     symbol = elf.get_dynamic_symbol("KrispInitializeExternal")
     if symbol is None:
         raise RuntimeError("could not find KrispInitializeExternal")
     offset = elf.virtual_address_to_offset(symbol.value)
+    if not isinstance(offset, int):
+        raise TypeError(f"invalid KrispInitializeExternal file offset: {offset}")
     data = bytearray(path.read_bytes())
     end = offset + len(LINUX_EXTERNAL_INIT_PATCH)
     if end > len(data):
