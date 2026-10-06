@@ -1104,7 +1104,13 @@
   },
   "cleanChannelName": {
     "description": "Remove emoji and decoration from channel names. Reverts to the original while you're editing the channel. (Equicord-only)",
-    "settings": {}
+    "settings": {
+      "ignoredChannels": {
+        "type": "types.str",
+        "default": "",
+        "description": "Comma separated list of channel IDs to leave untouched."
+      }
+    }
   },
   "cleanerChannelGroups": {
     "description": "Hides all channels in collapsed categories, even if they have unread messages. (Equicord-only)",

@@ -36,10 +36,10 @@
     "@types/fs-extra": "11.0.4",
     "@types/node": "26.6.4",
     "@typescript/native": "npm:typescript@7.0.2",
-    "equicord": "https://github.com/Equicord/Equicord/archive/1489c0e2a4435d854d7343a5cfb0abb894772318.tar.gz",
+    "equicord": "https://github.com/Equicord/Equicord/archive/33bc116426c64deefed72f690524aeabb260ba27.tar.gz",
     "fallow": "3.31.0",
     "typescript": "npm:@typescript/typescript6@6.0.2",
-    "vencord": "https://github.com/Vendicated/Vencord/archive/b52ed365cf2ea64a5019b419291a2d9d4d76852d.tar.gz",
+    "vencord": "https://github.com/Vendicated/Vencord/archive/3374b8a9d8f6b051c64204917360293aad7f5d75.tar.gz",
     "vite": "8.3.2",
     "vitest": "5.0.3"
   },
