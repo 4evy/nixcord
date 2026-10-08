@@ -363,6 +363,21 @@
     "description": "Makes picking a gif in the gif picker insert a link into the chatbox instead of instantly sending it (Shared between Vencord and Equicord)",
     "settings": {}
   },
+  "gifProviderSwitcher": {
+    "description": "Allows you to use Tenor or Giphy GIF search instead of Klipy (Shared between Vencord and Equicord)",
+    "settings": {
+      "provider": {
+        "type": "types.enum",
+        "enumValues": [
+          "tenor",
+          "giphy",
+          "klipy"
+        ],
+        "default": "tenor",
+        "description": "The provider to use. You can also change this directly in the GIF picker"
+      }
+    }
+  },
   "greetStickerPicker": {
     "description": "Allows you to use any greet sticker instead of only the random one by right-clicking the 'Wave to say hi!' button (Shared between Vencord and Equicord)",
     "settings": {
@@ -1375,10 +1390,6 @@
       }
     }
   },
-  "tenorGifSearch": {
-    "description": "Restore Tenor GIF search (Shared between Vencord and Equicord)",
-    "settings": {}
-  },
   "themeAttributes": {
     "description": "Adds data attributes to various elements for theming purposes (Shared between Vencord and Equicord)",
     "settings": {}
@@ -1635,6 +1646,16 @@
         "type": "types.bool",
         "default": false,
         "description": "Show in message context menu"
+      },
+      "sortKeys": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Alphabetically sort the keys of the raw data."
+      },
+      "stripSensitiveData": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Remove sensitive data from the raw data, such as your email and phone number."
       }
     }
   },

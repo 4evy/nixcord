@@ -92,6 +92,14 @@
       "to": "RichPresence",
       "date": "2026-09-12"
     },
+    "tenorGifSearch": {
+      "to": "GifProviderSwitcher",
+      "date": "2026-10-07"
+    },
+    "TenorGifSearch": {
+      "to": "GifProviderSwitcher",
+      "date": "2026-10-08"
+    },
     "TimelessClips": {
       "to": "ClipsEnhancements",
       "date": "2026-09-12"

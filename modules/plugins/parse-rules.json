@@ -131,6 +131,7 @@
     "gifCollections": "GifCollections",
     "gifMaker": "GifMaker",
     "gifPaste": "GifPaste",
+    "gifProviderSwitcher": "GifProviderSwitcher",
     "gitHubRepos": "GitHubRepos",
     "globalBadges": "GlobalBadges",
     "googleThat": "GoogleThat",
@@ -312,7 +313,6 @@
     "superReactionTweaks": "SuperReactionTweaks",
     "supportHelper": "SupportHelper",
     "talkInReverse": "TalkInReverse",
-    "tenorGifSearch": "TenorGifSearch",
     "textReplace": "TextReplace",
     "themeAttributes": "ThemeAttributes",
     "themeLibrary": "ThemeLibrary",
@@ -427,6 +427,9 @@
       "userLeave": "user_leave",
       "userMoved": "user_moved",
       "vibingWumpus": "vibing_wumpus"
+    },
+    "fileUpload": {
+      "customDiscordFileSizeLimitMb": "customDiscordFileSizeLimitMB"
     },
     "globalBadges": {
       "showReviewDb": "showReviewDB"

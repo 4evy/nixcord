@@ -2121,6 +2121,16 @@
         "type": "types.bool",
         "default": false,
         "description": "Skips the server onboarding by gaslighting it (restart required)"
+      },
+      "enableAutoCorrect": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Adds a chat box context menu toggle for native autocorrection and text replacements (restart required)"
+      },
+      "autoCorrect": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Use native autocorrection and text replacements in message editors"
       }
     }
   },
@@ -2492,6 +2502,11 @@
         "type": "types.bool",
         "default": true,
         "description": "Only use FileUpload if the file(s) exceed the file size limit."
+      },
+      "customDiscordFileSizeLimitMb": {
+        "type": "types.int",
+        "default": 0,
+        "description": "Manual Discord file size limit in MB. 0 means automatic detection."
       },
       "gofileToken": {
         "type": "types.str",
@@ -4048,7 +4063,7 @@
       "reactionCount": {
         "type": "types.int",
         "default": 5,
-        "description": "Number of reactions (0-42)"
+        "description": "Number of reactions (0-42) (restart required)"
       },
       "frequentEmojis": {
         "type": "types.bool",

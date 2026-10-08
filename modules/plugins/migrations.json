@@ -2961,6 +2961,28 @@
     },
     {
       "from": [
+        "tenorGifSearch",
+        "enable"
+      ],
+      "to": [
+        "gifProviderSwitcher",
+        "enable"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "tenorGifSearch",
+        "provider"
+      ],
+      "to": [
+        "gifProviderSwitcher",
+        "provider"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
         "timelessClips",
         "enable"
       ],
@@ -3561,6 +3583,28 @@
       "to": [
         "viewRaw",
         "messageContextMenu"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "viewRawVariant",
+        "sortKeys"
+      ],
+      "to": [
+        "viewRaw",
+        "sortKeys"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "viewRawVariant",
+        "stripSensitiveData"
+      ],
+      "to": [
+        "viewRaw",
+        "stripSensitiveData"
       ],
       "warn": false
     },
@@ -4179,6 +4223,17 @@
       "to": [
         "customRpc",
         "type"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "fileUpload",
+        "customDiscordFileSizeLimitMB"
+      ],
+      "to": [
+        "fileUpload",
+        "customDiscordFileSizeLimitMb"
       ],
       "warn": true
     },
