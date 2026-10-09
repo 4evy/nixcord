@@ -2849,6 +2849,17 @@
       }
     }
   },
+  "gifProviderSwitcher": {
+    "description": "Allows you to use Tenor or Giphy GIF search instead of Klipy (Equicord-only)",
+    "settings": {
+      "provider": {
+        "type": "types.listOf types.str",
+        "default": [
+          "tenor"
+        ]
+      }
+    }
+  },
   "gitHubRepos": {
     "description": "Displays a user's public GitHub repositories in their profile (Equicord-only)",
     "settings": {
@@ -5003,6 +5014,11 @@
         "default": false,
         "description": "Make mobile-only Video Quests compatible with desktop. (restart required)"
       },
+      "hideNonAutoCompletableQuests": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Hide incomplete Quests without a supported and enabled auto-complete task."
+      },
       "autoCompleteQuestsSimultaneously": {
         "type": "types.bool",
         "default": false,
@@ -5217,6 +5233,11 @@
           "EXPIRED"
         ],
         "description": "Sort order for Quest status groups."
+      },
+      "hiddenQuestStatuses": {
+        "type": "types.listOf types.str",
+        "default": [],
+        "description": "Quest status groups to hide."
       },
       "unclaimedSubsort": {
         "type": "types.str",

@@ -11,9 +11,9 @@ let
   pnpmArgument =
     if lib.trivial.functionArgs equicord.override ? pnpm_10_latest then "pnpm_10_latest" else "pnpm_10";
   fetchDeps = callPackage ../pnpm/fetch-deps.nix { inherit fetchPnpmDeps; };
-  version = "1.15.10.0-2026-10-08";
-  rev = "bde62725fd3dbf685eac53a307491ef4ba31e7a1";
-  hash = "sha256-38mMUaDgS0nYwrW2WceQmuHDJk1vFU1PEi7HWvNxiZk=";
+  version = "1.15.10.0-2026-10-09";
+  rev = "51eab49cce4566e51f65f29cc0eaae50efdd48d4";
+  hash = "sha256-x1tpRKmhO8JBjAwhNYqVdvMvKapv6pde9nN/6IS50Vw=";
   pnpmDepsHash = "sha256-pU/oxNJ9epA75Pth/b7mO67NavS8wy2BI/wuKKgnCpM=";
   inherit (equicord.src) owner repo;
   src = fetchFromGitHub {
