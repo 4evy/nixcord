@@ -366,6 +366,21 @@
     "description": "Bypasses youtube videos being blocked from display on Discord (for example by UMG) (Vencord-only)",
     "settings": {}
   },
+  "gifProviderSwitcher": {
+    "description": "Allows you to use Tenor or Giphy GIF search instead of Klipy (Vencord-only)",
+    "settings": {
+      "provider": {
+        "type": "types.enum",
+        "enumValues": [
+          "tenor",
+          "giphy",
+          "klipy"
+        ],
+        "default": "tenor",
+        "description": "The provider to use. You can also change this directly in the GIF picker"
+      }
+    }
+  },
   "messageClickActions": {
     "description": "Hold Backspace and click to delete, double click to edit/reply (Vencord-only)",
     "settings": {
