@@ -27,6 +27,7 @@ let
       ../modules/plugins/parse-rules.json
       ../modules/plugins/shared.json
       ../modules/plugins/vencord.json
+      ../packages/nix-generator/src/identifier.ts
       siteSources
     ];
   };

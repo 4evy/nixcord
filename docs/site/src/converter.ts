@@ -2,6 +2,7 @@ import equicordPlugins from '../../../modules/plugins/equicord.json';
 import parseRules from '../../../modules/plugins/parse-rules.json';
 import sharedPlugins from '../../../modules/plugins/shared.json';
 import vencordPlugins from '../../../modules/plugins/vencord.json';
+import { toNixIdentifier } from '../../../packages/nix-generator/src/identifier';
 
 type JsonObject = Record<string, unknown>;
 
@@ -20,6 +21,13 @@ type SettingSchema =
     };
 
 type PluginMetadata = Record<string, PluginSchema>;
+
+class NixFloat extends Number {
+  toString(): string {
+    // Nix requires a decimal point even for integral floats and exponent notation
+    return super.toString().replace(/^(-?\d+)(e|$)/, '$1.0$2');
+  }
+}
 
 export type ConverterStats = {
   configPluginCount: number;
@@ -77,15 +85,6 @@ const internalPluginNames = new Set(
     'UserSettingsAPI',
   ].map((name) => name.toLowerCase())
 );
-
-const PARENTHESES_PATTERN = /\s*\([^)]*\)\s*/g;
-const INVALID_CHARS_PATTERN = /[^A-Za-z0-9_'-]/g;
-const LEADING_TRAILING_UNDERSCORES_PATTERN = /^_+|_+$/g;
-const MULTIPLE_UNDERSCORES_PATTERN = /_+/g;
-const VALID_IDENTIFIER_START_PATTERN = /^[A-Za-z_]/;
-const LEADING_UNDERSCORE_PREFIX = '_';
-const WORD_PATTERN = /[0-9]+[a-z]+|[A-Z]+(?=[A-Z][a-z]|[0-9]|$)|[A-Z]?[a-z]+|[0-9]+/g;
-const PLUS_PATTERN = /\+/g;
 
 const pluginNameLookup = buildPluginNameLookup();
 
@@ -146,14 +145,13 @@ export function convertSettingsJsonToNix(input: string): ConverterResult {
       }
 
       const target = mapped.schema;
-      if (shouldOmitKnownSettingValue(target, settingValue)) continue;
+      const normalizedValue = normalizeSettingValue(settingValue, target);
+      if (shouldOmitKnownSettingValue(target, normalizedValue)) continue;
 
-      const normalizedValue =
-        isObject(settingValue) && isNestedSetting(target)
-          ? convertNestedSettings(plugin.nixName, settingValue, target.settings)
-          : settingValue;
-
-      configPlugin[mapped.nixName] = normalizedValue;
+      configPlugin[mapped.nixName] =
+        isObject(normalizedValue) && isNestedSetting(target)
+          ? convertNestedSettings(mapped.nixName, normalizedValue, target.settings)
+          : normalizedValue;
       knownSettingCount += 1;
     }
 
@@ -284,12 +282,13 @@ function convertNestedSettings(
       continue;
     }
 
-    if (shouldOmitKnownSettingValue(mapped.schema, value)) continue;
+    const normalizedValue = normalizeSettingValue(value, mapped.schema);
+    if (shouldOmitKnownSettingValue(mapped.schema, normalizedValue)) continue;
 
     converted[mapped.nixName] =
-      isObject(value) && isNestedSetting(mapped.schema)
-        ? convertNestedSettings(pluginName, value, mapped.schema.settings)
-        : value;
+      isObject(normalizedValue) && isNestedSetting(mapped.schema)
+        ? convertNestedSettings(mapped.nixName, normalizedValue, mapped.schema.settings)
+        : normalizedValue;
   }
 
   return converted;
@@ -302,11 +301,18 @@ function mapSettingName(
 ): { nixName: string; schema: SettingSchema } | null {
   if (schema[inputName]) return { nixName: inputName, schema: schema[inputName] };
 
+  // mkPluginOptions adds enable to every nested group outside the JSON schema
+  if (inputName === 'enabled' || inputName === 'enable') {
+    return { nixName: 'enable', schema: { type: 'types.bool' } };
+  }
+
   const settingRenames = (parseRules.settingRenames as Record<string, Record<string, string>>)[
     pluginName
   ];
   const renamed = settingRenames
-    ? Object.entries(settingRenames).find(([, upstreamName]) => stripQuotes(upstreamName) === inputName)
+    ? Object.entries(settingRenames).find(
+        ([, upstreamName]) => stripQuotes(upstreamName) === inputName
+      )
     : undefined;
 
   if (renamed && schema[renamed[0]]) return { nixName: renamed[0], schema: schema[renamed[0]] };
@@ -322,13 +328,28 @@ function stripQuotes(value: string): string {
   return value;
 }
 
-function isNestedSetting(setting: SettingSchema): setting is { settings: Record<string, SettingSchema> } {
+function isNestedSetting(
+  setting: SettingSchema
+): setting is { settings: Record<string, SettingSchema> } {
   return 'settings' in setting && isObject(setting.settings);
 }
 
 function shouldOmitKnownSettingValue(schema: SettingSchema, value: unknown): boolean {
   if (!('default' in schema)) return false;
-  return isJsonEqual(value, normalizeDefaultValue(schema.default));
+  return isJsonEqual(
+    value instanceof NixFloat ? value.valueOf() : value,
+    normalizeDefaultValue(schema.default)
+  );
+}
+
+function normalizeSettingValue(value: unknown, schema: SettingSchema): unknown {
+  if (isNestedSetting(schema) || schema.type !== 'types.float') return value;
+
+  const numericValue = typeof value === 'string' && value.trim() !== '' ? Number(value) : value;
+
+  return typeof numericValue === 'number' && Number.isFinite(numericValue)
+    ? new NixFloat(numericValue)
+    : value;
 }
 
 function normalizeDefaultValue(value: unknown): unknown {
@@ -398,6 +419,7 @@ function flattenNixcordAssignments(value: JsonObject): [string[], unknown][] {
 
 function printNixValue(value: unknown, level: number): string {
   if (value == null) return 'null';
+  if (value instanceof NixFloat) return value.toString();
   if (typeof value === 'boolean') return value ? 'true' : 'false';
   if (typeof value === 'number') return Number.isFinite(value) ? String(value) : 'null';
   if (typeof value === 'string') return quoteNixString(value);
@@ -450,48 +472,4 @@ function quoteNixString(value: string): string {
     .replace(/\n/g, '\\n')
     .replace(/\r/g, '\\r')
     .replace(/\t/g, '\\t')}"`;
-}
-
-function capitalize(word: string): string {
-  return word.length === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1);
-}
-
-function toNixIdentifier(name: string): string {
-  const originalStartsWithUnderscore = name.startsWith('_');
-  const originalEndsWithUnderscore = name.endsWith('_');
-  const normalizedInput = name.replace(PLUS_PATTERN, ' Plus ');
-  const sanitized = normalizedInput
-    .replace(PARENTHESES_PATTERN, '')
-    .replace(INVALID_CHARS_PATTERN, '_')
-    .replace(LEADING_TRAILING_UNDERSCORES_PATTERN, '')
-    .replace(MULTIPLE_UNDERSCORES_PATTERN, '_');
-  const needsPrefix = sanitized.length === 0 || !VALID_IDENTIFIER_START_PATTERN.test(sanitized);
-
-  const words: string[] = [];
-  for (const segment of sanitized.split(/[_\s'-]+/)) {
-    const normalizedSegment = segment.replace(/([A-Z]{2,})s(?=$|[A-Z])/g, '$1S');
-    for (const match of normalizedSegment.matchAll(WORD_PATTERN)) {
-      words.push(match[0].toLowerCase());
-    }
-  }
-
-  let identifier =
-    words.length === 0
-      ? sanitized
-      : words.map((word, index) => (index === 0 ? word : capitalize(word))).join('');
-
-  if (
-    originalStartsWithUnderscore &&
-    !originalEndsWithUnderscore &&
-    identifier &&
-    VALID_IDENTIFIER_START_PATTERN.test(identifier)
-  ) {
-    return `_${identifier}`;
-  }
-
-  if (needsPrefix || identifier.length === 0 || !VALID_IDENTIFIER_START_PATTERN.test(identifier)) {
-    identifier = `${LEADING_UNDERSCORE_PREFIX}${identifier}`;
-  }
-
-  return identifier;
 }
