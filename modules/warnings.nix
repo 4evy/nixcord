@@ -21,7 +21,7 @@ let
 
   inherit (pluginKit)
     pluginNameMigrations
-    clientConfigs
+    freeformClientConfigs
     collectDeprecatedPlugins
     ;
 
@@ -46,7 +46,7 @@ let
 
   deprecatedPluginsSorted = builtins.attrValues (
     lib.attrsets.genAttrs' (
-      deprecatedTypedPlugins ++ lib.lists.concatMap collectDeprecatedPlugins clientConfigs
+      deprecatedTypedPlugins ++ lib.lists.concatMap collectDeprecatedPlugins freeformClientConfigs
     ) (name: lib.attrsets.nameValuePair (pluginKit.pluginName name) name)
   );
 
