@@ -16,11 +16,12 @@ let
     mkAssertions
     ;
 
-  pluginKit = mkPluginKit cfg;
+  inherit (pkgs.callPackage ./lib/core.nix { inherit (cfg) parseRules; }) mkVencordCfg;
+  pluginKit = mkPluginKit { inherit cfg mkVencordCfg; };
 
   inherit (pluginKit)
     pluginNameMigrations
-    mergePlugins
+    clientConfigs
     collectDeprecatedPlugins
     ;
 
@@ -43,18 +44,10 @@ let
     lib.attrsets.attrNames
   ];
 
-  freeformPlugins = {
-    plugins = mergePlugins [
-      cfg.extraConfig
-      cfg.vencordConfig
-      cfg.equicordConfig
-      cfg.vesktopConfig
-      cfg.equibopConfig
-    ];
-  };
-
-  deprecatedPluginsSorted = builtins.attrNames (
-    lib.attrsets.genAttrs (deprecatedTypedPlugins ++ collectDeprecatedPlugins freeformPlugins) (_: null)
+  deprecatedPluginsSorted = builtins.attrValues (
+    lib.attrsets.genAttrs' (
+      deprecatedTypedPlugins ++ lib.lists.concatMap collectDeprecatedPlugins clientConfigs
+    ) (name: lib.attrsets.nameValuePair (pluginKit.pluginName name) name)
   );
 
   discordHasNoModClient =

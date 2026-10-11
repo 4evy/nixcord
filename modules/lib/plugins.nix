@@ -1,6 +1,8 @@
 { lib, ... }:
 let
-  isPluginEnabled = pluginConfig: builtins.isAttrs pluginConfig && (pluginConfig.enable or false);
+  isPluginEnabled =
+    pluginConfig:
+    builtins.isAttrs pluginConfig && (pluginConfig.enable or pluginConfig.enabled or false);
 
   schemaHasOptionPath =
     schema: path:
@@ -42,10 +44,11 @@ let
       lib.attrsets.filterAttrs
         (
           client: standaloneEnabled:
-          cfg.discord.${client}.enable
-          || cfg.legcord.${client}.enable
+          (cfg.discord.enable && cfg.discord.${client}.enable)
+          || (cfg.legcord.enable && cfg.legcord.${client}.enable)
           || standaloneEnabled
           || (cfg.goofcord.enable && cfg.goofcord.clientMod == client)
+          || (cfg.browser.enable && cfg.browser.client == client)
         )
         {
           vencord = cfg.vesktop.enable;
@@ -54,7 +57,7 @@ let
     );
 
   mkPluginKit =
-    cfg:
+    { cfg, mkVencordCfg }:
     let
       sharedPluginNames = builtins.attrNames sharedPlugins;
       vencordPluginNames = builtins.attrNames vencordPlugins;
@@ -90,6 +93,14 @@ let
       ];
 
       pluginsOf = attrs: attrs.plugins or { };
+      normalizePlugins = config: pluginsOf (mkVencordCfg config);
+      pluginName =
+        name:
+        builtins.head (
+          builtins.attrNames (normalizePlugins {
+            plugins.${name}.enable = true;
+          })
+        );
 
       mergePlugins =
         configs:
@@ -97,6 +108,38 @@ let
           (map pluginsOf)
           (lib.lists.foldl' lib.attrsets.recursiveUpdate { })
         ];
+
+      # Independent client overrides must not hide each other's enabled plugins.
+      sharedPluginConfig = mergePlugins [
+        cfg.config
+        cfg.extraConfig
+      ];
+      clientConfigs =
+        map
+          (
+            clientConfig:
+            mkVencordCfg {
+              plugins = lib.attrsets.recursiveUpdate sharedPluginConfig (pluginsOf clientConfig);
+            }
+          )
+          (
+            lib.lists.optional (cfg.discord.enable && cfg.discord.vencord.enable) cfg.vencordConfig
+            ++ lib.lists.optional (cfg.discord.enable && cfg.discord.equicord.enable) cfg.equicordConfig
+            ++ lib.lists.optional cfg.vesktop.enable cfg.vesktopConfig
+            ++ lib.lists.optional cfg.equibop.enable cfg.equibopConfig
+            ++ lib.lists.optional cfg.goofcord.enable cfg.goofcordConfig
+            ++ lib.lists.optional cfg.legcord.enable { }
+            ++ lib.lists.optional cfg.dorion.enable { }
+          )
+        ++ lib.lists.optional cfg.browser.enable {
+          plugins = mergePlugins (
+            map mkVencordCfg [
+              cfg.config
+              cfg.extraConfig
+              cfg.browser.extraConfig
+            ]
+          );
+        };
 
       pluginNameMigrations = deprecatedPluginNameMigrations // generatedPluginNameMigrations;
 
@@ -199,7 +242,7 @@ let
           plugins = pluginsOf configAttrs;
         in
         lib.trivial.pipe pluginNameMigrations [
-          (lib.attrsets.filterAttrs (oldName: _: isPluginEnabled (plugins.${oldName} or null)))
+          (lib.attrsets.filterAttrs (oldName: _: isPluginEnabled (plugins.${pluginName oldName} or null)))
           lib.attrsets.attrNames
         ];
 
@@ -212,10 +255,9 @@ let
 
       collectEnabledExclusivePlugins =
         exclusiveMask: configAttrs:
-        lib.trivial.pipe (builtins.intersectAttrs exclusiveMask (pluginsOf configAttrs)) [
-          (lib.attrsets.filterAttrs (_: isPluginEnabled))
-          builtins.attrNames
-        ];
+        builtins.filter (name: isPluginEnabled ((pluginsOf configAttrs).${pluginName name} or null)) (
+          builtins.attrNames exclusiveMask
+        );
 
       collectEnabledEquicordOnlyPlugins = collectEnabledExclusivePlugins equicordOnlyMask;
       collectEnabledVencordOnlyPlugins = collectEnabledExclusivePlugins vencordOnlyMask;
@@ -263,11 +305,14 @@ let
         isPluginEnabled
         pluginsOf
         mergePlugins
+        clientConfigs
         pluginNameMigrations
+        pluginName
         collectDeprecatedPlugins
         collectEnabledEquicordOnlyPlugins
         collectEnabledVencordOnlyPlugins
         filterPluginsFor
+        migrateFreeformConfigFor
         mkFullConfig
         ;
     };
@@ -277,22 +322,17 @@ let
     let
       inherit (pluginKit)
         enabledClients
-        mergePlugins
+        clientConfigs
         collectEnabledEquicordOnlyPlugins
         collectEnabledVencordOnlyPlugins
         ;
-      allPlugins.plugins = mergePlugins [
-        cfg.config
-        cfg.extraConfig
-        cfg.vencordConfig
-        cfg.equicordConfig
-        cfg.vesktopConfig
-        cfg.equibopConfig
-        cfg.goofcordConfig
-      ];
       goofcordAssets = cfg.goofcord.settings.assets or { };
-      wrongEquicordPlugins = collectEnabledEquicordOnlyPlugins allPlugins;
-      wrongVencordPlugins = collectEnabledVencordOnlyPlugins allPlugins;
+      wrongEquicordPlugins = lib.lists.unique (
+        lib.lists.concatMap collectEnabledEquicordOnlyPlugins clientConfigs
+      );
+      wrongVencordPlugins = lib.lists.unique (
+        lib.lists.concatMap collectEnabledVencordOnlyPlugins clientConfigs
+      );
     in
     [
       {
@@ -332,6 +372,8 @@ in
   inherit
     isPluginEnabled
     schemaHasOptionPath
+    getEnabledClients
+    clientHasOptionPath
     mkPluginKit
     mkAssertions
     ;
