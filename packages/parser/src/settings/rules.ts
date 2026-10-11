@@ -79,14 +79,15 @@ export const inferTypeFromValue = (
   if (typeof value === 'boolean') return { kind: 'boolean' };
   if (typeof value === 'number')
     return Number.isInteger(value) ? { kind: 'integer' } : { kind: 'float' };
-  if (typeof value === 'string') return { kind: 'string', nullable: false };
   const context =
     typeof contextualType === 'string'
       ? contextualTypeNode(contextualType)
       : contextualType
         ? unwrapType(contextualType)
         : undefined;
-  const members = context && ts.isUnionTypeNode(context) ? context.types : context ? [context] : [];
+  const members = typeMembers(context);
+  const nullable = members.some(isNullType);
+  if (typeof value === 'string') return { kind: 'string', nullable };
   const isRecord = members.some(
     (member) =>
       ts.isTypeLiteralNode(member) ||
@@ -108,7 +109,7 @@ export const inferTypeFromValue = (
       return { kind: 'list', element: 'attrs' };
     return { kind: 'list', element: 'anything' };
   }
-  if (value && typeof value === 'object') return { kind: 'attrs', nullable: false };
+  if (value && typeof value === 'object') return { kind: 'attrs', nullable };
   const contextualListElement = listElementFromContext(context);
   if (contextualListElement) return { kind: 'list', element: contextualListElement };
   if (isRecord) return { kind: 'attrs', nullable: true };
@@ -136,6 +137,15 @@ const contextualTypeNode = (text: string | undefined): ts.TypeNode | undefined =
     ? unwrapType(declaration.type)
     : undefined;
 };
+
+const typeMembers = (node: ts.TypeNode | undefined): readonly ts.TypeNode[] => {
+  if (!node) return [];
+  const type = unwrapType(node);
+  return ts.isUnionTypeNode(type) ? type.types.flatMap(typeMembers) : [type];
+};
+
+const isNullType = (node: ts.TypeNode): boolean =>
+  ts.isLiteralTypeNode(node) && node.literal.kind === ts.SyntaxKind.NullKeyword;
 
 const listElementFromContext = (type: ts.TypeNode | undefined): SettingListElement | undefined => {
   if (!type) return undefined;
@@ -173,7 +183,10 @@ const RULES: Readonly<Record<OptionTypeName, (input: SettingRuleInput) => Settin
     withDefault(
       {
         kind: 'string',
-        nullable: input.hasDeclaredDefault !== true || input.defaultValue === null,
+        nullable:
+          input.hasDeclaredDefault !== true ||
+          input.defaultValue === null ||
+          typeMembers(contextualTypeNode(input.contextualType)).some(isNullType),
       },
       input,
       null

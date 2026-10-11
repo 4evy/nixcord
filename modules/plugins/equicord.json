@@ -5148,7 +5148,7 @@
         "description": "Show a notification when new excluded Quests are detected."
       },
       "questCompletedAlertSound": {
-        "type": "types.str",
+        "type": "types.nullOr types.str",
         "default": "bop_message1",
         "description": "The sound to play when a Quest is completed."
       },
@@ -5163,7 +5163,7 @@
         "description": "The interval in seconds to fetch Quests from Discord."
       },
       "newQuestAlertSound": {
-        "type": "types.str",
+        "type": "types.nullOr types.str",
         "default": "discodo",
         "description": "The sound to play when new Quests are detected."
       },
