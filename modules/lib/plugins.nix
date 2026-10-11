@@ -110,11 +110,14 @@ let
         ];
 
       # Independent client overrides must not hide each other's enabled plugins.
-      sharedPluginConfig = mergePlugins [
-        cfg.config
-        cfg.extraConfig
-      ];
-      clientConfigs =
+      clientConfigsFor =
+        baseConfig:
+        let
+          sharedPluginConfig = mergePlugins [
+            baseConfig
+            cfg.extraConfig
+          ];
+        in
         map
           (
             clientConfig:
@@ -134,12 +137,15 @@ let
         ++ lib.lists.optional cfg.browser.enable {
           plugins = mergePlugins (
             map mkVencordCfg [
-              cfg.config
+              baseConfig
               cfg.extraConfig
               cfg.browser.extraConfig
             ]
           );
         };
+
+      clientConfigs = clientConfigsFor cfg.config;
+      freeformClientConfigs = clientConfigsFor { };
 
       pluginNameMigrations = deprecatedPluginNameMigrations // generatedPluginNameMigrations;
 
@@ -242,7 +248,10 @@ let
           plugins = pluginsOf configAttrs;
         in
         lib.trivial.pipe pluginNameMigrations [
-          (lib.attrsets.filterAttrs (oldName: _: isPluginEnabled (plugins.${pluginName oldName} or null)))
+          (lib.attrsets.filterAttrs (
+            oldName: newName:
+            pluginName oldName != pluginName newName && isPluginEnabled (plugins.${pluginName oldName} or null)
+          ))
           lib.attrsets.attrNames
         ];
 
@@ -306,6 +315,7 @@ let
         pluginsOf
         mergePlugins
         clientConfigs
+        freeformClientConfigs
         pluginNameMigrations
         pluginName
         collectDeprecatedPlugins
