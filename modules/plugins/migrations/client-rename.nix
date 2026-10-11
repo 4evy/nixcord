@@ -20,13 +20,12 @@ let
   newPath = base ++ migration.to;
   oldOption = lib.attrsets.attrByPath oldPath null options;
   cfg = config.programs.nixcord;
-  inherit (import ../../lib/plugins.nix { inherit lib; }) mkPluginKit;
-  pluginKit = mkPluginKit cfg;
+  inherit (import ../../lib/plugins.nix { inherit lib; }) getEnabledClients clientHasOptionPath;
 
   # Dorion also consumes Vencord settings through its browser bootstrap.
-  migrationClients = pluginKit.enabledClients ++ lib.lists.optional cfg.dorion.enable "vencord";
+  migrationClients = getEnabledClients cfg ++ lib.lists.optional cfg.dorion.enable "vencord";
   targetIsAvailable = lib.lists.any (
-    client: pluginKit.clientHasOptionPath client migration.to
+    client: clientHasOptionPath client migration.to
   ) migrationClients;
 
   optionDefaultPriority = (lib.modules.mkOptionDefault null).priority;

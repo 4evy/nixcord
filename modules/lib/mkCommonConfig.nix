@@ -27,7 +27,7 @@ let
 
   inherit (pkgs.callPackage ./core.nix { inherit lib parseRules; }) mkVencordCfg mkFinalPackages;
 
-  pluginKit = mkPluginKit cfg;
+  pluginKit = mkPluginKit { inherit cfg mkVencordCfg; };
 
   fullConfigs = mkAllFullConfigs cfg pluginKit;
 

@@ -1,6 +1,7 @@
 { lib, ... }:
 {
   imports = [
+    ./browser.nix
     ./discord.nix
     ./vesktop.nix
     ./equibop.nix
