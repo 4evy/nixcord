@@ -20,11 +20,11 @@ jobs:
       matrix:
         include:
           - system: x86_64-linux
-            runner: ubuntu-24.04
+            runner: ubuntu-26.04
           - system: aarch64-linux
-            runner: ubuntu-24.04-arm
+            runner: ubuntu-26.04-arm
           - system: aarch64-darwin
-            runner: macos-15
+            runner: macos-26
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 360
     permissions:
@@ -37,7 +37,7 @@ jobs:
 
       - uses: $/.github/actions/install-nix
 
-      - uses: $/.github/actions/import-pnpm-deps
+      - uses: $/.github/actions/import-bun-deps
 
       - name: Verify host and target architectures
         env:
@@ -61,15 +61,14 @@ jobs:
         env:
           EXPECTED_SYSTEM: ${{ matrix.system }}
         run: |
-          set -euo pipefail
+          set -o errexit -o nounset -o pipefail
           generated=$(nix --option system "$EXPECTED_SYSTEM" build \
             --option allow-import-from-derivation false \
             .#generate --no-link --print-out-paths)
-          for generated_file in "$generated"/plugins/*; do
-            committed_file="modules/plugins/$(basename "$generated_file")"
-            if ! cmp --silent "$generated_file" "$committed_file"; then
-              echo "::error file=$committed_file::Generated plugin metadata is stale"
-              diff -u "$committed_file" "$generated_file" || true
+          for generated_entry in "$generated"/plugins/*; do
+            committed_entry="modules/plugins/$(basename "$generated_entry")"
+            if ! diff --recursive --unified -- "$committed_entry" "$generated_entry"; then
+              echo "::error file=$committed_entry::Generated plugin metadata is stale"
               exit 1
             fi
           done
@@ -90,20 +89,12 @@ jobs:
         env:
           EXPECTED_SYSTEM: ${{ matrix.system }}
         run: |
-          set -euo pipefail
+          set -o errexit -o nounset -o pipefail
           available=$(nix --option system "$EXPECTED_SYSTEM" eval \
             --option allow-import-from-derivation false \
-            --json ".#packages.$EXPECTED_SYSTEM" --apply builtins.attrNames)
-          packages=(equicord vencord goofcord docs-json generate)
-          for package in docs discord discord-ptb discord-canary discord-development; do
-            if jq -e --arg package "$package" 'index($package) != null' <<< "$available" >/dev/null; then
-              packages+=("$package")
-            fi
-          done
-          installables=()
-          for package in "${packages[@]}"; do
-            installables+=(".#$package")
-          done
+            --raw ".#packages.$EXPECTED_SYSTEM" \
+            --apply 'packages: builtins.concatStringsSep " " (map (name: ".#" + name) (builtins.attrNames packages))')
+          read -r -a installables <<< "$available"
           nix_args=()
           if [[ "$RUNNER_OS" == "macOS" ]]; then
             nix_args+=(--max-jobs 1 --cores 2)

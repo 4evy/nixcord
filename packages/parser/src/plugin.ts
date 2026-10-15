@@ -1,12 +1,12 @@
-import type { StaticEvaluator } from '@nixcord/ast';
 import type {
   ParseDiagnostic,
   PluginConfig,
   PluginRename,
   PluginSetting,
   SettingRename,
-} from '@nixcord/shared';
-import type { CallExpression, SourceFile } from 'ts-morph';
+} from '@nixcord/domain';
+import type { CallExpression, SourceFile, StaticEvaluator } from '@nixcord/typescript-analysis';
+import { relative } from 'pathe';
 import {
   diagnostic,
   type PluginContext,
@@ -41,7 +41,7 @@ async function extractSettings(
   context: PluginContext,
   pluginName: string
 ): Promise<Record<string, PluginSetting | PluginConfig>> {
-  const privateDefinitions = privateSettings(settingsCall, context);
+  const privateDefinitions = await privateSettings(settingsCall, context, pluginName);
   const argument = settingsCall.getArguments()[0];
   if (!argument) return privateDefinitions;
   const unresolved: UnresolvedAstValue[] = [];
@@ -166,7 +166,7 @@ const extractRenames = (
 
     // Vencord declares (plugin, old, new), while Equicord has also used
     // (plugin, new, old). Shared plugins can contain either convention, so
-    // use the parsed current schema to identify the destination setting.
+    // use the parsed current schema to identify the destination setting
     const firstIsActive = activeSettingNames.has(firstSetting);
     const secondIsActive = activeSettingNames.has(secondSetting);
     const [oldSetting, newSetting] =
@@ -269,6 +269,10 @@ export async function parseSinglePlugin(
           name: pluginName,
           settings,
           directoryName: pluginDir,
+          source: {
+            file: relative(context.session.rootPath, entry.getFilePath()),
+            line: definePluginCall.getStartLineNumber(),
+          },
           ...(typeof description === 'string' ? { description } : {}),
           ...(typeof isModified === 'boolean' ? { isModified } : {}),
         },

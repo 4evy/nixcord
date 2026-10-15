@@ -63,7 +63,7 @@ default = 0;`;
       <dt>Resolve</dt>
       <dd>
         <div class="resolution"><code>FilterMode.Whitelist</code><span aria-hidden="true">→</span><code>EnumMember</code><span aria-hidden="true">→</span><strong><code>0</code></strong></div>
-        <p><a class={`link ${linkClass}`} href={`${sourceRoot}packages/ast/src/evaluator.ts`}>StaticEvaluator</a>
+        <p><a class={`link ${linkClass}`} href={`${sourceRoot}packages/typescript-analysis/src/evaluator.ts`}>StaticEvaluator</a>
           follows the property access to its enum declaration and reads the member's constant value.</p>
       </dd>
     </div>
@@ -81,15 +81,16 @@ default = 0;`;
       <dt>Declare</dt>
       <dd>
         <div class="nix-result"><CodeBlock code={nix} /></div>
-        <p><a class={`link ${linkClass}`} href={`${sourceRoot}modules/plugins/mkPluginOptions.nix`}>mkPluginOptions.nix</a>
-          uses those fields to declare <code>config.plugins.ignoreActivities.listMode</code>.
+        <p>The <a class={`link ${linkClass}`} href={`${sourceRoot}packages/cli/src/runner/schema.ts`}>option compiler</a>
+          uses those fields to generate the declaration for <code>config.plugins.ignoreActivities.listMode</code>.
+          The Nix module imports that declaration.
           Now <code>listMode = 0</code> is accepted.</p>
       </dd>
     </div>
   </dl>
 
   <p class={`verify ${paragraphClass}`}>Check the generated option's choices and default, not just whether the plugin was found.
-    Run <code class={literalCodeClass}>npm test</code> and <code class={literalCodeClass}>npm run test:upstream</code>;
+    Run <code class={literalCodeClass}>bun run test</code> and <code class={literalCodeClass}>bun run test:upstream</code>;
     include the affected option and results in your pull request.</p>
 </section>
 

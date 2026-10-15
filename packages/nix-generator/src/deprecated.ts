@@ -1,19 +1,19 @@
-import type { PluginMigrationInfo } from '@nixcord/git-analyzer';
 import type {
   DeprecatedData,
   DeprecatedRenameEntry,
   Logger,
   PluginConfig,
+  PluginMigrationInfo,
   SettingRename,
-} from '@nixcord/shared';
-import { REMOVAL_EXPIRY_DAYS, RENAME_EXPIRY_DAYS, sortedEntries } from '@nixcord/shared';
+} from '@nixcord/domain';
+import { REMOVAL_EXPIRY_DAYS, RENAME_EXPIRY_DAYS, sortedEntries } from '@nixcord/domain';
 import fse from 'fs-extra';
 import { join } from 'pathe';
-import * as z from 'zod';
+import * as v from 'valibot';
 
-/** Plugin names must be valid Nix identifiers (no dots or other special chars). */
+/** Plugin names must be valid Nix identifiers (no dots or other special chars) */
 function isValidPluginName(name: string): boolean {
-  return PluginNameSchema.safeParse(name).success;
+  return v.is(PluginNameSchema, name);
 }
 
 function isExpired(dateStr: string, expiryDays: number): boolean {
@@ -24,42 +24,49 @@ function isExpired(dateStr: string, expiryDays: number): boolean {
   return diffDays > expiryDays;
 }
 
-// Persisted history is best-effort: keep valid entries even if another entry is malformed.
-const historyRecord = <T>(key: z.ZodType<string>, value: z.ZodType<T>) => {
-  const entrySchema = z.tuple([key, value]);
-  return z
-    .record(z.string(), z.unknown())
-    .transform((record) =>
-      Object.fromEntries(
-        Object.entries(record).flatMap((entry) => {
-          const result = entrySchema.safeParse(entry);
-          return result.success ? [result.data] : [];
-        })
+// Persisted history is best-effort: keep valid entries even if another entry is malformed
+const historyRecord = <T>(
+  key: v.GenericSchema<unknown, string>,
+  value: v.GenericSchema<unknown, T>
+) => {
+  const entrySchema = v.tuple([key, value]);
+  return v.fallback(
+    v.pipe(
+      v.record(v.string(), v.unknown()),
+      v.transform((record) =>
+        Object.fromEntries(
+          Object.entries(record).flatMap((entry) => {
+            const result = v.safeParse(entrySchema, entry);
+            return result.success ? [result.output] : [];
+          })
+        )
       )
-    )
-    .catch({});
+    ),
+    () => ({})
+  );
 };
 
-const PluginNameSchema = z.string().regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/);
-const RemovalEntrySchema = z.object({ date: z.string().min(1) });
-const DeprecatedHistorySchema = z
-  .object({
+const PluginNameSchema = v.pipe(v.string(), v.regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/));
+const RemovalEntrySchema = v.object({ date: v.pipe(v.string(), v.minLength(1)) });
+const DeprecatedHistorySchema = v.fallback(
+  v.object({
     renames: historyRecord(
       PluginNameSchema,
-      z.object({
+      v.object({
         to: PluginNameSchema,
-        date: z.string().min(1).optional().catch(undefined),
+        date: v.fallback(v.optional(v.pipe(v.string(), v.minLength(1))), undefined),
       })
     ),
     removals: historyRecord(PluginNameSchema, RemovalEntrySchema),
-    settingRenames: historyRecord(z.string(), z.record(z.string(), z.string())),
-    settingRemovals: historyRecord(PluginNameSchema, historyRecord(z.string(), RemovalEntrySchema)),
-  })
-  .catch({ renames: {}, removals: {}, settingRenames: {}, settingRemovals: {} });
+    settingRenames: historyRecord(v.string(), v.record(v.string(), v.string())),
+    settingRemovals: historyRecord(PluginNameSchema, historyRecord(v.string(), RemovalEntrySchema)),
+  }),
+  () => ({ renames: {}, removals: {}, settingRenames: {}, settingRemovals: {} })
+);
 
 async function readDeprecatedJson(filePath: string): Promise<DeprecatedData> {
   const parsed: unknown = await fse.readJson(filePath).catch(() => undefined);
-  return DeprecatedHistorySchema.parse(parsed);
+  return v.parse(DeprecatedHistorySchema, parsed);
 }
 
 export function generateDeprecatedJson(data: DeprecatedData): string {
@@ -99,7 +106,7 @@ export function generateDeprecatedJson(data: DeprecatedData): string {
 }
 
 /**
- * Remove A -> B / B -> A pairs left by reversals in Git history.
+ * Remove A -> B / B -> A pairs left by reversals in Git history
  */
 function removeCircularRenames(renames: Record<string, DeprecatedRenameEntry>): void {
   const toRemove = new Set<string>();
@@ -153,8 +160,27 @@ export async function updateDeprecatedPlugins(
   const existing = await readDeprecatedJson(deprecatedPath);
   const normalize = normalizePluginName ?? ((n: string) => n);
 
+  pruneExpiredHistory(existing);
+  mergeObservedPluginHistory(existing, migrations, normalize);
+  reconcilePluginHistory(existing, normalize, activePluginNames, normalizePluginName !== undefined);
+  mergeObservedSettingRenames(existing, settingRenames, normalize);
+  reconcileSettingHistory(existing, normalize, activePlugins);
+
+  const json = generateDeprecatedJson(existing);
+  await fse.writeFile(deprecatedPath, json);
+
+  if (verbose) {
+    const renameCount = Object.keys(existing.renames).length;
+    const deletionCount = Object.keys(existing.removals).length;
+    logger.info(`Updated deprecated.json: ${renameCount} renames, ${deletionCount} removals`);
+  }
+
+  return existing;
+}
+
+function pruneExpiredHistory(existing: DeprecatedData): void {
   // Prune expired history first so migrations still declared upstream can
-  // replace their expired entries with the current observation date.
+  // replace their expired entries with the current observation date
   for (const [name, entry] of Object.entries(existing.renames)) {
     if (!entry.date || isExpired(entry.date, RENAME_EXPIRY_DAYS)) {
       delete existing.renames[name];
@@ -171,11 +197,18 @@ export async function updateDeprecatedPlugins(
     }
     if (Object.keys(settings).length === 0) delete existing.settingRemovals![pluginName];
   }
+}
 
+function mergeObservedPluginHistory(
+  existing: DeprecatedData,
+  migrations: PluginMigrationInfo,
+  normalize: (name: string) => string
+): void {
   // Merge new renames (skip dot-named plugins, don't overwrite existing entries)
   for (const rename of migrations.renames) {
     if (!isValidPluginName(rename.oldName) || !isValidPluginName(rename.newName)) continue;
     const dateStr = rename.commitDate.split('T')[0];
+    if (isExpired(dateStr, RENAME_EXPIRY_DAYS)) continue;
     if (!existing.renames[rename.oldName]) {
       existing.renames[rename.oldName] = { to: rename.newName, date: dateStr };
     }
@@ -185,23 +218,33 @@ export async function updateDeprecatedPlugins(
   for (const deletion of migrations.deletions) {
     if (!isValidPluginName(deletion.pluginName)) continue;
     const dateStr = deletion.commitDate.split('T')[0];
+    if (isExpired(dateStr, REMOVAL_EXPIRY_DAYS)) continue;
     if (!existing.removals[deletion.pluginName]) {
       existing.removals[deletion.pluginName] = { date: dateStr };
     }
   }
 
-  // Merge settings removed from active plugins.
+  // Merge settings removed from active plugins
   for (const removal of migrations.settingRemovals ?? []) {
     if (!isValidPluginName(removal.plugin) || !isValidPluginName(removal.setting)) continue;
+    const dateStr = removal.commitDate.split('T')[0];
+    if (isExpired(dateStr, REMOVAL_EXPIRY_DAYS)) continue;
     const pluginName = normalize(removal.plugin);
     const settings = (existing.settingRemovals ??= {})[pluginName] ?? {};
-    settings[removal.setting] ??= { date: removal.commitDate.split('T')[0] };
+    settings[removal.setting] ??= { date: dateStr };
     existing.settingRemovals[pluginName] = settings;
   }
+}
 
+function reconcilePluginHistory(
+  existing: DeprecatedData,
+  normalize: (name: string) => string,
+  activePluginNames: Set<string> | undefined,
+  normalizeNames: boolean
+): void {
   removeCircularRenames(existing.renames);
 
-  if (activePluginNames && normalizePluginName) {
+  if (activePluginNames && normalizeNames) {
     const activeNameByNormalizedName = new Map(
       [...activePluginNames].map((name) => [normalize(name), name])
     );
@@ -218,7 +261,7 @@ export async function updateDeprecatedPlugins(
   removeSelfRenames(existing.renames, normalize);
 
   // A rename must not also remove the plugin. Compare names without case
-  // because Git history may contain different spellings.
+  // because Git history may contain different spellings
   const renameKeysLower = new Map(Object.keys(existing.renames).map((k) => [k.toLowerCase(), k]));
   for (const name of Object.keys(existing.removals)) {
     if (existing.renames[name] || renameKeysLower.has(name.toLowerCase())) {
@@ -226,7 +269,7 @@ export async function updateDeprecatedPlugins(
     }
   }
 
-  // An active plugin may appear deleted in Git after a file move.
+  // An active plugin may appear deleted in Git after a file move
   if (activePluginNames) {
     const normalizedActiveNames = new Set([...activePluginNames].map(normalize));
     for (const name of Object.keys(existing.removals)) {
@@ -235,7 +278,13 @@ export async function updateDeprecatedPlugins(
       }
     }
   }
+}
 
+function mergeObservedSettingRenames(
+  existing: DeprecatedData,
+  settingRenames: SettingRename[],
+  normalize: (name: string) => string
+): void {
   // Merge setting renames from migratePluginSetting() calls
   for (const rename of settingRenames) {
     const nixName = normalize(rename.pluginName);
@@ -250,8 +299,15 @@ export async function updateDeprecatedPlugins(
       delete existing.settingRemovals?.[nixName];
     }
   }
+}
 
-  // Deduplicate settingRenames by normalized name (e.g. "PlatformIndicators" -> "platformIndicators")
+function reconcileSettingHistory(
+  existing: DeprecatedData,
+  normalize: (name: string) => string,
+  activePlugins: Readonly<Record<string, PluginConfig>> | undefined
+): void {
+  // Deduplicate settingRenames by normalized name (e.g. "PlatformIndicators" ->
+  // "platformIndicators")
   {
     const deduped: Record<string, Record<string, string>> = {};
     for (const [key, settings] of Object.entries(existing.settingRenames)) {
@@ -265,7 +321,7 @@ export async function updateDeprecatedPlugins(
   }
 
   // Use the current schema to resolve circular pairs left by older generators
-  // that read an upstream migration in the wrong direction.
+  // that read an upstream migration in the wrong direction
   if (activePlugins) {
     const activeSettingsByPlugin = new Map(
       Object.entries(activePlugins).map(([name, config]) => [
@@ -283,15 +339,4 @@ export async function updateDeprecatedPlugins(
       }
     }
   }
-
-  const json = generateDeprecatedJson(existing);
-  await fse.writeFile(deprecatedPath, json);
-
-  if (verbose) {
-    const renameCount = Object.keys(existing.renames).length;
-    const deletionCount = Object.keys(existing.removals).length;
-    logger.info(`Updated deprecated.json: ${renameCount} renames, ${deletionCount} removals`);
-  }
-
-  return existing;
 }

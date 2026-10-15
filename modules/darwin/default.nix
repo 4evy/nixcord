@@ -80,16 +80,12 @@
           let
             mkDir =
               dir:
-              "${install} -d -o ${lib.strings.escapeShellArg cfg.user} -g staff ${lib.strings.escapeShellArg dir}";
+              "${install} --directory --owner ${lib.strings.escapeShellArg cfg.user} --group staff ${lib.strings.escapeShellArg dir}";
           in
           ''
             ${lib.strings.concatMapStringsSep "\n" mkDir managedConfigDirs}
 
-            copy_file() {
-              sudo --user=${lib.strings.escapeShellArg cfg.user} -- ${install} -D -m "$3" "$1" "$2"
-            }
-
-            ${fileCopyCommands}
+            ${fileCopyCommands "sudo --user=${lib.strings.escapeShellArg cfg.user} -- ${install} -D --mode=0644"}
           ''
         );
       })

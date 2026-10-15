@@ -1,6 +1,6 @@
 import type { PluginConfig, PluginSetting } from '@nixcord/shared';
 import { describe, expect, test } from 'vitest';
-import { generatePluginJson, generatePluginModule, generateSettingJson } from '../src/generator.js';
+import { generatePluginJson, generatePluginSchema, generateSettingJson } from '../src/generator.js';
 
 describe('generateSettingJson()', () => {
   test('regular setting -> includes type', () => {
@@ -312,7 +312,7 @@ describe('generatePluginJson()', () => {
   });
 });
 
-describe('generatePluginModule()', () => {
+describe('generatePluginSchema()', () => {
   test('sorts plugins alphabetically', () => {
     const plugins: Readonly<Record<string, PluginConfig>> = {
       ZuluPlugin: {
@@ -328,16 +328,16 @@ describe('generatePluginModule()', () => {
         settings: {},
       },
     };
-    const result = generatePluginModule(plugins);
-    const parsed = JSON.parse(result);
+    const result = generatePluginSchema(plugins);
+    const parsed = result;
     const keys = Object.keys(parsed);
     expect(keys).toEqual(['alphaPlugin', 'betaPlugin', 'zuluPlugin']);
   });
 
   test('handles empty plugins record', () => {
     const plugins: Readonly<Record<string, PluginConfig>> = {};
-    const result = generatePluginModule(plugins);
-    expect(JSON.parse(result)).toEqual({});
+    const result = generatePluginSchema(plugins);
+    expect(result).toEqual({});
   });
 
   test('uses acronym-aware identifiers for plugin and setting names', () => {
@@ -355,8 +355,8 @@ describe('generatePluginModule()', () => {
       },
     };
 
-    const result = generatePluginModule(plugins);
-    const parsed = JSON.parse(result);
+    const result = generatePluginSchema(plugins);
+    const parsed = result;
 
     expect(parsed.clearUrls).toBeDefined();
     expect(parsed.ClearURLs).toBeUndefined();
@@ -370,7 +370,7 @@ describe('generatePluginModule()', () => {
       'Clear-URLs': { name: 'Clear-URLs', settings: {} },
     };
 
-    expect(() => generatePluginModule(plugins)).toThrow(
+    expect(() => generatePluginSchema(plugins)).toThrow(
       'Plugins "ClearURLs" and "Clear-URLs" both normalize to "clearUrls"'
     );
   });

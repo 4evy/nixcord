@@ -7,7 +7,7 @@ pkgs.runCommand "discord-linux-scripts-check"
     ];
   }
   ''
-    set -euo pipefail
+    set -o errexit -o nounset -o pipefail
 
 
     store="$PWD/store-modules"
@@ -17,7 +17,7 @@ pkgs.runCommand "discord-linux-scripts-check"
     export DISCORD_DISABLED_UPDATE_SETTINGS_JSON='{"SKIP_HOST_UPDATE":true,"SKIP_MODULE_UPDATE":true,"USE_NEW_UPDATER":false}'
     export DISCORD_INSTALLED_MODULES_JSON='{"discord_desktop_core":{"installedVersion":1},"discord_krisp":{"installedVersion":1},"discord_voice":{"installedVersion":1}}'
 
-    mkdir -p "$store/discord_desktop_core" "$store/discord_krisp" "$store/discord_voice"
+    mkdir --parents "$store/discord_desktop_core" "$store/discord_krisp" "$store/discord_voice"
     printf 'store core\n' > "$store/discord_desktop_core/index.js"
     printf 'store krisp\n' > "$store/discord_krisp/index.js"
     printf 'store voice\n' > "$store/discord_voice/index.js"
@@ -26,7 +26,7 @@ pkgs.runCommand "discord-linux-scripts-check"
     export DISCORD_USER_DATA_DIR="$PWD/linux-user-data"
     linux_config="$DISCORD_USER_DATA_DIR/discord"
     linux_modules="$linux_config/1.0.0/modules"
-    mkdir -p "$linux_modules/discord_old" "$linux_modules/discord_krisp"
+    mkdir --parents "$linux_modules/discord_old" "$linux_modules/discord_krisp"
     printf 'old\n' > "$linux_modules/discord_old/index.js"
     printf 'writable krisp\n' > "$linux_modules/discord_krisp/module.node"
     printf 'hash\n' > "$linux_modules/discord_krisp/.nix-krisp-hash"
@@ -40,11 +40,11 @@ pkgs.runCommand "discord-linux-scripts-check"
     done
     test ! -e "$linux_modules/discord_old"
     test ! -L "$linux_modules/discord_krisp"
-    grep -Fx 'writable krisp' "$linux_modules/discord_krisp/module.node"
-    grep -Fx 'hash' "$linux_modules/discord_krisp/.nix-krisp-hash"
-    jq -e '.discord_voice.installedVersion == 1 and .discord_krisp.installedVersion == 1' \
+    grep --fixed-strings --line-regexp 'writable krisp' "$linux_modules/discord_krisp/module.node"
+    grep --fixed-strings --line-regexp 'hash' "$linux_modules/discord_krisp/.nix-krisp-hash"
+    jq --exit-status '.discord_voice.installedVersion == 1 and .discord_krisp.installedVersion == 1' \
       "$linux_modules/installed.json"
-    jq -e '.KEEP == true and .SKIP_HOST_UPDATE == true and .SKIP_MODULE_UPDATE == true and .USE_NEW_UPDATER == false' \
+    jq --exit-status '.KEEP == true and .SKIP_HOST_UPDATE == true and .SKIP_MODULE_UPDATE == true and .USE_NEW_UPDATER == false' \
       "$linux_config/settings.json"
     test ! -e "$linux_config/module_data"
 
@@ -53,7 +53,7 @@ pkgs.runCommand "discord-linux-scripts-check"
     darwin_config="$DISCORD_USER_DATA_DIR/discord"
     darwin_modules="$darwin_config/1.0.0/modules"
     darwin_module_data="$darwin_config/module_data"
-    mkdir -p \
+    mkdir --parents \
       "$darwin_modules/discord_old" \
       "$darwin_modules/discord_krisp" \
       "$darwin_module_data/discord_old" \
@@ -74,10 +74,10 @@ pkgs.runCommand "discord-linux-scripts-check"
     test ! -e "$darwin_module_data/discord_old"
     test ! -L "$darwin_modules/discord_krisp"
     test ! -L "$darwin_module_data/discord_krisp"
-    grep -Fx 'writable krisp' "$darwin_modules/discord_krisp/module.node"
-    grep -Fx 'writable krisp data' "$darwin_module_data/discord_krisp/module.node"
-    jq -e '.discord_voice.installedVersion == 1' "$darwin_modules/installed.json"
-    jq -e '.KEEP == true and .SKIP_HOST_UPDATE == true and .SKIP_MODULE_UPDATE == true and .USE_NEW_UPDATER == false' \
+    grep --fixed-strings --line-regexp 'writable krisp' "$darwin_modules/discord_krisp/module.node"
+    grep --fixed-strings --line-regexp 'writable krisp data' "$darwin_module_data/discord_krisp/module.node"
+    jq --exit-status '.discord_voice.installedVersion == 1' "$darwin_modules/installed.json"
+    jq --exit-status '.KEEP == true and .SKIP_HOST_UPDATE == true and .SKIP_MODULE_UPDATE == true and .USE_NEW_UPDATER == false' \
       "$darwin_config/settings.json"
 
     touch "$out"

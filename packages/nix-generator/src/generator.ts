@@ -1,48 +1,50 @@
-import type { PluginConfig, PluginSetting, SettingType } from '@nixcord/shared';
+import type { PluginConfig, PluginSetting, SettingType } from '@nixcord/domain';
 import {
   INTEGER_STRING_PATTERN,
   NIX_ENUM_TYPE,
+  NIX_LIST_TYPES,
   NIX_TYPE_ATTRS,
   NIX_TYPE_BOOL,
   NIX_TYPE_FLOAT,
   NIX_TYPE_INT,
-  NIX_TYPE_LIST_OF_ANYTHING,
-  NIX_TYPE_LIST_OF_ATTRS,
-  NIX_TYPE_LIST_OF_BOOL,
-  NIX_TYPE_LIST_OF_NUMBER,
-  NIX_TYPE_LIST_OF_STR,
+  NIX_TYPE_NULL_OR_ATTRS,
   NIX_TYPE_NULL_OR_STR,
   NIX_TYPE_STR,
-} from '@nixcord/shared';
+  type NixSettingType,
+} from '@nixcord/domain';
+import { Match } from 'effect';
 import { toNixIdentifier } from './identifier.js';
 
 export type PluginCategory = 'shared' | 'vencord' | 'equicord';
 
-/** JSON representation of a single plugin setting for the Nix-side builder. */
+/** JSON representation of a single plugin setting for the option compiler */
 export interface PluginSettingJson {
-  type: string;
+  upstreamName: string;
+  upstreamType: SettingType;
+  type: NixSettingType;
   default?: unknown;
   description?: string;
   enumValues?: (string | number | boolean)[];
   example?: string;
+  hidden?: boolean;
+  restartNeeded?: boolean;
 }
 
-/** JSON representation of a plugin for the Nix-side builder. */
+/** JSON representation of a plugin for the option compiler */
 export interface PluginJson {
+  upstreamName: string;
+  category?: PluginCategory;
+  directoryName?: string;
+  source?: PluginConfig['source'];
   description: string;
   settings: Record<string, PluginSettingJson | PluginJson>;
 }
 
-const categoryLabel = (category: PluginCategory): string => {
-  switch (category) {
-    case 'shared':
-      return ' (Shared between Vencord and Equicord)';
-    case 'vencord':
-      return ' (Vencord-only)';
-    case 'equicord':
-      return ' (Equicord-only)';
-  }
-};
+const CATEGORY_LABELS = {
+  shared: ' (Shared between Vencord and Equicord)',
+  vencord: ' (Vencord-only)',
+  equicord: ' (Equicord-only)',
+} as const satisfies Record<PluginCategory, string>;
 
 const buildEnumMappingDescription = (
   enumValues: readonly (string | number | boolean)[],
@@ -64,37 +66,28 @@ const buildEnumMappingDescription = (
   return mappings.length === 0 ? undefined : mappings.join(', ');
 };
 
-const lowerSettingType = (type: SettingType): string => {
-  switch (type.kind) {
-    case 'boolean':
-      return NIX_TYPE_BOOL;
-    case 'string':
-      return type.nullable ? NIX_TYPE_NULL_OR_STR : NIX_TYPE_STR;
-    case 'integer':
-      return NIX_TYPE_INT;
-    case 'float':
-      return NIX_TYPE_FLOAT;
-    case 'attrs':
-      return type.nullable ? `types.nullOr ${NIX_TYPE_ATTRS}` : NIX_TYPE_ATTRS;
-    case 'list':
-      switch (type.element) {
-        case 'string':
-          return NIX_TYPE_LIST_OF_STR;
-        case 'number':
-          return NIX_TYPE_LIST_OF_NUMBER;
-        case 'boolean':
-          return NIX_TYPE_LIST_OF_BOOL;
-        case 'attrs':
-          return NIX_TYPE_LIST_OF_ATTRS;
-        case 'anything':
-          return NIX_TYPE_LIST_OF_ANYTHING;
-      }
-    case 'enum':
-      return NIX_ENUM_TYPE;
-  }
+type SettingTypeRules = {
+  [Kind in SettingType['kind']]: (type: Extract<SettingType, { kind: Kind }>) => NixSettingType;
 };
 
-const resolveDefault = (setting: Readonly<PluginSetting>, nixType: string): unknown | undefined => {
+const SETTING_TYPES = {
+  boolean: () => NIX_TYPE_BOOL,
+  string: (type) => (type.nullable ? NIX_TYPE_NULL_OR_STR : NIX_TYPE_STR),
+  integer: () => NIX_TYPE_INT,
+  float: () => NIX_TYPE_FLOAT,
+  attrs: (type) => (type.nullable ? NIX_TYPE_NULL_OR_ATTRS : NIX_TYPE_ATTRS),
+  list: (type) => NIX_LIST_TYPES[type.element],
+  enum: () => NIX_ENUM_TYPE,
+} satisfies SettingTypeRules;
+
+const lowerSettingType = (type: SettingType): NixSettingType => {
+  return Match.value(type).pipe(Match.discriminatorsExhaustive('kind')(SETTING_TYPES));
+};
+
+const resolveDefault = (
+  setting: Readonly<PluginSetting>,
+  nixType: NixSettingType
+): unknown | undefined => {
   if (setting.default === undefined) return undefined;
   if (setting.default === null) return null;
 
@@ -132,7 +125,13 @@ export const generateSettingJson = (
   _category?: PluginCategory
 ): PluginSettingJson => {
   const nixType = lowerSettingType(setting.type);
-  const json: PluginSettingJson = { type: nixType };
+  const json: PluginSettingJson = {
+    upstreamName: setting.name,
+    upstreamType: setting.type,
+    type: nixType,
+  };
+  if (setting.hidden !== undefined) json.hidden = setting.hidden;
+  if (setting.restartNeeded !== undefined) json.restartNeeded = setting.restartNeeded;
 
   if (setting.type.kind === 'enum') {
     json.enumValues = [...setting.type.values];
@@ -175,15 +174,22 @@ export const generatePluginJson = (
     }
   }
 
-  const description = `${config.description ?? ''}${category ? categoryLabel(category) : ''}`;
+  const description = `${config.description ?? ''}${category ? CATEGORY_LABELS[category] : ''}`;
 
-  return { description, settings };
+  return {
+    upstreamName: config.name,
+    ...(category ? { category } : {}),
+    ...(config.directoryName ? { directoryName: config.directoryName } : {}),
+    ...(config.source ? { source: config.source } : {}),
+    description,
+    settings,
+  };
 };
 
-export const generatePluginModule = (
+export const generatePluginSchema = (
   plugins: Readonly<Record<string, PluginConfig>>,
   category?: PluginCategory
-): string => {
+): Record<string, PluginJson> => {
   const output: Record<string, PluginJson> = {};
   const sourceNames = new Map<string, string>();
 
@@ -204,5 +210,5 @@ export const generatePluginModule = (
     output[nixName] = generatePluginJson(pluginName, config, category);
   }
 
-  return `${JSON.stringify(output, null, 2)}\n`;
+  return output;
 };

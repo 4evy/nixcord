@@ -1,19 +1,19 @@
-import { Project } from 'ts-morph';
 import { describe, expect, test } from 'vitest';
 import { StaticEvaluator } from '../../../src/evaluator.js';
 import { traceComponentSetting } from '../../../src/trace.js';
+import { NativeFixture } from '../../fixtures/native.js';
 
-const trace = (source: string, settingKey: string) => {
-  const project = new Project({ useInMemoryFileSystem: true });
-  const file = project.createSourceFile('/component.tsx', source);
+const trace = async (source: string, settingKey: string) => {
+  const project = new NativeFixture();
+  const file = await project.openFile('/component.tsx', source);
   const component = file.getVariableDeclarationOrThrow('Component').getInitializerOrThrow();
-  const checker = project.getTypeChecker();
+  const checker = project.checker;
   return traceComponentSetting(component, settingKey, checker, new StaticEvaluator(checker));
 };
 
 describe('component setting traces', () => {
-  test('recognizes persistent store reads and declarative controls', () => {
-    const result = trace(
+  test('recognizes persistent store reads and declarative controls', async () => {
+    const result = await trace(
       `
         const Component = () => (
           <TextInput value={settings.store.soundId} onChange={value => settings.store.soundId = value} />
@@ -28,8 +28,8 @@ describe('component setting traces', () => {
     });
   });
 
-  test('retains store provenance when a computed key needs execution fallback', () => {
-    const result = trace(
+  test('retains store provenance when a computed key needs execution fallback', async () => {
+    const result = await trace(
       `
         const keys = ["flag"];
         const Component = () => {
@@ -42,8 +42,8 @@ describe('component setting traces', () => {
     expect(result).toMatchObject({ persistent: false, storeReferenced: true, controls: [] });
   });
 
-  test('captures nested store initialization from data-driven loops and aliases', () => {
-    const result = trace(
+  test('captures nested store initialization from data-driven loops and aliases', async () => {
+    const result = await trace(
       `
         const tags = [
           { id: "first", displayName: "First", defaults: { text: "hello", showInChat: true } },
@@ -67,24 +67,24 @@ describe('component setting traces', () => {
     });
   });
 
-  test('does not classify action-only UI as a persistent setting', () => {
-    const result = trace(
+  test('does not classify action-only UI as a persistent setting', async () => {
+    const result = await trace(
       'const Component = () => <Button onClick={() => alert("hi")} />;',
       'value'
     );
     expect(result).toMatchObject({ persistent: false, storeReferenced: false, controls: [] });
   });
 
-  test('ignores generic action callbacks even when they write a settings store', () => {
-    const result = trace(
+  test('ignores generic action callbacks even when they write a settings store', async () => {
+    const result = await trace(
       'const Component = () => <Button onClick={() => settings.store.token = "new"} />;',
       'token'
     );
     expect(result).toMatchObject({ persistent: false, storeReferenced: true, controls: [] });
   });
 
-  test('does not follow components rendered from generic action callbacks', () => {
-    const result = trace(
+  test('does not follow components rendered from generic action callbacks', async () => {
+    const result = await trace(
       `
         let timezones = {};
         const Modal = () => <SearchableSelect value={timezones} onChange={() => {
@@ -97,8 +97,8 @@ describe('component setting traces', () => {
     expect(result).toMatchObject({ persistent: false, storeReferenced: false, controls: [] });
   });
 
-  test('does not classify less common event handlers as persistent settings', () => {
-    const result = trace(
+  test('does not classify less common event handlers as persistent settings', async () => {
+    const result = await trace(
       `
         const Component = () => (
           <Button
@@ -117,8 +117,8 @@ describe('component setting traces', () => {
     });
   });
 
-  test('does not infer reset actions as component defaults', () => {
-    const result = trace(
+  test('does not infer reset actions as component defaults', async () => {
+    const result = await trace(
       `
         const Component = () => (
           <>
@@ -135,8 +135,8 @@ describe('component setting traces', () => {
     expect(result).toMatchObject({ persistent: true, hasDefault: false });
   });
 
-  test('does not expose values persisted only through an external data API', () => {
-    const result = trace(
+  test('does not expose values persisted only through an external data API', async () => {
+    const result = await trace(
       `
         let triggerWords = [""];
         const Child = () => <TextInput value={triggerWords[0]} onChange={value => {
@@ -150,9 +150,9 @@ describe('component setting traces', () => {
     expect(result).toMatchObject({ persistent: false, storeReferenced: false, controls: [] });
   });
 
-  test('follows a store-backed component returned by an imported factory', () => {
-    const project = new Project({ useInMemoryFileSystem: true });
-    project.createSourceFile(
+  test('follows a store-backed component returned by an imported factory', async () => {
+    const project = new NativeFixture();
+    await project.openFile(
       '/folder-input.tsx',
       `
         function createDirSelector(settingKey: "logsDir" | "imageCacheDir") {
@@ -165,7 +165,7 @@ describe('component setting traces', () => {
         export const ImageCacheDir = createDirSelector("imageCacheDir");
       `
     );
-    const file = project.createSourceFile(
+    const file = await project.openFile(
       '/settings.tsx',
       `
         import { ImageCacheDir } from "./folder-input";
@@ -173,7 +173,7 @@ describe('component setting traces', () => {
       `
     );
     const component = file.getVariableDeclarationOrThrow('Component').getInitializerOrThrow();
-    const checker = project.getTypeChecker();
+    const checker = project.checker;
     const result = traceComponentSetting(
       component,
       'imageCacheDir',

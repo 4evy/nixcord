@@ -6,9 +6,20 @@
   },
   "include": ["src/**/*"],
   "references": [
-    { "path": "../shared" },
-    { "path": "../parser" },
-    { "path": "../nix-generator" },
-    { "path": "../git-analyzer" }
+    {
+      "path": "../domain"
+    },
+    {
+      "path": "../shared"
+    },
+    {
+      "path": "../parser"
+    },
+    {
+      "path": "../nix-generator"
+    },
+    {
+      "path": "../git-analyzer"
+    }
   ]
 }

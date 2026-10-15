@@ -1,4 +1,4 @@
-import type { ParsedPluginsResult, PluginConfig } from '@nixcord/shared';
+import type { ParsedPluginsResult, PluginConfig } from '@nixcord/domain';
 import { SOURCE_PROFILES } from './profiles.js';
 
 const PLUGIN_RENAME_MAP: Record<string, string> = { oneko: 'CursorBuddy' };
@@ -128,7 +128,7 @@ export function categorizePlugins(
   );
 
   // Include Equicord's ordinary plugins with no Vencord counterpart;
-  // the Vencord loop above cannot discover them.
+  // the Vencord loop above cannot discover them
   const renamedEquicordTargets = new Set(Object.values(PLUGIN_RENAME_MAP));
   const equicordSharedExtras = Object.fromEntries(
     Object.entries(equicordSharedPlugins).filter(

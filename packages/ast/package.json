@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "build": "vite build"
+    "build": "bun run build:bundle && bun --bun tsc --build --emitDeclarationOnly --force",
+    "build:bundle": "bun --bun vite build"
   },
   "exports": {
     ".": {
@@ -18,9 +19,12 @@
   "main": "./dist/index.js",
   "types": "./src/index.ts",
   "dependencies": {
-    "ts-morph": "^28.0.0"
+    "@nixcord/typescript-analysis": "workspace:*",
+    "@nixcord/setting-analysis": "workspace:*",
+    "@nixcord/slice-executor": "workspace:*"
   },
   "files": [
     "dist"
-  ]
+  ],
+  "devDependencies": {}
 }

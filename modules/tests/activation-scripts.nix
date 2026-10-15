@@ -65,28 +65,28 @@ pkgs.runCommand "activation-scripts-test"
     nativeBuildInputs = [ pkgs.jq ];
   }
   ''
-    rm -rf ${lib.strings.escapeShellArg testRoot}
-    mkdir -p ${lib.strings.escapeShellArg "${testRoot}/discord"} ${lib.strings.escapeShellArg "${testRoot}/discordptb"} ${lib.strings.escapeShellArg "${testRoot}/discordcanary"} ${lib.strings.escapeShellArg "${testRoot}/Vencord"}
+    rm --recursive --force ${lib.strings.escapeShellArg testRoot}
+    mkdir --parents ${lib.strings.escapeShellArg "${testRoot}/discord"} ${lib.strings.escapeShellArg "${testRoot}/discordptb"} ${lib.strings.escapeShellArg "${testRoot}/discordcanary"} ${lib.strings.escapeShellArg "${testRoot}/Vencord"}
     printf '%s\n' '{"KEEP":true,"USE_NEW_UPDATER":true}' > ${lib.strings.escapeShellArg "${testRoot}/discord/settings.json"}
     printf '%s\n' '{"PTB":true}' > ${lib.strings.escapeShellArg "${testRoot}/discordptb/settings.json"}
 
     ${disableDiscordUpdates}
 
-    jq -e '
+    jq --exit-status '
       .KEEP == true
       and .SKIP_HOST_UPDATE == true
       and .SKIP_MODULE_UPDATE == true
       and .USE_NEW_UPDATER == false
     ' ${lib.strings.escapeShellArg "${testRoot}/discord/settings.json"}
 
-    jq -e '
+    jq --exit-status '
       .PTB == true
       and .SKIP_HOST_UPDATE == true
       and .SKIP_MODULE_UPDATE == true
       and .USE_NEW_UPDATER == false
     ' ${lib.strings.escapeShellArg "${testRoot}/discordptb/settings.json"}
 
-    jq -e '
+    jq --exit-status '
       .SKIP_HOST_UPDATE == true
       and .SKIP_MODULE_UPDATE == true
       and .USE_NEW_UPDATER == false
@@ -95,7 +95,7 @@ pkgs.runCommand "activation-scripts-test"
 
     rm ${lib.strings.escapeShellArg "${testRoot}/discord/settings.json"}
     ${disableDiscordUpdates}
-    jq -e '
+    jq --exit-status '
       .SKIP_HOST_UPDATE == true
       and .SKIP_MODULE_UPDATE == true
       and .USE_NEW_UPDATER == false
@@ -104,29 +104,29 @@ pkgs.runCommand "activation-scripts-test"
 
     previous=${lib.strings.escapeShellArg "${testRoot}/discord-configs/discord/1.0.0/modules"}
     current=${lib.strings.escapeShellArg "${testRoot}/discord-configs/discord/2.0.0/modules"}
-    mkdir -p "$previous" "$current/pending"
+    mkdir --parents "$previous" "$current/pending"
     printf 'previous\n' > "$previous/discord_desktop_core"
     original_pwd="$PWD"
 
     ${fixDiscordModules}
 
     test "$PWD" = "$original_pwd"
-    grep -Fx previous "$current/discord_desktop_core"
+    grep --fixed-strings --line-regexp previous "$current/discord_desktop_core"
     test ! -e "$current/pending"
 
     ptb_previous=${lib.strings.escapeShellArg "${testRoot}/discord-configs/discordptb/1.0.0/modules"}
     ptb_current=${lib.strings.escapeShellArg "${testRoot}/discord-configs/discordptb/2.0.0/modules"}
-    mkdir -p "$ptb_previous" "$ptb_current/pending"
+    mkdir --parents "$ptb_previous" "$ptb_current/pending"
     printf 'previous ptb\n' > "$ptb_previous/discord_desktop_core"
     ${fixDiscordModules}
-    grep -Fx 'previous ptb' "$ptb_current/discord_desktop_core"
+    grep --fixed-strings --line-regexp 'previous ptb' "$ptb_current/discord_desktop_core"
 
     printf 'current\n' > "$current/discord_desktop_core"
     printf 'changed previous\n' > "$previous/discord_desktop_core"
     ${fixDiscordModules}
-    grep -Fx current "$current/discord_desktop_core"
+    grep --fixed-strings --line-regexp current "$current/discord_desktop_core"
 
-    mkdir -p ${lib.strings.escapeShellArg "${testRoot}/dorion-storage"}
+    mkdir --parents ${lib.strings.escapeShellArg "${testRoot}/dorion-storage"}
     dorion_db=${lib.strings.escapeShellArg "${testRoot}/dorion-storage/settings.sqlite3"}
     unrelated_db=${lib.strings.escapeShellArg "${testRoot}/dorion-storage/unrelated.sqlite3"}
     ${sqlite} "$dorion_db" \
@@ -137,13 +137,13 @@ pkgs.runCommand "activation-scripts-test"
     ${setupDorionVencordSettings}
 
     expected_hex=$(printf '%s' ${lib.strings.escapeShellArg expectedVencordSettings} \
-      | ${lib.meta.getExe' pkgs.iconv "iconv"} -f UTF-8 -t UTF-16LE \
-      | ${lib.meta.getExe pkgs.xxd} -p | tr -d '\n' | tr '[:lower:]' '[:upper:]')
+      | ${lib.meta.getExe' pkgs.iconv "iconv"} --from-code=UTF-8 --to-code=UTF-16LE \
+      | ${lib.meta.getExe pkgs.xxd} -postscript | tr --delete '\n' | tr '[:lower:]' '[:upper:]')
     actual_hex=$(${sqlite} "$dorion_db" \
       "SELECT hex(value) FROM ItemTable WHERE key = 'VencordSettings';")
     test "$actual_hex" = "$expected_hex"
     test "$(${sqlite} "$unrelated_db" 'SELECT COUNT(*) FROM ItemTable;')" -eq 0
 
-    rm -rf ${lib.strings.escapeShellArg testRoot}
+    rm --recursive --force ${lib.strings.escapeShellArg testRoot}
     touch "$out"
   ''

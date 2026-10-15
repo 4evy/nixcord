@@ -42,6 +42,8 @@ discordPackages
 // {
   inherit openasar;
 
+  discord-patch-tools = pkgs.callPackage ./discord/patching { };
+
   vencord = pkgs.callPackage ./vencord { };
   equicord = pkgs.callPackage ./equicord { };
   generate = pkgs.callPackage ./generate-options { };

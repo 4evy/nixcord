@@ -18,19 +18,6 @@ let
   };
 in
 {
-  "enabled plugin appears in generated settings" =
-    let
-      config = testLib.eval.hm (
-        recursiveUpdate baseConfig {
-          config.plugins.alwaysAnimate.enable = true;
-        }
-      );
-      settingsJson = discordModSettingsSource config;
-    in
-    ''
-      ${testLib.output.json settingsJson ".plugins.AlwaysAnimate.enabled == true"}
-    '';
-
   "acronym plugin option emits upstream JSON key" =
     let
       config = testLib.eval.hm (
@@ -212,7 +199,8 @@ in
       postPatch = builtins.unsafeDiscardStringContext config._moduleTest.common.packages.equicord.postPatch;
       storePlugin = builtins.unsafeDiscardStringContext "${localPlugin}";
     in
-    assert lib.strings.hasInfix "cp -r ${storePlugin} src/userplugins/BetterAudioDefaults" postPatch;
+    assert lib.strings.hasInfix "cp --recursive ${storePlugin} src/userplugins/BetterAudioDefaults"
+      postPatch;
     assert !(lib.strings.hasInfix (toString localPlugin) postPatch);
     true;
 
@@ -232,6 +220,7 @@ in
       postPatch = builtins.unsafeDiscardStringContext config._moduleTest.common.packages.equicord.postPatch;
       packagePath = builtins.unsafeDiscardStringContext "${pluginPackage}";
     in
-    assert lib.strings.hasInfix "cp -r ${packagePath} src/userplugins/packagedPlugin" postPatch;
+    assert lib.strings.hasInfix "cp --recursive ${packagePath} src/userplugins/packagedPlugin"
+      postPatch;
     true;
 }

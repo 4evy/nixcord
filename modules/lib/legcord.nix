@@ -8,7 +8,7 @@
 }:
 pkgs.runCommand "legcord-${client}"
   {
-    nativeBuildInputs = [ pkgs.nodejs ];
+    nativeBuildInputs = [ pkgs.bun ];
     spec = builtins.toJSON {
       inherit client settings quickCss;
       themes = lib.attrsets.mapAttrs' (
@@ -18,5 +18,5 @@ pkgs.runCommand "legcord-${client}"
     passAsFile = [ "spec" ];
   }
   ''
-    node ${./legcord-build.ts} "$specPath" ${browserBuild} "$out"
+    bun ${./legcord-build.ts} "$specPath" ${browserBuild} "$out"
   ''

@@ -57,14 +57,14 @@ pkgs.runCommand "goofcord-support-test" { nativeBuildInputs = [ pkgs.jq ]; } ''
     test -s "$support/clientMod.js"
     test -s "$support/clientMod.css"
 
-    grep -Fq '// prevencordmarker' "$support/preVencord.js"
-    grep -Fq '// postvencordmarker' "$support/postVencord.js"
-    head -c 500 "$support/clientMod.js" | grep -Fiq vencord
-    grep -Fq "$settings_key" "$support/preVencord.js"
-    grep -Fq 'AlwaysAnimate' "$support/preVencord.js"
+    grep --fixed-strings --quiet '// prevencordmarker' "$support/preVencord.js"
+    grep --fixed-strings --quiet '// postvencordmarker' "$support/postVencord.js"
+    head --bytes 500 "$support/clientMod.js" | grep --fixed-strings --ignore-case --quiet vencord
+    grep --fixed-strings --quiet "$settings_key" "$support/preVencord.js"
+    grep --fixed-strings --quiet 'AlwaysAnimate' "$support/preVencord.js"
 
-    test "$(jq -r '.assets.PreVencord' "$settings")" = "$support/preVencord.js"
-    test "$(jq -r '.assets.ClientMod' "$settings")" = "$support/clientMod.js"
+    test "$(jq --raw-output '.assets.PreVencord' "$settings")" = "$support/preVencord.js"
+    test "$(jq --raw-output '.assets.ClientMod' "$settings")" = "$support/clientMod.js"
   }
 
   check_support \
@@ -77,7 +77,7 @@ pkgs.runCommand "goofcord-support-test" { nativeBuildInputs = [ pkgs.jq ]; } ''
     ${equicordFiles.goofcordSettings} \
     EquicordSettings
 
-  grep -Fq 'rebeccapurple' ${vencordFiles.goofcordQuickCss}
+  grep --fixed-strings --quiet 'rebeccapurple' ${vencordFiles.goofcordQuickCss}
   printf 'a\nb' > expected-themes.css
   cmp expected-themes.css ${vencordFiles.goofcordThemes}
 
@@ -91,9 +91,9 @@ pkgs.runCommand "goofcord-support-test" { nativeBuildInputs = [ pkgs.jq ]; } ''
       ''
         ${testLib.output.json (testLib.output.homeFileSource config "${cfg.vesktop.configDir}/settings/settings.json") ''.clientCoexistence == "vesktop"''}
         ${testLib.output.json (testLib.output.homeFileSource config "${cfg.equibop.configDir}/settings/settings.json") ''.clientCoexistence == "equibop"''}
-        grep -Fq ${pkgs.lib.strings.escapeShellArg ''\"clientCoexistence\":\"goofcord-${cfg.goofcord.clientMod}\"''} \
+        grep --fixed-strings --quiet ${pkgs.lib.strings.escapeShellArg ''\"clientCoexistence\":\"goofcord-${cfg.goofcord.clientMod}\"''} \
           ${support}/preVencord.js
-        if grep -Fq -e '\"clientCoexistence\":\"vesktop\"' -e '\"clientCoexistence\":\"equibop\"' \
+        if grep --fixed-strings --quiet --regexp '\"clientCoexistence\":\"vesktop\"' --regexp '\"clientCoexistence\":\"equibop\"' \
           ${support}/preVencord.js; then
           echo 'Desktop client configuration leaked into Goofcord' >&2
           exit 1

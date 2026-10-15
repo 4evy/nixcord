@@ -127,9 +127,6 @@
     },
     "seeSummaries": {
       "date": "2026-09-21"
-    },
-    "soggy": {
-      "date": "2026-08-27"
     }
   },
   "settingRenames": {
@@ -175,11 +172,6 @@
       },
       "allowNewlinesInCommands": {
         "date": "2026-09-02"
-      }
-    },
-    "channelTabs": {
-      "noPomeloNames": {
-        "date": "2026-08-26"
       }
     },
     "experiments": {

@@ -1,0 +1,24 @@
+{
+  "name": "@nixcord/typescript-analysis",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "bun run build:bundle && bun --bun tsc --build --emitDeclarationOnly --force",
+    "build:bundle": "bun --bun vite build"
+  },
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@typescript/native": "npm:typescript@7.0.2",
+    "effect": "4.0.5"
+  },
+  "files": [
+    "dist"
+  ]
+}

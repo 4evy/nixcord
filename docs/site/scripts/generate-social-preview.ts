@@ -2,7 +2,7 @@ import { Resvg } from '@resvg/resvg-js';
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
-// Run through npm run generate-social-preview so the logo is generated first.
+// Run through bun run generate-social-preview so the logo is generated first
 const publicDirectory = resolve(import.meta.dirname, '../public');
 const logo = await readFile(resolve(publicDirectory, 'nixcord-logo.svg'), 'utf8');
 const logoPath = logo.match(/<path[^>]+ d="([^"]+)"/)?.[1];

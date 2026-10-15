@@ -1,0 +1,44 @@
+--- a/package.json
++++ b/package.json
+@@ -27,27 +27,25 @@
+ 		"check": "tsc"
+ 	},
+ 	"dependencies": {
+-		"arrpc": "github:Milkshiift/arrpc",
+-		"electron-sync-store": "github:Milkshiift/electron-sync-store",
++		"arrpc": "https://github.com/Milkshiift/arrpc/archive/8b2b3fb7c64f1ba050d35620afb6bc3a9032ef5b.tar.gz",
++		"electron-sync-store": "https://github.com/Milkshiift/electron-sync-store/archive/17fb5bc76dfa4822459dafff997f0e8878c51600.tar.gz",
+ 		"picocolors": "1.1.1",
+-		"preact": "^11.0.0",
+-		"stegcloak": "github:Milkshiift/stegcloak-rs"
++		"preact": "^11.0.1",
++		"stegcloak": "https://github.com/Milkshiift/stegcloak-rs/archive/847c39e7ce790bfb491259c515c190b6d44431d9.tar.gz"
+ 	},
+ 	"devDependencies": {
+-		"@types/bun": "1.4.2",
+-		"@types/node": "26.6.3",
++		"@types/bun": "1.4.2",
++		"@types/node": "26.6.5",
+ 		"@vencord/types": "1.15.1",
+-		"electron": "44.5.1",
+-		"electron-builder": "27.0.0-alpha.9",
+-		"oxfmt": "^0.71.0",
+-		"oxlint": "^1.86.0",
+-		"oxlint-tsgolint": "^7.0.2003",
++		"electron": "44.7.0",
++		"electron-builder": "27.0.0-alpha.10",
++		"oxfmt": "^0.72.0",
++		"oxlint": "^1.87.0",
++		"oxlint-tsgolint": "^7.0.2004",
+ 		"typescript": "7.0.2",
+-		"typescriptOld": "npm:@typescript/typescript6@^6.0.2"
+-	},
+-	"optionalDependencies": {
+-		"goofbind": "github:Milkshiift/goofbind",
+-		"patchcord": "github:Milkshiift/patchcord"
++		"typescriptOld": "npm:@typescript/typescript6@^6.0.2",
++		"patchcord": "https://github.com/Milkshiift/patchcord/archive/cb0d3d48f0c217e9621c48c576ec340fdfd9b9b7.tar.gz",
++		"goofbind": "https://github.com/Milkshiift/goofbind/archive/703237071f61d1ceede8076b0015488773a7c4ae.tar.gz"
+ 	},
+ 	"trustedDependencies": [
+ 		"electron"

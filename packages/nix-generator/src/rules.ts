@@ -1,5 +1,5 @@
-import type { PluginConfig } from '@nixcord/shared';
-import { sortedEntries } from '@nixcord/shared';
+import type { PluginConfig } from '@nixcord/domain';
+import { sortedEntries } from '@nixcord/domain';
 import { toNixIdentifier } from './identifier.js';
 
 const baseUpperNames = [

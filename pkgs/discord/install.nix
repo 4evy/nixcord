@@ -12,12 +12,13 @@
   mod,
   hasKrispModule,
   krispModule,
-  patchVoiceKrispPy,
+  patchVoiceKrisp ? patchStockUpdater.patchVoiceKrisp,
   krispRuntimePath,
+  ...
 }:
 assert (patchLauncher == null) == (launcherPath == null);
 lib.strings.optionalString withOpenASAR ''
-  cp -f ${openasar} "${resourcesDir}/app.asar"
+  cp --force ${openasar} "${resourcesDir}/app.asar"
 ''
 + lib.strings.optionalString (mod != null) ''
   mv "${resourcesDir}/app.asar" "${resourcesDir}/_app.asar"
@@ -50,7 +51,7 @@ lib.strings.optionalString withOpenASAR ''
   ''}
   rm "$host_asar"
   ${lib.meta.getExe asar} pack discord-host-asar "$host_asar"
-  rm -r discord-host-asar
+  rm --recursive discord-host-asar
 ''
 # Desktop core owns renderer-requested relaunches even with an OpenASAR host
 # The launcher restages modules; explicit argv retains wrapper and user flags
@@ -60,15 +61,15 @@ lib.strings.optionalString withOpenASAR ''
   ${lib.getExe patchLauncher} core discord-core-asar/bundle.js "${launcherPath}"
   rm "$core_asar"
   ${lib.getExe asar} pack discord-core-asar "$core_asar"
-  rm -r discord-core-asar
+  rm --recursive discord-core-asar
 ''
 + lib.strings.optionalString hasKrispModule ''
-  rm -rf "${modulesDir}/discord_krisp"
-  mkdir -p "${modulesDir}/discord_krisp"
-  cp -R "${krispModule}/." "${modulesDir}/discord_krisp/"
-  chmod -R u+w "${modulesDir}/discord_krisp"
+  rm --recursive --force "${modulesDir}/discord_krisp"
+  mkdir --parents "${modulesDir}/discord_krisp"
+  cp --recursive "${krispModule}/." "${modulesDir}/discord_krisp/"
+  chmod --recursive u+w "${modulesDir}/discord_krisp"
 
-  ${python3.interpreter} ${patchVoiceKrispPy} \
+  ${lib.getExe patchVoiceKrisp} \
     "${modulesDir}/discord_voice/index.js" \
     ${lib.strings.escapeShellArg krispRuntimePath}
 ''

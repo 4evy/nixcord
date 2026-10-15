@@ -7,6 +7,7 @@
 }:
 let
   inherit (import ./discord.nix { inherit lib; })
+    branchDirName
     disabledUpdateSettings
     getDiscordConfigDirs
     packageSupportsOverride
@@ -15,6 +16,16 @@ let
   inherit (cfg) homeDirectory xdgConfigHome;
   disabledUpdateSettingsJson = builtins.toJSON disabledUpdateSettings;
   disabledUpdateSettingsJq = lib.strings.escapeShellArg ". + ${disabledUpdateSettingsJson}";
+  dorionSettings =
+    pkgs.runCommand "dorion-vencord-settings-utf16le"
+      {
+        settings = builtins.toJSON (mkVencordCfg (lib.attrsets.recursiveUpdate cfg.config cfg.extraConfig));
+        passAsFile = [ "settings" ];
+        nativeBuildInputs = [ pkgs.iconv ];
+      }
+      ''
+        iconv --from-code=UTF-8 --to-code=UTF-16LE "$settingsPath" > "$out"
+      '';
   discordConfigBase =
     if
       (cfg.discord.appDataDir or null) != null
@@ -23,13 +34,18 @@ let
       builtins.dirOf (toString cfg.discord.configDir)
     else
       "${homeDirectory}/Library/Application Support";
+  discordModuleConfigDirs = map (
+    branch:
+    "${if pkgs.stdenvNoCC.hostPlatform.isDarwin then discordConfigBase else xdgConfigHome}/${branch}"
+  ) (builtins.attrValues branchDirName);
 in
 {
   disableDiscordUpdates = wrapScript ''
-    set -euo pipefail
-    ${lib.meta.getExe' pkgs.coreutils "install"} -d -o ${lib.strings.escapeShellArg cfg.user} ${lib.strings.optionalString pkgs.stdenvNoCC.hostPlatform.isDarwin "-g staff"} ${lib.strings.escapeShellArg cfg.configDir}
+    set -o errexit -o nounset -o pipefail
+    ${lib.meta.getExe' pkgs.coreutils "install"} --directory --owner ${lib.strings.escapeShellArg cfg.user} ${lib.strings.optionalString pkgs.stdenvNoCC.hostPlatform.isDarwin "--group staff"} ${
+      lib.strings.escapeShellArgs ([ cfg.configDir ] ++ getDiscordConfigDirs cfg)
+    }
     for config_dir in ${lib.strings.escapeShellArgs (getDiscordConfigDirs cfg)}; do
-      ${lib.meta.getExe' pkgs.coreutils "install"} -d -o ${lib.strings.escapeShellArg cfg.user} ${lib.strings.optionalString pkgs.stdenvNoCC.hostPlatform.isDarwin "-g staff"} "$config_dir"
       if [ -f "$config_dir/settings.json" ]; then
         ${lib.meta.getExe' pkgs.jq "jq"} ${disabledUpdateSettingsJq} "$config_dir/settings.json" > "$config_dir/settings.json.tmp" && mv "$config_dir/settings.json.tmp" "$config_dir/settings.json"
       else
@@ -39,31 +55,24 @@ in
   '';
 
   fixDiscordModules = wrapScript ''
-    set -euo pipefail
+    set -o errexit -o nounset -o pipefail
 
-    config_base=${
-      lib.strings.escapeShellArg (
-        if pkgs.stdenvNoCC.hostPlatform.isDarwin then discordConfigBase else xdgConfigHome
-      )
-    }
-
-    for branch in discord discordptb discordcanary discorddevelopment; do
-      config_dir="$config_base/$branch"
+    for config_dir in ${lib.strings.escapeShellArgs discordModuleConfigDirs}; do
       [ ! -d "$config_dir" ] && continue
       (
         cd "$config_dir" || exit 0
-        versions=($(ls -1d [0-9]*.[0-9]*.[0-9]* 2>/dev/null | sort -V || true))
+        versions=($(${lib.meta.getExe' pkgs.coreutils "ls"} --format=single-column --directory [0-9]*.[0-9]*.[0-9]* 2>/dev/null | ${lib.meta.getExe' pkgs.coreutils "sort"} --version-sort || true))
         n=''${#versions[@]}
         if [ "$n" -ge 2 ]; then
           prev="''${versions[$((n-2))]}"
           curr="''${versions[$((n-1))]}"
           prev_modules="$config_dir/$prev/modules"
           curr_modules="$config_dir/$curr/modules"
-          if [ ! -d "$curr_modules" ] || [ "$(ls -A "$curr_modules" 2>/dev/null | grep -v '^pending$' | wc -l)" -eq 0 ]; then
+          if [ ! -d "$curr_modules" ] || [ "$(${lib.meta.getExe' pkgs.coreutils "ls"} --almost-all "$curr_modules" 2>/dev/null | ${lib.meta.getExe pkgs.gnugrep} --invert-match '^pending$' | ${lib.meta.getExe' pkgs.coreutils "wc"} --lines)" -eq 0 ]; then
             if [ -d "$prev_modules" ]; then
-              echo "Copying Discord modules for $branch from $prev to $curr"
-              rm -rf "$curr_modules"
-              cp -a "$prev_modules" "$curr_modules"
+              echo "Copying Discord modules for ''${config_dir##*/} from $prev to $curr"
+              ${lib.meta.getExe' pkgs.coreutils "rm"} --recursive --force "$curr_modules"
+              ${lib.meta.getExe' pkgs.coreutils "cp"} --archive "$prev_modules" "$curr_modules"
             fi
           fi
         fi
@@ -72,7 +81,7 @@ in
   '';
 
   setupDorionVencordSettings = wrapScript ''
-    set -euo pipefail
+    set -o errexit -o nounset -o pipefail
 
     webkit_base_dir=${
       lib.strings.escapeShellArg (
@@ -83,28 +92,11 @@ in
       )
     }
 
-    encode_utf16le() {
-      local input="$1"
-      echo -n "$input" | ${lib.meta.getExe' pkgs.iconv "iconv"} -f UTF-8 -t UTF-16LE | ${lib.meta.getExe pkgs.xxd} -p | tr -d '\n' | tr '[:lower:]' '[:upper:]'
-    }
-
-    vencord_settings=${lib.strings.escapeShellArg (builtins.toJSON (mkVencordCfg (lib.attrsets.recursiveUpdate cfg.config cfg.extraConfig)))}
-
-    sqlite_paths=()
     while IFS= read -r -d ''' sqlite_file; do
-      if ${lib.meta.getExe pkgs.sqlite} "$sqlite_file" "SELECT COUNT(*) FROM ItemTable WHERE key = 'VencordSettings';" 2>/dev/null | grep -q "1"; then
-        sqlite_paths+=("$sqlite_file")
+      if ${lib.meta.getExe pkgs.sqlite} "$sqlite_file" "SELECT COUNT(*) FROM ItemTable WHERE key = 'VencordSettings';" 2>/dev/null | ${lib.meta.getExe pkgs.gnugrep} --quiet "1"; then
+        ${lib.meta.getExe pkgs.sqlite} "$sqlite_file" \
+          "UPDATE ItemTable SET value = readfile('${dorionSettings}') WHERE key = 'VencordSettings';"
       fi
-    done < <(find "$webkit_base_dir" \( -name "*.sqlite3" -o -name "*.localstorage" \) -type f -print0 2>/dev/null)
-
-    encoded_settings=$(encode_utf16le "$vencord_settings")
-
-    sql_file=$(mktemp)
-    trap 'rm -f "$sql_file"' EXIT
-    printf "INSERT OR REPLACE INTO ItemTable (key, value) VALUES ('VencordSettings', X'%s');\n" "$encoded_settings" > "$sql_file"
-
-    for sqlite_path in "''${sqlite_paths[@]}"; do
-      ${lib.meta.getExe pkgs.sqlite} "$sqlite_path" < "$sql_file"
-    done
+    done < <(find "$webkit_base_dir" \( -name "*.sqlite3" -or -name "*.localstorage" \) -type f -print0 2>/dev/null)
   '';
 }

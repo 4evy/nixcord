@@ -5,18 +5,30 @@ let
     pkgs.callPackage ../../pkgs/discord/metadata.nix { }
   );
   discordPackage = pkgs.callPackage ../../pkgs/discord { };
+  discordSource = pkgs.lib.fileset.toSource {
+    root = ../..;
+    fileset = pkgs.lib.fileset.unions [
+      ../../pkgs/discord
+      ../../pkgs/bun
+      ../../nix/bun
+      ../../nix/rust-package.nix
+      ../../Cargo.toml
+      ../../Cargo.lock
+      ../../package.json
+    ];
+  };
 
 in
 pkgs.runCommand "discord-package-arguments-test" { nativeBuildInputs = [ pkgs.nix ]; } ''
   ${pkgs.lib.strings.optionalString (discordAvailable && pkgs.stdenv.hostPlatform.isDarwin) ''
-    ${pkgs.jq}/bin/jq -e '.disableUpdater == true' \
+    ${pkgs.jq}/bin/jq --exit-status '.disableUpdater == true' \
       '${discordPackage}/Applications/Discord.app/Contents/Resources/build_info.json'
     echo 'Darwin native module updater is disabled'
   ''}
   ${pkgs.lib.strings.optionalString discordAvailable ''
     export NIX_STATE_DIR="$TMPDIR/nix-state"
     export NIX_REMOTE=dummy://
-    mkdir -p "$NIX_STATE_DIR"
+    mkdir --parents "$NIX_STATE_DIR"
     evaluate() {
       nix-instantiate --eval --strict --expr "
         let pkgs = import ${pkgs.path} {
@@ -32,7 +44,7 @@ pkgs.runCommand "discord-package-arguments-test" { nativeBuildInputs = [ pkgs.ni
             })
           ];
         };
-        in (pkgs.callPackage ${../../pkgs/discord} { $1 }).drvPath
+        in (pkgs.callPackage ${discordSource}/pkgs/discord { $1 }).drvPath
       "
     }
     # Valid branches must evaluate before checking argument errors
@@ -44,7 +56,7 @@ pkgs.runCommand "discord-package-arguments-test" { nativeBuildInputs = [ pkgs.ni
         echo "Expected package evaluation to fail: $1" >&2
         exit 1
       fi
-      grep -F -- "$2" actual.err
+      grep --fixed-strings -- "$2" actual.err
     }
     expect_error 'withVencord = true; withEquicord = true;' \
       'Discord: Vencord and Equicord cannot both be enabled'

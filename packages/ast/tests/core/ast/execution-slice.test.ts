@@ -1,16 +1,17 @@
 import { access, mkdir, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { Project, SyntaxKind } from 'ts-morph';
+import { SyntaxKind } from '@nixcord/typescript-analysis';
 import { describe, expect, test } from 'vitest';
 import { executeComponentSlice } from '../../../src/execute.js';
+import { NativeFixture } from '../../fixtures/native.js';
 
 describe('executed component slices', () => {
   test('captures persistent settings reads without executing unrelated plugin initialization', async () => {
     const root = await mkdtemp(join(tmpdir(), 'slice-'));
     try {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const source = project.createSourceFile(
+      const project = new NativeFixture();
+      const source = await project.openFile(
         `${root}/component.tsx`,
         `
           import { definePluginSettings } from "@api/Settings";
@@ -20,7 +21,7 @@ describe('executed component slices', () => {
         `
       );
       const component = source.getVariableDeclarationOrThrow('Component').getInitializerOrThrow();
-      const result = await executeComponentSlice(component, project.getTypeChecker(), {
+      const result = await executeComponentSlice(component, project.checker, {
         settingKey: 'soundId',
         allowedRoot: root,
       });
@@ -37,8 +38,8 @@ describe('executed component slices', () => {
   test('stubs React hooks imported from upstream webpack modules', async () => {
     const root = await mkdtemp(join(tmpdir(), 'slice-hooks-'));
     try {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const source = project.createSourceFile(
+      const project = new NativeFixture();
+      const source = await project.openFile(
         `${root}/component.tsx`,
         `
           import { React, Switch, useState } from "@webpack/common";
@@ -52,7 +53,7 @@ describe('executed component slices', () => {
         `
       );
       const component = source.getVariableDeclarationOrThrow('Component').getInitializerOrThrow();
-      const result = await executeComponentSlice(component, project.getTypeChecker(), {
+      const result = await executeComponentSlice(component, project.checker, {
         settingKey: 'flag',
         allowedRoot: root,
       });
@@ -72,8 +73,8 @@ describe('executed component slices', () => {
   test('stubs common pure helpers used by upstream components', async () => {
     const root = await mkdtemp(join(tmpdir(), 'slice-helpers-'));
     try {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const source = project.createSourceFile(
+      const project = new NativeFixture();
+      const source = await project.openFile(
         `${root}/component.ts`,
         `
           import { definePluginSettings } from "@api/Settings";
@@ -89,7 +90,7 @@ describe('executed component slices', () => {
         `
       );
       const component = source.getVariableDeclarationOrThrow('Component').getInitializerOrThrow();
-      const result = await executeComponentSlice(component, project.getTypeChecker(), {
+      const result = await executeComponentSlice(component, project.checker, {
         settingKey: 'value',
         allowedRoot: root,
       });
@@ -106,13 +107,13 @@ describe('executed component slices', () => {
   test('kills a non-terminating slice and reports a diagnostic result', async () => {
     const root = await mkdtemp(join(tmpdir(), 'slice-'));
     try {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const source = project.createSourceFile(
+      const project = new NativeFixture();
+      const source = await project.openFile(
         `${root}/timeout.ts`,
         'const Component = () => { while (true) {} };'
       );
       const component = source.getVariableDeclarationOrThrow('Component').getInitializerOrThrow();
-      const result = await executeComponentSlice(component, project.getTypeChecker(), {
+      const result = await executeComponentSlice(component, project.checker, {
         settingKey: 'value',
         allowedRoot: root,
         timeoutMs: 50,
@@ -126,8 +127,8 @@ describe('executed component slices', () => {
   test('limits trace events for the requested setting', async () => {
     const root = await mkdtemp(join(tmpdir(), 'slice-events-'));
     try {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const source = project.createSourceFile(
+      const project = new NativeFixture();
+      const source = await project.openFile(
         `${root}/events.ts`,
         `
           import { definePluginSettings } from "@api/Settings";
@@ -138,7 +139,7 @@ describe('executed component slices', () => {
         `
       );
       const component = source.getVariableDeclarationOrThrow('Component').getInitializerOrThrow();
-      const result = await executeComponentSlice(component, project.getTypeChecker(), {
+      const result = await executeComponentSlice(component, project.checker, {
         settingKey: 'value',
         allowedRoot: root,
         maxTraceEvents: 10,
@@ -153,16 +154,16 @@ describe('executed component slices', () => {
   test('keeps declarations from different source modules in separate scopes', async () => {
     const root = await mkdtemp(join(tmpdir(), 'slice-modules-'));
     try {
-      const project = new Project({ useInMemoryFileSystem: true });
-      project.createSourceFile(
+      const project = new NativeFixture();
+      await project.openFile(
         `${root}/first.ts`,
         'const shared = "first"; export const first = () => shared;'
       );
-      project.createSourceFile(
+      await project.openFile(
         `${root}/second.ts`,
         'const shared = "second"; export const second = () => shared;'
       );
-      const source = project.createSourceFile(
+      const source = await project.openFile(
         `${root}/component.tsx`,
         `
           import { definePluginSettings } from "@api/Settings";
@@ -172,9 +173,8 @@ describe('executed component slices', () => {
           const Component = () => { first(); second(); void settings.store.value; };
         `
       );
-      project.resolveSourceFileDependencies();
       const component = source.getVariableDeclarationOrThrow('Component').getInitializerOrThrow();
-      const result = await executeComponentSlice(component, project.getTypeChecker(), {
+      const result = await executeComponentSlice(component, project.checker, {
         settingKey: 'value',
         allowedRoot: root,
       });
@@ -191,8 +191,8 @@ describe('executed component slices', () => {
   test('keeps component-local declarations inside their original function scope', async () => {
     const root = await mkdtemp(join(tmpdir(), 'slice-locals-'));
     try {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const source = project.createSourceFile(
+      const project = new NativeFixture();
+      const source = await project.openFile(
         `${root}/component.ts`,
         `
           import { definePluginSettings } from "@api/Settings";
@@ -210,7 +210,7 @@ describe('executed component slices', () => {
         `
       );
       const component = source.getVariableDeclarationOrThrow('Component').getInitializerOrThrow();
-      const result = await executeComponentSlice(component, project.getTypeChecker(), {
+      const result = await executeComponentSlice(component, project.checker, {
         settingKey: 'value',
         allowedRoot: root,
       });
@@ -227,15 +227,15 @@ describe('executed component slices', () => {
   test('executes an imported component through a circular settings dependency', async () => {
     const root = await mkdtemp(join(tmpdir(), 'slice-cycle-'));
     try {
-      const project = new Project({ useInMemoryFileSystem: true });
-      project.createSourceFile(
+      const project = new NativeFixture();
+      await project.openFile(
         `${root}/component.ts`,
         `
           import { settings } from "./settings";
           export function Component() { settings.use(["value"]); }
         `
       );
-      const source = project.createSourceFile(
+      const source = await project.openFile(
         `${root}/settings.ts`,
         `
           import { definePluginSettings } from "@api/Settings";
@@ -244,9 +244,8 @@ describe('executed component slices', () => {
           const Target = Component;
         `
       );
-      project.resolveSourceFileDependencies();
       const component = source.getVariableDeclarationOrThrow('Target').getInitializerOrThrow();
-      const result = await executeComponentSlice(component, project.getTypeChecker(), {
+      const result = await executeComponentSlice(component, project.checker, {
         settingKey: 'value',
         allowedRoot: root,
       });
@@ -263,8 +262,8 @@ describe('executed component slices', () => {
   test('initializes a local component before its enclosing settings declaration', async () => {
     const root = await mkdtemp(join(tmpdir(), 'slice-settings-cycle-'));
     try {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const source = project.createSourceFile(
+      const project = new NativeFixture();
+      const source = await project.openFile(
         `${root}/settings.ts`,
         `
           import { definePluginSettings } from "@api/Settings";
@@ -274,7 +273,7 @@ describe('executed component slices', () => {
         `
       );
       const component = source.getVariableDeclarationOrThrow('Target').getInitializerOrThrow();
-      const result = await executeComponentSlice(component, project.getTypeChecker(), {
+      const result = await executeComponentSlice(component, project.checker, {
         settingKey: 'value',
         allowedRoot: root,
       });
@@ -291,8 +290,8 @@ describe('executed component slices', () => {
   test('exports an enclosing settings stub before loading an imported component cycle', async () => {
     const root = await mkdtemp(join(tmpdir(), 'slice-inline-cycle-'));
     try {
-      const project = new Project({ useInMemoryFileSystem: true });
-      project.createSourceFile(
+      const project = new NativeFixture();
+      await project.openFile(
         `${root}/component.ts`,
         `
           import { settings } from "./settings";
@@ -302,7 +301,7 @@ describe('executed component slices', () => {
           }
         `
       );
-      const source = project.createSourceFile(
+      const source = await project.openFile(
         `${root}/settings.ts`,
         `
           import { definePluginSettings } from "@api/Settings";
@@ -313,14 +312,13 @@ describe('executed component slices', () => {
           });
         `
       );
-      project.resolveSourceFileDependencies();
       const component = source
         .getVariableDeclarationOrThrow('settings')
         .getInitializerOrThrow()
         .getDescendantsOfKind(SyntaxKind.ArrowFunction)
         .find((node) => node.getText().includes('Child'));
       expect(component).toBeDefined();
-      const result = await executeComponentSlice(component!, project.getTypeChecker(), {
+      const result = await executeComponentSlice(component!, project.checker, {
         settingKey: 'value',
         allowedRoot: root,
       });
@@ -337,8 +335,8 @@ describe('executed component slices', () => {
   test('stubs an enclosing settings binding used by an inline component method', async () => {
     const root = await mkdtemp(join(tmpdir(), 'slice-inline-settings-'));
     try {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const source = project.createSourceFile(
+      const project = new NativeFixture();
+      const source = await project.openFile(
         `${root}/settings.ts`,
         `
           import { definePluginSettings } from "@api/Settings";
@@ -354,7 +352,7 @@ describe('executed component slices', () => {
         .getDescendants()
         .find((node) => node.getKindName() === 'MethodDeclaration');
       expect(component).toBeDefined();
-      const result = await executeComponentSlice(component!, project.getTypeChecker(), {
+      const result = await executeComponentSlice(component!, project.checker, {
         settingKey: 'value',
         allowedRoot: root,
       });
@@ -371,8 +369,8 @@ describe('executed component slices', () => {
   test('loads JSX component imports used by an inline settings component', async () => {
     const root = await mkdtemp(join(tmpdir(), 'slice-inline-jsx-'));
     try {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const source = project.createSourceFile(
+      const project = new NativeFixture();
+      const source = await project.openFile(
         `${root}/settings.tsx`,
         `
           import { definePluginSettings } from "@api/Settings";
@@ -390,7 +388,7 @@ describe('executed component slices', () => {
         .getInitializerOrThrow()
         .getDescendantsOfKind(SyntaxKind.ArrowFunction)[0];
       expect(component).toBeDefined();
-      const result = await executeComponentSlice(component!, project.getTypeChecker(), {
+      const result = await executeComponentSlice(component!, project.checker, {
         settingKey: 'value',
         allowedRoot: root,
       });
@@ -410,18 +408,17 @@ describe('executed component slices', () => {
     const sibling = join(parent, 'plugin-escape');
     await Promise.all([mkdir(root), mkdir(sibling)]);
     try {
-      const project = new Project({ useInMemoryFileSystem: true });
-      project.createSourceFile(
+      const project = new NativeFixture();
+      await project.openFile(
         `${sibling}/escape.ts`,
         'export const escape = () => { throw new Error("outside declaration executed"); };'
       );
-      const source = project.createSourceFile(
+      const source = await project.openFile(
         `${root}/component.ts`,
         'import { escape } from "../plugin-escape/escape"; const Component = () => { escape(); };'
       );
-      project.resolveSourceFileDependencies();
       const component = source.getVariableDeclarationOrThrow('Component').getInitializerOrThrow();
-      const result = await executeComponentSlice(component, project.getTypeChecker(), {
+      const result = await executeComponentSlice(component, project.checker, {
         settingKey: 'value',
         allowedRoot: root,
       });
@@ -441,13 +438,13 @@ describe('executed component slices', () => {
     const marker = join(parent, 'outside-root.txt');
     await mkdir(root);
     try {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const source = project.createSourceFile(
+      const project = new NativeFixture();
+      const source = await project.openFile(
         `${root}/component.ts`,
         `const Component = () => { Bun.write(${JSON.stringify(marker)}, "executed"); };`
       );
       const component = source.getVariableDeclarationOrThrow('Component').getInitializerOrThrow();
-      const result = await executeComponentSlice(component, project.getTypeChecker(), {
+      const result = await executeComponentSlice(component, project.checker, {
         settingKey: 'value',
         allowedRoot: root,
       });
@@ -465,8 +462,8 @@ describe('executed component slices', () => {
     const marker = join(parent, 'constructor-escape.txt');
     await mkdir(root);
     try {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const source = project.createSourceFile(
+      const project = new NativeFixture();
+      const source = await project.openFile(
         `${root}/component.ts`,
         `
           const Component = () => {
@@ -479,7 +476,7 @@ describe('executed component slices', () => {
         `
       );
       const component = source.getVariableDeclarationOrThrow('Component').getInitializerOrThrow();
-      const result = await executeComponentSlice(component, project.getTypeChecker(), {
+      const result = await executeComponentSlice(component, project.checker, {
         settingKey: 'value',
         allowedRoot: root,
       });

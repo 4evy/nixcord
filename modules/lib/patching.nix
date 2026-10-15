@@ -6,10 +6,10 @@ let
       postPatch =
         (o.postPatch or "")
         + lib.strings.optionalString (cfg.userPlugins != { }) ''
-          mkdir -p src/userplugins
+          mkdir --parents src/userplugins
           ${lib.strings.concatMapAttrsStringSep "\n" (
             name: path:
-            "cp -r ${lib.strings.escapeShellArg "${path}"} src/userplugins/${lib.strings.escapeShellArg name}"
+            "cp --recursive ${lib.strings.escapeShellArg "${path}"} src/userplugins/${lib.strings.escapeShellArg name}"
           ) cfg.userPlugins}
         '';
 
@@ -35,12 +35,12 @@ let
       (_old: {
         buildPhase = ''
           runHook preBuild
-          pnpm run buildWeb -- --standalone --disable-updater
+          bun run --bun buildWeb --standalone --disable-updater
           runHook postBuild
         '';
         installPhase = ''
           runHook preInstall
-          mkdir -p "$out"
+          mkdir --parents "$out"
           cp ${browserDir}/browser.js "$out/browser.js"
           cp ${browserDir}/browser.css "$out/browser.css"
           runHook postInstall

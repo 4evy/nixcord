@@ -1,7 +1,12 @@
-import type { StaticEvaluator } from '@nixcord/ast';
-import type { SettingValue } from '@nixcord/shared';
-import { type Node, type ObjectLiteralExpression, SyntaxKind, type TypeChecker } from 'ts-morph';
-import * as z from 'zod';
+import type { SettingValue } from '@nixcord/domain';
+import type { StaticEvaluator } from '@nixcord/typescript-analysis';
+import {
+  type Node,
+  type ObjectLiteralExpression,
+  SyntaxKind,
+  type TypeChecker,
+} from '@nixcord/typescript-analysis';
+import * as v from 'valibot';
 import type { RawRecord, UnresolvedAstValue } from '../context.js';
 import { resolveNode } from '../resolve.js';
 
@@ -32,19 +37,20 @@ const recordUnresolvedAstValue = (
 export const isRecord = (value: unknown): value is RawRecord =>
   typeof value === 'object' && value !== null && !Array.isArray(value) && !('callable' in value);
 
-export const JsonValueSchema: z.ZodType<SettingValue> = z.lazy(() =>
-  z.union([
-    z.null(),
-    z.string(),
-    z.number(),
-    z.boolean(),
-    z.array(JsonValueSchema),
-    z
-      .custom<RawRecord>(isRecord)
-      .transform((value) =>
+export const JsonValueSchema: v.GenericSchema<unknown, SettingValue> = v.lazy(() =>
+  v.union([
+    v.null(),
+    v.string(),
+    v.pipe(v.number(), v.finite()),
+    v.boolean(),
+    v.array(JsonValueSchema),
+    v.pipe(
+      v.custom<RawRecord>(isRecord),
+      v.transform((value) =>
         Object.fromEntries(Object.entries(value).filter(([, item]) => item !== undefined))
-      )
-      .pipe(z.record(z.string(), JsonValueSchema)),
+      ),
+      v.record(v.string(), JsonValueSchema)
+    ),
   ])
 );
 
@@ -178,7 +184,7 @@ const rawObjectFromAst = (
     else recordUnresolvedAstValue(unresolved, { node: initializer, path, reason: result.reason });
   }
   // Remove each definition from `visited` when this branch returns. Settings can
-  // share a definition; leaving it marked would discard later defaults and metadata.
+  // share a definition; leaving it marked would discard later defaults and metadata
   visited.delete(visitKey);
   return output;
 };

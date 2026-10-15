@@ -34,8 +34,8 @@ assert activationsRunAfterUsers;
 pkgs.runCommand "nixos-activation-safety-test" { } ''
   # NixOS activation deliberately runs without these options so that its ERR
   # trap can record a failed snippet and continue finalizing the generation.
-  set +e
-  set +u
+  set +o errexit
+  set +o nounset
   set +o pipefail
 
   ${harmlessScript}

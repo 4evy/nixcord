@@ -5547,8 +5547,7 @@
   ],
   "removals": [
     "appleMusic",
-    "seeSummaries",
-    "soggy"
+    "seeSummaries"
   ],
   "settingRemovals": [
     [
@@ -5558,10 +5557,6 @@
     [
       "betterCommands",
       "allowNewlinesInCommands"
-    ],
-    [
-      "channelTabs",
-      "noPomeloNames"
     ],
     [
       "voiceMessageTranscriber",

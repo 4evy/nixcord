@@ -6,12 +6,13 @@
 # Follow nixpkgs' lib/fileset/benchmark.sh: warm up once, alternate the two
 # trees, and compare evaluator statistics as well as CPU time.
 
-set -euo pipefail
+set -o errexit -o nounset -o pipefail
 
 runs=${EVAL_RUNS:-5}
 system=${EVAL_SYSTEM:-}
 compare_ref=HEAD
 check_ifd=1
+selected_scenario=all
 
 usage() {
   printf '%s\n' \
@@ -22,6 +23,8 @@ usage() {
     "Options:" \
     "  --runs COUNT    Measured runs per tree and scenario (default: 5)" \
     "  --system SYSTEM Nix system to evaluate (default: builtins.currentSystem)" \
+    "  --scenario NAME Select home-manager, nixos, nix-darwin or plugin-options" \
+    "                  (default: the three platform module scenarios)" \
     "  --skip-ifd      Skip the working-tree flake check; benchmark evaluations" \
     "                  still disable import-from-derivation" \
     "  -h, --help      Show this help"
@@ -68,6 +71,16 @@ while (($# > 0)); do
     check_ifd=0
     shift
     ;;
+  --scenario)
+    require_option_value "$1" "${2-}"
+    selected_scenario=$2
+    shift 2
+    ;;
+  --scenario=*)
+    selected_scenario=${1#*=}
+    [[ -n $selected_scenario ]] || usage_error "--scenario requires a value."
+    shift
+    ;;
   -h | --help)
     usage
     exit 0
@@ -94,6 +107,11 @@ while (($# > 0)); do
     ;;
   esac
 done
+
+case "$selected_scenario" in
+all | home-manager | nixos | nix-darwin | plugin-options) ;;
+*) usage_error "Unknown scenario: $selected_scenario" ;;
+esac
 
 if [[ ! $runs =~ ^[0-9]+$ ]]; then
   usage_error "Run count must be an integer from 1 through 1000, got '$runs'."
@@ -167,121 +185,16 @@ if ((check_ifd)); then
   printf 'IFD-free evaluation passed.\n\n'
 fi
 
-# Evaluate Home Manager files and activation output, plus NixOS and Darwin
-# activation scripts. A shallow import would leave that work unevaluated.
-# Keep the expression here so it also runs against revisions without this benchmark.
-read -r -d '' expression <<'EOF' || true
-let
-  source = builtins.getEnv "EVAL_SOURCE";
-  sourcePath = builtins.toPath source;
-  scenario = builtins.getEnv "EVAL_SCENARIO";
-  system = builtins.getEnv "EVAL_SYSTEM";
-  flake = builtins.getFlake source;
-  pkgs = import flake.inputs.nixpkgs {
-    inherit system;
-    config.allowUnfree = true;
-  };
-  lib = pkgs.lib.extend (
-    _final: _previous: {
-      hm.dag.entryAfter = after: data: { inherit after data; };
-    }
-  );
-  stubs = import (sourcePath + "/modules/tests/lib/stubs.nix");
-  moduleConfig = {
-    enable = true;
-    discord.enable = true;
-    discord.vencord.enable = true;
-    vesktop.enable = true;
-    quickCss = "body { color: red; }";
-    config = {
-      useQuickCss = true;
-      plugins.fakeNitro.enable = true;
-    };
-  };
-  common = config: {
-    packageDrvs = map (package: package.drvPath) config.packages;
-    inherit (config) assertions warnings;
-  };
-  moduleArgs = {
-    _module.args = { inherit pkgs system; };
-  };
-  homeConfig = (lib.modules.evalModules {
-    modules = [
-      stubs.hm
-      flake.homeModules.nixcord
-      moduleArgs
-      { programs.nixcord = moduleConfig; }
-    ];
-    specialArgs = { inherit pkgs; };
-  }).config;
-  nixosConfig = (lib.modules.evalModules {
-    modules = [
-      stubs.nixos
-      flake.nixosModules.nixcord
-      moduleArgs
-      {
-        programs.nixcord = moduleConfig // { user = "testuser"; };
-        users.users.testuser = {
-          name = "testuser";
-          home = "/home/testuser";
-          isNormalUser = true;
-        };
-      }
-    ];
-    specialArgs = { inherit pkgs; };
-  }).config;
-  darwinConfig = (lib.modules.evalModules {
-    modules = [
-      stubs.darwin
-      flake.darwinModules.nixcord
-      moduleArgs
-      {
-        programs.nixcord = moduleConfig // { user = "testuser"; };
-        users.users.testuser = {
-          name = "testuser";
-          home = "/Users/testuser";
-        };
-      }
-    ];
-    specialArgs = { inherit pkgs; };
-  }).config;
-in
-if scenario == "home-manager" then
-  common {
-    packages = homeConfig.home.packages;
-    inherit (homeConfig) assertions warnings;
-  }
-  // {
-    files = lib.attrsets.mapAttrs (_: file: toString file.source) homeConfig.home.file;
-    activation = lib.attrsets.mapAttrs (_: entry: entry.data or entry) homeConfig.home.activation;
-  }
-else if scenario == "nixos" then
-  common {
-    packages = nixosConfig.environment.systemPackages;
-    inherit (nixosConfig) assertions warnings;
-  }
-  // {
-    activation = lib.attrsets.mapAttrs (_: entry: entry.text or entry) nixosConfig.system.activationScripts;
-  }
-else if scenario == "nix-darwin" then
-  common {
-    packages = darwinConfig.environment.systemPackages;
-    inherit (darwinConfig) assertions warnings;
-  }
-  // {
-    activation = lib.attrsets.mapAttrs (_: entry: entry.text or entry) darwinConfig.system.activationScripts;
-  }
-else
-  throw "unknown evaluation benchmark scenario: ${scenario}"
-EOF
-
 scenarios=(home-manager nixos nix-darwin)
+if [[ $selected_scenario != all ]]; then
+  scenarios=("$selected_scenario")
+fi
 
 extract_sample() {
   local stats=$1
   local samples=$2
 
-  jq -ce '
+  jq --compact-output --exit-status '
     {
       cpuTime,
       envElements: .envs.elements,
@@ -318,17 +231,16 @@ run_evaluation() {
   local stats="$work/$scenario-$label-$run.json"
   local samples="$work/$scenario-$label.jsonl"
 
-  if ! EVAL_SOURCE="$source" \
-    EVAL_SCENARIO="$scenario" \
-    EVAL_SYSTEM="$system" \
-    NIX_SHOW_STATS=1 \
+  if ! NIX_SHOW_STATS=1 \
     NIX_SHOW_STATS_PATH="$stats" \
     nix --option warn-dirty false eval \
     --impure \
     --json \
     --no-eval-cache \
     --option allow-import-from-derivation false \
-    --expr "$expression" >/dev/null; then
+    --file "$script_dir/benchmark-eval/benchmark-eval.nix" \
+    --argstr source "$source" \
+    --argstr system "$system" "$scenario" >/dev/null; then
     printf 'Error: %s evaluation failed for %s.\n' "$scenario" "$label" >&2
     return 1
   fi
@@ -343,7 +255,7 @@ summarize_samples() {
   local samples=$1
   local summary=$2
 
-  jq -s '
+  jq --slurp '
     def metric(values):
       (values | add / length) as $mean
       | {

@@ -1,12 +1,41 @@
 {
   "files": [],
   "references": [
-    { "path": "modules/lib" },
-    { "path": "packages/shared" },
-    { "path": "packages/ast" },
-    { "path": "packages/git-analyzer" },
-    { "path": "packages/parser" },
-    { "path": "packages/nix-generator" },
-    { "path": "packages/cli" }
+    {
+      "path": "tsconfig.patching.json"
+    },
+    {
+      "path": "modules/lib"
+    },
+    {
+      "path": "packages/domain"
+    },
+    {
+      "path": "packages/typescript-analysis"
+    },
+    {
+      "path": "packages/setting-analysis"
+    },
+    {
+      "path": "packages/slice-executor"
+    },
+    {
+      "path": "packages/ast"
+    },
+    {
+      "path": "packages/git-analyzer"
+    },
+    {
+      "path": "packages/nix-generator"
+    },
+    {
+      "path": "packages/shared"
+    },
+    {
+      "path": "packages/parser"
+    },
+    {
+      "path": "packages/cli"
+    }
   ]
 }

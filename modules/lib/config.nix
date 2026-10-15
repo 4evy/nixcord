@@ -9,14 +9,7 @@ let
     in
     (cfg.config.useQuickCss || appQuickCss) && cfg.quickCss != "";
 
-  toSnakeCase =
-    str:
-    lib.trivial.pipe str [
-      (lib.strings.splitStringBy (_prev: curr: builtins.match "[A-Z]" curr != null) true)
-      (lib.lists.filter (part: part != ""))
-      (map lib.strings.toLower)
-      (lib.strings.concatStringsSep "_")
-    ];
+  inherit (import ./normalization/casing.nix { inherit lib; }) toSnakeCase;
 
   mkDorionConfigAttrs =
     cfg:
@@ -59,7 +52,6 @@ let
           pluginKit.mkFullConfig {
             inherit client;
             inherit (cfg) extraConfig;
-            baseConfig = cfg.config;
             clientConfig = cfg.${name + "Config"};
           }
         )

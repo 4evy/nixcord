@@ -2,8 +2,9 @@
 lib.trivial.pipe
   [
     ./patching.nix
-    ./plugins.nix
-    ./files.nix
+    ./plugins/plugins.nix
+    ./files/files.nix
+    ./packages/installed.nix
     ./config.nix
     ./discord.nix
   ]
