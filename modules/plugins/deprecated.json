@@ -12,6 +12,18 @@
       "to": "ExpressionCloner",
       "date": "2026-09-12"
     },
+    "EquicordHelper": {
+      "to": "EquiTweaks",
+      "date": "2026-10-19"
+    },
+    "favouriteAnything": {
+      "to": "FavoriteAnything",
+      "date": "2026-10-19"
+    },
+    "FavouriteAnything": {
+      "to": "FavoriteAnything",
+      "date": "2026-10-19"
+    },
     "ForwardAnywhere": {
       "to": "BetterForwards",
       "date": "2026-09-14"
@@ -128,8 +140,8 @@
     "seeSummaries": {
       "date": "2026-09-21"
     },
-    "soggy": {
-      "date": "2026-08-27"
+    "showAllBadges": {
+      "date": "2026-10-19"
     }
   },
   "settingRenames": {
@@ -177,9 +189,57 @@
         "date": "2026-09-02"
       }
     },
-    "channelTabs": {
-      "noPomeloNames": {
-        "date": "2026-08-26"
+    "equicordHelper": {
+      "accountStandingButton": {
+        "date": "2026-10-19"
+      },
+      "autoCorrect": {
+        "date": "2026-10-19"
+      },
+      "disableAdoptTagPrompt": {
+        "date": "2026-10-19"
+      },
+      "disableHolidayNotifications": {
+        "date": "2026-10-19"
+      },
+      "enableAutoCorrect": {
+        "date": "2026-10-19"
+      },
+      "forceRoleIcon": {
+        "date": "2026-10-19"
+      },
+      "hideVoiceIndicatorForMutedChannels": {
+        "date": "2026-10-19"
+      },
+      "jsonGateway": {
+        "date": "2026-10-19"
+      },
+      "noBulletPoints": {
+        "date": "2026-10-19"
+      },
+      "noMirroredCamera": {
+        "date": "2026-10-19"
+      },
+      "noModalAnimation": {
+        "date": "2026-10-19"
+      },
+      "noOnboarding": {
+        "date": "2026-10-19"
+      },
+      "refreshSlashCommands": {
+        "date": "2026-10-19"
+      },
+      "removeActivitySection": {
+        "date": "2026-10-19"
+      },
+      "restoreFileDownloadButton": {
+        "date": "2026-10-19"
+      },
+      "showAllBadges": {
+        "date": "2026-10-19"
+      },
+      "showYourOwnActivityButtons": {
+        "date": "2026-10-19"
       }
     },
     "experiments": {

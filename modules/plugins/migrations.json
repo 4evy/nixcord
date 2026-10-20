@@ -640,6 +640,28 @@
     },
     {
       "from": [
+        "favouriteAnything",
+        "enable"
+      ],
+      "to": [
+        "favoriteAnything",
+        "enable"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "favouriteAnything",
+        "localThumbnails"
+      ],
+      "to": [
+        "favoriteAnything",
+        "localThumbnails"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
         "forwardAnywhere",
         "dontFollowForwards"
       ],
@@ -5548,7 +5570,7 @@
   "removals": [
     "appleMusic",
     "seeSummaries",
-    "soggy"
+    "showAllBadges"
   ],
   "settingRemovals": [
     [
@@ -5560,8 +5582,72 @@
       "allowNewlinesInCommands"
     ],
     [
-      "channelTabs",
-      "noPomeloNames"
+      "equicordHelper",
+      "accountStandingButton"
+    ],
+    [
+      "equicordHelper",
+      "autoCorrect"
+    ],
+    [
+      "equicordHelper",
+      "disableAdoptTagPrompt"
+    ],
+    [
+      "equicordHelper",
+      "disableHolidayNotifications"
+    ],
+    [
+      "equicordHelper",
+      "enableAutoCorrect"
+    ],
+    [
+      "equicordHelper",
+      "forceRoleIcon"
+    ],
+    [
+      "equicordHelper",
+      "hideVoiceIndicatorForMutedChannels"
+    ],
+    [
+      "equicordHelper",
+      "jsonGateway"
+    ],
+    [
+      "equicordHelper",
+      "noBulletPoints"
+    ],
+    [
+      "equicordHelper",
+      "noMirroredCamera"
+    ],
+    [
+      "equicordHelper",
+      "noModalAnimation"
+    ],
+    [
+      "equicordHelper",
+      "noOnboarding"
+    ],
+    [
+      "equicordHelper",
+      "refreshSlashCommands"
+    ],
+    [
+      "equicordHelper",
+      "removeActivitySection"
+    ],
+    [
+      "equicordHelper",
+      "restoreFileDownloadButton"
+    ],
+    [
+      "equicordHelper",
+      "showAllBadges"
+    ],
+    [
+      "equicordHelper",
+      "showYourOwnActivityButtons"
     ],
     [
       "voiceMessageTranscriber",
