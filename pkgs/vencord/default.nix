@@ -8,9 +8,9 @@
 let
   pnpm = callPackage ../pnpm { };
   fetchDeps = callPackage ../pnpm/fetch-deps.nix { inherit fetchPnpmDeps; };
-  version = "1.15.11-2026-10-14";
-  rev = "32c90633ce6a95d7e56c95479efbb431bacf1eac";
-  hash = "sha256-HMCXOlMkeBPsqgkwidqBo6mRtVLOFVhSH+7T5lySfxQ=";
+  version = "1.15.12-2026-10-21";
+  rev = "b0e636df2ed5c9006b80ddc6644bc41110404bc3";
+  hash = "sha256-7UOyztToPBCHQo0lkt4Mr/OTORNRoXnRsWdTSY616Kk=";
   pnpmDepsHash = "sha256-P1X36dnEDGpLAKzf8PTadrF/UfsFu5rA61byXiJx4wc=";
   src = fetchFromGitHub {
     inherit (vencord.src) owner repo;

@@ -1862,10 +1862,6 @@
       }
     }
   },
-  "directFileDownload": {
-    "description": "Directly download files from Discord instead of opening them in the browser (Equicord-only)",
-    "settings": {}
-  },
   "disableCameras": {
     "description": "Disables cameras in a call by default (Equicord-only)",
     "settings": {}

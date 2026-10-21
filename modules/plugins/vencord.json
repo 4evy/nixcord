@@ -547,7 +547,7 @@
       "disableAnalytics": {
         "type": "types.bool",
         "default": true,
-        "description": "Disable Discord's tracking (analytics/'science') (restart required)"
+        "description": "Block Discord's tracking analytics. Disable this if you want badges to track your progress (eg: hours streamed). (restart required)"
       }
     }
   },
