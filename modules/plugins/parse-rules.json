@@ -163,6 +163,7 @@
     "ircColors": "IrcColors",
     "iRememberYou": "IRememberYou",
     "jumpTo": "JumpTo",
+    "jumpToTop": "JumpToTop",
     "keepCurrentChannel": "KeepCurrentChannel",
     "keyboardNavigation": "KeyboardNavigation",
     "keyboardSounds": "KeyboardSounds",

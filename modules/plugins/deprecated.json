@@ -2,15 +2,15 @@
   "renames": {
     "AudioBookShelfRichPresence": {
       "to": "RichPresence",
-      "date": "2026-09-12"
+      "date": "2026-10-23"
     },
     "BetterQuickReact": {
       "to": "MoreQuickReactions",
-      "date": "2026-09-12"
+      "date": "2026-10-23"
     },
     "EmoteCloner": {
       "to": "ExpressionCloner",
-      "date": "2026-09-12"
+      "date": "2026-10-23"
     },
     "EquicordHelper": {
       "to": "EquiTweaks",
@@ -30,27 +30,27 @@
     },
     "FriendCloud": {
       "to": "MoreCommands",
-      "date": "2026-09-12"
+      "date": "2026-10-23"
     },
     "GensokyoRadioRPC": {
       "to": "RichPresence",
-      "date": "2026-09-12"
+      "date": "2026-10-23"
     },
     "GifRoulette": {
       "to": "MoreCommands",
-      "date": "2026-09-12"
+      "date": "2026-10-23"
     },
     "HideAttachments": {
       "to": "HideMedia",
-      "date": "2026-09-12"
+      "date": "2026-10-23"
     },
     "ImgToGif": {
       "to": "MoreCommands",
-      "date": "2026-09-12"
+      "date": "2026-10-23"
     },
     "JellyfinRichPresence": {
       "to": "RichPresence",
-      "date": "2026-09-12"
+      "date": "2026-10-23"
     },
     "LastFMRichPresence": {
       "to": "MusicRichPresence",
@@ -58,51 +58,51 @@
     },
     "MemberListActivities": {
       "to": "BetterActivities",
-      "date": "2026-09-12"
+      "date": "2026-10-23"
     },
     "MessageTags": {
       "to": "CustomCommands",
-      "date": "2026-09-12"
+      "date": "2026-10-23"
     },
     "MoreKaomoji": {
       "to": "MoreCommands",
-      "date": "2026-09-12"
+      "date": "2026-10-23"
     },
     "oneko": {
       "to": "CursorBuddy",
-      "date": "2026-09-12"
+      "date": "2026-10-23"
     },
     "Oneko": {
       "to": "CursorBuddy",
-      "date": "2026-09-12"
+      "date": "2026-10-23"
     },
     "PronounDB": {
       "to": "UserMessagesPronouns",
-      "date": "2026-09-12"
+      "date": "2026-10-23"
     },
     "RepeatMessage": {
       "to": "RepeatMessages",
-      "date": "2026-09-12"
+      "date": "2026-10-23"
     },
     "Search": {
       "to": "ReplaceGoogleSearch",
-      "date": "2026-09-12"
+      "date": "2026-10-23"
     },
     "SearchReply": {
       "to": "FullSearchContext",
-      "date": "2026-09-12"
+      "date": "2026-10-23"
     },
     "ShowAllRoles": {
       "to": "AlwaysExpandRoles",
-      "date": "2026-09-12"
+      "date": "2026-10-23"
     },
     "SortFriendRequests": {
       "to": "SortFriends",
-      "date": "2026-09-12"
+      "date": "2026-10-23"
     },
     "StatsfmPresence": {
       "to": "RichPresence",
-      "date": "2026-09-12"
+      "date": "2026-10-23"
     },
     "tenorGifSearch": {
       "to": "GifProviderSwitcher",
@@ -114,15 +114,15 @@
     },
     "TimelessClips": {
       "to": "ClipsEnhancements",
-      "date": "2026-09-12"
+      "date": "2026-10-23"
     },
     "TosuRPC": {
       "to": "RichPresence",
-      "date": "2026-09-12"
+      "date": "2026-10-23"
     },
     "VencordToolbox": {
       "to": "EquicordToolbox",
-      "date": "2026-09-12"
+      "date": "2026-10-23"
     },
     "ViewRawVariant": {
       "to": "ViewRaw",
@@ -130,7 +130,7 @@
     },
     "YoutubeDescription": {
       "to": "FixYoutubeEmbeds",
-      "date": "2026-09-12"
+      "date": "2026-10-23"
     }
   },
   "removals": {
@@ -170,6 +170,9 @@
     "platformIndicators": {
       "badges": "profiles"
     },
+    "shikiCodeblocks": {
+      "tryHljs": "tryDiscordHighlighter"
+    },
     "showMeYourName": {
       "alwaysShowEffects": "alwaysAnimateEffects",
       "animateGradients": "animateEffects",
@@ -181,14 +184,6 @@
     }
   },
   "settingRemovals": {
-    "betterCommands": {
-      "a": {
-        "date": "2026-09-02"
-      },
-      "allowNewlinesInCommands": {
-        "date": "2026-09-02"
-      }
-    },
     "equicordHelper": {
       "accountStandingButton": {
         "date": "2026-10-19"

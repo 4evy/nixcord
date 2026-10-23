@@ -2,6 +2,6 @@
 fetchNpmDeps {
   name = "plugin-generator-npm-deps";
   src = import ../../nix/workspace-source.nix { inherit lib; };
-  hash = "sha256-EJrNrxii4e1oWmHN7d0jiFlsuWf4yFeBQvp8gJz3dfA=";
+  hash = "sha256-HThTehVLBkH2fnhqPartuFAwtQkssVqf3aO/nCCQogI=";
   fetcherVersion = 2;
 }

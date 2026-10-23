@@ -3261,6 +3261,10 @@
     "description": "Adds context menu options to jump to the start or bottom of a channel/DM. (Equicord-only)",
     "settings": {}
   },
+  "jumpToTop": {
+    "description": "Adds a button to jump to the first message in a channel (Equicord-only)",
+    "settings": {}
+  },
   "keyboardNavigation": {
     "description": "Allows you to navigate the UI with a keyboard. (Equicord-only)",
     "settings": {
@@ -4709,7 +4713,7 @@
       "disableAnalytics": {
         "type": "types.bool",
         "default": true,
-        "description": "Disable Discord's tracking (analytics/'science') (restart required)"
+        "description": "Block Discord's tracking analytics. Disable this if you want badges to track your progress (eg: hours streamed). (restart required)"
       },
       "disableStackDumping": {
         "type": "types.bool",
@@ -6164,7 +6168,7 @@
         "description": "A link to a custom vscode theme",
         "example": "https://raw.githubusercontent.com/millsp/material-candy/master/material-candy.json"
       },
-      "tryHljs": {
+      "tryDiscordHighlighter": {
         "type": "types.enum",
         "enumValues": [
           "NEVER",

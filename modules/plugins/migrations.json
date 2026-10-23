@@ -5574,14 +5574,6 @@
   ],
   "settingRemovals": [
     [
-      "betterCommands",
-      "a"
-    ],
-    [
-      "betterCommands",
-      "allowNewlinesInCommands"
-    ],
-    [
       "equicordHelper",
       "accountStandingButton"
     ],
@@ -5855,6 +5847,18 @@
       "to": [
         "platformIndicators",
         "profiles"
+      ],
+      "warn": false,
+      "declare": false
+    },
+    {
+      "from": [
+        "shikiCodeblocks",
+        "tryHljs"
+      ],
+      "to": [
+        "shikiCodeblocks",
+        "tryDiscordHighlighter"
       ],
       "warn": false,
       "declare": false
