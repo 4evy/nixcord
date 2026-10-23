@@ -1,9 +1,11 @@
 {
   lib,
-  stdenv,
+  callPackage,
   brotli,
+  cctools,
+  darwin,
+  ffmpeg_7-headless,
   python3,
-  writeScript,
   writeText,
   rcodesign,
   binaryName,
@@ -18,101 +20,93 @@
 }:
 finalAttrs:
 let
-  fixDistroSymlinks = writeScript "discord-fix-distro-symlinks.py" ''
-    #!${python3.interpreter}
-    import pathlib
-    import sys
-    import tarfile
-
-    with tarfile.open(sys.argv[1]) as tar:
-        for member in tar:
-            if not member.issym():
-                continue
-            parts = pathlib.PurePosixPath(member.name).parts[1:]
-            if not parts:
-                continue
-            path = pathlib.Path(sys.argv[2], *parts)
-            path.unlink(missing_ok=True)
-            path.symlink_to(member.linkname)
+  fixDistroSymlinks = directory: ''
+    # Restore Discord's mode-000 symlinks without following their targets
+    find "$out/${directory}" -type l -exec chmod --no-dereference 777 {} +
+  '';
+  unpackDistro = src: directory: ''
+    mkdir --parents "$out/${directory}"
+    brotli --decompress < ${src} > discord-distro.tar
+    tar --extract --file=discord-distro.tar --strip-components=1 --directory="$out/${directory}"
+    ${fixDistroSymlinks directory}
+    rm discord-distro.tar
   '';
 
-  appDataDirFile = writeText "discord-app-data-dir" (lib.trivial.defaultTo "" appDataDir);
-  modDataDirFile = writeText "discord-mod-data-dir" (lib.trivial.defaultTo "" modDataDir);
   commandLineArgsList = if builtins.isList commandLineArgs then commandLineArgs else [ ];
-
-  # Embed bytes directly: escapeC only supports printable ASCII
-  commandLineArgsC = lib.strings.concatMapStrings (arg: ''
-    (char[]){
-    #embed "${writeText "discord-command-line-argument" arg}" suffix(,)
-      0
-    },
-  '') commandLineArgsList;
-
   darwinSigningPython = python3.withPackages (ps: [ ps.pyyaml ]);
+  launcher = callPackage ./launcher {
+    configuration = {
+      directories = [
+        {
+          name = "DISCORD_USER_DATA_DIR";
+          configured = appDataDir;
+          suffix = "Library/Application Support/nixcord";
+        }
+      ]
+      ++ lib.optional (mod != null) {
+        name = mod.dataDirEnv;
+        configured = modDataDir;
+        suffix = lib.removePrefix "/" mod.dataDirSuffix;
+      };
+      stage_modules = finalAttrs.stageModules;
+      deploy_krisp = if hasDeployKrisp then lib.getExe deployKrisp else null;
+      command_line_args = commandLineArgsList;
+      modules_dir = "../Resources/modules";
+      target = "${binaryName}.unwrapped";
+    };
+  };
 in
 {
-  nativeBuildInputs = [ brotli ];
+  nativeBuildInputs = [ brotli ] ++ lib.optionals (moduleSrcs ? discord_ndi) [ cctools ];
   dontStrip = true;
 
   installPhase = ''
     runHook preInstall
 
-    mkdir -p "$out/${builtins.dirOf layout.appDir}"
-
-    extractDistro() {
-      local src="$1"
-      local dest="$2"
-      local tarball
-      tarball=$(mktemp)
-      brotli -d < "$src" > "$tarball"
-      tar xf "$tarball" --strip-components=1 -C "$dest"
-
-      # Restore Discord's mode-000 symlinks with normal Darwin permissions
-      ${fixDistroSymlinks} "$tarball" "$dest"
-      rm "$tarball"
-    }
-
-    extractDistro "$src" "$out/${builtins.dirOf layout.appDir}"
-
-    ${lib.strings.concatMapAttrsStringSep "\n" (name: src: ''
-      mkdir -p "$out/${layout.modulesDir}/${name}"
-      extractDistro ${src} "$out/${layout.modulesDir}/${name}"
-    '') moduleSrcs}
+    ${unpackDistro finalAttrs.src (builtins.dirOf layout.appDir)}
+    ${lib.strings.concatMapAttrsStringSep "\n" (
+      name: src: unpackDistro src "${layout.modulesDir}/${name}"
+    ) moduleSrcs}
 
     # Finder and the CLI enter the native launcher installed during fixup
-    mkdir -p "$out/bin"
-    ln -s "$out/${layout.executable}" "$out/bin/${binaryName}"
+    mkdir --parents "$out/bin"
+    ln --symbolic "$out/${layout.executable}" "$out/bin/${binaryName}"
 
     runHook postInstall
   '';
 
-  postInstall = ''
-    # Redirect module data APIs without changing native code or signatures
-    for module in discord_intents discord_notifications; do
-      cat >> "$out/${layout.modulesDir}/$module/index.js" <<JS
-
-    require('${./modules/redirect.cjs}')(module.exports, '$module');
-    JS
-    done
-  '';
+  postInstall =
+    lib.optionalString (moduleSrcs ? discord_ndi) ''
+      # NDI dlopens the FFmpeg 7 ABI by dylib name rather than linking it
+      install_name_tool -add_rpath "${ffmpeg_7-headless.lib}/lib" \
+        "$out/${layout.modulesDir}/discord_ndi/libndi.dylib"
+      source ${darwin.signingUtils}
+      sign "$out/${layout.modulesDir}/discord_ndi/libndi.dylib"
+    ''
+    + ''
+      # Redirect module data APIs without changing native code or signatures
+      ${lib.strings.concatMapStringsSep "\n"
+        (module: ''
+          cat ${
+            writeText "${module}-redirect.js" (
+              "\n"
+              + ''
+                require('${./modules/redirect.cjs}')(module.exports, '${module}');
+              ''
+            )
+          } >> "$out/${layout.modulesDir}/${module}/index.js"
+        '')
+        [
+          "discord_intents"
+          "discord_notifications"
+        ]
+      }
+    '';
 
   postFixup = ''
-    source ${./launcher/install.sh} \
-      ${lib.strings.escapeShellArg binaryName} \
-      ${./launcher/main.c} \
-      ${finalAttrs.stageModules} \
-      "$out/${layout.modulesDir}" \
-      ${lib.strings.escapeShellArg (lib.strings.optionalString hasDeployKrisp (lib.meta.getExe deployKrisp))} \
-      "$out/${layout.executable}.unwrapped" \
-      ${if hasDeployKrisp then "1" else "0"} \
-      ${lib.strings.escapeShellArg commandLineArgsC} \
-      ${stdenv.cc}/bin/cc \
-      ${lib.meta.getExe rcodesign} \
-      ${darwinSigningPython}/bin/python3 \
-      ${./launcher/signing.py} \
-      ${appDataDirFile} \
-      ${modDataDirFile} \
-      ${lib.strings.escapeShellArg (if mod == null then "" else mod.dataDirEnv)} \
-      ${lib.strings.escapeShellArg (if mod == null then "" else mod.dataDirSuffix)}
+    mv "$out/${layout.executable}" "$out/${layout.executable}.unwrapped"
+    install --mode=755 ${lib.getExe launcher} "$out/${layout.executable}"
+    ${darwinSigningPython.interpreter} ${./launcher/signing.py} \
+      ${lib.meta.getExe rcodesign} "$out/${layout.appDir}" ${lib.strings.escapeShellArg binaryName}
   '';
 }

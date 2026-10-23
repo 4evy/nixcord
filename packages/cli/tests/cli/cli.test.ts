@@ -1,7 +1,7 @@
 import { resolve } from 'node:path';
 import { CLI_CONFIG } from '@nixcord/shared';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { buildCli, CliExecutionError, handleCliError, runCli } from '../../src/cli.js';
+import { CliExecutionError, handleCliError, runCli } from '../../src/cli.js';
 import { runGeneratePluginOptions } from '../../src/runner/index.js';
 
 vi.mock('../../src/runner/index.js', () => ({
@@ -39,31 +39,108 @@ describe('CLI contract', () => {
     process.exitCode = undefined;
   });
 
-  test('exposes the documented command, flags, and positional source path', () => {
-    const cli = buildCli();
-    const flags = Object.keys(cli.root.parameters.flags ?? {});
-    const positional = cli.root.parameters.positional;
+  test.each(['--help', '-h'])(
+    'prints generated help for %s without running generation',
+    async (flag) => {
+      const stdout = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+      try {
+        await runCli(['node', 'cli.js', flag]);
+        const output = stdout.mock.calls.map(([chunk]) => String(chunk)).join('');
 
-    expect(cli.config.name).toBe('generate-plugin-options');
-    expect(cli.root.brief).toContain('Extract Vencord/Equicord plugin settings');
-    expect(flags).toEqual(
-      expect.arrayContaining([
-        'vencord',
-        'equicord',
-        'output',
-        'overrides',
-        'vencordPlugins',
-        'equicordPlugins',
-        'skipGitMigrations',
-        'verbose',
-        'version',
-      ])
-    );
-    expect(cli.root.usesFlag('version')).toBe(true);
-    expect(positional?.kind).toBe('tuple');
-    if (positional?.kind === 'tuple') {
-      expect(positional.parameters[0]?.placeholder).toBe('vencord-path');
+        expect(output).toContain('Usage: generate-plugin-options');
+        for (const name of [
+          '--vencord',
+          '--equicord',
+          '--output',
+          '--overrides',
+          '--vencord-plugins',
+          '--equicord-plugins',
+          '--skip-git-migrations',
+          '--verbose',
+          '--version',
+          'VENCORD-PATH',
+        ]) {
+          expect(output).toContain(name);
+        }
+        expect(runGeneratePluginOptions).not.toHaveBeenCalled();
+        expect(process.exitCode).toBeUndefined();
+      } finally {
+        stdout.mockRestore();
+      }
     }
+  );
+
+  test.each(['--version', '-V'])(
+    'prints the version for %s without running generation',
+    async (flag) => {
+      const stdout = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+      try {
+        await runCli(['node', 'cli.js', flag]);
+
+        expect(stdout.mock.calls.map(([chunk]) => String(chunk)).join('')).toBe(
+          `${CLI_CONFIG.version}\n`
+        );
+        expect(runGeneratePluginOptions).not.toHaveBeenCalled();
+        expect(process.exitCode).toBeUndefined();
+      } finally {
+        stdout.mockRestore();
+      }
+    }
+  );
+
+  test.each([
+    ['unknown option', ['--unknown']],
+    ['missing option value', ['--output']],
+    ['extra positional path', ['/first', '/second']],
+    ['negated boolean', ['--no-verbose']],
+    ...[
+      '--vencord',
+      '--equicord',
+      '--output',
+      '--overrides',
+      '--vencord-plugins',
+      '--equicord-plugins',
+    ].map((name) => [`empty ${name}`, [name, '']]),
+    ['empty positional path', ['']],
+  ])('rejects %s before running generation', async (_label, args) => {
+    const stderr = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+    try {
+      await runCli(['node', 'cli.js', ...args]);
+
+      expect(process.exitCode).toBe(1);
+      expect(runGeneratePluginOptions).not.toHaveBeenCalled();
+      expect(stderr.mock.calls.map(([chunk]) => String(chunk)).join('')).toContain('Error:');
+    } finally {
+      stderr.mockRestore();
+    }
+  });
+
+  test('preserves short aliases and camel-case option spellings', async () => {
+    await runCli([
+      'node',
+      'cli.js',
+      '-e',
+      '/sources/equicord',
+      '-o',
+      '/output/plugins.nix',
+      '-v',
+      '--vencordPlugins',
+      'custom/plugins',
+      '--equicordPlugins',
+      'custom/equicordplugins',
+      '--skipGitMigrations',
+    ]);
+
+    expect(runGeneratePluginOptions).toHaveBeenCalledWith(
+      expect.objectContaining({
+        equicordPath: '/sources/equicord',
+        outputPath: '/output/plugins.nix',
+        verbose: true,
+        vencordPluginsDir: 'custom/plugins',
+        equicordPluginsDir: 'custom/equicordplugins',
+        skipGitMigrations: true,
+      })
+    );
   });
 
   test('maps positional input and defaults to runner parameters', async () => {

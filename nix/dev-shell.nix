@@ -6,7 +6,7 @@ pkgs.mkShellNoCC {
     jq
     nix-update
     nixfmt
-    (callPackage ./nodejs.nix { })
+    bun
     npins
     treefmt
     yamllint
@@ -15,7 +15,7 @@ pkgs.mkShellNoCC {
 
   shellHook = ''
     echo "Development shell"
-    echo "Run 'npm ci' once, then 'npm run check' and 'nix flake check'."
+    echo "Run 'bun install --frozen-lockfile' once, then 'bun run check' and 'nix flake check'."
     echo "Run './nix/benchmark-eval.sh [GIT_REF]' to compare evaluator cost and check IFD."
   '';
 }

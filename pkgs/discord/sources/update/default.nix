@@ -1,20 +1,21 @@
 {
   writeShellApplication,
   cacert,
-  python3,
+  coreutils,
+  curl,
+  jq,
+  branch,
 }:
 writeShellApplication {
   name = "discord-update";
+  runtimeInputs = [
+    coreutils
+    curl
+    jq
+  ];
   runtimeEnv = {
-    DISCORD_UPDATE_SOURCES_PY = ./main.py;
+    DISCORD_BRANCHES = branch;
     SSL_CERT_FILE = "${cacert}/etc/ssl/certs/ca-bundle.crt";
   };
-  runtimeInputs = [
-    cacert
-    python3
-  ];
-  text = ''
-    # shellcheck disable=SC1091
-    source ${./run.sh}
-  '';
+  text = builtins.readFile ./main.sh;
 }

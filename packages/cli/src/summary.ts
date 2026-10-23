@@ -14,9 +14,9 @@ export function logGeneratePluginOptionsSummary(
 
   logger.success(
     `${CLI_CONFIG.symbols.success} Generated plugin options in ${summary.pluginsDir}:\n` +
-      `  - ${CLI_CONFIG.filenames.shared}: ${summary.sharedCount} plugins (shared)\n` +
-      `  - ${CLI_CONFIG.filenames.vencord}: ${summary.vencordOnlyCount} plugins (Vencord-only)\n` +
-      `  - ${CLI_CONFIG.filenames.equicord}: ${summary.equicordOnlyCount} plugins (Equicord-only)\n` +
+      `  - shared: ${summary.sharedCount} plugins\n` +
+      `  - Vencord-only: ${summary.vencordOnlyCount} plugins\n` +
+      `  - Equicord-only: ${summary.equicordOnlyCount} plugins\n` +
       `  - ${CLI_CONFIG.filenames.parseRules}: parser rename rules${diagnosticSummary}`
   );
 }

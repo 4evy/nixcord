@@ -157,30 +157,43 @@ def metadata_summary(path, old, new):
 
 def lock_summary(old, new):
     try:
-        left, right = json.loads(old), json.loads(new)
-    except json.JSONDecodeError:
-        return "refresh npm lockfile", ["npm lockfile: update contents"]
-    # npm includes root and workspace packages alongside installed dependencies.
+        left, right = (
+            json.loads(
+                subprocess.check_output(
+                    [
+                        "bun",
+                        "--eval",
+                        "process.stdout.write(JSON.stringify(Bun.JSONC.parse(await Bun.stdin.text())))",
+                    ],
+                    input=content,
+                    text=True,
+                )
+            )
+            for content in (old, new)
+        )
+    except (json.JSONDecodeError, subprocess.CalledProcessError):
+        return "refresh Bun lockfile", ["Bun lockfile: update contents"]
+    # Bun records packages separately from workspace manifests
     old_packages, new_packages = (
         {path or "(root)": entry for path, entry in data.pop("packages", {}).items()}
         for data in (left, right)
     )
     added, removed, changed = delta(old_packages, new_packages)
     if len(removed) == 1 and not added and not changed and left == right:
-        subject = f"remove {removed[0]} from npm lockfile"
+        subject = f"remove {removed[0]} from Bun lockfile"
         if len(f"plugins: {subject}") <= 72:
-            return subject, [f"npm lockfile: remove {removed[0]}"]
+            return subject, [f"Bun lockfile: remove {removed[0]}"]
     lines = []
     if added or removed or changed:
         lines.append(
-            "npm lockfile: " + describe_entries(old_packages, new_packages, "package")
+            "Bun lockfile: " + describe_entries(old_packages, new_packages, "package")
         )
     settings = sorted(
         k for k in left.keys() | right.keys() if left.get(k) != right.get(k)
     )
     if settings:
-        lines.append(f"npm lockfile: update settings ({join_names(settings)})")
-    return "refresh npm lockfile", lines or ["npm lockfile: reformat entries"]
+        lines.append(f"Bun lockfile: update settings ({join_names(settings)})")
+    return "refresh Bun lockfile", lines or ["Bun lockfile: reformat entries"]
 
 
 def hash_summary(old, new):
@@ -221,9 +234,9 @@ def package_summary(client, old, new):
             "refresh GoofCord Darwin dependency hashes",
             [f"GoofCord Darwin dependency hashes: {join_names(hashes)}"],
         )
-    # The top-level hash pins source archives; pnpmDepsHash pins dependencies
+    # The top-level hash pins source archives; bunDepsHash pins dependencies
     # Calling both dependency hashes would mislabel source-only refreshes
-    fields = {"hash": "source hash", "pnpmDepsHash": "pnpm dependency hash"}
+    fields = {"hash": "source hash", "bunDepsHash": "Bun dependency hash"}
     labels = [fields.get(name, name) for name in hashes]
     subject = f"refresh {label} " + (
         labels[0] if len(labels) == 1 else "source and dependency hashes"
@@ -256,7 +269,7 @@ def plugin_message(paths):
         elif path.startswith("modules/plugins/") and path.endswith(".json"):
             subject, lines = metadata_summary(path, old, new)
             summaries.append(("configuration", subject, lines))
-        elif path == "package-lock.json":
+        elif path.endswith("bun.lock"):
             subject, lines = lock_summary(old, new)
             summaries.append(("dependencies", subject, lines))
         elif path == "package.json":
@@ -345,7 +358,16 @@ def channel_label(channel):
 
 def discord_message(paths):
     lines, versions, channels = [], [], []
+    patch_tools_changed = False
     for path in paths:
+        if path == "pkgs/discord/patching/default.nix":
+            patch_tools_changed = True
+            hashes = hash_summary(before(path) or "", Path(path).read_text())
+            lines.append(
+                "Discord patch tools: refresh "
+                + ("Bun dependency hash" if hashes else "package definition")
+            )
+            continue
         old = json.loads(before(path) or "{}")
         new = json.loads(Path(path).read_text()) if Path(path).is_file() else {}
         for channel in sorted(old.keys() | new.keys()):
@@ -393,6 +415,8 @@ def discord_message(paths):
             )
             + " sources"
         )
+    elif patch_tools_changed:
+        subject = "refresh patch tool dependencies"
     else:
         subject = "reformat source metadata"
     if len(f"discord: {subject}") > 72:

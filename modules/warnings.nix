@@ -16,7 +16,13 @@ let
     mkAssertions
     ;
 
-  inherit (pkgs.callPackage ./lib/core.nix { inherit (cfg) parseRules; }) mkVencordCfg;
+  inherit
+    (import ./lib/normalization/normalization.nix {
+      inherit lib;
+      inherit (cfg) parseRules;
+    })
+    mkVencordCfg
+    ;
   pluginKit = mkPluginKit { inherit cfg mkVencordCfg; };
 
   inherit (pluginKit)

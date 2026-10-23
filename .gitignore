@@ -1,3 +1,6 @@
+# Rust
+target/
+
 # Nix
 .direnv
 .envrc
@@ -95,6 +98,7 @@ node_modules/
 
 # Bun
 tsconfig.tools.tsbuildinfo
+tsconfig.patching.tsbuildinfo
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*

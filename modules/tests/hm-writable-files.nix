@@ -18,15 +18,15 @@ pkgs.runCommand "hm-writable-files-test"
   }
   ''
     source ${home-manager}/lib/bash/home-manager.sh
-    rm -rf ${destinationRoot}
-    mkdir -p ${destinationRoot}/existing ${destinationRoot}/Vencord/settings
+    rm --recursive --force ${destinationRoot}
+    mkdir --parents ${destinationRoot}/existing ${destinationRoot}/Vencord/settings
     printf 'old\n' > ${destinationRoot}/existing/settings.json
-    ln -s ${destinationRoot}/existing/settings.json ${destination}
+    ln --symbolic ${destinationRoot}/existing/settings.json ${destination}
 
     export DRY_RUN=1
     ${activation}
     test -L ${destination}
-    grep -Fx old ${destination}
+    grep --fixed-strings --line-regexp old ${destination}
     test "$(readlink ${destination})" = '${destinationRoot}/existing/settings.json'
     unset DRY_RUN
     ${activation}
@@ -34,7 +34,7 @@ pkgs.runCommand "hm-writable-files-test"
     test -f ${destination}
     test ! -L ${destination}
     test -w ${destination}
-    jq -e '.plugins.AlwaysAnimate.enabled == true' ${destination}
+    jq --exit-status '.plugins.AlwaysAnimate.enabled == true' ${destination}
 
     chmod 0444 ${destination}
     cp ${destination} before.json
@@ -45,9 +45,9 @@ pkgs.runCommand "hm-writable-files-test"
     unset DRY_RUN
     ${activation}
     test -w ${destination}
-    jq -e '.plugins.AlwaysAnimate.enabled == true' ${destination}
+    jq --exit-status '.plugins.AlwaysAnimate.enabled == true' ${destination}
 
-    rm -rf ${destinationRoot}
+    rm --recursive --force ${destinationRoot}
     export DRY_RUN=1
     ${activation}
     ${config.home.activation.disableDiscordUpdates.data}

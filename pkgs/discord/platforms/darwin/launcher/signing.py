@@ -47,7 +47,9 @@ def signing_metadata(
         flags_text = signature["code_directory"]["flags"]
         flags_match = re.fullmatch(r"CodeSignatureFlags\(([^)]*)\)", flags_text)
         if flags_match is None:
-            raise RuntimeError(f"cannot read code-signature flags from {executable}")
+            raise RuntimeError(
+                f"cannot read code-signature flags from {executable}"
+            )
         flags = tuple(
             name.strip().lower().replace("_", "-")
             for name in flags_match.group(1).split("|")
@@ -67,7 +69,8 @@ def carry_entitlements(entitlements: dict, executable: Path) -> dict:
     unknown = sorted(
         key
         for key in entitlements
-        if key not in IDENTITY_ENTITLEMENTS and not key.startswith(USABLE_PREFIXES)
+        if key not in IDENTITY_ENTITLEMENTS
+        and not key.startswith(USABLE_PREFIXES)
     )
     if unknown:
         raise RuntimeError(
@@ -154,6 +157,33 @@ def main() -> None:
                         )
                     )
         subprocess.run([*command, str(app)], check=True)
+
+        # NDI runs in a separate hardened process and loads Nix codec dylibs
+        ndi_tool = app / "Contents/Resources/modules/discord_ndi/discord_ndi"
+        if ndi_tool.exists():
+            metadata = signing_metadata(rcodesign, ndi_tool)
+            if not metadata or any(
+                value != metadata[0] for value in metadata[1:]
+            ):
+                raise RuntimeError(
+                    f"review inconsistent signing settings on {ndi_tool}"
+                )
+            entitlements, flags = metadata[0]
+            plist = Path(directory) / "ndi.plist"
+            plist.write_bytes(
+                plistlib.dumps(carry_entitlements(entitlements, ndi_tool))
+            )
+            tool_command = [
+                rcodesign,
+                "sign",
+                "--config-file",
+                "/dev/null",
+                "--entitlements-xml-file",
+                str(plist),
+            ]
+            if flags:
+                tool_command.extend(("--code-signature-flags", ",".join(flags)))
+            subprocess.run([*tool_command, str(ndi_tool)], check=True)
 
 
 if __name__ == "__main__":

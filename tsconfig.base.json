@@ -2,8 +2,8 @@
   "compilerOptions": {
     "target": "ES2024",
     "module": "ESNext",
-    "lib": ["ES2024"],
-    "types": ["node"],
+    "lib": ["ES2024", "ESNext.Disposable"],
+    "types": ["node", "bun"],
     "moduleResolution": "bundler",
     "strict": true,
     "esModuleInterop": true,

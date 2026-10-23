@@ -1,143 +1,101 @@
-import { CLI_CONFIG } from '@nixcord/shared';
 import { createFixture } from 'fs-fixture';
 import { describe, expect, test } from 'vitest';
 import { applyPluginOverrides } from '../src/overrides.js';
+import type { CategorySchemas } from '../src/runner/outputs.js';
+
+const emptySchemas = (): CategorySchemas => ({ shared: {}, vencord: {}, equicord: {} });
 
 describe('applyPluginOverrides', () => {
-  test('deep-merges category overrides into generated plugin JSON', async () => {
+  test('deep-merges overrides in memory without mutating the generated schema', async () => {
     await using fixture = await createFixture({
       'overrides.json': JSON.stringify({
         shared: {
           Demo: {
             settings: {
-              list: ['new'],
-              nested: { added: 4, right: 3 },
+              list: { default: ['new'] },
+              nested: { default: { added: 4, right: 3 } },
             },
           },
         },
       }),
-      plugins: {
-        [CLI_CONFIG.filenames.shared]: JSON.stringify({
-          Demo: {
-            enabled: false,
-            settings: {
-              list: ['old'],
-              nested: { left: 1, right: 2 },
-            },
-          },
-        }),
-        [CLI_CONFIG.filenames.vencord]: '{}',
-        [CLI_CONFIG.filenames.equicord]: '{"OnlyEquicord":true}',
-      },
     });
-
-    await applyPluginOverrides(fixture.getPath('overrides.json'), fixture.getPath('plugins'));
-
-    await expect(fixture.readJson(`plugins/${CLI_CONFIG.filenames.shared}`)).resolves.toEqual({
-      Demo: {
-        enabled: false,
-        settings: {
-          list: ['new'],
-          nested: { left: 1, right: 3, added: 4 },
+    const schemas = emptySchemas();
+    schemas.shared.Demo = {
+      upstreamName: 'Demo',
+      description: '',
+      settings: {
+        list: {
+          upstreamName: 'list',
+          upstreamType: { kind: 'list', element: 'string' },
+          type: 'types.listOf types.str',
+          default: ['old'],
+        },
+        nested: {
+          upstreamName: 'nested',
+          upstreamType: { kind: 'attrs', nullable: false },
+          type: 'types.attrs',
+          default: { left: 1, right: 2 },
         },
       },
+    };
+
+    const result = await applyPluginOverrides(fixture.getPath('overrides.json'), schemas);
+    expect(result.shared.Demo.settings.list).toMatchObject({ default: ['new'] });
+    expect(result.shared.Demo.settings.nested).toMatchObject({
+      default: { left: 1, right: 3, added: 4 },
     });
-    await expect(fixture.readJson(`plugins/${CLI_CONFIG.filenames.equicord}`)).resolves.toEqual({
-      OnlyEquicord: true,
-    });
+    expect(schemas.shared.Demo.settings.list).toMatchObject({ default: ['old'] });
+    expect(result.equicord).toBe(schemas.equicord);
   });
 
-  test('applies all overrides to whichever category contains the plugin', async () => {
+  test('applies all overrides only to existing settings in each category', async () => {
     await using fixture = await createFixture({
       'overrides.json': JSON.stringify({
-        all: {
-          MovedPlugin: {
-            settings: {
-              dynamicDefault: { default: false },
-            },
-          },
-        },
+        all: { MovedPlugin: { settings: { dynamicDefault: { default: false } } } },
       }),
-      plugins: {
-        [CLI_CONFIG.filenames.shared]: JSON.stringify({
-          MovedPlugin: {
-            settings: {
-              dynamicDefault: { type: 'types.bool' },
-            },
-          },
-        }),
-        [CLI_CONFIG.filenames.vencord]: JSON.stringify({
-          MovedPlugin: { settings: {} },
-        }),
-        [CLI_CONFIG.filenames.equicord]: '{}',
-      },
     });
-
-    await applyPluginOverrides(fixture.getPath('overrides.json'), fixture.getPath('plugins'));
-
-    await expect(fixture.readJson(`plugins/${CLI_CONFIG.filenames.shared}`)).resolves.toEqual({
-      MovedPlugin: {
-        settings: {
-          dynamicDefault: { type: 'types.bool', default: false },
+    const schemas = emptySchemas();
+    schemas.shared.MovedPlugin = {
+      upstreamName: 'MovedPlugin',
+      description: '',
+      settings: {
+        dynamicDefault: {
+          upstreamName: 'dynamicDefault',
+          upstreamType: { kind: 'boolean' },
+          type: 'types.bool',
         },
       },
-    });
-    await expect(fixture.readJson(`plugins/${CLI_CONFIG.filenames.vencord}`)).resolves.toEqual({
-      MovedPlugin: { settings: {} },
-    });
-    await expect(fixture.readJson(`plugins/${CLI_CONFIG.filenames.equicord}`)).resolves.toEqual({});
+    };
+    schemas.vencord.MovedPlugin = { upstreamName: 'MovedPlugin', description: '', settings: {} };
+
+    const result = await applyPluginOverrides(fixture.getPath('overrides.json'), schemas);
+    expect(result.shared.MovedPlugin.settings.dynamicDefault).toMatchObject({ default: false });
+    expect(result.vencord.MovedPlugin.settings).toEqual({});
+    expect(result.equicord).toEqual({});
   });
 
-  test('rejects an overrides document that is not an object', async () => {
-    await using fixture = await createFixture({
-      'overrides.json': '[]',
-      plugins: {},
-    });
-
+  test.each([
+    ['[]', 'Plugin overrides must be a JSON object'],
+    ['{"shared":[]}', 'Plugin overrides category must be a JSON object: shared'],
+    ['{"all":[]}', 'Plugin overrides category must be a JSON object: all'],
+  ])('rejects invalid override documents: %s', async (document, message) => {
+    await using fixture = await createFixture({ 'overrides.json': document });
     await expect(
-      applyPluginOverrides(fixture.getPath('overrides.json'), fixture.getPath('plugins'))
-    ).rejects.toThrow('Plugin overrides must be a JSON object');
+      applyPluginOverrides(fixture.getPath('overrides.json'), emptySchemas())
+    ).rejects.toThrow(message);
   });
 
-  test('rejects non-object category overrides', async () => {
+  test('keeps prototype-shaped keys as ordinary data', async () => {
     await using fixture = await createFixture({
-      'overrides.json': JSON.stringify({ shared: [] }),
-      plugins: {
-        [CLI_CONFIG.filenames.shared]: '{}',
-      },
+      'overrides.json':
+        '{"shared":{"__proto__":{"description":"ordinary plugin data","settings":{}}}}',
     });
-
-    await expect(
-      applyPluginOverrides(fixture.getPath('overrides.json'), fixture.getPath('plugins'))
-    ).rejects.toThrow('Plugin overrides category must be a JSON object: shared');
-  });
-
-  test('rejects a non-object all override', async () => {
-    await using fixture = await createFixture({
-      'overrides.json': JSON.stringify({ all: [] }),
-      plugins: {},
+    const result = await applyPluginOverrides(fixture.getPath('overrides.json'), emptySchemas());
+    expect(Object.hasOwn(result.shared, '__proto__')).toBe(true);
+    expect(Reflect.get(result.shared, '__proto__')).toEqual({
+      description: 'ordinary plugin data',
+      settings: {},
     });
-
-    await expect(
-      applyPluginOverrides(fixture.getPath('overrides.json'), fixture.getPath('plugins'))
-    ).rejects.toThrow('Plugin overrides category must be a JSON object: all');
-  });
-
-  test('keeps prototype-shaped JSON keys as ordinary data', async () => {
-    await using fixture = await createFixture({
-      'overrides.json': '{"shared":{"__proto__":{"polluted":true}}}',
-      plugins: {
-        [CLI_CONFIG.filenames.shared]: '{}',
-        [CLI_CONFIG.filenames.vencord]: '{}',
-        [CLI_CONFIG.filenames.equicord]: '{}',
-      },
-    });
-
-    await applyPluginOverrides(fixture.getPath('overrides.json'), fixture.getPath('plugins'));
-
-    const output = await fixture.readJson(`plugins/${CLI_CONFIG.filenames.shared}`);
-    expect(Object.hasOwn(output, '__proto__')).toBe(true);
-    expect(Reflect.get(output, '__proto__')).toEqual({ polluted: true });
-    expect(Object.prototype).not.toHaveProperty('polluted');
+    expect(Object.prototype).not.toHaveProperty('description');
   });
 });

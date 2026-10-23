@@ -1,0 +1,7 @@
+[install]
+linker = "hoisted"
+ignoreScripts = true
+
+[run]
+# Vitest scripts use an explicit entrypoint to avoid its Node shebang
+bun = true

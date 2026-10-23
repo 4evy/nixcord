@@ -5,5 +5,12 @@
     "rootDir": "./src"
   },
   "include": ["src/**/*"],
-  "references": [{ "path": "../shared" }]
+  "references": [
+    {
+      "path": "../domain"
+    },
+    {
+      "path": "../typescript-analysis"
+    }
+  ]
 }

@@ -30,10 +30,10 @@ let
     homeFileSource config spec.dest;
 
   json = source: filter: ''
-    jq -e ${lib.strings.escapeShellArg filter} ${lib.strings.escapeShellArg source} >/dev/null
+    jq --exit-status ${lib.strings.escapeShellArg filter} ${lib.strings.escapeShellArg source} >/dev/null
   '';
   text = source: expected: ''
-    diff -u ${lib.strings.escapeShellArg source} <(printf '%s' ${lib.strings.escapeShellArg expected})
+    diff --unified ${lib.strings.escapeShellArg source} <(printf '%s' ${lib.strings.escapeShellArg expected})
   '';
 in
 {

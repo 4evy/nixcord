@@ -1,8 +1,9 @@
-import type { SettingScalar } from '@nixcord/shared';
+import type { SettingScalar } from '@nixcord/domain';
 
 export type SourceKind = 'vencord' | 'equicord';
 
 export interface SourceProfile {
+  readonly pluginsDirectory: string;
   readonly entryGlobs: readonly string[];
   readonly clientSpecificPlugins: readonly string[];
   readonly apiModules: readonly string[];
@@ -19,17 +20,9 @@ export interface SourceProfile {
   readonly includeHiddenSettings: boolean;
 }
 
-export type OptionTypeName =
-  | 'STRING'
-  | 'NUMBER'
-  | 'BIGINT'
-  | 'BOOLEAN'
-  | 'SELECT'
-  | 'SLIDER'
-  | 'COMPONENT'
-  | 'CUSTOM';
+export type OptionTypeName = (typeof OPTION_TYPES)[keyof typeof OPTION_TYPES];
 
-const OPTION_TYPES: Readonly<Record<number, OptionTypeName>> = {
+const OPTION_TYPES = {
   0: 'STRING',
   1: 'NUMBER',
   2: 'BIGINT',
@@ -38,13 +31,13 @@ const OPTION_TYPES: Readonly<Record<number, OptionTypeName>> = {
   5: 'SLIDER',
   6: 'COMPONENT',
   7: 'CUSTOM',
-};
+} as const;
 
 const COMMON_PROFILE = {
   // Match upstream discovery: directory indexes for ordinary plugins and files
-  // in _core for required plugins. Exclude _api implementation dependencies.
+  // in _core for required plugins. Exclude _api implementation dependencies
   entryGlobs: ['*/index.{ts,tsx}', '_core/*.{ts,tsx}'],
-  // Keep separate schemas where the description names a specific client.
+  // Keep separate schemas where the description names a specific client
   clientSpecificPlugins: ['Settings'],
   apiModules: ['@api/Settings', '@utils/types'],
   apiDeclarations: {
@@ -133,6 +126,6 @@ const COMMON_PROFILE = {
 } as const;
 
 export const SOURCE_PROFILES: Readonly<Record<SourceKind, SourceProfile>> = {
-  vencord: COMMON_PROFILE,
-  equicord: COMMON_PROFILE,
+  vencord: { ...COMMON_PROFILE, pluginsDirectory: 'src/plugins' },
+  equicord: { ...COMMON_PROFILE, pluginsDirectory: 'src/equicordplugins' },
 };

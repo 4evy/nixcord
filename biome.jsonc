@@ -13,7 +13,7 @@
       "*.ts",
       "scripts/**/*.ts",
       "modules/lib/*.ts",
-      "pkgs/discord/patching/**/*.cts",
+      "pkgs/discord/patching/**/*.ts",
       "pkgs/discord/patching/package.json",
       "modules/lib/tsconfig.json",
       "packages/*/package.json",

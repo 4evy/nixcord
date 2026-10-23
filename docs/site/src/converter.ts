@@ -1,8 +1,6 @@
-import equicordPlugins from '../../../modules/plugins/equicord.json';
+import generatedMetadata from 'virtual:nixcord-plugin-metadata';
+import { toNixIdentifier } from '@nixcord/nix-generator/identifier';
 import parseRules from '../../../modules/plugins/parse-rules.json';
-import sharedPlugins from '../../../modules/plugins/shared.json';
-import vencordPlugins from '../../../modules/plugins/vencord.json';
-import { toNixIdentifier } from '../../../packages/nix-generator/src/identifier';
 
 type JsonObject = Record<string, unknown>;
 
@@ -50,9 +48,9 @@ type NormalizedPlugin = {
 };
 
 const pluginMetadata = mergePluginMetadata(
-  sharedPlugins as PluginMetadata,
-  vencordPlugins as PluginMetadata,
-  equicordPlugins as PluginMetadata
+  generatedMetadata.shared as PluginMetadata,
+  generatedMetadata.vencord as PluginMetadata,
+  generatedMetadata.equicord as PluginMetadata
 );
 
 const internalPluginNames = new Set(
@@ -89,7 +87,7 @@ const internalPluginNames = new Set(
 const pluginNameLookup = buildPluginNameLookup();
 
 function mergePluginMetadata(...sources: PluginMetadata[]): PluginMetadata {
-  const merged: PluginMetadata = {};
+  const merged: PluginMetadata = Object.create(null);
 
   for (const source of sources) {
     for (const [pluginName, schema] of Object.entries(source)) {
@@ -108,14 +106,14 @@ function mergePluginMetadata(...sources: PluginMetadata[]): PluginMetadata {
 export function convertSettingsJsonToNix(input: string): ConverterResult {
   const parsed = parseSettingsJson(input);
   const plugins = extractPlugins(parsed);
-  const configPlugins: JsonObject = {};
-  const extraPlugins: JsonObject = {};
+  const configPlugins: JsonObject = Object.create(null);
+  const extraPlugins: JsonObject = Object.create(null);
   let knownSettingCount = 0;
   let preservedSettingCount = 0;
 
   for (const plugin of normalizePlugins(plugins)) {
-    const configPlugin: JsonObject = {};
-    const extraPlugin: JsonObject = {};
+    const configPlugin: JsonObject = Object.create(null);
+    const extraPlugin: JsonObject = Object.create(null);
     const enabled = readEnabled(plugin.value);
 
     if (plugin.schema == null && isInternalPluginName(plugin.inputName)) continue;
@@ -273,7 +271,7 @@ function convertNestedSettings(
   values: JsonObject,
   schema: Record<string, SettingSchema>
 ): JsonObject {
-  const converted: JsonObject = {};
+  const converted: JsonObject = Object.create(null);
 
   for (const [name, value] of Object.entries(values)) {
     const mapped = mapSettingName(pluginName, name, schema);
@@ -299,9 +297,9 @@ function mapSettingName(
   inputName: string,
   schema: Record<string, SettingSchema>
 ): { nixName: string; schema: SettingSchema } | null {
-  if (schema[inputName]) return { nixName: inputName, schema: schema[inputName] };
+  if (Object.hasOwn(schema, inputName)) return { nixName: inputName, schema: schema[inputName] };
 
-  // mkPluginOptions adds enable to every nested group outside the JSON schema
+  // Generated option declarations add enable to nested groups outside the JSON schema
   if (inputName === 'enabled' || inputName === 'enable') {
     return { nixName: 'enable', schema: { type: 'types.bool' } };
   }
@@ -315,10 +313,11 @@ function mapSettingName(
       )
     : undefined;
 
-  if (renamed && schema[renamed[0]]) return { nixName: renamed[0], schema: schema[renamed[0]] };
+  if (renamed && Object.hasOwn(schema, renamed[0]))
+    return { nixName: renamed[0], schema: schema[renamed[0]] };
 
   const normalized = toNixIdentifier(inputName);
-  if (schema[normalized]) return { nixName: normalized, schema: schema[normalized] };
+  if (Object.hasOwn(schema, normalized)) return { nixName: normalized, schema: schema[normalized] };
 
   return null;
 }

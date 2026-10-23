@@ -7,8 +7,9 @@ import {
   ParsedPluginsResultSchema,
   type PluginSetting,
 } from '@nixcord/shared';
+import { type Node, SyntaxKind, type TypeLiteralNode } from '@nixcord/typescript-analysis';
 import fg from 'fast-glob';
-import { type Node, SyntaxKind, type TypeLiteralNode } from 'ts-morph';
+import * as v from 'valibot';
 import { beforeAll, describe, expect, test } from 'vitest';
 import { categorizePlugins, parsePlugins } from '../../src/index.js';
 
@@ -147,7 +148,7 @@ const auditSettingCoverage = async (
     ],
     { cwd: sourceRoot, absolute: true, onlyFiles: true }
   );
-  const session = await createAnalysisSession({
+  await using session = await createAnalysisSession({
     rootPath: sourceRoot,
     filePaths,
     tsConfigPath: join(sourceRoot, 'tsconfig.json'),
@@ -253,7 +254,7 @@ describe.skipIf(!existsSync(VENCORD_PATH))('pinned Vencord source', () => {
   }, UPSTREAM_PARSE_TIMEOUT);
 
   test('parses the complete plugin tree into the public result schema', () => {
-    expect(ParsedPluginsResultSchema.safeParse(result).success).toBe(true);
+    expect(v.safeParse(ParsedPluginsResultSchema, result).success).toBe(true);
     assertNormalizedSettingSemantics(result.vencordPlugins);
   });
 
@@ -320,7 +321,7 @@ describe.skipIf(!existsSync(EQUICORD_PATH))('pinned Equicord source', () => {
   }, UPSTREAM_PARSE_TIMEOUT);
 
   test('parses both inherited and Equicord-only plugin trees', () => {
-    expect(ParsedPluginsResultSchema.safeParse(result).success).toBe(true);
+    expect(v.safeParse(ParsedPluginsResultSchema, result).success).toBe(true);
     assertNormalizedSettingSemantics(result.vencordPlugins);
     assertNormalizedSettingSemantics(result.equicordPlugins);
   });

@@ -66,7 +66,7 @@ let
       krispSrc
       ;
   };
-  inherit (krisp) krispModule deployKrisp patchVoiceKrispPy;
+  inherit (krisp) krispModule deployKrisp patchVoiceKrisp;
   hasKrispModule = withKrisp && krispModule != null;
   hasDeployKrisp = withKrisp && deployKrisp != null;
 
@@ -143,7 +143,7 @@ stdenv.mkDerivation (
           withOpenASAR
           hasKrispModule
           krispModule
-          patchVoiceKrispPy
+          patchVoiceKrisp
           krispRuntimePath
           ;
         patchStockUpdater = callPackage ./patching/updater { };
@@ -157,7 +157,7 @@ stdenv.mkDerivation (
 
     passthru = {
       inherit source moduleSrcs moduleVersions;
-      updateScript = callPackage ./sources/update { };
+      updateScript = lib.getExe (callPackage ./sources/update { inherit branch; });
       stageModules = finalAttrs.stageModules;
       commandLineArgsAsList = true;
       krispPatched = hasKrispModule;

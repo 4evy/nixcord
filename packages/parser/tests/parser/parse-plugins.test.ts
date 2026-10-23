@@ -2,6 +2,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ParsedPluginsResultSchema, type PluginSetting } from '@nixcord/shared';
 import { createFixture } from 'fs-fixture';
+import * as v from 'valibot';
 import { describe, expect, test } from 'vitest';
 import { parsePlugins } from '../../src/index.js';
 
@@ -490,6 +491,6 @@ describe('parsePlugins()', () => {
         }),
       ])
     );
-    expect(ParsedPluginsResultSchema.safeParse(result).success).toBe(true);
+    expect(v.safeParse(ParsedPluginsResultSchema, result).success).toBe(true);
   });
 });

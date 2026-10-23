@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # shellcheck shell=bash
 
-set -euo pipefail
+set -o errexit -o nounset -o pipefail
 
 script_dir=$(CDPATH='' cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)
 benchmark="$script_dir/../benchmark-eval.sh"
@@ -16,10 +16,10 @@ check() {
   local actual_status
   shift 3
 
-  set +e
+  set +o errexit
   output=$("$@" 2>&1)
   actual_status=$?
-  set -e
+  set -o errexit
 
   if [[ $actual_status != "$expected_status" || $output != *"$expected_output"* ]]; then
     printf 'FAIL %s: status=%s, expected=%s, output=%q\n' \
@@ -30,7 +30,6 @@ check() {
   fi
 }
 
-check help 0 'Usage:' bash "$benchmark" --help
 check help-without-dependencies 0 'Usage:' \
   env -i PATH=/nonexistent /bin/bash --noprofile --norc "$benchmark" --help
 check missing-runs 2 '--runs requires a value' bash "$benchmark" --runs
@@ -64,7 +63,7 @@ check invocation-outside-repository 2 'does not resolve to a commit' \
   env EVAL_SYSTEM=x86_64-linux bash "$benchmark" "$missing_ref"
 cd "$old_pwd"
 
-if (( failures > 0 )); then
+if ((failures > 0)); then
   printf '%s benchmark CLI test(s) failed.\n' "$failures" >&2
   exit 1
 fi

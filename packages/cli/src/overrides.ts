@@ -1,7 +1,6 @@
-import { CLI_CONFIG } from '@nixcord/shared';
 import { deepmergeCustom } from 'deepmerge-ts';
 import fse from 'fs-extra';
-import { resolve } from 'pathe';
+import type { CategorySchemas } from './runner/outputs.js';
 
 type JsonObject = Record<string, unknown>;
 
@@ -33,8 +32,8 @@ const selectApplicableCommonPluginOverride = (
 
 export const applyPluginOverrides = async (
   overridesPath: string,
-  pluginsDir: string
-): Promise<void> => {
+  schemas: CategorySchemas
+): Promise<CategorySchemas> => {
   const overrides = (await fse.readJson(overridesPath)) as unknown;
   if (!isPlainObject(overrides)) {
     throw new TypeError(`Plugin overrides must be a JSON object: ${overridesPath}`);
@@ -45,24 +44,15 @@ export const applyPluginOverrides = async (
     throw new TypeError('Plugin overrides category must be a JSON object: all');
   }
 
-  const files = {
-    shared: CLI_CONFIG.filenames.shared,
-    vencord: CLI_CONFIG.filenames.vencord,
-    equicord: CLI_CONFIG.filenames.equicord,
-  } as const;
-
-  for (const [category, filename] of Object.entries(files)) {
+  const result = { ...schemas };
+  for (const category of ['shared', 'vencord', 'equicord'] as const) {
     const override = overrides[category];
     if (override === undefined && commonOverride === undefined) continue;
     if (override !== undefined && !isPlainObject(override)) {
       throw new TypeError(`Plugin overrides category must be a JSON object: ${category}`);
     }
 
-    const targetPath = resolve(pluginsDir, filename);
-    const generated = (await fse.readJson(targetPath)) as unknown;
-    if (!isPlainObject(generated)) {
-      throw new TypeError(`Generated plugin metadata must be a JSON object: ${targetPath}`);
-    }
+    const generated = schemas[category];
 
     const applicableCommonOverride: JsonObject = Object.create(null) as JsonObject;
     if (isPlainObject(commonOverride)) {
@@ -82,6 +72,7 @@ export const applyPluginOverrides = async (
     const withCommonOverride = merge(generated, applicableCommonOverride);
     const merged =
       override === undefined ? withCommonOverride : merge(withCommonOverride, override);
-    await fse.writeFile(targetPath, `${JSON.stringify(merged, null, 2)}\n`);
+    result[category] = merged as CategorySchemas[typeof category];
   }
+  return result;
 };

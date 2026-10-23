@@ -2,6 +2,7 @@
   lib,
   stdenvNoCC,
   writeShellApplication,
+  coreutils,
   jq,
   version,
   configDirName,
@@ -9,7 +10,10 @@
 }:
 writeShellApplication {
   name = "discord-stage-modules";
-  runtimeInputs = [ jq ];
+  runtimeInputs = [
+    coreutils
+    jq
+  ];
   # CI checks the source scripts; keep ShellCheck and its GHC dependency graph
   # out of Darwin package evaluation
   checkPhase = ''

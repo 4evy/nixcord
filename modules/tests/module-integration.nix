@@ -113,13 +113,13 @@ assert
   !(lib.strings.hasInfix "vesktop-settings" (builtins.unsafeDiscardStringContext disabledScript));
 assert lib.strings.hasInfix "vesktop-settings" (builtins.unsafeDiscardStringContext enabledScript);
 pkgs.runCommand "module-integration" { nativeBuildInputs = [ pkgs.jq ]; } ''
-  jq -e '.integration == "client"' \
+  jq --exit-status '.integration == "client"' \
     '${hmEnabled.activationPackage}/home-files/${clientDir}/settings.json'
-  jq -e '.plugins.AlwaysAnimate.enabled == true' \
+  jq --exit-status '.plugins.AlwaysAnimate.enabled == true' \
     '${hmEnabled.activationPackage}/home-files/${clientDir}/settings/settings.json'
-  diff -u <(printf '%s' 'body { color: purple; }') \
+  diff --unified <(printf '%s' 'body { color: purple; }') \
     '${hmEnabled.activationPackage}/home-files/${clientDir}/settings/quickCss.css'
   # Inspect the assembled script without activating a system during the build.
-  grep -F 'vesktop-settings' ${pkgs.writeText "system-activation" enabledScript}
+  grep --fixed-strings 'vesktop-settings' ${pkgs.writeText "system-activation" enabledScript}
   touch "$out"
 ''

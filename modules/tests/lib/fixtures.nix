@@ -1,9 +1,10 @@
 { lib }:
 
 let
-  sharedNames = builtins.attrNames (lib.trivial.importJSON ../../plugins/shared.json);
-  vencordNames = builtins.attrNames (lib.trivial.importJSON ../../plugins/vencord.json);
-  equicordNames = builtins.attrNames (lib.trivial.importJSON ../../plugins/equicord.json);
+  paths = import ../../plugins/schema/schema.nix;
+  sharedNames = builtins.attrNames paths.shared;
+  vencordNames = builtins.attrNames paths.vencord;
+  equicordNames = builtins.attrNames paths.equicord;
 
   sharedSet = lib.attrsets.genAttrs sharedNames (_: null);
   vencordSet = lib.attrsets.genAttrs vencordNames (_: null);

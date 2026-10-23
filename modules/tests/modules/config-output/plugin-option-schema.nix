@@ -2,52 +2,39 @@
 
 let
   inherit (testLib) lib;
-  schema = {
-    Demo = {
-      description = "Plugin option schema validation";
-      settings = {
-        emptyEnum = {
-          type = "types.enum";
-          enumValues = [ ];
-        };
-        sentinelAttrs = {
-          type = "types.attrs";
-          default.__nixRaw = "ordinary plugin data";
-        };
-        mergeableAttrs = {
-          type = "types.attrs";
-        };
-      };
-    };
-  };
   evaluated = lib.modules.evalModules {
     modules = [
       {
-        options.plugins = import ../../../plugins/mkPluginOptions.nix {
-          inherit lib schema;
+        options.plugins = import ../../../plugins/options/options.nix {
+          inherit lib;
         };
       }
-      { config.plugins.Demo.mergeableAttrs.first = true; }
-      { config.plugins.Demo.mergeableAttrs.second = [ 2 ]; }
+      {
+        config.plugins.channelTabs.tabSet = {
+          __nixRaw = "ordinary plugin data";
+          nested.first = true;
+        };
+      }
+      { config.plugins.channelTabs.tabSet.nested.second = [ 2 ]; }
     ];
   };
 in
 {
-  "empty enum domains construct a valid option type" =
-    assert evaluated.options.plugins.Demo.emptyEnum.type.name == "enum";
+  "generated enum options preserve choices and defaults" =
+    assert evaluated.options.plugins.channelTabs.onStartup.type.name == "enum";
+    assert evaluated.options.plugins.channelTabs.onStartup.type.check "remember";
+    assert !evaluated.options.plugins.channelTabs.onStartup.type.check "invalid";
+    assert evaluated.config.plugins.channelTabs.onStartup == "nothing";
     true;
 
-  "raw-number sentinel keys remain ordinary attribute defaults" =
-    assert
-      evaluated.config.plugins.Demo.sentinelAttrs == {
-        __nixRaw = "ordinary plugin data";
-      };
+  "raw-number sentinel keys remain ordinary attribute data" =
+    assert evaluated.config.plugins.channelTabs.tabSet.__nixRaw == "ordinary plugin data";
     true;
 
   "attribute settings use recursively mergeable JSON types" =
-    assert evaluated.options.plugins.Demo.mergeableAttrs.type.name == "attrsOf";
+    assert evaluated.options.plugins.channelTabs.tabSet.type.name == "attrsOf";
     assert
-      evaluated.config.plugins.Demo.mergeableAttrs == {
+      evaluated.config.plugins.channelTabs.tabSet.nested == {
         first = true;
         second = [ 2 ];
       };

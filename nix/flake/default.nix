@@ -24,6 +24,7 @@ let
       };
       devShells = {
         default = import ../dev-shell.nix { inherit pkgs; };
+        rust = import ../rust-shell.nix { inherit pkgs; };
         ci = import ../ci-shell.nix {
           pkgs = import inputs.nixpkgs-ci { inherit system; };
         };

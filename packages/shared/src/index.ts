@@ -1,6 +1,5 @@
+// Compatibility facade for existing callers; new code imports domain contracts directly
+
+export * from '@nixcord/domain';
 export * from './config.js';
-export * from './guards.js';
 export * from './logger.js';
-export * from './nix.js';
-export * from './types.js';
-export * from './validation.js';

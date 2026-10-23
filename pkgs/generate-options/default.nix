@@ -1,19 +1,20 @@
 {
-  buildNpmPackage,
   lib,
+  bun,
   callPackage,
   git,
-  writableTmpDirAsHomeHook,
   nix,
+  nixfmt,
+  nix-update-script,
   vencordSource ? "node_modules/vencord",
   equicordSource ? "node_modules/equicord",
   skipGitMigrations ? true,
 }:
 let
-  nodejs = callPackage ../../nix/nodejs.nix { };
+  buildBunPackage = callPackage ../bun/build-package.nix { };
   sources = import ./sources.nix { inherit lib; };
 in
-buildNpmPackage {
+buildBunPackage {
   pname = "plugin-options";
   version = "generated";
 
@@ -22,34 +23,42 @@ buildNpmPackage {
 
   src = sources.project;
 
-  inherit nodejs;
-  npmDeps = callPackage ./node-modules.nix { };
-  npmDepsFetcherVersion = 2;
-  npmInstallFlags = [ "--ignore-scripts" ];
+  bunDeps = callPackage ./node-modules.nix { };
 
-  nativeBuildInputs = [
-    nodejs
-    writableTmpDirAsHomeHook
-  ]
-  ++ lib.lists.optional (!skipGitMigrations) git;
+  passthru.updateScript = nix-update-script {
+    attrPath = "generate";
+    extraArgs = [
+      "--flake"
+      "--version=skip"
+      "--no-src"
+      "--custom-dep=bunDeps"
+      "--override-filename=pkgs/generate-options/node-modules.nix"
+    ];
+  };
+
+  nativeBuildInputs = [ nixfmt ] ++ lib.optional (!skipGitMigrations) git;
 
   nativeCheckInputs = [ git ];
 
   nativeInstallCheckInputs = [ nix ];
 
-  npmBuildScript = "build:packages";
+  buildPhase = ''
+    runHook preBuild
+    bun run --bun build:packages
+    runHook postBuild
+  '';
 
   doCheck = true;
 
   checkPhase = ''
     runHook preCheck
-    ./node_modules/.bin/vitest run \
+    bun node_modules/vitest/vitest.mjs run \
       --exclude 'packages/parser/tests/validation/**' \
       --no-isolate \
       --fsModuleCache \
       --maxWorkers=1 \
       --testTimeout=30000
-    ./node_modules/.bin/vitest run \
+    bun node_modules/vitest/vitest.mjs run \
       packages/parser/tests/validation/real-world.test.ts \
       --no-isolate \
       --fsModuleCache \
@@ -61,7 +70,7 @@ buildNpmPackage {
   installPhase = ''
     runHook preInstall
 
-    mkdir -p "$out/plugins"
+    mkdir --parents "$out/plugins"
     cp modules/plugins/deprecated.json "$out/plugins/deprecated.json"
     cp modules/plugins/migrations.nix "$out/plugins/migrations.nix"
 
@@ -70,7 +79,7 @@ buildNpmPackage {
       git config --global --add safe.directory "${equicordSource}"
     ''}
 
-    ${lib.meta.getExe nodejs} packages/cli/dist/index.js \
+    ${lib.meta.getExe bun} packages/cli/dist/index.js \
       --vencord "${vencordSource}" \
       --vencord-plugins src/plugins \
       --equicord "${equicordSource}" \
@@ -79,6 +88,8 @@ buildNpmPackage {
       --overrides modules/plugins/overrides.json \
       ${lib.strings.optionalString skipGitMigrations "--skip-git-migrations"} \
       --verbose
+
+    find "$out/plugins" -type f -name '*.nix' -exec nixfmt {} +
 
     runHook postInstall
   '';
@@ -89,7 +100,7 @@ buildNpmPackage {
     runHook preInstallCheck
 
     export NIX_STATE_DIR="$TMPDIR/nix-state"
-    mkdir -p "$NIX_STATE_DIR"
+    mkdir --parents "$NIX_STATE_DIR"
 
     for nixFile in "$out/plugins"/*.nix; do
       if ! nix-instantiate --parse "$nixFile" > /dev/null 2>&1; then
@@ -99,11 +110,11 @@ buildNpmPackage {
       fi
     done
 
-    for jsonFile in "$out/plugins"/*.json; do
-      ${lib.meta.getExe nodejs} -e \
+    while IFS= read -r -d "" jsonFile; do
+      ${lib.meta.getExe bun} --eval \
         'JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8"))' \
         "$jsonFile"
-    done
+    done < <(find "$out/plugins" -type f -name '*.json' -print0)
 
     runHook postInstallCheck
   '';

@@ -2,51 +2,46 @@
   lib,
   stdenvNoCC,
   brotli,
+  callPackage,
   python314,
+  replaceVarsWith,
   runCommand,
   darwin ? null,
   withKrisp,
   version,
   configDirName,
   krispSrc,
-  replaceVarsWith,
 }:
 let
   hasKrispSrc = withKrisp && krispSrc != null;
-  krispPlatform = if stdenvNoCC.hostPlatform.isDarwin then "darwin" else "linux";
   krispPython = python314.withPackages (ps: [
     ps.lief
     ps.capstone
   ]);
   deployPython = python314.withPackages (ps: [ ps.watchdog ]);
-
-  patchKrispPy = ./patch/binary.py;
-  patchKrispModulePy = ./patch/module.py;
-  patchVoiceKrispPy = ./patch/voice.py;
-  deployKrispPy = ./deploy.py;
+  javascript = callPackage ../patching/krisp { };
+  patchVoiceKrisp = javascript.voice;
 
   # Bypass Discord's signature check and ad-hoc sign the Darwin module with
   # nixpkgs' signingUtils
   krispModule =
     if hasKrispSrc then
       runCommand "discord-krisp-module"
-        (
-          {
-            nativeBuildInputs = [
-              brotli
-              krispPython
-            ];
-          }
-          // lib.attrsets.optionalAttrs stdenvNoCC.hostPlatform.isDarwin {
-            DARWIN_SIGNING_UTILS = darwin.signingUtils;
-          }
-        )
+        {
+          nativeBuildInputs = [
+            brotli
+            javascript.index
+          ];
+        }
         ''
-          bash ${./build.sh} \
-            ${krispSrc} \
-            ${patchKrispPy} \
-            ${patchKrispModulePy} \
-            ${krispPlatform}
+          mkdir --parents "$out"
+          brotli --decompress < ${krispSrc} | tar --extract --file=- --strip-components=1 --directory "$out"
+          ${krispPython.interpreter} ${./patch/binary.py} "$out/discord_krisp.node"
+          patch-krisp-index "$out/index.js"
+          ${lib.strings.optionalString stdenvNoCC.hostPlatform.isDarwin ''
+            source ${darwin.signingUtils}
+            sign "$out/discord_krisp.node"
+          ''}
         ''
     else
       null;
@@ -55,7 +50,7 @@ let
   deployKrisp =
     if hasKrispSrc then
       replaceVarsWith {
-        src = deployKrispPy;
+        src = ./deploy.py;
         name = "deploy-krisp.py";
         dir = "bin";
         isExecutable = true;
@@ -74,5 +69,5 @@ let
       null;
 in
 {
-  inherit patchVoiceKrispPy krispModule deployKrisp;
+  inherit patchVoiceKrisp krispModule deployKrisp;
 }

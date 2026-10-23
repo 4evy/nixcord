@@ -8,7 +8,7 @@ let
 in
 assert source.type == "tarball";
 {
-  nixpkgs = builtins.fetchTarball {
+  nixpkgs = fetchTarball {
     url = source.url;
     sha256 = source.narHash;
   };

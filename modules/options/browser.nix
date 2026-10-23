@@ -8,7 +8,13 @@
 let
   cfg = config.programs.nixcord;
   inherit (import ../lib { inherit lib; }) mkPluginKit;
-  inherit (pkgs.callPackage ../lib/core.nix { inherit (cfg) parseRules; }) mkVencordCfg;
+  inherit
+    (import ../lib/normalization/normalization.nix {
+      inherit lib;
+      inherit (cfg) parseRules;
+    })
+    mkVencordCfg
+    ;
   pluginKit = mkPluginKit { inherit cfg mkVencordCfg; };
   # Preserve browser settings that were not explicitly declared in Nix.
   declaredConfig =

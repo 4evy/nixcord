@@ -5,7 +5,6 @@
 }:
 let
   inherit (builtins)
-    baseNameOf
     isPath
     readFile
     ;
@@ -48,34 +47,44 @@ let
     entries: predicate: fallback:
     (lib.lists.findFirst predicate { line = fallback; } entries).line;
 
-  pluginLine =
-    source: pluginName: findLine source.lines (entry: entry.text == "  \"${pluginName}\": {") 1;
-
   pluginSettingLine =
-    source: pluginName: settingName:
-    let
-      start = pluginLine source pluginName;
-    in
-    findLine source.lines (
-      entry: entry.line >= start && entry.text == "      \"${settingName}\": {"
-    ) start;
-
-  pluginSources =
-    map
-      (path: {
-        inherit path;
-        subpath = "modules/plugins/${baseNameOf (toString path)}";
-        plugins = lib.attrsets.attrNames (lib.trivial.importJSON path);
-        lines = linesWithNumbers path;
+    source: pluginName: settingPath:
+    (lib.lists.foldl'
+      (position: settingName: {
+        indent = position.indent + "  ";
+        line = findLine source.lines (
+          entry:
+          entry.line >= position.line
+          && lib.strings.hasPrefix "${position.indent}\"${settingName}\" = " entry.text
+        ) position.line;
       })
-      [
-        ../modules/plugins/shared.json
-        ../modules/plugins/vencord.json
-        ../modules/plugins/equicord.json
-      ];
+      {
+        indent = "    ";
+        line = findLine source.lines (entry: entry.text == "  \"${pluginName}\" = {") 1;
+      }
+      settingPath
+    ).line;
 
-  pluginSourceByName = lib.attrsets.mergeAttrsList (
-    map (source: lib.attrsets.genAttrs source.plugins (_: source)) pluginSources
+  pluginPaths = import ../modules/plugins/schema/schema.nix;
+  pluginSource = {
+    subpath = "modules/plugins/options/options.nix";
+    lines = linesWithNumbers ../modules/plugins/options/options.nix;
+  };
+
+  pluginSourcesByName = lib.attrsets.zipAttrsWith (_: sources: sources) (
+    map
+      (
+        category:
+        lib.attrsets.mapAttrs (_: plugin: {
+          inherit category;
+          inherit (plugin) settings;
+        }) pluginPaths.${category}
+      )
+      [
+        "shared"
+        "vencord"
+        "equicord"
+      ]
   );
 
   isNixcordOption = opt: listHasPrefix [ "programs" "nixcord" ] opt.loc;
@@ -94,17 +103,32 @@ let
     opt:
     let
       pluginName = lib.lists.elemAt opt.loc 4;
-      source = pluginSourceByName.${pluginName} or null;
-      sourceSubpath = if source == null then "modules/plugins" else source.subpath;
+      settingPath = lib.lists.drop 5 opt.loc;
+      sourceSettingPath =
+        if settingPath != [ ] && lib.lists.last settingPath == "enable" then
+          lib.lists.init settingPath
+        else
+          settingPath;
+      schemaPath = lib.lists.concatMap (name: [
+        "settings"
+        name
+      ]) sourceSettingPath;
+      source = lib.lists.findFirst (candidate: lib.attrsets.hasAttrByPath schemaPath candidate) null (
+        lib.lists.reverseList (pluginSourcesByName.${pluginName} or [ ])
+      );
+      sourceSubpath = pluginSource.subpath;
       line =
         if source == null then
           1
         else if lib.lists.length opt.loc >= 6 then
-          pluginSettingLine source pluginName (lib.lists.elemAt opt.loc 5)
+          pluginSettingLine pluginSource pluginName sourceSettingPath
         else
-          pluginLine source pluginName;
+          findLine pluginSource.lines (entry: entry.text == "  \"${pluginName}\" = {") 1;
     in
-    mkGitHubDeclaration sourceSubpath line;
+    mkGitHubDeclaration sourceSubpath line
+    // lib.attrsets.optionalAttrs (source != null) {
+      name = "${source.category} plugin option";
+    };
 
   transformOption =
     opt:

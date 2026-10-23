@@ -49,7 +49,7 @@
             elif [ -e "$dest" ]; then
               run chmod u+w "$dest" 2>/dev/null || true
             fi
-            run ${install} -Dm644 "$src" "$dest"
+            run ${install} -D --mode=644 "$src" "$dest"
           ''
         )
       );

@@ -1,0 +1,14 @@
+name: Import Bun dependencies
+description: Download and import the plugin dependency stores from this run
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+      with:
+        name: bun-deps
+        path: ${{ runner.temp }}/bun-deps
+
+    - name: Import Bun dependency caches
+      shell: bash
+      run: nix-store --import < "$RUNNER_TEMP/bun-deps/bun-deps.nar"

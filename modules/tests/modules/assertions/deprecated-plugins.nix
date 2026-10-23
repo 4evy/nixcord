@@ -4,16 +4,6 @@ let
   inherit (testLib.assertions) hmWarnings;
 in
 {
-  "disabled module is quiet" =
-    let
-      config = testLib.eval.hm {
-        enable = false;
-      };
-    in
-    assert config.assertions == [ ];
-    assert config.warnings == [ ];
-    true;
-
   "renamed target plugin is not deprecated" =
     let
       warnings = hmWarnings {

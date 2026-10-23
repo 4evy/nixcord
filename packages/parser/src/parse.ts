@@ -1,118 +1,20 @@
-import { type AnalysisSession, createAnalysisSession, StaticEvaluator } from '@nixcord/ast';
-import {
-  CLI_CONFIG,
-  type ParseDiagnostic,
-  type ParsedPluginsResult,
-  type PluginConfig,
-  type PluginRename,
-  type SettingRename,
-} from '@nixcord/shared';
+import type { ParsedPluginsResult } from '@nixcord/domain';
+import { createAnalysisSession } from '@nixcord/typescript-analysis';
+import { Effect, Record, Schema } from 'effect';
 import fg from 'fast-glob';
 import fse from 'fs-extra';
-import pLimit from 'p-limit';
-import { basename, dirname, join, normalize, relative, resolve } from 'pathe';
-import * as z from 'zod';
-import type { PluginParseResult } from './context.js';
-import { parseSinglePlugin } from './plugin.js';
-import { SOURCE_PROFILES, type SourceProfile } from './profiles.js';
+import { join, normalize, resolve } from 'pathe';
+import { emptyDirectoryResult, parsePluginsFromDirectory } from './discovery/directory.js';
+import { PluginParseError, parseOperation } from './errors/errors.js';
+import { SOURCE_PROFILES } from './profiles.js';
 
-// Own directory discovery, shared sessions, and deterministic plugin traversal
-const PROGRESS_REPORT_INTERVAL = 25;
-const EXECUTION_CONCURRENCY = 4;
-
-const ParsePluginsOptionsSchema = z.object({
-  vencordPluginsDir: z.string().min(1).optional(),
-  equicordPluginsDir: z.string().min(1).optional(),
-  executionMode: z.enum(['disabled', 'fallback']).optional(),
+const ParsePluginsOptionsSchema = Schema.Struct({
+  vencordPluginsDir: Schema.optional(Schema.NonEmptyString),
+  equicordPluginsDir: Schema.optional(Schema.NonEmptyString),
+  executionMode: Schema.optional(Schema.Literals(['disabled', 'fallback'])),
 });
 
-export interface ParsePluginsOptions {
-  readonly vencordPluginsDir?: string;
-  readonly equicordPluginsDir?: string;
-  readonly executionMode?: 'disabled' | 'fallback';
-}
-
-interface DirectoryParseResult {
-  readonly plugins: Readonly<Record<string, PluginConfig>>;
-  readonly settingRenames: SettingRename[];
-  readonly pluginRenames: PluginRename[];
-  readonly diagnostics: ParseDiagnostic[];
-}
-
-const emptyDirectoryResult = (): DirectoryParseResult => ({
-  plugins: {} as Readonly<Record<string, PluginConfig>>,
-  settingRenames: [],
-  pluginRenames: [],
-  diagnostics: [],
-});
-
-async function parsePluginsFromDirectory(
-  pluginsPath: string,
-  profile: SourceProfile,
-  session: AnalysisSession,
-  executionMode: 'disabled' | 'fallback'
-): Promise<DirectoryParseResult> {
-  const entryFiles = await fg([...profile.entryGlobs], {
-    cwd: pluginsPath,
-    absolute: true,
-    onlyFiles: true,
-  });
-  const entries = entryFiles
-    .map((file) => {
-      const relativeEntry = normalize(relative(pluginsPath, file));
-      const isDirectoryEntry = /^index\.(?:ts|tsx)$/.test(basename(relativeEntry));
-      return {
-        file: normalize(file),
-        pluginDir: isDirectoryEntry ? dirname(relativeEntry) : relativeEntry,
-        sourceRoot: normalize(dirname(file)),
-        isDirectoryEntry,
-      };
-    })
-    .filter((entry) => entry.pluginDir !== '.')
-    .sort((left, right) => left.pluginDir.localeCompare(right.pluginDir));
-  if (!process.stdout.isTTY)
-    console.log(`Found ${entries.length} plugin entries in ${basename(pluginsPath)}`);
-
-  const executionLimit = pLimit(EXECUTION_CONCURRENCY);
-  const evaluator = new StaticEvaluator(session.checker, {
-    constants: Object.fromEntries(
-      Object.entries(profile.enumMemberFallbacks).flatMap(([enumName, members]) =>
-        Object.entries(members).map(([memberName, value]) => [`${enumName}.${memberName}`, value])
-      )
-    ),
-  });
-  const results: PluginParseResult[] = [];
-  for (let index = 0; index < entries.length; index++) {
-    const { file, pluginDir, sourceRoot, isDirectoryEntry } = entries[index];
-    const entry = session.getSourceFile(file);
-    if (!entry) continue;
-    const pluginFiles = isDirectoryEntry
-      ? session.sourceFiles.filter((sourceFile) =>
-          sourceFile.getFilePath().startsWith(`${sourceRoot}/`)
-        )
-      : [entry];
-    results.push(
-      await parseSinglePlugin(pluginDir, sourceRoot, entry, pluginFiles, {
-        profile,
-        session,
-        evaluator,
-        executionMode,
-        executionLimit,
-      })
-    );
-    if (!process.stdout.isTTY && (index + 1) % PROGRESS_REPORT_INTERVAL === 0)
-      console.log(`Processed ${index + 1}/${entries.length} plugins...`);
-  }
-
-  return {
-    plugins: Object.fromEntries(
-      results.flatMap((result) => (result.entry ? [result.entry] : []))
-    ) as Readonly<Record<string, PluginConfig>>,
-    settingRenames: results.flatMap((result) => result.settingRenames),
-    pluginRenames: results.flatMap((result) => result.pluginRenames),
-    diagnostics: results.flatMap((result) => result.diagnostics),
-  };
-}
+export type ParsePluginsOptions = typeof ParsePluginsOptionsSchema.Type;
 
 const sourceFilesForAnalysis = async (
   sourcePath: string,
@@ -128,53 +30,92 @@ const sourceFilesForAnalysis = async (
   );
 };
 
-export async function parsePlugins(
+export function parsePluginsEffect(
+  sourcePath: string,
+  options: ParsePluginsOptions = {}
+): Effect.Effect<ParsedPluginsResult, PluginParseError> {
+  return Effect.scoped(
+    Effect.gen(function* () {
+      const resolvedSourcePath = resolve(sourcePath);
+      const validated = yield* Schema.decodeUnknownEffect(ParsePluginsOptionsSchema)(options).pipe(
+        Effect.mapError(
+          (cause) =>
+            new PluginParseError({
+              stage: 'options',
+              sourcePath: resolvedSourcePath,
+              message: cause.message,
+              cause,
+            })
+        )
+      );
+      const overrides = {
+        vencord: validated.vencordPluginsDir,
+        equicord: validated.equicordPluginsDir,
+      };
+      const sources = yield* Effect.all(
+        Record.map(SOURCE_PROFILES, (profile, kind) => {
+          const directory = overrides[kind] ?? profile.pluginsDirectory;
+          const path = normalize(join(resolvedSourcePath, directory));
+          return parseOperation('discovery', path, () => fse.pathExists(path)).pipe(
+            Effect.map((exists) => ({ profile, directory, path, exists }))
+          );
+        }),
+        { concurrency: 2 }
+      );
+      const available = Object.values(sources).filter((source) => source.exists);
+      if (available.length === 0) {
+        return yield* Effect.fail(
+          new PluginParseError({
+            stage: 'discovery',
+            sourcePath: resolvedSourcePath,
+            message: `No plugins directories found. Expected one of:\n${Object.values(sources)
+              .map(({ path }) => `  - ${path}`)
+              .join('\n')}`,
+            cause: undefined,
+          })
+        );
+      }
+
+      const filePaths = yield* parseOperation('discovery', resolvedSourcePath, () =>
+        sourceFilesForAnalysis(
+          resolvedSourcePath,
+          available.map(({ directory }) => directory)
+        )
+      );
+      const session = yield* Effect.acquireDisposable(
+        parseOperation('session', resolvedSourcePath, () =>
+          createAnalysisSession({
+            rootPath: resolvedSourcePath,
+            filePaths,
+            tsConfigPath: normalize(join(resolvedSourcePath, 'tsconfig.json')),
+          })
+        )
+      );
+      const executionMode = validated.executionMode ?? 'fallback';
+      const results = yield* Effect.all(
+        Record.map(sources, ({ exists, path, profile }) =>
+          exists
+            ? parsePluginsFromDirectory(path, profile, session, executionMode)
+            : Effect.succeed(emptyDirectoryResult())
+        ),
+        { concurrency: 1 }
+      );
+      const parsed = Object.values(results);
+
+      return {
+        vencordPlugins: results.vencord.plugins,
+        equicordPlugins: results.equicord.plugins,
+        settingRenames: parsed.flatMap((result) => result.settingRenames),
+        pluginRenames: parsed.flatMap((result) => result.pluginRenames),
+        diagnostics: parsed.flatMap((result) => result.diagnostics),
+      };
+    })
+  );
+}
+
+export function parsePlugins(
   sourcePath: string,
   options: ParsePluginsOptions = {}
 ): Promise<ParsedPluginsResult> {
-  sourcePath = resolve(sourcePath);
-  const validated = ParsePluginsOptionsSchema.parse(options);
-  const vencordPluginsDir = validated.vencordPluginsDir ?? CLI_CONFIG.directories.vencordPlugins;
-  const equicordPluginsDir = validated.equicordPluginsDir ?? CLI_CONFIG.directories.equicordPlugins;
-  const pluginsPath = normalize(join(sourcePath, vencordPluginsDir));
-  const equicordPluginsPath = normalize(join(sourcePath, equicordPluginsDir));
-  const [hasVencord, hasEquicord] = await Promise.all([
-    fse.pathExists(pluginsPath),
-    fse.pathExists(equicordPluginsPath),
-  ]);
-  if (!hasVencord && !hasEquicord) {
-    throw new Error(
-      `No plugins directories found. Expected one of:\n  - ${pluginsPath}\n  - ${equicordPluginsPath}`
-    );
-  }
-
-  const filePaths = await sourceFilesForAnalysis(
-    sourcePath,
-    [hasVencord ? vencordPluginsDir : '', hasEquicord ? equicordPluginsDir : ''].filter(Boolean)
-  );
-  const session = await createAnalysisSession({
-    rootPath: sourcePath,
-    filePaths,
-    tsConfigPath: normalize(join(sourcePath, 'tsconfig.json')),
-  });
-  const executionMode = validated.executionMode ?? 'fallback';
-  const vencordResult = hasVencord
-    ? await parsePluginsFromDirectory(pluginsPath, SOURCE_PROFILES.vencord, session, executionMode)
-    : emptyDirectoryResult();
-  const equicordResult = hasEquicord
-    ? await parsePluginsFromDirectory(
-        equicordPluginsPath,
-        SOURCE_PROFILES.equicord,
-        session,
-        executionMode
-      )
-    : emptyDirectoryResult();
-
-  return {
-    vencordPlugins: vencordResult.plugins,
-    equicordPlugins: equicordResult.plugins,
-    settingRenames: [...vencordResult.settingRenames, ...equicordResult.settingRenames],
-    pluginRenames: [...vencordResult.pluginRenames, ...equicordResult.pluginRenames],
-    diagnostics: [...vencordResult.diagnostics, ...equicordResult.diagnostics],
-  };
+  return Effect.runPromise(parsePluginsEffect(sourcePath, options));
 }

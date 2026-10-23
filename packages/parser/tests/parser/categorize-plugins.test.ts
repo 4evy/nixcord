@@ -11,37 +11,6 @@ const VENCORD_FIXTURE = join(FIXTURES_ROOT, 'vencord');
 const EQUICORD_FIXTURE = join(FIXTURES_ROOT, 'equicord');
 
 describe('categorizePlugins()', () => {
-  test('categorizes generic (shared) plugins', () => {
-    const vencordResult: ParsedPluginsResult = {
-      vencordPlugins: {
-        'Shared Plugin': {
-          name: 'Shared Plugin',
-          settings: {},
-        },
-      },
-      equicordPlugins: {},
-    };
-
-    const equicordResult: ParsedPluginsResult = {
-      vencordPlugins: {
-        'Shared Plugin': {
-          name: 'Shared Plugin',
-          settings: {},
-        },
-      },
-      equicordPlugins: {},
-    };
-
-    const result = categorizePlugins(vencordResult, equicordResult);
-    const sharedPlugin = result.generic['Shared Plugin'];
-
-    if (!sharedPlugin) {
-      throw new Error('Expected Shared Plugin to be categorized as generic');
-    }
-    expect(sharedPlugin.name).toBe('Shared Plugin');
-    expect(result.vencordOnly['Shared Plugin']).toBeUndefined();
-  });
-
   test('categorizes vencord-only plugins', () => {
     const vencordResult: ParsedPluginsResult = {
       vencordPlugins: {
@@ -61,27 +30,6 @@ describe('categorizePlugins()', () => {
     const result = categorizePlugins(vencordResult, equicordResult);
     expect(result.vencordOnly['Vencord Only']).toBeDefined();
     expect(result.generic['Vencord Only']).toBeUndefined();
-  });
-
-  test('categorizes equicord-only plugins', () => {
-    const vencordResult: ParsedPluginsResult = {
-      vencordPlugins: {},
-      equicordPlugins: {},
-    };
-
-    const equicordResult: ParsedPluginsResult = {
-      vencordPlugins: {},
-      equicordPlugins: {
-        'Equicord Only': {
-          name: 'Equicord Only',
-          settings: {},
-        },
-      },
-    };
-
-    const result = categorizePlugins(vencordResult, equicordResult);
-    expect(result.equicordOnly['Equicord Only']).toBeDefined();
-    expect(result.generic['Equicord Only']).toBeUndefined();
   });
 
   test('handles missing equicordResult', () => {
@@ -122,40 +70,6 @@ describe('categorizePlugins()', () => {
     expect(result.equicordOnly.EquicordExtra).toBeDefined();
     expect(result.generic.EquicordExtra).toBeUndefined();
     expect(result.vencordOnly.EquicordExtra).toBeUndefined();
-  });
-
-  test('categorizes CharacterCounter as shared when both clients ship it', () => {
-    const characterCounter = {
-      name: 'CharacterCounter',
-      description: 'Adds a character counter to the chat input',
-      settings: {
-        colorEffects: {
-          name: 'colorEffects',
-          type: 'types.bool',
-          default: true,
-        },
-      },
-      directoryName: 'characterCounter',
-    };
-
-    const vencordResult: ParsedPluginsResult = {
-      vencordPlugins: {
-        CharacterCounter: characterCounter,
-      },
-      equicordPlugins: {},
-    };
-
-    const equicordResult: ParsedPluginsResult = {
-      vencordPlugins: {
-        CharacterCounter: characterCounter,
-      },
-      equicordPlugins: {},
-    };
-
-    const result = categorizePlugins(vencordResult, equicordResult);
-    expect(result.generic.CharacterCounter).toBeDefined();
-    expect(result.vencordOnly.CharacterCounter).toBeUndefined();
-    expect(result.equicordOnly.CharacterCounter).toBeUndefined();
   });
 
   test('keeps renamed equicord-only plugin targets when the old Vencord plugin still exists', () => {
@@ -336,6 +250,8 @@ describe('categorizePlugins()', () => {
       throw new Error('Shared Plugin should prefer the Equicord definition');
     }
     expect(shared.name).toBe('Shared Plugin');
+    expect(result.vencordOnly['Shared Plugin']).toBeUndefined();
+    expect(result.equicordOnly['Shared Plugin']).toBeUndefined();
   });
 });
 
@@ -347,8 +263,11 @@ describe('parsePlugins() fixture integration', () => {
     const categorized = categorizePlugins(vencordResult, equicordResult);
     expect(categorized.generic['Shared Plugin']).toBeDefined();
     expect(categorized.generic['Shared Plugin']!.description).toBe('Equicord shared description');
+    expect(categorized.vencordOnly['Shared Plugin']).toBeUndefined();
+    expect(categorized.equicordOnly['Shared Plugin']).toBeUndefined();
 
     expect(categorized.vencordOnly['Vencord Only']).toBeDefined();
     expect(categorized.equicordOnly['Equicord Only']).toBeDefined();
+    expect(categorized.generic['Equicord Only']).toBeUndefined();
   });
 });

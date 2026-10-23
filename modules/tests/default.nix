@@ -10,7 +10,7 @@
   darwin-activation-stage = import ./darwin-activation-stage.nix { inherit pkgs; };
   discord-package-arguments = import ./discord-package-arguments.nix { inherit pkgs; };
   discord-install = import ./discord-install.nix { inherit pkgs; };
-  discord-launcher-c = import ./c/discord-launcher.nix { inherit pkgs; };
+  discord-launcher = import ./discord-launcher.nix { inherit pkgs; };
   goofcord-support = import ./goofcord-support.nix { inherit pkgs; };
   user-plugins = import ./user-plugins.nix { inherit pkgs; };
 }

@@ -5,5 +5,18 @@
     "rootDir": "./src"
   },
   "include": ["src/**/*.ts"],
-  "references": [{ "path": "../shared" }, { "path": "../ast" }, { "path": "../git-analyzer" }]
+  "references": [
+    {
+      "path": "../domain"
+    },
+    {
+      "path": "../typescript-analysis"
+    },
+    {
+      "path": "../setting-analysis"
+    },
+    {
+      "path": "../slice-executor"
+    }
+  ]
 }

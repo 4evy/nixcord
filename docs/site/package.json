@@ -3,33 +3,34 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "prepare-options": "mkdir -p public && nix build ../..#docs-json --out-link .options-json-result && rm -f public/options.json && install -m 0644 .options-json-result/share/doc/nixos/options.json public/options.json && unlink .options-json-result",
-    "predev": "npm run generate-social-preview",
-    "dev": "vite --host 127.0.0.1",
-    "predev:options": "npm run generate-social-preview",
-    "dev:options": "npm run prepare-options && vite --host 127.0.0.1",
-    "generate-logo": "node scripts/generate-nixcord-logo.ts",
-    "prebuild": "npm run generate-social-preview",
-    "build": "vite build",
-    "check": "tsc --noEmit --project tsconfig.json",
-    "preview": "vite preview --host 127.0.0.1",
-    "generate-social-preview": "npm run generate-logo && node scripts/generate-social-preview.ts"
+    "prepare-options": "bun scripts/prepare-options/prepare-options.ts",
+    "predev": "bun run build:dependencies && bun run generate-social-preview",
+    "dev": "bun --bun vite --host 127.0.0.1",
+    "predev:options": "bun run build:dependencies && bun run generate-social-preview",
+    "dev:options": "bun run prepare-options && bun --bun vite --host 127.0.0.1",
+    "generate-logo": "bun scripts/generate-nixcord-logo.ts",
+    "prebuild": "bun run build:dependencies && bun run generate-social-preview",
+    "build": "bun --bun vite build",
+    "check": "bun --bun tsc --noEmit --project tsconfig.json",
+    "preview": "bun --bun vite preview --host 127.0.0.1",
+    "generate-social-preview": "bun run generate-logo && bun scripts/generate-social-preview.ts",
+    "build:dependencies": "bun run --cwd ../.. build:packages"
   },
   "dependencies": {
-    "@lucide/svelte": "^1.52.0",
+    "@lucide/svelte": "^1.59.0",
     "@sveltejs/vite-plugin-svelte": "^7.3.1",
     "@tailwindcss/vite": "^4.3.3",
     "highlight.js": "^11.12.0",
     "mode-watcher": "^1.1.0",
-    "svelte": "^5.57.1",
+    "svelte": "^5.57.2",
     "tailwindcss": "^4.3.3",
-    "vite": "^8.3.2"
+    "vite": "^8.3.4",
+    "@nixcord/nix-generator": "workspace:*"
   },
   "devDependencies": {
     "@resvg/resvg-js": "2.6.2",
-    "@typescript/native": "npm:typescript@7.0.2",
     "fs-fixture": "2.16.0",
     "polyclip-ts": "0.16.8",
-    "typescript": "npm:@typescript/typescript6@6.0.2"
+    "typescript": "7.0.2"
   }
 }

@@ -15,7 +15,7 @@ defaults:
 jobs:
   update-discord:
     name: Update and verify Discord
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 360
     outputs:
       base-sha: ${{ steps.prepare-update.outputs.base-sha }}
@@ -29,11 +29,13 @@ jobs:
           ref: ${{ github.ref_name }}
           persist-credentials: false
 
+      - uses: $/.github/actions/install-nix
+
       - name: Check Discord manifests and update sources
         id: sources
         run: |
-          set -euo pipefail
-          python3 pkgs/discord/sources/update/main.py
+          set -o errexit -o nounset -o pipefail
+          nix run .#update-discord
           python3 - <<'PY'
           import json
           import os
@@ -43,11 +45,14 @@ jobs:
           path = "pkgs/discord/sources/sources.json"
           previous = json.loads(subprocess.check_output(["git", "show", f"HEAD:{path}"]))
           current = json.loads(Path(path).read_text())
-          changed = previous != current
+          tools_changed = subprocess.run([
+              "git", "diff", "--quiet", "HEAD", "--", "pkgs/discord/patching/default.nix"
+          ]).returncode != 0
+          changed = previous != current or tools_changed
           packages = []
           for branch in ("stable", "ptb", "canary", "development"):
               key = f"linux-{branch}"
-              if previous.get(key) != current.get(key):
+              if previous.get(key) != current.get(key) or tools_changed:
                   packages.append(".#discord" if branch == "stable" else f".#discord-{branch}")
           with open(os.environ["GITHUB_OUTPUT"], "a") as output:
               print(f"changed={str(changed).lower()}", file=output)
@@ -58,32 +63,32 @@ jobs:
 
       - name: Validate sources
         run: |
-          set -euo pipefail
-          jq -e '
+          set -o errexit -o nounset -o pipefail
+          jq --exit-status '
+            def validHash:
+              type == "string"
+              and test("^sha256(-[A-Za-z0-9+/]{43}=|:[0-9a-fA-F]{64})$");
             def validSource:
               .kind == "distro"
               and (.version | type == "string" and length > 0)
               and (.distro.url | type == "string" and startswith("https://"))
-              and (.distro.hash | type == "string" and startswith("sha256-"))
+              and (.distro.hash | validHash)
               and (.modules | type == "object" and length > 0)
               and all(.modules[];
                 (.version | type == "number")
                 and (.url | type == "string" and startswith("https://"))
-                and (.hash | type == "string" and startswith("sha256-"))
+                and (.hash | validHash)
               );
             ([keys[] | select(test("^(linux|osx)-(stable|ptb|canary|development)$"))] | length) == 8
             and all(.[]; validSource)
           ' pkgs/discord/sources/sources.json
-
-      - uses: $/.github/actions/install-nix
-        if: steps.sources.outputs.packages != ''
 
       - name: Build changed Discord channels
         if: steps.sources.outputs.packages != ''
         env:
           DISCORD_PACKAGES: ${{ steps.sources.outputs.packages }}
         run: |
-          set -euo pipefail
+          set -o errexit -o nounset -o pipefail
           read -r -a packages <<< "$DISCORD_PACKAGES"
           nix build --no-link --print-build-logs "${packages[@]}"
 
@@ -91,11 +96,13 @@ jobs:
         id: prepare-update
         if: steps.sources.outputs.changed == 'true'
         run: |
-          mkdir -p source-update
-          git diff --binary --full-index -- pkgs/discord/sources/sources.json > source-update/changes.patch
+          mkdir --parents source-update
+          git diff --binary --full-index -- \
+            pkgs/discord/sources/sources.json \
+            pkgs/discord/patching/default.nix > source-update/changes.patch
           echo "base-sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: steps.sources.outputs.changed == 'true'
         with:
           name: discord-source-update

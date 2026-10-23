@@ -40,6 +40,7 @@
   cairo,
   dbus,
   expat,
+  ffmpeg_7-headless,
   fontconfig,
   freetype,
   gdk-pixbuf,
@@ -122,7 +123,10 @@ in
     pciutils
     curl
   ]
-  ++ lib.optionals withTTS [ speechd-minimal ];
+  ++ lib.optionals withTTS [ speechd-minimal ]
+  # NDI dlopens the FFmpeg 7 ABI for compressed audio and video decoding
+  # Its bundled libraries do not include libavcodec.so.61 or libavutil.so.59
+  ++ lib.optionals (moduleSrcs ? discord_ndi) [ ffmpeg_7-headless.lib ];
 
   # Keep NSS out of LD_LIBRARY_PATH so xdg-open cannot leak an incompatible
   # version into Firefox children; autoPatchelf finds it through buildInputs
@@ -152,23 +156,23 @@ in
   installPhase = ''
     runHook preInstall
 
-    mkdir -p "$out/bin" "$out/${layout.appDir}" "$out/share/icons/hicolor/256x256/apps"
+    mkdir --parents "$out/bin" "$out/${layout.appDir}" "$out/share/icons/hicolor/256x256/apps"
 
-    brotli -d < $src | tar xf - --strip-components=1 -C "$out/${layout.appDir}"
+    brotli --decompress < $src | tar --extract --file=- --strip-components=1 --directory "$out/${layout.appDir}"
     chmod +x "$out/${layout.executable}"
 
     ${lib.strings.concatMapAttrsStringSep "\n" (name: src: ''
-      mkdir -p "$out/${layout.modulesDir}/${name}"
-      brotli -d < ${src} | tar xf - --strip-components=1 -C "$out/${layout.modulesDir}/${name}"
+      mkdir --parents "$out/${layout.modulesDir}/${name}"
+      brotli --decompress < ${src} | tar --extract --file=- --strip-components=1 --directory "$out/${layout.modulesDir}/${name}"
     '') moduleSrcs}
 
-    mkdir -p "$out/${layout.modulesDir}/discord_krisp/KMS/logs"
+    mkdir --parents "$out/${layout.modulesDir}/discord_krisp/KMS/logs"
 
-    ln -s "$out/${layout.executable}" $out/bin/
+    ln --symbolic "$out/${layout.executable}" $out/bin/
     # Preserve support for case-insensitive build filesystems
-    ln -s "$out/${layout.executable}" $out/bin/${lib.strings.toLower binaryName} || true
-    ln -s "$out/${layout.appDir}/discord.png" $out/share/icons/hicolor/256x256/apps/${finalAttrs.pname}.png
-    ln -s "$desktopItem/share/applications" $out/share/
+    ln --symbolic "$out/${layout.executable}" $out/bin/${lib.strings.toLower binaryName} || true
+    ln --symbolic "$out/${layout.appDir}/discord.png" $out/share/icons/hicolor/256x256/apps/${finalAttrs.pname}.png
+    ln --symbolic "$desktopItem/share/applications" $out/share/
 
     runHook postInstall
   '';

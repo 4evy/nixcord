@@ -1,5 +1,5 @@
-import type { DeprecatedData, PluginConfig } from '@nixcord/shared';
-import { sortedEntries } from '@nixcord/shared';
+import type { DeprecatedData, PluginConfig } from '@nixcord/domain';
+import { sortedEntries } from '@nixcord/domain';
 import { toLegacyNixIdentifier, toNixIdentifier } from './identifier.js';
 
 export interface MigrationRenameJson {
@@ -39,7 +39,7 @@ function normalizePathParts(
   return path.split('.').map(normalizer);
 }
 
-/** Collect leaf setting paths, including each config's "enable" option. */
+/** Collect leaf setting paths, including each config's "enable" option */
 function collectSettingNames(
   config: Readonly<PluginConfig>,
   normalizer: (name: string) => string = toNixIdentifier
@@ -104,7 +104,7 @@ function mkRenameEntry(
   const newId = toNixIdentifier(newPlugin);
 
   // Plugin options commonly have defaults. Warning aliases can therefore fire
-  // during evaluation even when users never referenced the obsolete option.
+  // during evaluation even when users never referenced the obsolete option
   return {
     from: [oldId, ...normalizePathParts(fromSettingPath, fromSettingNormalizer)],
     to: [newId, ...normalizePathParts(toSettingPath, toSettingNormalizer)],
@@ -171,7 +171,7 @@ export function generateMigrationsData(
   const activeNixNames = new Set(Object.keys(allPlugins).map((k) => toNixIdentifier(k)));
 
   // Merge settings when source names such as "platformIndicators" and
-  // "PlatformIndicators" normalize to the same Nix identifier.
+  // "PlatformIndicators" normalize to the same Nix identifier
   const settingRenamesByNixName = new Map<string, Record<string, string>>();
   for (const [pluginName, settings] of sortedEntries(deprecated.settingRenames ?? {})) {
     const nixName = toNixIdentifier(pluginName);
@@ -191,7 +191,7 @@ export function generateMigrationsData(
 
   // Keep plugin renames whose target still exists. Renames whose old name is
   // active in another client cannot alias `enable`, but can still expose any
-  // non-conflicting target settings for old client-specific configurations.
+  // non-conflicting target settings for old client-specific configurations
   const renameEntries = [
     ...new Map(
       sortedEntries(deprecated.renames)
@@ -206,7 +206,7 @@ export function generateMigrationsData(
     ).values(),
   ];
 
-  // Pre-compute removals while skipping plugin names that came back upstream.
+  // Pre-compute removals while skipping plugin names that came back upstream
   const removalEntries = sortedEntries(deprecated.removals).filter(
     ([pluginName]) => !activeNixNames.has(toNixIdentifier(pluginName))
   );
@@ -232,7 +232,7 @@ export function generateMigrationsData(
     const targetPlugin = pluginsByNixName.get(newNixName);
 
     if (!targetPlugin) {
-      // Without a target schema, only the enable option can be forwarded.
+      // Without a target schema, only the enable option can be forwarded
       if (!oldNameIsActive) {
         migrations.renames.push(mkRenameEntry(oldName, newName, 'enable'));
       }
@@ -260,7 +260,7 @@ export function generateMigrationsData(
     }
   }
   // Check conflicts against both clients' settings. A shared plugin name can
-  // have different settings in Vencord and Equicord.
+  // have different settings in Vencord and Equicord
   const allSettingsByNixName = new Map<string, Set<string>>();
   migrations.identifierRenames = generateIdentifierRenames(sources);
   for (const source of sources) {
@@ -291,7 +291,7 @@ export function generateMigrationsData(
 
   for (const [nixName, settings] of settingRenameEntries) {
     // Filter out renames where the old setting name still exists on the active plugin,
-    // as mkRenamedOptionModule would conflict with the existing option declaration.
+    // as mkRenamedOptionModule would conflict with the existing option declaration
     const activeSettingNames = allSettingsByNixName.get(nixName) ?? new Set<string>();
 
     const normalizedRenames = Object.entries(settings)

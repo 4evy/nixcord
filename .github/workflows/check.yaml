@@ -20,7 +20,7 @@ defaults:
 jobs:
   workflow-quality:
     name: Workflow and shell checks
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 360
     permissions:
       contents: read
@@ -36,7 +36,7 @@ jobs:
 
   javascript:
     name: JavaScript and documentation
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 360
     permissions:
       contents: read
@@ -45,17 +45,17 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: $/.github/actions/setup-node
+      - uses: $/.github/actions/setup-bun
 
       - name: Check TypeScript, docs, dead code, duplication, and formatting
-        run: npm run check
+        run: bun run check
 
       - name: Run JavaScript and TypeScript tests
-        run: npm run test
+        run: bun run test
 
   nix-quality:
     name: Nix formatting and evaluation
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 360
     permissions:
       contents: read
@@ -77,7 +77,7 @@ jobs:
 
   renovate-config:
     name: Renovate configuration
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 360
     permissions:
       contents: read
@@ -86,19 +86,19 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: $/.github/actions/setup-node
+      - uses: $/.github/actions/setup-bun
         with:
           working-directory: .github/renovate
 
       - name: Validate Renovate configuration
         run: >-
-          node .github/renovate/node_modules/renovate/dist/config-validator.js
+          bun .github/renovate/node_modules/renovate/dist/config-validator.js
           --strict --no-global .github/renovate.json
 
-  prepare-pnpm-deps:
-    name: Prepare pnpm dependencies
+  prepare-bun-deps:
+    name: Prepare Bun dependencies
     needs: [workflow-quality, javascript, nix-quality, renovate-config]
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 360
     permissions:
       contents: read
@@ -110,11 +110,11 @@ jobs:
 
       - uses: $/.github/actions/install-nix
 
-      - uses: $/.github/actions/export-pnpm-deps
+      - uses: $/.github/actions/export-bun-deps
 
   nix:
     name: Nix
-    needs: prepare-pnpm-deps
+    needs: prepare-bun-deps
     permissions:
       contents: read
     uses: $/.github/workflows/nix-check.yaml
@@ -122,8 +122,8 @@ jobs:
   required:
     name: CI required
     if: ${{ !cancelled() }}
-    needs: [workflow-quality, javascript, nix-quality, renovate-config, prepare-pnpm-deps, nix]
-    runs-on: ubuntu-24.04
+    needs: [workflow-quality, javascript, nix-quality, renovate-config, prepare-bun-deps, nix]
+    runs-on: ubuntu-26.04
     timeout-minutes: 360
     permissions: {}
     cache-mode: none
@@ -132,5 +132,5 @@ jobs:
         env:
           RESULTS: ${{ toJSON(needs) }}
         run: |
-          jq -r 'to_entries[] | "\(.key): \(.value.result)"' <<< "$RESULTS"
-          jq -e 'all(.[]; .result == "success")' <<< "$RESULTS"
+          jq --raw-output 'to_entries[] | "\(.key): \(.value.result)"' <<< "$RESULTS"
+          jq --exit-status 'all(.[]; .result == "success")' <<< "$RESULTS"

@@ -1,6 +1,5 @@
 { lib, ... }:
 let
-
   uiElementOptions =
     { name, ... }:
     {
@@ -70,18 +69,7 @@ in
         chatBarButtons = uiElementsOption "chat bar buttons";
         messagePopoverButtons = uiElementsOption "message popover buttons";
       };
-      plugins = import ../plugins/mkPluginOptions.nix {
-        inherit lib;
-        # Merge schema data before constructing options so conflicting setting
-        # types are replaced as a whole, without merging option-type internals
-        schema = lib.lists.foldl' lib.attrsets.recursiveUpdate { } (
-          map lib.trivial.importJSON [
-            ../plugins/shared.json
-            ../plugins/vencord.json
-            ../plugins/equicord.json
-          ]
-        );
-      };
+      plugins = import ../plugins/options/options.nix { inherit lib; };
     };
   };
 }

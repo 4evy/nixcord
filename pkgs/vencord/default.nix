@@ -1,72 +1,40 @@
 {
-  fetchFromGitHub,
-  fetchPnpmDeps,
-  vencord,
-  buildWebExtension ? false,
+  lib,
   callPackage,
+  fetchFromGitHub,
+  buildWebExtension ? false,
 }:
 let
-  pnpm = callPackage ../pnpm { };
-  fetchDeps = callPackage ../pnpm/fetch-deps.nix { inherit fetchPnpmDeps; };
+  buildClientMod = callPackage ../build-client-mod/build-client-mod.nix { };
   version = "1.15.12-2026-10-21";
   rev = "b0e636df2ed5c9006b80ddc6644bc41110404bc3";
   hash = "sha256-7UOyztToPBCHQo0lkt4Mr/OTORNRoXnRsWdTSY616Kk=";
-  pnpmDepsHash = "sha256-P1X36dnEDGpLAKzf8PTadrF/UfsFu5rA61byXiJx4wc=";
+  bunDepsHash = "sha256-daNUbnfjfjPYUkI9lw7gu2r3f/59OBBKaXynL31Zr+E=";
   src = fetchFromGitHub {
-    inherit (vencord.src) owner repo;
+    owner = "Vendicated";
+    repo = "Vencord";
     inherit rev hash;
   };
+  patches = [ ];
 in
-(vencord.override {
-  inherit buildWebExtension;
-  pnpm_11 = pnpm;
-}).overrideAttrs
-  (
-    oldAttrs:
-    let
-      patches = [ ];
-      postPatch = "";
-    in
-    {
-      inherit
-        version
-        src
-        patches
-        postPatch
-        ;
-      pnpmDeps = fetchDeps {
-        inherit (oldAttrs) pname;
-        inherit
-          pnpm
-          patches
-          postPatch
-          src
-          ;
-        prePnpmInstall = ''
-          export NODE_OPTIONS=--max-old-space-size=2048
-          export pnpm_config_child_concurrency=1
-          export pnpm_config_network_concurrency=1
-          export pnpm_config_workspace_concurrency=1
-        '';
-        fetcherVersion = 4;
-        hash = pnpmDepsHash;
-      };
-      env = (oldAttrs.env or { }) // {
-        VENCORD_REMOTE = "${src.owner}/${src.repo}";
-        VENCORD_HASH = rev;
-      };
-      meta = oldAttrs.meta // {
-        description =
-          if buildWebExtension then
-            "Vencord web extension"
-          else
-            oldAttrs.meta.description or "Vencord Discord client mod";
-      };
-      passthru = (oldAttrs.passthru or { }) // {
-        updateScript = callPackage ../plugin-update.nix { } {
-          attrPath = "vencord";
-          filename = "pkgs/vencord/default.nix";
-        };
-      };
-    }
-  )
+buildClientMod {
+  pname = "vencord";
+  inherit
+    version
+    src
+    patches
+    bunDepsHash
+    buildWebExtension
+    ;
+  bunLock = ./bun.lock;
+  env = {
+    VENCORD_REMOTE = "${src.owner}/${src.repo}";
+    VENCORD_HASH = rev;
+  };
+  meta = {
+    description = if buildWebExtension then "Vencord web extension" else "Vencord Discord client mod";
+    homepage = "https://github.com/Vendicated/Vencord";
+    license = lib.licenses.gpl3Only;
+    platforms = lib.platforms.unix;
+  };
+}
