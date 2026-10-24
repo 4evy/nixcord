@@ -26,7 +26,7 @@
     },
     "ForwardAnywhere": {
       "to": "BetterForwards",
-      "date": "2026-09-14"
+      "date": "2026-10-24"
     },
     "FriendCloud": {
       "to": "MoreCommands",
@@ -126,7 +126,7 @@
     },
     "ViewRawVariant": {
       "to": "ViewRaw",
-      "date": "2026-09-14"
+      "date": "2026-10-24"
     },
     "YoutubeDescription": {
       "to": "FixYoutubeEmbeds",

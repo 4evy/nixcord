@@ -537,6 +537,10 @@
       }
     }
   },
+  "jumpToTop": {
+    "description": "Adds a button to jump to the first message in a channel (Shared between Vencord and Equicord)",
+    "settings": {}
+  },
   "keepCurrentChannel": {
     "description": "Attempt to navigate to the channel you were in before switching accounts or loading Discord. (Shared between Vencord and Equicord)",
     "settings": {}

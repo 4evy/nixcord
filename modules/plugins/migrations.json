@@ -3720,6 +3720,17 @@
     },
     {
       "from": [
+        "shikiCodeblocks",
+        "tryHljs"
+      ],
+      "to": [
+        "shikiCodeblocks",
+        "tryDiscordHighlighter"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
         "showMeYourName",
         "alwaysShowEffects"
       ],
@@ -5847,18 +5858,6 @@
       "to": [
         "platformIndicators",
         "profiles"
-      ],
-      "warn": false,
-      "declare": false
-    },
-    {
-      "from": [
-        "shikiCodeblocks",
-        "tryHljs"
-      ],
-      "to": [
-        "shikiCodeblocks",
-        "tryDiscordHighlighter"
       ],
       "warn": false,
       "declare": false

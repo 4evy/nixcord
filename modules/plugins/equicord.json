@@ -3261,10 +3261,6 @@
     "description": "Adds context menu options to jump to the start or bottom of a channel/DM. (Equicord-only)",
     "settings": {}
   },
-  "jumpToTop": {
-    "description": "Adds a button to jump to the first message in a channel (Equicord-only)",
-    "settings": {}
-  },
   "keyboardNavigation": {
     "description": "Allows you to navigate the UI with a keyboard. (Equicord-only)",
     "settings": {

@@ -787,7 +787,7 @@
         "description": "A link to a custom vscode theme",
         "example": "https://raw.githubusercontent.com/millsp/material-candy/master/material-candy.json"
       },
-      "tryHljs": {
+      "tryDiscordHighlighter": {
         "type": "types.enum",
         "enumValues": [
           "NEVER",
