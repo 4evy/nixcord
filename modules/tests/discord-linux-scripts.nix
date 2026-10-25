@@ -35,9 +35,10 @@ pkgs.runCommand "discord-linux-scripts-check"
     bash ${../../pkgs/discord/modules/stage.sh} "$store"
 
     for module in discord_desktop_core discord_voice; do
-      test -L "$linux_modules/$module"
-      test "$(readlink "$linux_modules/$module")" = "$store/$module"
+      test ! -L "$linux_modules/$module"
+      test -d "$linux_modules/$module"
     done
+    grep --fixed-strings --line-regexp 'store core' "$linux_modules/discord_desktop_core/index.js"
     test ! -e "$linux_modules/discord_old"
     test ! -L "$linux_modules/discord_krisp"
     grep --fixed-strings --line-regexp 'writable krisp' "$linux_modules/discord_krisp/module.node"
@@ -65,11 +66,12 @@ pkgs.runCommand "discord-linux-scripts-check"
     bash ${../../pkgs/discord/modules/stage.sh} "$store"
 
     for module in discord_desktop_core discord_voice; do
-      test -L "$darwin_modules/$module"
-      test "$(readlink "$darwin_modules/$module")" = "$store/$module"
-      test -L "$darwin_module_data/$module"
-      test "$(readlink "$darwin_module_data/$module")" = "$store/$module"
+      test ! -L "$darwin_modules/$module"
+      test -d "$darwin_modules/$module"
+      test ! -L "$darwin_module_data/$module"
+      test -d "$darwin_module_data/$module"
     done
+    grep --fixed-strings --line-regexp 'store core' "$darwin_modules/discord_desktop_core/index.js"
     test ! -e "$darwin_modules/discord_old"
     test ! -e "$darwin_module_data/discord_old"
     test ! -L "$darwin_modules/discord_krisp"

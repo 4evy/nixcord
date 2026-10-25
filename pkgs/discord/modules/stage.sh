@@ -30,9 +30,12 @@ remove_module() {
   fi
 }
 
-replace_link() {
+replace_module() {
   remove_module "$2"
-  ln --symbolic "$1" "$2"
+  # Discord's native loader rejects modules resolving outside registered roots
+  # Dereference store symlinks so every staged file stays inside the profile
+  cp --recursive --dereference "$1" "$2"
+  chmod --recursive u+w "$2"
 }
 
 prune_unstaged_modules() {
@@ -71,7 +74,7 @@ for dir in "${module_dirs[@]}"; do
     # The Krisp deployer owns this writable module and its repair watcher
     # Keep it in the manifest and prune allow-list without staging it here
     [[ "$module" != discord_krisp ]] || continue
-    replace_link "$store_modules/$module" "$dir/$module"
+    replace_module "$store_modules/$module" "$dir/$module"
   done
 done
 
