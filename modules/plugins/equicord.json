@@ -302,6 +302,41 @@
       }
     }
   },
+  "betterBackreading": {
+    "description": "Improve backreading with earlier message loading and less rubberbanding. (Equicord-only)",
+    "settings": {
+      "imageScrollMargin": {
+        "type": "types.str",
+        "default": "1500",
+        "description": "How far ahead to load images, in pixels (300-3000). (restart required)"
+      },
+      "messageLoadBuffer": {
+        "type": "types.str",
+        "default": "1500",
+        "description": "How far ahead to fetch more messages, in pixels (500-3000). (restart required)"
+      },
+      "useDiscordMessageCount": {
+        "type": "types.bool",
+        "default": true,
+        "description": "Let Discord choose how many messages to fetch based on your window and chat settings."
+      },
+      "messageCount": {
+        "type": "types.str",
+        "default": "50",
+        "description": "How many messages to fetch per history request when the dynamic count is disabled (30-100)."
+      },
+      "channelOpenScrollMode": {
+        "type": "types.enum",
+        "enumValues": [
+          "default",
+          "bottom",
+          "saved"
+        ],
+        "default": "saved",
+        "description": "Open unread channels at the saved position (or bottom), always the bottom, or defer to default unread behavior."
+      }
+    }
+  },
   "betterBanReasons": {
     "description": "Create custom reasons to use in the Discord ban modal, and/or show a text input by default instead of the options. (Equicord-only)",
     "settings": {
@@ -846,6 +881,11 @@
       "tabSet": {
         "type": "types.attrs",
         "default": {}
+      },
+      "bookmarks": {
+        "type": "types.attrs",
+        "default": {},
+        "description": "Saved bookmarks per account"
       },
       "showStatusIndicators": {
         "type": "types.bool",
@@ -2210,6 +2250,35 @@
         "type": "types.bool",
         "default": false,
         "description": "Export a list of friends to your clipboard. Adds a new button to the menu bar for the friends tab."
+      }
+    }
+  },
+  "externalPlayer": {
+    "description": "Open videos and audio in an external media player like mpv. (Equicord-only)",
+    "settings": {
+      "player": {
+        "type": "types.enum",
+        "enumValues": [
+          "mpv",
+          "vlc"
+        ],
+        "default": "mpv",
+        "description": "Which player to open media in."
+      },
+      "openOnClick": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Open videos and audio in the player when you press play, instead of playing them in Discord."
+      },
+      "path": {
+        "type": "types.str",
+        "default": "",
+        "description": "Absolute path to the player executable. Leave empty to use the one on your PATH."
+      },
+      "args": {
+        "type": "types.str",
+        "default": "",
+        "description": "Extra arguments passed to the player. Wrap values with spaces in quotes."
       }
     }
   },
@@ -5038,6 +5107,16 @@
         "default": false,
         "description": "Hide incomplete Quests without a supported and enabled auto-complete task."
       },
+      "autoEnrollQuests": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Automatically enroll in eligible available Quests on successful fetches while Discord is running."
+      },
+      "autoCompleteQuests": {
+        "type": "types.bool",
+        "default": false,
+        "description": "Automatically enroll in and complete eligible available Quests with supported and enabled task types on successful fetches while Discord is running."
+      },
       "autoCompleteQuestsSimultaneously": {
         "type": "types.bool",
         "default": false,
@@ -5056,13 +5135,13 @@
       "autoCompleteQuestTypes": {
         "type": "types.attrs",
         "default": {
-          "PLAY_ON_DESKTOP": false,
-          "PLAY_ON_XBOX": false,
-          "PLAY_ON_PLAYSTATION": false,
-          "PLAY_ACTIVITY": false,
           "WATCH_VIDEO": false,
           "WATCH_VIDEO_ON_MOBILE": false,
-          "ACHIEVEMENT_IN_ACTIVITY": false
+          "ACHIEVEMENT_IN_ACTIVITY": false,
+          "PLAY_ACTIVITY": false,
+          "PLAY_ON_DESKTOP": false,
+          "PLAY_ON_PLAYSTATION": false,
+          "PLAY_ON_XBOX": false
         },
         "description": "Which types of Quests to auto-complete in the background. (restart required)"
       },
@@ -5090,8 +5169,6 @@
           "ACHIEVEMENT_IN_GAME": true,
           "PLAY_ACTIVITY": true,
           "PLAY_ON_DESKTOP": true,
-          "PLAY_ON_DESKTOP_V2": true,
-          "STREAM_ON_DESKTOP": true,
           "PLAY_ON_PLAYSTATION": true,
           "PLAY_ON_XBOX": true
         },
@@ -5314,6 +5391,22 @@
         "type": "types.attrs",
         "default": {},
         "description": "An array of Quest IDs that are being or are queued to be auto-completed in the background."
+      },
+      "usedKonamiCode": {
+        "type": "types.bool",
+        "default": false
+      },
+      "autoEnrollQuestsUnpaused": {
+        "type": "types.bool",
+        "default": false
+      },
+      "autoCompleteQuestsUnpaused": {
+        "type": "types.bool",
+        "default": false
+      },
+      "enrollmentRateLimitBlockedUntil": {
+        "type": "types.attrs",
+        "default": {}
       }
     }
   },
