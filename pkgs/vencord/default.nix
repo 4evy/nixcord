@@ -6,7 +6,7 @@
 }:
 let
   buildClientMod = callPackage ../build-client-mod/build-client-mod.nix { };
-  version = "1.15.13-2026-10-24";
+  version = "1.15.13-unstable-2026-10-24";
   rev = "443688b5366a4d43e9868519f48a4544cd7520d4";
   hash = "sha256-YuzFkZafNJ0brt2S3gg+pm6xYXZEAjBkDH76cb0dmd8=";
   bunDepsHash = "sha256-zCLryVJqM9mSnsgrxD3tDQFV6dKj2oiqZhzJL44j2AU=";
