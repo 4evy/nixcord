@@ -5,22 +5,20 @@
 // Keep localModulesRoot/standaloneModules unset in stock build_info.json:
 // upstream isInstalled bypasses metadata/version checks in those modes
 //
-// Node strips the types; Nix supplies ts-morph by absolute store path
-import type { Rule } from '../bundle.cts';
+// Bun runs the TypeScript; Nix supplies the native API by absolute store path
+import { bundle, type Rule } from '../bundle.ts';
 
-const bundle: import('../bundle.cts').Bundle = require('../bundle.cts');
-const [morphPath, filename] = process.argv.slice(2);
-if (!morphPath || !filename) {
-  throw new Error('Usage: updater/main.cts <ts-morph.js> <extracted-file.js>');
+const [nativePath, filename] = process.argv.slice(2);
+if (!nativePath || !filename) {
+  throw new Error('Usage: updater/main.ts <native-api.js> <extracted-file.js>');
 }
-const { Node, factory, values, one, apply } = bundle(morphPath, filename);
+await using patch = await bundle(nativePath, filename);
+const { Node, factory, values, one, apply, forEachDescendant } = patch;
 // Selectors must match exactly once so upstream changes fail the build
 const scope = factory(
   (node) =>
-    node.forEachDescendant((child) =>
-      Node.isStringLiteral(child) && child.getLiteralValue() === 'legacyModulesUpdater.log'
-        ? true
-        : undefined
+    forEachDescendant(node, (child) =>
+      Node.isStringLiteral(child) && child.text === 'legacyModulesUpdater.log' ? true : undefined
     ) === true,
   'legacy updater factory'
 );
@@ -52,7 +50,6 @@ const plan = {
     }`,
   },
 };
-
 const init = one(values(scope, 'exports.init'), 'updater init export');
 const rules: Rule[] = [
   ...plan.requiredExports.map((name) => ({
@@ -73,5 +70,5 @@ const rules: Rule[] = [
     replacement: source,
   })),
 ];
-const count = apply(rules);
+const count = await apply(rules);
 console.log(`Patched stock updater: ${count} expressions`);

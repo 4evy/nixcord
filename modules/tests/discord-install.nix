@@ -43,7 +43,7 @@ let
     ''
       resources="${resourcesDir}"
       modules="${modulesDir}"
-      mkdir -p "$resources" "$modules/discord_voice" "$modules/discord_krisp"
+      mkdir --parents "$resources" "$modules/discord_voice" "$modules/discord_krisp"
       cp stock.asar "$resources/app.asar"
       cp build_info.json "$resources/build_info.json"
       cp voice.js "$modules/discord_voice/index.js"
@@ -51,18 +51,18 @@ let
 
       ${installer}
 
-      node check-build-info.cjs "$resources/build_info.json"
+      bun check-build-info.cjs "$resources/build_info.json"
       asar extract "$resources/${hostName}" "${name}-host"
       ${
         if withOpenASAR then
           ''
             cmp openasar.asar "$resources/${hostName}"
-            node "${name}-host/bundle.js"
+            bun "${name}-host/bundle.js"
           ''
         else
           ''
             cmp host/preserved.txt "${name}-host/preserved.txt"
-            node check-updater.cjs "$PWD/${name}-host/bundle.js"
+            bun check-updater.cjs "$PWD/${name}-host/bundle.js"
           ''
       }
       ${
@@ -74,8 +74,8 @@ let
         else
           ''
             export MOD_MARKER="$PWD/${name}-mod-marker"
-            node "$resources/app.asar"
-            node - "$MOD_MARKER" ${lib.strings.escapeShellArg mod.patcher} <<'JS'
+            bun "$resources/app.asar"
+            bun - "$MOD_MARKER" ${lib.strings.escapeShellArg mod.patcher} <<'JS'
             const assert = require('node:assert/strict');
             const fs = require('node:fs');
             assert.equal(fs.readFileSync(process.argv[2], 'utf8'), process.argv[3]);
@@ -91,7 +91,7 @@ let
             cmp ${krispModule}/index.js "$modules/discord_krisp/index.js"
             export TEST_MODULES="$modules"
             export KRISP_MARKER="$PWD/${name}-krisp-marker"
-            node check-voice.cjs "$modules/discord_voice/index.js"
+            bun check-voice.cjs "$modules/discord_voice/index.js"
           ''
         else
           ''
@@ -105,11 +105,11 @@ pkgs.runCommand "discord-install-test"
   {
     nativeBuildInputs = [
       pkgs.asar
-      pkgs.nodejs
+      (pkgs.callPackage ../../nix/bun/bun.nix { })
     ];
   }
   ''
-    set -euo pipefail
+    set -o errexit -o nounset -o pipefail
 
     mkdir host openasar-host
     cat > host/bundle.js <<'JS'

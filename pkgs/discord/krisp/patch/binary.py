@@ -1,6 +1,5 @@
 #!/usr/bin/env python3.14
-"""
-Patch discord_krisp.node to bypass its signature verification
+"""Patch discord_krisp.node to bypass its signature verification.
 
 Krisp checks its own code signature on load. Since Nix modifies the binary (e.g.
 patchelf), the signature no longer matches and the module refuses to start. We
@@ -151,7 +150,7 @@ def _build_xrefs(
     functions: FunctionStarts,
 ) -> dict[int, set[int]]:
     """Disassemble ``data`` (the __text section) once and index direct-branch
-    targets by the function containing the branch
+    targets by the function containing the branch.
 
     Returns ``{target_vaddr: {start addresses of calling functions}}``. The
     containing function for a branch comes from ``functions``.
@@ -235,13 +234,15 @@ def patch_elf(mm: mmap.mmap, path: str) -> None:
     func_vaddr = functions.require_containing(idx + text_delta)
     func_off = func_vaddr - text_delta
 
-    print(f"[krisp-patcher] ELF: signature at 0x{idx:x}, function at 0x{func_off:x}")
+    print(
+        f"[krisp-patcher] ELF: signature at 0x{idx:x}, function at 0x{func_off:x}"
+    )
     _apply_patch(mm, func_off, ARCHS[_X86_64].return_true, "ELF")
 
 
 def patch_macho_slice(mm: mmap.mmap, binary: lief.MachO.Binary) -> None:
-    """Trace _SecStaticCodeCreateWithPath up the call chain and patch the
-    last uniquely-reachable function."""
+    """Trace _SecStaticCodeCreateWithPath up the call chain and patch the last
+    uniquely-reachable function."""
     arch = ARCHS[binary.header.cpu_type]
     base = binary.fat_offset
 
@@ -257,16 +258,20 @@ def patch_macho_slice(mm: mmap.mmap, binary: lief.MachO.Binary) -> None:
 
     target = _macho_import_stub(binary, stubs, ANCHOR_IMPORT)
 
-    # Sorted function starts; bisect maps any __text address to its function.
+    # Sorted function starts, so bisect maps any __text address to its function
     # binary.functions merges symbols + __unwind_info so it covers stripped
     # functions too
     functions = FunctionStarts.from_lief(binary, text_vm, text_vm + text_sz)
 
-    # One disassembly pass; each hop up the chain is an O(1) dict lookup
-    xrefs = _build_xrefs(bytes(mm[fstart : fstart + text_sz]), text_vm, arch, functions)
+    # After one disassembly pass, each hop up the chain is an O(1) dict lookup
+    xrefs = _build_xrefs(
+        bytes(mm[fstart : fstart + text_sz]), text_vm, arch, functions
+    )
 
     patch_addr = _walk_unique_callers(xrefs, target, f"Mach-O {arch.name}")
-    _apply_patch(mm, fstart + (patch_addr - text_vm), arch.return_true, arch.name)
+    _apply_patch(
+        mm, fstart + (patch_addr - text_vm), arch.return_true, arch.name
+    )
 
 
 def main() -> None:

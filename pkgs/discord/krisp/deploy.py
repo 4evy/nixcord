@@ -33,7 +33,7 @@ CONFIG_DIR = "@configDirName@"
 
 # Marker file written alongside the deployed krisp to track the patched module
 # contents. A hash mismatch means another Discord install (or the user)
-# overwrote our files, so the caller redeploys from KRISP_STORE.
+# overwrote our files, so the caller redeploys from KRISP_STORE
 MARKER = ".nix-krisp-hash"
 PARENT_CHECK_INTERVAL = 1
 WATCHED_EVENTS: list[type[FileSystemEvent]] = [
@@ -52,10 +52,17 @@ WATCHED_EVENTS: list[type[FileSystemEvent]] = [
 def modules_dir() -> Path:
     configured_base = os.environ.get("DISCORD_USER_DATA_DIR")
     if configured_base is not None:
-        return Path(configured_base) / CONFIG_DIR.replace(" ", "") / VERSION / "modules"
+        return (
+            Path(configured_base)
+            / CONFIG_DIR.replace(" ", "")
+            / VERSION
+            / "modules"
+        )
     if sys.platform == "darwin":
         base = (
-            Path(pwd.getpwuid(os.getuid()).pw_dir) / "Library" / "Application Support"
+            Path(pwd.getpwuid(os.getuid()).pw_dir)
+            / "Library"
+            / "Application Support"
         )
         return base / CONFIG_DIR.replace(" ", "") / VERSION / "modules"
     home = Path(os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config")
@@ -97,7 +104,9 @@ def needs_deploy(dest: Path, verify_node: bool = True) -> bool:
             return True
     return (
         verify_node
-        and hashlib.sha256((_file_hash(node) + _file_hash(index)).encode()).hexdigest()
+        and hashlib.sha256(
+            (_file_hash(node) + _file_hash(index)).encode()
+        ).hexdigest()
         != KRISP_HASH
     )
 
@@ -125,7 +134,7 @@ def deploy(dest: Path, quiet: bool = False, verify_node: bool = True) -> None:
     dest.chmod(0o755)
     for p in dest.rglob("*"):
         p.chmod(0o755 if p.is_dir() or p.suffix == ".node" else 0o644)
-    # Write marker with hash of the deployed files so we can detect overwrites.
+    # Write marker with hash of the deployed files so we can detect overwrites
     (dest / MARKER).write_text(KRISP_HASH + "\n", encoding="utf-8")
 
 
@@ -183,7 +192,10 @@ def watch(parent_pid: int, dest: Path, manifest: Path) -> None:
 
     class Handler(FileSystemEventHandler):
         def on_any_event(self, event) -> None:
-            if event.event_type in {EVENT_TYPE_OPENED, EVENT_TYPE_CLOSED_NO_WRITE}:
+            if event.event_type in {
+                EVENT_TYPE_OPENED,
+                EVENT_TYPE_CLOSED_NO_WRITE,
+            }:
                 return
             repair()
 
@@ -234,7 +246,7 @@ def main() -> None:
     # Do not create installed.json on fresh legacy installs: Discord needs a
     # missing manifest to bootstrap discord_desktop_core and friends. A short
     # watcher repairs krisp if the module updater overwrites it during launch,
-    # then registers it once the real manifest exists.
+    # then registers it once the real manifest exists
     register(manifest, create=False)
     start_watcher(dest, manifest)
 

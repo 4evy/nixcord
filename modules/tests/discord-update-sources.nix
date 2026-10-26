@@ -2,10 +2,14 @@
 
 pkgs.runCommand "discord-update-sources-check"
   {
-    nativeBuildInputs = [ pkgs.python3 ];
+    nativeBuildInputs = [
+      pkgs.bash
+      pkgs.jq
+      pkgs.coreutils
+    ];
   }
   ''
-    python3 ${./scripts/test-discord-update-sources.py} \
-      ${../../pkgs/discord/sources/update/main.py}
+    bash ${./scripts/test-discord-update-sources.sh} \
+      ${../../pkgs/discord/sources/update/main.sh}
     touch "$out"
   ''

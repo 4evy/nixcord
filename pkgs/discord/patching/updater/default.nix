@@ -1,8 +1,8 @@
 {
   lib,
+  bun,
   callPackage,
   writeShellApplication,
-  nodejs,
 }:
 let
   tools = callPackage ../. { };
@@ -10,7 +10,8 @@ in
 writeShellApplication {
   name = "patch-discord-updater";
   text = ''
-    exec ${lib.meta.getExe nodejs} ${../.}/updater/main.cts \
-      ${tools}/node_modules/ts-morph/dist/ts-morph.js "$@"
+    exec ${lib.meta.getExe bun} ${tools.scriptSource}/updater/main.ts \
+      ${tools}/node_modules/typescript/dist/api/async/api.js "$@"
   '';
+  passthru.patchVoiceKrisp = (callPackage ../krisp { }).voice;
 }

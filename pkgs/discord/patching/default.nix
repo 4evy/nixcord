@@ -1,21 +1,52 @@
-{ lib, buildNpmPackage }:
-# ts-morph uses the compatible JS compiler; native TypeScript 7 checks our types
-buildNpmPackage {
-  pname = "discord-patch-tools";
-  version = "1.0.0";
+{
+  lib,
+  callPackage,
+  nix-update-script,
+}:
+let
   src = lib.fileset.toSource {
     root = ./.;
     fileset = lib.fileset.unions [
       ./package.json
-      ./package-lock.json
+      ./bun.lock
     ];
   };
-  npmDepsHash = "sha256-guGNfNDKn6g4gX/3XWJJDdhvV0dWivHedEkWIrs5lW0=";
-  dontNpmBuild = true;
+  buildBunPackage = callPackage ../../bun/build-package.nix { };
+in
+buildBunPackage {
+  pname = "discord-patch-tools";
+  version = "1.0.0";
+  inherit src;
+  bunDeps = (callPackage ../../bun/fetch-deps.nix { }) {
+    name = "discord-patch-tools-bun-deps";
+    inherit src;
+    hash = "sha256-t1CHxnPsjbyEtXo/umHP7fwrEgZ8sNXSOOEeKjLdMkk=";
+  };
+  dontBuild = true;
+  # Keep source scripts independent of local node_modules installations
+  passthru.scriptSource = lib.fileset.toSource {
+    root = ./.;
+    fileset = lib.fileset.unions [
+      ./bundle.ts
+      ./updater/main.ts
+      ./launcher/main.ts
+      ./krisp/main.ts
+    ];
+  };
+  passthru.updateScript = nix-update-script {
+    attrPath = "discord-patch-tools";
+    extraArgs = [
+      "--flake"
+      "--version=skip"
+      "--no-src"
+      "--custom-dep=bunDeps"
+      "--override-filename=pkgs/discord/patching/default.nix"
+    ];
+  };
   installPhase = ''
     runHook preInstall
-    mkdir -p "$out"
-    cp -r node_modules "$out/"
+    mkdir --parents "$out"
+    cp --recursive node_modules "$out/"
     runHook postInstall
   '';
 }

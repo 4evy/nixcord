@@ -1,8 +1,8 @@
 {
   lib,
+  bun,
   callPackage,
   writeShellApplication,
-  nodejs,
 }:
 let
   tools = callPackage ../. { };
@@ -10,7 +10,7 @@ in
 writeShellApplication {
   name = "patch-discord-launcher";
   text = ''
-    exec ${lib.getExe nodejs} ${../.}/launcher/main.cts \
-      ${tools}/node_modules/ts-morph/dist/ts-morph.js "$@"
+    exec ${lib.getExe bun} ${tools.scriptSource}/launcher/main.ts \
+      ${tools}/node_modules/typescript/dist/api/async/api.js "$@"
   '';
 }
