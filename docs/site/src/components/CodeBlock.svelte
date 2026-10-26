@@ -1,14 +1,60 @@
 <script lang="ts">
+import Check from '@lucide/svelte/icons/check';
+import Copy from '@lucide/svelte/icons/copy';
 import hljs from 'highlight.js/lib/core';
 import json from 'highlight.js/lib/languages/json';
 import nix from 'highlight.js/lib/languages/nix';
+import shell from 'highlight.js/lib/languages/shell';
 import typescript from 'highlight.js/lib/languages/typescript';
+import { onDestroy } from 'svelte';
 
-let { code, language = 'nix' }: { code: string; language?: string } = $props();
+let {
+  code,
+  language = 'nix',
+  label,
+}: {
+  code: string;
+  language?: string;
+  label?: string;
+} = $props();
+
+let copyState = $state<'idle' | 'copied' | 'failed'>('idle');
+let resetTimer: ReturnType<typeof setTimeout> | undefined;
+const languageLabels: Record<string, string> = {
+  json: 'JSON',
+  nix: 'Nix',
+  shell: 'Terminal',
+  typescript: 'TypeScript',
+};
+const displayLabel = $derived(label ?? languageLabels[language] ?? language);
+const copyLabel = $derived(copyState === 'copied' ? 'Copied' : 'Copy');
+
+onDestroy(() => clearTimeout(resetTimer));
+
+$effect(() => {
+  // Reset feedback when the selected installation example changes
+  code;
+  copyState = 'idle';
+  clearTimeout(resetTimer);
+});
+
+async function copyCode() {
+  clearTimeout(resetTimer);
+  try {
+    await navigator.clipboard.writeText(code.trimEnd());
+    copyState = 'copied';
+    resetTimer = setTimeout(() => {
+      copyState = 'idle';
+    }, 2500);
+  } catch {
+    copyState = 'failed';
+  }
+}
 
 hljs.registerLanguage('nix', nix);
 hljs.registerLanguage('json', json);
 hljs.registerLanguage('typescript', typescript);
+hljs.registerLanguage('shell', shell);
 
 const highlighted = $derived(
   applyTokenClasses(hljs.highlight(code.trimEnd(), { language, ignoreIllegals: true }).value)
@@ -45,6 +91,21 @@ function applyTokenClasses(html: string) {
 }
 </script>
 
-<pre
-  class="my-4 overflow-x-auto rounded-md border border-neutral-200 bg-neutral-50 p-0 font-mono text-[0.92rem] leading-6 shadow-sm dark:border-neutral-700 dark:bg-[#171d24]"
-><code class={`block bg-transparent p-4 font-mono text-neutral-950 language-${language} dark:text-neutral-100`}>{@html highlighted}</code></pre>
+<div class="code-block">
+  <div class="code-block-header">
+    <span>{displayLabel}</span>
+    <button type="button" class="copy-code" aria-label={`Copy ${displayLabel} code`} onclick={copyCode}>
+      {#if copyState === 'copied'}
+        <Check size={14} aria-hidden="true" />
+      {:else}
+        <Copy size={14} aria-hidden="true" />
+      {/if}
+      {copyLabel}
+    </button>
+    <span class="sr-only" role="status">{copyState === 'copied' ? 'Code copied to clipboard' : ''}</span>
+  </div>
+  <pre class="overflow-x-auto p-0 font-mono leading-6"><code class={`block bg-transparent p-4 font-mono text-neutral-950 language-${language} dark:text-neutral-100`}>{@html highlighted}</code></pre>
+  {#if copyState === 'failed'}
+    <p class="copy-error" role="status">Could not copy. Select the code and copy it manually.</p>
+  {/if}
+</div>

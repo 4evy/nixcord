@@ -8,16 +8,13 @@ import {
 } from '../classes';
 import {
   configurationExample,
-  darwinExample,
-  flakeExample,
   goofcordExample,
-  homeManagerExample,
   introductionToc,
   legcordExample,
-  nixosExample,
   userPluginsExample,
 } from '../content';
 import CodeBlock from './CodeBlock.svelte';
+import InstallationGuide from './InstallationGuide.svelte';
 import TableOfContents from './TableOfContents.svelte';
 import TitlePage from './TitlePage.svelte';
 </script>
@@ -33,28 +30,7 @@ import TitlePage from './TitlePage.svelte';
 
   <section class={sectionClass} aria-labelledby="getting-started">
     <TitlePage id="getting-started" title="Install Nixcord" level={3} />
-    <p class={paragraphClass}>Add Nixcord to your <code class={literalCodeClass}>flake.nix</code> inputs:</p>
-    <CodeBlock code={flakeExample} />
-    <p class={paragraphClass}>Pass <code class={literalCodeClass}>inputs</code> to your modules. In your existing configuration builder, set the argument for your setup to <code class={literalCodeClass}>{'{ inherit inputs; }'}</code>:</p>
-    <table class="setup-arguments">
-      <caption class="sr-only">Module arguments by configuration</caption>
-      <thead><tr><th scope="col">Your setup</th><th scope="col">Argument</th></tr></thead>
-      <tbody>
-        <tr><th scope="row">Standalone Home Manager</th><td><code>extraSpecialArgs</code></td></tr>
-        <tr><th scope="row">NixOS or nix-darwin</th><td><code>specialArgs</code></td></tr>
-        <tr><th scope="row">Home Manager inside a system configuration</th><td><code>home-manager.extraSpecialArgs</code></td></tr>
-      </tbody>
-    </table>
-    <p class={paragraphClass}>Then import the module for your setup:</p>
-    <h4 class="mt-5 mb-2 text-[1.05rem] leading-snug font-semibold text-neutral-900 dark:text-neutral-100">Home Manager</h4>
-    <p class={paragraphClass}>Home Manager uses your configured username and home directory.</p>
-    <CodeBlock code={homeManagerExample} />
-    <h4 class="mt-5 mb-2 text-[1.05rem] leading-snug font-semibold text-neutral-900 dark:text-neutral-100">NixOS</h4>
-    <p class={paragraphClass}>Replace <code class={literalCodeClass}>your-username</code> with the existing user whose settings Nixcord should manage.</p>
-    <CodeBlock code={nixosExample} />
-    <h4 class="mt-5 mb-2 text-[1.05rem] leading-snug font-semibold text-neutral-900 dark:text-neutral-100">nix-darwin (macOS)</h4>
-    <CodeBlock code={darwinExample} />
-    <p class={paragraphClass}>Apply your configuration with your usual <code class={literalCodeClass}>home-manager switch</code>, <code class={literalCodeClass}>nixos-rebuild switch</code>, or <code class={literalCodeClass}>darwin-rebuild switch</code> command. Reopen Discord to load Vencord and the configured plugins.</p>
+    <InstallationGuide />
   </section>
 
   <section class={sectionClass} aria-labelledby="without-flakes">

@@ -21,14 +21,19 @@ import ArrowRight from '@lucide/svelte/icons/arrow-right';
   <a class="skip-link" href="#content">Skip to main content</a>
   <ManualNav />
   <main id="content" class="book docs-content">
-    <header class="docs-intro">
-      <h1 id="nixcord-manual">Nixcord documentation</h1>
-      <p class="intro-description">Install Discord clients and configure plugins and themes with Home Manager, NixOS, or nix-darwin.</p>
+    <header id="nixcord-manual" class="docs-intro">
+      <p class="intro-kicker">Nixcord documentation</p>
+      <h1>Discord, configured with Nix</h1>
+      <p class="intro-description">
+        Keep your Discord clients, plugins, and themes in one reproducible
+        configuration. Set up Nixcord with Home Manager, NixOS, or nix-darwin.
+      </p>
+      <nav class="intro-links" aria-label="Quick links">
+        <a class="primary-action" href="#getting-started">Get started <ArrowRight size={16} aria-hidden="true" /></a>
+        <a class="secondary-action" href="#sec-options">Browse options <ArrowRight size={16} aria-hidden="true" /></a>
+      </nav>
       <div class="intro-footer">
-        <nav class="intro-links" aria-label="Quick links">
-          <a href="#sec-options">Search options <ArrowRight size={15} aria-hidden="true" /></a>
-          <a href="#getting-started">Get started <ArrowRight size={15} aria-hidden="true" /></a>
-        </nav>
+        <p class="intro-migration">Already have settings? <a href="#sec-converter">Convert your JSON to Nix <ArrowRight size={14} aria-hidden="true" /></a></p>
         <p class="revision">Revision <a href={`https://github.com/4evy/nixcord/commit/${revision}`} title={revision}><code>{revision.slice(0, 8)}</code></a></p>
       </div>
     </header>
