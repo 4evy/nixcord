@@ -2,103 +2,67 @@
   lib,
   goofcord,
   stdenv,
-  buildNpmPackage,
   fetchFromGitHub,
-  patchelf,
   autoPatchelfHook,
+  libx11,
+  libxtst,
   callPackage,
-  patch,
   makeBinaryWrapper,
   makeShellWrapper,
   copyDesktopItems,
   rcodesign,
-  writeShellApplication,
-  nix,
-  nix-update,
 }:
 let
-  nodejs = callPackage ../../nix/nodejs.nix { };
-  npmDepsVersion = "2.3.1";
+  buildBunPackage = callPackage ../bun/build-package.nix { };
+  version = "2.3.1";
   src = fetchFromGitHub {
     owner = "Milkshiift";
     repo = "GoofCord";
-    tag = "v${npmDepsVersion}";
+    tag = "v${version}";
     hash = "sha256-958TIiBsXYTfYaQdNKeVJspdSE1vIYMX/wScfqekTBU=";
   };
-  npmDepsHash = "sha256-QXRgCs8D0xKtlueaJddnlFsaRR41a6WAfQvfcwO0X9g=";
-  nodeBuildPatch = ./node-build.patch;
+  bunDepsHash = "sha256-VYCPrQ1N8kGbsV2uD5UzrcczBCgangU+bHj9wDh8eSs=";
+  dependencyPatch = ./dependencies.patch;
 
-  nodeModules = buildNpmPackage {
+  nodeModules = buildBunPackage {
     pname = "goofcord-modules";
-    version = npmDepsVersion;
-    inherit src;
-    inherit nodejs npmDepsHash;
-    nativeBuildInputs = [ patchelf ];
-    patches = [ nodeBuildPatch ];
-    postPatch = "cp ${./package-lock.json} package-lock.json";
-    # arrpc still declares a TypeScript 5 peer.
-    npmInstallFlags = [
-      "--ignore-scripts"
-      "--allow-remote=root"
-      "--legacy-peer-deps"
-      "--force"
+    inherit version src;
+    patches = [ dependencyPatch ];
+    postPatch = "cp ${./bun.lock} bun.lock";
+    bunDeps = (callPackage ../bun/fetch-deps.nix { }) {
+      name = "goofcord-bun-deps";
+      inherit src;
+      patches = [ dependencyPatch ];
+      postPatch = "cp ${./bun.lock} bun.lock";
+      hash = bunDepsHash;
+    };
+    buildInputs = lib.optionals stdenv.hostPlatform.isLinux [
+      libx11
+      libxtst
     ];
-    npmRebuildFlags = [ "--ignore-scripts" ];
-    dontNpmBuild = true;
+    dontBuild = true;
     installPhase = ''
       runHook preInstall
-      cp -R node_modules "$out"
+      cp --recursive node_modules "$out"
       runHook postInstall
     '';
   };
 
-  updateScript = writeShellApplication {
-    name = "update-goofcord";
-    runtimeInputs = [
-      nix
-      nix-update
-      nodejs
-      patch
-    ];
-    text = ''
-      root="$PWD"
-      nix-update --flake --src-only \
-        --override-filename pkgs/goofcord/default.nix goofcord
-      source=$(nix build --no-link --print-out-paths .#goofcord.src)
-      work=$(mktemp -d)
-      trap 'rm -rf -- "$work"' EXIT
-      cp -R "$source/." "$work/"
-      chmod -R u+w "$work"
-      cd -P "$work"
-      patch -p1 < "$root/pkgs/goofcord/node-build.patch"
-      cp "$root/pkgs/goofcord/package-lock.json" package-lock.json
-      npm install --package-lock-only --ignore-scripts --allow-remote=root --legacy-peer-deps --force
-      cp package-lock.json "$root/pkgs/goofcord/package-lock.json"
-      cd "$root"
-      nix-update --flake --version=skip --no-src \
-        --override-filename pkgs/goofcord/default.nix goofcord.npmDeps
-    '';
+  updateScript = callPackage ../bun/update-script.nix { } {
+    attrPath = "goofcord";
   };
 in
 goofcord.overrideAttrs (
   old:
   let
-    nativeBuildInputs = builtins.filter (
-      input:
-      !(builtins.elem (input.pname or "") [
-        "bun"
-        "nodejs"
-      ])
-    ) (old.nativeBuildInputs or [ ]);
     env = builtins.removeAttrs (old.env or { }) [
       "GOOFCORD_PATCHCORD_PATH"
       "GOOFCORD_VENBIND_PATH"
     ];
   in
   {
-    version = npmDepsVersion;
-    inherit src;
-    patches = (old.patches or [ ]) ++ [ nodeBuildPatch ];
+    inherit version src;
+    patches = (old.patches or [ ]) ++ [ dependencyPatch ];
     node-modules = nodeModules;
     env =
       env
@@ -109,8 +73,7 @@ goofcord.overrideAttrs (
       lib.lists.subtractLists (lib.lists.optionals stdenv.hostPlatform.isDarwin [
         copyDesktopItems
         makeShellWrapper
-      ]) nativeBuildInputs
-      ++ [ nodejs ]
+      ]) (old.nativeBuildInputs or [ ])
       ++ lib.lists.optional stdenv.hostPlatform.isLinux autoPatchelfHook
       ++ lib.lists.optionals stdenv.hostPlatform.isDarwin [
         makeBinaryWrapper
@@ -118,22 +81,22 @@ goofcord.overrideAttrs (
       ];
     configurePhase = ''
       runHook preConfigure
-      cp -R ${nodeModules} node_modules
-      chmod -R u+w node_modules
+      cp --recursive ${nodeModules} node_modules
+      chmod --recursive u+w node_modules
       patchShebangs --build node_modules
       runHook postConfigure
     '';
     buildPhase =
       builtins.replaceStrings
         [
-          "bun run build"
+          "bun run build -- --skipTypecheck"
           "node node_modules/electron-builder/out/cli/cli.js"
           "-c.npmRebuild=false"
         ]
         [
-          "npm run build"
-          "node_modules/.bin/electron-builder"
-          "-c.nativeModules.npmRebuild=false"
+          "bun run --bun build --skipTypecheck"
+          "bun --bun node_modules/electron-builder/cli.js"
+          "--config.nativeModules.npmRebuild=false"
         ]
         old.buildPhase;
     meta = (old.meta or { }) // {
@@ -142,14 +105,14 @@ goofcord.overrideAttrs (
 
     passthru = (old.passthru or { }) // {
       inherit updateScript;
-      npmDeps = nodeModules.npmDeps;
+      bunDeps = nodeModules.bunDeps;
     };
   }
   // lib.attrsets.optionalAttrs stdenv.hostPlatform.isDarwin {
     desktopItems = [ ];
 
     postPatch = (old.postPatch or "") + ''
-      # Disable code signing on macOS, as nixpkgs does for other Electron clients.
+      # Disable code signing on macOS, as nixpkgs does for other Electron clients
       substituteInPlace electron-builder.ts \
         --replace-fail 'identity: "",' 'identity: null,'
     '';
@@ -157,7 +120,7 @@ goofcord.overrideAttrs (
     installPhase = ''
       runHook preInstall
 
-      mkdir -p "$out/Applications" "$out/bin"
+      mkdir --parents "$out/Applications" "$out/bin"
       mv dist/mac*/GoofCord.app "$out/Applications/GoofCord.app"
       makeWrapper \
         "$out/Applications/GoofCord.app/Contents/MacOS/GoofCord" \
@@ -167,19 +130,34 @@ goofcord.overrideAttrs (
     '';
 
     # Seal the complete Electron app after fixup so nested frameworks and
-    # resources form one valid ad-hoc-signed bundle.
+    # resources form one valid ad-hoc-signed bundle
     postFixup = (old.postFixup or "") + ''
       ${lib.meta.getExe rcodesign} sign \
         --code-signature-flags runtime \
         --entitlements-xml-file ${src}/build/entitlements.mac.plist \
-        --code-signature-flags 'Contents/Frameworks/GoofCord Helper.app:runtime' \
-        --entitlements-xml-file 'Contents/Frameworks/GoofCord Helper.app:${src}/build/entitlements.mac.plist' \
-        --code-signature-flags 'Contents/Frameworks/GoofCord Helper (Renderer).app:runtime' \
-        --entitlements-xml-file 'Contents/Frameworks/GoofCord Helper (Renderer).app:${src}/build/entitlements.mac.plist' \
-        --code-signature-flags 'Contents/Frameworks/GoofCord Helper (GPU).app:runtime' \
-        --entitlements-xml-file 'Contents/Frameworks/GoofCord Helper (GPU).app:${src}/build/entitlements.mac.plist' \
-        --code-signature-flags 'Contents/Frameworks/GoofCord Helper (Plugin).app:runtime' \
-        --entitlements-xml-file 'Contents/Frameworks/GoofCord Helper (Plugin).app:${src}/build/entitlements.mac.plist' \
+        ${
+          lib.strings.escapeShellArgs (
+            lib.lists.concatMap
+              (
+                suffix:
+                let
+                  helper = "Contents/Frameworks/GoofCord Helper${suffix}.app";
+                in
+                [
+                  "--code-signature-flags"
+                  "${helper}:runtime"
+                  "--entitlements-xml-file"
+                  "${helper}:${src}/build/entitlements.mac.plist"
+                ]
+              )
+              [
+                ""
+                " (Renderer)"
+                " (GPU)"
+                " (Plugin)"
+              ]
+          )
+        } \
         "$out/Applications/GoofCord.app"
     '';
   }
