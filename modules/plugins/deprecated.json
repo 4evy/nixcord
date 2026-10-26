@@ -237,11 +237,6 @@
         "date": "2026-10-19"
       }
     },
-    "experiments": {
-      "toolbarDevMenu": {
-        "date": "2026-09-06"
-      }
-    },
     "voiceMessageTranscriber": {
       "deleteModalFiles": {
         "date": "2026-09-23"
