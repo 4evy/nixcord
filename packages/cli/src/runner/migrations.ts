@@ -6,10 +6,10 @@ import {
   updateDeprecatedPlugins,
 } from '@nixcord/nix-generator';
 import type { CategorizedPlugins } from '@nixcord/parser';
-import { CLI_CONFIG } from '@nixcord/shared';
 import { Effect } from 'effect';
 import fse from 'fs-extra';
 import { resolve } from 'pathe';
+import { CLI_CONFIG } from '../config.js';
 import { type GeneratePluginOptionsError, generationStep, generationValue } from './errors.js';
 import { getPluginsDir, PLUGIN_CATEGORIES } from './outputs.js';
 import type { GeneratePluginOptionsParams } from './params.js';

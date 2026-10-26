@@ -20,16 +20,10 @@
       "path": "packages/slice-executor"
     },
     {
-      "path": "packages/ast"
-    },
-    {
       "path": "packages/git-analyzer"
     },
     {
       "path": "packages/nix-generator"
-    },
-    {
-      "path": "packages/shared"
     },
     {
       "path": "packages/parser"

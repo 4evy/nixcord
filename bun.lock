@@ -37,15 +37,6 @@
         "typescript": "7.1.0-beta",
       },
     },
-    "packages/ast": {
-      "name": "@nixcord/ast",
-      "version": "1.0.0",
-      "dependencies": {
-        "@nixcord/setting-analysis": "workspace:*",
-        "@nixcord/slice-executor": "workspace:*",
-        "@nixcord/typescript-analysis": "workspace:*",
-      },
-    },
     "packages/cli": {
       "name": "@nixcord/cli",
       "version": "1.0.0",
@@ -57,9 +48,9 @@
         "@nixcord/git-analyzer": "workspace:*",
         "@nixcord/nix-generator": "workspace:*",
         "@nixcord/parser": "workspace:*",
-        "@nixcord/shared": "workspace:*",
         "@optique/core": "^1.3.6",
         "@optique/run": "^1.3.6",
+        "consola": "^3.4.2",
         "deepmerge-ts": "^8.0.2",
         "effect": "4.0.6",
         "fs-extra": "^11.4.1",
@@ -98,7 +89,6 @@
         "valibot": "^1.5.0",
       },
       "devDependencies": {
-        "@nixcord/shared": "1.0.0",
         "fs-fixture": "2.16.0",
       },
     },
@@ -117,8 +107,6 @@
         "valibot": "^1.5.0",
       },
       "devDependencies": {
-        "@nixcord/ast": "1.0.0",
-        "@nixcord/shared": "1.0.0",
         "fs-fixture": "2.16.0",
       },
     },
@@ -127,14 +115,6 @@
       "version": "1.0.0",
       "dependencies": {
         "@nixcord/typescript-analysis": "workspace:*",
-      },
-    },
-    "packages/shared": {
-      "name": "@nixcord/shared",
-      "version": "1.0.0",
-      "dependencies": {
-        "@nixcord/domain": "workspace:*",
-        "consola": "^3.4.2",
       },
     },
     "packages/slice-executor": {
@@ -224,8 +204,6 @@
 
     "@lucide/svelte": ["@lucide/svelte@1.61.0", "", { "peerDependencies": { "svelte": "^5" } }, "sha512-Vwj4ADoKgVogLFpEbXv2PS2hh2fj+aAqPuiNydI88Zkyb1l7veL4fXgRrOX3tgpESHhIGneNkSSYhHupvCBshg=="],
 
-    "@nixcord/ast": ["@nixcord/ast@workspace:packages/ast"],
-
     "@nixcord/cli": ["@nixcord/cli@workspace:packages/cli"],
 
     "@nixcord/domain": ["@nixcord/domain@workspace:packages/domain"],
@@ -237,8 +215,6 @@
     "@nixcord/parser": ["@nixcord/parser@workspace:packages/parser"],
 
     "@nixcord/setting-analysis": ["@nixcord/setting-analysis@workspace:packages/setting-analysis"],
-
-    "@nixcord/shared": ["@nixcord/shared@workspace:packages/shared"],
 
     "@nixcord/slice-executor": ["@nixcord/slice-executor@workspace:packages/slice-executor"],
 

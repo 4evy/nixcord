@@ -5,7 +5,6 @@ import { handleCliError, runCli } from './cli.js';
 export {
   GeneratePluginOptionsError,
   generatePluginOptions,
-  runGeneratePluginOptions,
   validateParsedResults,
 } from './runner/index.js';
 

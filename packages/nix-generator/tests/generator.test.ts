@@ -1,4 +1,4 @@
-import type { PluginConfig, PluginSetting } from '@nixcord/shared';
+import type { PluginConfig, PluginSetting } from '@nixcord/domain';
 import { describe, expect, test } from 'vitest';
 import { generatePluginJson, generatePluginSchema, generateSettingJson } from '../src/generator.js';
 

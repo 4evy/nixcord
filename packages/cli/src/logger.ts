@@ -1,8 +1,6 @@
 import type { Logger } from '@nixcord/domain';
 import consola from 'consola';
 
-export type { Logger } from '@nixcord/domain';
-
 export const createLogger = (verbose = false): Logger => {
   const level = verbose ? 4 : 3;
   const instance = consola.create({

@@ -1,10 +1,10 @@
+import { afterEach } from 'vitest';
 import {
   type AnalysisSession,
   createAnalysisSession,
   type Node,
   type TypeChecker,
-} from '@nixcord/typescript-analysis';
-import { afterEach } from 'vitest';
+} from '../../src/index.js';
 
 const fixtures = new Set<NativeFixture>();
 afterEach(async () => {

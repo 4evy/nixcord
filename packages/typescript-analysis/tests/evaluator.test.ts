@@ -1,7 +1,7 @@
 import { SyntaxKind, type TypeChecker } from '@nixcord/typescript-analysis';
 import { describe, expect, test } from 'vitest';
-import { StaticEvaluator } from '../../../src/evaluator.js';
-import { NativeFixture } from '../../fixtures/native.js';
+import { StaticEvaluator } from '../src/evaluator.js';
+import { NativeFixture } from './fixtures/native.js';
 
 const evaluateInitializer = async (source: string, name = 'result') => {
   const project = new NativeFixture();

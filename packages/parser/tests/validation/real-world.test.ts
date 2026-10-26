@@ -1,20 +1,26 @@
 import { existsSync } from 'node:fs';
 import { basename, dirname, join, relative } from 'node:path';
-import { createAnalysisSession, StaticEvaluator } from '@nixcord/ast';
 import {
-  CLI_CONFIG,
   type ParsedPluginsResult,
   ParsedPluginsResultSchema,
   type PluginSetting,
-} from '@nixcord/shared';
-import { type Node, SyntaxKind, type TypeLiteralNode } from '@nixcord/typescript-analysis';
+} from '@nixcord/domain';
+import {
+  createAnalysisSession,
+  type Node,
+  StaticEvaluator,
+  SyntaxKind,
+  type TypeLiteralNode,
+} from '@nixcord/typescript-analysis';
 import fg from 'fast-glob';
 import * as v from 'valibot';
 import { beforeAll, describe, expect, test } from 'vitest';
 import { categorizePlugins, parsePlugins } from '../../src/index.js';
 
-const VENCORD_PATH = CLI_CONFIG.sources.vencord;
-const EQUICORD_PATH = CLI_CONFIG.sources.equicord;
+const VENCORD_PATH = 'node_modules/vencord';
+const EQUICORD_PATH = 'node_modules/equicord';
+const VENCORD_PLUGINS = 'src/plugins';
+const EQUICORD_PLUGINS = 'src/equicordplugins';
 
 let vencordPromise: Promise<ParsedPluginsResult> | undefined;
 let equicordPromise: Promise<ParsedPluginsResult> | undefined;
@@ -259,10 +265,7 @@ describe.skipIf(!existsSync(VENCORD_PATH))('pinned Vencord source', () => {
   });
 
   test('covers every upstream Vencord plugin entry and declared setting', async () => {
-    const expectedEntries = await expectedEntryIds(
-      VENCORD_PATH,
-      CLI_CONFIG.directories.vencordPlugins
-    );
+    const expectedEntries = await expectedEntryIds(VENCORD_PATH, VENCORD_PLUGINS);
     expect(
       Object.values(result.vencordPlugins)
         .map((plugin) => plugin.directoryName)
@@ -273,7 +276,7 @@ describe.skipIf(!existsSync(VENCORD_PATH))('pinned Vencord source', () => {
     expect(
       await auditSettingCoverage(
         VENCORD_PATH,
-        [{ pluginRoot: CLI_CONFIG.directories.vencordPlugins, plugins: result.vencordPlugins }],
+        [{ pluginRoot: VENCORD_PLUGINS, plugins: result.vencordPlugins }],
         result.diagnostics
       )
     ).toEqual([]);
@@ -416,8 +419,8 @@ describe.skipIf(!existsSync(EQUICORD_PATH))('pinned Equicord source', () => {
 
   test('covers every upstream Equicord plugin entry and declared setting', async () => {
     const [expectedVencordEntries, expectedEquicordEntries] = await Promise.all([
-      expectedEntryIds(EQUICORD_PATH, CLI_CONFIG.directories.vencordPlugins),
-      expectedEntryIds(EQUICORD_PATH, CLI_CONFIG.directories.equicordPlugins),
+      expectedEntryIds(EQUICORD_PATH, VENCORD_PLUGINS),
+      expectedEntryIds(EQUICORD_PATH, EQUICORD_PLUGINS),
     ]);
     expect(
       Object.values(result.vencordPlugins)
@@ -435,8 +438,8 @@ describe.skipIf(!existsSync(EQUICORD_PATH))('pinned Equicord source', () => {
       await auditSettingCoverage(
         EQUICORD_PATH,
         [
-          { pluginRoot: CLI_CONFIG.directories.vencordPlugins, plugins: result.vencordPlugins },
-          { pluginRoot: CLI_CONFIG.directories.equicordPlugins, plugins: result.equicordPlugins },
+          { pluginRoot: VENCORD_PLUGINS, plugins: result.vencordPlugins },
+          { pluginRoot: EQUICORD_PLUGINS, plugins: result.equicordPlugins },
         ],
         result.diagnostics
       )

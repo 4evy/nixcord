@@ -1,6 +1,6 @@
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { ParsedPluginsResult, PluginSetting } from '@nixcord/shared';
+import type { ParsedPluginsResult, PluginSetting } from '@nixcord/domain';
 import { describe, expect, test } from 'vitest';
 import { categorizePlugins, parsePlugins } from '../../src/index.js';
 

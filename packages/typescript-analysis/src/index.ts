@@ -1,3 +1,7 @@
+// Syntax, symbols, sessions, and static evaluation belong to this package
+// Import setting traces from @nixcord/setting-analysis and component execution
+// from @nixcord/slice-executor
+
 export { createScanner } from '@typescript/native/ast/scanner';
 export * from './ast.js';
 export type {
@@ -7,7 +11,7 @@ export type {
   StaticScalar,
   StaticValue,
 } from './evaluator.js';
-export { createStaticEvaluator, StaticEvaluator } from './evaluator.js';
+export { StaticEvaluator } from './evaluator.js';
 export { resolvedDeclaration, unwrapExpression } from './nodes.js';
 export { unexportedText } from './printing.js';
 export type {

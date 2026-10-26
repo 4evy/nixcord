@@ -1,8 +1,8 @@
 import { generatePluginSchema } from '@nixcord/nix-generator';
 import { categorizePlugins, type ParsePluginsOptions } from '@nixcord/parser';
-import { CLI_CONFIG } from '@nixcord/shared';
 import { Effect, Record, Schema } from 'effect';
 import { resolve } from 'pathe';
+import { CLI_CONFIG } from '../config.js';
 import { applyPluginOverrides } from '../overrides.js';
 import { summarizeDiagnostics } from './diagnostics.js';
 import { GeneratePluginOptionsError, generationStep, generationValue } from './errors.js';
@@ -22,6 +22,8 @@ export type {
 } from './params.js';
 export { validateParsedResults } from './sources.js';
 
+// Return the generation effect without choosing a runtime for API callers
+// Promise consumers execute it with Effect.runPromise
 export const generatePluginOptions = (
   rawParams: GeneratePluginOptionsParams
 ): Effect.Effect<GeneratePluginOptionsSummary, GeneratePluginOptionsError> =>
@@ -178,7 +180,3 @@ export const generatePluginOptions = (
 
     return summary;
   });
-
-export const runGeneratePluginOptions = (
-  params: GeneratePluginOptionsParams
-): Promise<GeneratePluginOptionsSummary> => Effect.runPromise(generatePluginOptions(params));

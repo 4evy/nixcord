@@ -1,4 +1,5 @@
-import { CLI_CONFIG, type Logger } from '@nixcord/shared';
+import type { Logger } from '@nixcord/domain';
+import { CLI_CONFIG } from './config.js';
 import type { GeneratePluginOptionsSummary } from './runner/index.js';
 
 export function logGeneratePluginOptionsSummary(

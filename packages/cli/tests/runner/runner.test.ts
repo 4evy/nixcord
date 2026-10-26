@@ -1,10 +1,10 @@
 import { dirname, join } from 'node:path';
-import type { ParsedPluginsResult, PluginConfig } from '@nixcord/shared';
-import { CLI_CONFIG } from '@nixcord/shared';
+import type { ParsedPluginsResult, PluginConfig } from '@nixcord/domain';
 import { Effect } from 'effect';
 import { createFixture } from 'fs-fixture';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { runGeneratePluginOptions, validateParsedResults } from '../../src/runner/index.js';
+import { CLI_CONFIG } from '../../src/config.js';
+import { generatePluginOptions, validateParsedResults } from '../../src/runner/index.js';
 
 const mocks = vi.hoisted(() => ({
   parsePluginsEffect: vi.fn(),
@@ -80,7 +80,7 @@ const createRepos = () =>
     },
   });
 
-describe('runGeneratePluginOptions', () => {
+describe('generatePluginOptions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -112,17 +112,19 @@ describe('runGeneratePluginOptions', () => {
 
     const outputPath = fixture.getPath('result', 'modules.nix');
     const overridesPath = fixture.getPath('overrides.json');
-    const result = await runGeneratePluginOptions({
-      vencordPath: vencordRepo,
-      equicordPath: equicordRepo,
-      vencordPluginsDir: CLI_CONFIG.directories.vencordPlugins,
-      equicordPluginsDir: CLI_CONFIG.directories.equicordPlugins,
-      outputPath,
-      metadataPath: fixture.getPath('result', 'metadata.json'),
-      overridesPath,
-      verbose: false,
-      logger,
-    });
+    const result = await Effect.runPromise(
+      generatePluginOptions({
+        vencordPath: vencordRepo,
+        equicordPath: equicordRepo,
+        vencordPluginsDir: CLI_CONFIG.directories.vencordPlugins,
+        equicordPluginsDir: CLI_CONFIG.directories.equicordPlugins,
+        outputPath,
+        metadataPath: fixture.getPath('result', 'metadata.json'),
+        overridesPath,
+        verbose: false,
+        logger,
+      })
+    );
 
     expect(result).toEqual({
       pluginsDir: join(dirname(outputPath), CLI_CONFIG.directories.output),
@@ -212,13 +214,15 @@ describe('runGeneratePluginOptions', () => {
       equicordOnly: {},
     });
 
-    const result = await runGeneratePluginOptions({
-      vencordPath: vencordRepo,
-      vencordPluginsDir: CLI_CONFIG.directories.vencordPlugins,
-      equicordPluginsDir: CLI_CONFIG.directories.equicordPlugins,
-      outputPath: fixture.getPath('out.nix'),
-      logger,
-    });
+    const result = await Effect.runPromise(
+      generatePluginOptions({
+        vencordPath: vencordRepo,
+        vencordPluginsDir: CLI_CONFIG.directories.vencordPlugins,
+        equicordPluginsDir: CLI_CONFIG.directories.equicordPlugins,
+        outputPath: fixture.getPath('out.nix'),
+        logger,
+      })
+    );
 
     expect(result.diagnosticSummary).toEqual({
       total: 3,
@@ -249,13 +253,15 @@ describe('runGeneratePluginOptions', () => {
       })
     );
 
-    const result = runGeneratePluginOptions({
-      vencordPath: vencordRepo,
-      vencordPluginsDir: CLI_CONFIG.directories.vencordPlugins,
-      equicordPluginsDir: CLI_CONFIG.directories.equicordPlugins,
-      outputPath: fixture.getPath('out.nix'),
-      logger,
-    });
+    const result = Effect.runPromise(
+      generatePluginOptions({
+        vencordPath: vencordRepo,
+        vencordPluginsDir: CLI_CONFIG.directories.vencordPlugins,
+        equicordPluginsDir: CLI_CONFIG.directories.equicordPlugins,
+        outputPath: fixture.getPath('out.nix'),
+        logger,
+      })
+    );
 
     await expect(result).rejects.toThrow('settings');
   });
@@ -263,13 +269,15 @@ describe('runGeneratePluginOptions', () => {
   test('fails fast when vencord path is invalid', async () => {
     await using fixture = await createRepos();
     const logger = createLogger();
-    const result = runGeneratePluginOptions({
-      vencordPath: fixture.getPath('missing'),
-      vencordPluginsDir: CLI_CONFIG.directories.vencordPlugins,
-      equicordPluginsDir: CLI_CONFIG.directories.equicordPlugins,
-      outputPath: fixture.getPath('out.nix'),
-      logger,
-    });
+    const result = Effect.runPromise(
+      generatePluginOptions({
+        vencordPath: fixture.getPath('missing'),
+        vencordPluginsDir: CLI_CONFIG.directories.vencordPlugins,
+        equicordPluginsDir: CLI_CONFIG.directories.equicordPlugins,
+        outputPath: fixture.getPath('out.nix'),
+        logger,
+      })
+    );
 
     await expect(result).rejects.toThrow('Vencord source path does not exist');
     expect(mocks.parsePluginsEffect).not.toHaveBeenCalled();

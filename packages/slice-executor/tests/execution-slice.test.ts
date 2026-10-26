@@ -3,8 +3,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { SyntaxKind } from '@nixcord/typescript-analysis';
 import { describe, expect, test } from 'vitest';
-import { executeComponentSlice } from '../../../src/execute.js';
-import { NativeFixture } from '../../fixtures/native.js';
+import { NativeFixture } from '../../typescript-analysis/tests/fixtures/native.js';
+import { executeComponentSlice } from '../src/execute.js';
 
 describe('executed component slices', () => {
   test('captures persistent settings reads without executing unrelated plugin initialization', async () => {

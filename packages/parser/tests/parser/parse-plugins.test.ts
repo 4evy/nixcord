@@ -1,6 +1,6 @@
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { ParsedPluginsResultSchema, type PluginSetting } from '@nixcord/shared';
+import { ParsedPluginsResultSchema, type PluginSetting } from '@nixcord/domain';
 import { createFixture } from 'fs-fixture';
 import * as v from 'valibot';
 import { describe, expect, test } from 'vitest';

@@ -21,10 +21,16 @@ beforeAll(async () => {
     logLevel: 'silent',
     resolve: {
       alias: Object.fromEntries(
-        ['cli', 'parser', 'ast', 'git-analyzer', 'nix-generator', 'shared'].map((name) => [
-          `@nixcord/${name}`,
-          join(root, 'packages', name, 'src/index.ts'),
-        ])
+        [
+          'cli',
+          'domain',
+          'parser',
+          'typescript-analysis',
+          'setting-analysis',
+          'slice-executor',
+          'git-analyzer',
+          'nix-generator',
+        ].map((name) => [`@nixcord/${name}`, join(root, 'packages', name, 'src/index.ts')])
       ),
     },
     build: {

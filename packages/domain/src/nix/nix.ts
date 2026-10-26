@@ -36,5 +36,5 @@ export type NixSettingType =
   | typeof NIX_TYPE_NULL_OR_LIST_OF_STR
   | (typeof NIX_LIST_TYPES)[keyof typeof NIX_LIST_TYPES];
 
-// Regex for detecting integer-only strings (used by nix-generator and ast)
+// Regex for detecting integer-only strings in setting analysis and Nix generation
 export const INTEGER_STRING_PATTERN = /^[0-9]+$/;

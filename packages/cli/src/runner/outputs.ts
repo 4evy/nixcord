@@ -5,10 +5,10 @@ import {
   type PluginJson,
 } from '@nixcord/nix-generator';
 import type { CategorizedPlugins } from '@nixcord/parser';
-import { CLI_CONFIG } from '@nixcord/shared';
 import { Record as Records } from 'effect';
 import fse from 'fs-extra';
 import { dirname, join, normalize, resolve } from 'pathe';
+import { CLI_CONFIG } from '../config.js';
 import type { GeneratePluginOptionsSummary } from './params.js';
 import { compilePluginOptions, compilePluginPaths } from './schema.js';
 

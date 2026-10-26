@@ -1,4 +1,4 @@
-import type { DeprecatedData, PluginConfig } from '@nixcord/shared';
+import type { DeprecatedData, PluginConfig } from '@nixcord/domain';
 import { createFixture } from 'fs-fixture';
 import { describe, expect, test } from 'vitest';
 import { updateDeprecatedPlugins } from '../src/deprecated.js';

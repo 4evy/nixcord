@@ -6,10 +6,8 @@
     "packages/typescript-analysis",
     "packages/setting-analysis",
     "packages/slice-executor",
-    "packages/ast",
     "packages/git-analyzer",
     "packages/nix-generator",
-    "packages/shared",
     "packages/parser",
     "packages/cli",
     "docs/site"

@@ -1,7 +1,7 @@
+import { StaticEvaluator } from '@nixcord/typescript-analysis';
 import { describe, expect, test } from 'vitest';
-import { StaticEvaluator } from '../../../src/evaluator.js';
-import { traceComponentSetting } from '../../../src/trace.js';
-import { NativeFixture } from '../../fixtures/native.js';
+import { NativeFixture } from '../../typescript-analysis/tests/fixtures/native.js';
+import { traceComponentSetting } from '../src/trace/trace.js';
 
 const trace = async (source: string, settingKey: string) => {
   const project = new NativeFixture();

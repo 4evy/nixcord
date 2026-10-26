@@ -1,8 +1,8 @@
 import { resolve } from 'node:path';
-import { CLI_CONFIG } from '@nixcord/shared';
 import { Effect } from 'effect';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { handleCliError, runCli } from '../../src/cli.js';
+import { CLI_CONFIG } from '../../src/config.js';
 import { GeneratePluginOptionsError } from '../../src/runner/errors.js';
 import { generatePluginOptions } from '../../src/runner/index.js';
 
@@ -18,8 +18,7 @@ const logger = vi.hoisted(() => ({
   debug: vi.fn(),
 }));
 
-vi.mock('@nixcord/shared', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@nixcord/shared')>()),
+vi.mock('../../src/logger.js', () => ({
   createLogger: vi.fn(() => logger),
 }));
 

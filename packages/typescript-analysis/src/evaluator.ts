@@ -153,8 +153,3 @@ export class StaticEvaluator {
     return unknown(`unsupported ${node.getKindName()}`, node);
   }
 }
-
-export const createStaticEvaluator = (
-  checker: TypeChecker,
-  options?: StaticEvaluatorOptions
-): StaticEvaluator => new StaticEvaluator(checker, options);

@@ -1,4 +1,3 @@
-import { CLI_CONFIG, createLogger } from '@nixcord/shared';
 import { object } from '@optique/core/constructs';
 import { message, text } from '@optique/core/message';
 import { optional, withDefault } from '@optique/core/modifiers';
@@ -8,6 +7,8 @@ import { run } from '@optique/run';
 import { path } from '@optique/run/valueparser';
 import { Effect, Result } from 'effect';
 import { resolve } from 'pathe';
+import { CLI_CONFIG } from './config.js';
+import { createLogger } from './logger.js';
 import type { GeneratePluginOptionsParams } from './runner/index.js';
 import { generatePluginOptions } from './runner/index.js';
 import { logGeneratePluginOptionsSummary } from './summary.js';

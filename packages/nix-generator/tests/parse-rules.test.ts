@@ -1,4 +1,4 @@
-import type { PluginConfig } from '@nixcord/shared';
+import type { PluginConfig } from '@nixcord/domain';
 import { describe, expect, test } from 'vitest';
 import { generateParseRulesModule } from '../src/rules.js';
 
