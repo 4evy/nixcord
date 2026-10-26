@@ -392,9 +392,9 @@
         "version": 1
       },
       "discord_utils": {
-        "hash": "sha256:2666007692291de14f2370088629abbabce7d7a2dcaa0a30f8844c521c1137d8",
-        "url": "https://canary.dl2.discordapp.net/distro/app/canary/osx/universal/0.0.1423/discord_utils/6/full.distro",
-        "version": 6
+        "hash": "sha256:90ef6814f2a80116d2ded7c0d235b985f6cd975f7bfe7e569a5fdb1f0faef203",
+        "url": "https://canary.dl2.discordapp.net/distro/app/canary/osx/universal/0.0.1423/discord_utils/7/full.distro",
+        "version": 7
       },
       "discord_voice": {
         "hash": "sha256:a031606961b2df6d3e9562a17626c6afffe0a714f00af314a271ae14da4ab17b",
