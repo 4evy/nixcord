@@ -36,7 +36,12 @@ const countLabel = $derived(
   id={section.id}
   class="option-section scroll-mt-20 border-t border-neutral-300 py-3 first:border-t-0 first:pt-0 dark:border-neutral-700"
   {open}
-  ontoggle={(event) => onToggle(event.currentTarget.open)}
+  ontoggle={(event) => {
+    // Ignore queued events from removed categories and controlled updates
+    if (event.currentTarget.isConnected && event.currentTarget.open !== open) {
+      onToggle(event.currentTarget.open);
+    }
+  }}
 >
   <summary
     class={`option-section-summary -mx-2 grid min-h-12 cursor-pointer list-none grid-cols-[minmax(0,1fr)_auto] items-start gap-3 rounded-sm px-2 py-2 text-[#0a3e68] transition-colors hover:bg-sky-50 hover:text-[#268598] [&::-webkit-details-marker]:hidden dark:text-[#8ccff0] dark:hover:bg-[#1f2b35] dark:hover:text-[#bde8fa] ${focusClass}`}
