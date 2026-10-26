@@ -1,0 +1,27 @@
+name: Export Bun dependencies
+description: Build and upload the portable plugin dependency stores
+
+runs:
+  using: composite
+  steps:
+    - name: Export Bun dependency caches
+      shell: bash
+      run: |
+        set -o errexit -o nounset -o pipefail
+        # Realize both stores together so Nix can schedule them in parallel
+        nix build --no-link --print-out-paths \
+          .#equicord.bunDeps .#vencord.bunDeps > bun-deps.paths
+        mapfile -t paths < bun-deps.paths
+        if [[ ${#paths[@]} -ne 2 ]]; then
+          echo "::error::Expected exactly two plugin dependency stores"
+          exit 1
+        fi
+        nix-store --export "${paths[@]}" > bun-deps.nar
+
+    - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+      with:
+        name: bun-deps
+        path: bun-deps.nar
+        if-no-files-found: error
+        compression-level: 0
+        retention-days: 1
