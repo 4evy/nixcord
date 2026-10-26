@@ -18,8 +18,8 @@ let {
 
 const categories: { label: string; value: OptionCategoryFilter }[] = [
   { label: 'All', value: 'all' },
-  { label: 'Core', value: 'core' },
-  { label: 'Shared', value: 'shared' },
+  { label: 'Clients & config', value: 'core' },
+  { label: 'Shared plugins', value: 'shared' },
   { label: 'Vencord', value: 'vencord' },
   { label: 'Equicord', value: 'equicord' },
 ];
@@ -41,7 +41,7 @@ const statusText = $derived(
     <input
       id="option-search"
       type="search"
-      placeholder="Name, description, or type"
+      placeholder="Search by name, description, or type…"
       autocomplete="off"
       bind:value={query}
     />
@@ -57,6 +57,17 @@ const statusText = $derived(
       </button>
     {/if}
   </div>
+
+  {#if !hasQuery}
+    <div class="search-examples">
+      <span>Try</span>
+      {#each ['hideMedia', 'themeLinks', 'vesktop'] as example}
+        <button type="button" aria-label={`Search for ${example}`} onclick={() => (query = example)}>
+          {example}
+        </button>
+      {/each}
+    </div>
+  {/if}
 
   <div class="option-filter-row">
     <fieldset class="option-categories">

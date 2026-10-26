@@ -363,6 +363,45 @@ input[type="search"]::-webkit-search-cancel-button {
   background: var(--panel);
   color: var(--ink);
 }
+.search-examples {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.search-examples button {
+  min-height: 36px;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  cursor: pointer;
+}
+.search-examples button:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.empty-search {
+  margin: 20px 0;
+  padding: 24px;
+  background: var(--panel);
+  border-radius: var(--radius);
+  font-size: 14px;
+}
+.empty-search p {
+  margin: 0 0 8px;
+}
+.empty-search p + p {
+  color: var(--muted);
+}
+.empty-search button {
+  min-height: 44px;
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
 .option-filter-row {
   display: flex;
   flex-wrap: wrap;

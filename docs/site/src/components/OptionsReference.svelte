@@ -257,7 +257,6 @@ function handleOptionToggle(optionName: string, isOpen: boolean) {
   else openOptionNames.delete(optionName);
 }
 
-
 function isReferenceHash(hash: string): boolean {
   return hash === '#sec-options' || hash.startsWith('#options-') || hash.startsWith('#opt-');
 }
@@ -294,12 +293,15 @@ function isReferenceHash(hash: string): boolean {
       <OptionsToolbar bind:query bind:category {totalMatches} {totalOptions} />
 
       {#if isFiltering && totalMatches === 0}
-        <p
-          class="my-4 rounded-r-sm border-l-4 border-neutral-300 bg-neutral-50 px-4 py-3 text-neutral-700 dark:border-neutral-600 dark:bg-[#171d24] dark:text-neutral-300"
-          role="status"
-        >
-          No options match this search{category === 'all' ? '.' : ' in the selected category.'} Try a shorter search or choose All.
-        </p>
+        <div class="empty-search">
+          <p role="status">No options match “{query}”{category === 'all' ? '.' : ' in this category.'}</p>
+          <p>Try a plugin name or a shorter search.</p>
+          <button type="button" onclick={() => {
+            query = '';
+            category = 'all';
+            document.getElementById('option-search')?.focus();
+          }}>Clear search and filters</button>
+        </div>
       {:else}
         {#each sections as section (section.id)}
           {#if !isFiltering || section.optionCount > 0}
