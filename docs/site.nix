@@ -3,12 +3,10 @@
   nixcord-options,
   callPackage,
   revision,
-  buildNpmPackage,
-  writableTmpDirAsHomeHook,
   ...
 }:
 let
-  nodejs = callPackage ../nix/nodejs.nix { };
+  buildBunPackage = callPackage ../pkgs/bun/build-package.nix { };
   siteSources = lib.fileset.difference ./site (
     lib.fileset.unions (
       map lib.fileset.maybeMissing [
@@ -23,34 +21,31 @@ let
     fileset = lib.fileset.unions [
       (lib.fileset.fromSource (import ../nix/workspace-source.nix { inherit lib; }))
       ../tsconfig.base.json
-      ../modules/plugins/equicord.json
       ../modules/plugins/parse-rules.json
-      ../modules/plugins/shared.json
-      ../modules/plugins/vencord.json
-      ../packages/nix-generator/src/identifier.ts
+      (lib.fileset.fromSource (import ../pkgs/generate-options/sources.nix { inherit lib; }).project)
       siteSources
     ];
   };
 
 in
-buildNpmPackage {
+buildBunPackage {
   pname = "nixcord-docs";
   version = revision;
 
-  inherit src nodejs;
-  npmDeps = callPackage ../pkgs/generate-options/node-modules.nix { };
-  npmDepsFetcherVersion = 2;
-  npmInstallFlags = [ "--ignore-scripts" ];
-  nativeBuildInputs = [ writableTmpDirAsHomeHook ];
-
-  npmWorkspace = "docs/site";
+  inherit src;
+  bunDeps = callPackage ../pkgs/generate-options/node-modules.nix { };
+  buildPhase = ''
+    runHook preBuild
+    bun run --bun docs:build
+    runHook postBuild
+  '';
   env.NIXCORD_REVISION = revision;
 
   installPhase = ''
     runHook preInstall
     dest="$out/share/doc/nixcord"
-    mkdir -p "$dest"
-    cp -R docs/site/dist/. "$dest/"
+    mkdir --parents "$dest"
+    cp --recursive docs/site/dist/. "$dest/"
     cp ${nixcord-options}/share/doc/nixos/options.json "$dest/options.json"
     runHook postInstall
   '';

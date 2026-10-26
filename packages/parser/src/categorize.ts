@@ -1,4 +1,5 @@
-import type { ParsedPluginsResult, PluginConfig } from '@nixcord/shared';
+import type { ParsedPluginsResult, PluginConfig } from '@nixcord/domain';
+import { Array as Arr, Result } from 'effect';
 import { SOURCE_PROFILES } from './profiles.js';
 
 const PLUGIN_RENAME_MAP: Record<string, string> = { oneko: 'CursorBuddy' };
@@ -35,14 +36,16 @@ const hasSameSettingSurface = (left: PluginConfig, right: PluginConfig): boolean
   );
 };
 
-export function categorizePlugins(
-  vencordResult: Readonly<ParsedPluginsResult>,
-  equicordResult?: Readonly<ParsedPluginsResult>
-): {
+export interface CategorizedPlugins {
   readonly generic: Readonly<Record<string, PluginConfig>>;
   readonly vencordOnly: Readonly<Record<string, PluginConfig>>;
   readonly equicordOnly: Readonly<Record<string, PluginConfig>>;
-} {
+}
+
+export function categorizePlugins(
+  vencordResult: Readonly<ParsedPluginsResult>,
+  equicordResult?: Readonly<ParsedPluginsResult>
+): CategorizedPlugins {
   const vencordPlugins = vencordResult.vencordPlugins;
   const equicordSharedPlugins = equicordResult?.vencordPlugins ?? {};
   const equicordOnlyPlugins = equicordResult?.equicordPlugins ?? {};
@@ -77,33 +80,22 @@ export function categorizePlugins(
     return { name, config, equicordConfig: getEquicordConfig() };
   });
 
-  const genericMatches = pluginMatches.filter(
-    ({ config, equicordConfig }) =>
-      equicordConfig !== undefined &&
+  const [genericMatches, vencordMatches] = Arr.partition(pluginMatches, (match) => {
+    const { config, equicordConfig } = match;
+    return equicordConfig !== undefined &&
       !CLIENT_SPECIFIC_PLUGINS.has(config.name) &&
       !equicordConfig.isModified &&
       hasSameSettingSurface(config, equicordConfig)
-  );
-  const vencordMatches = pluginMatches.filter(
-    ({ config, equicordConfig }) =>
-      equicordConfig === undefined ||
-      CLIENT_SPECIFIC_PLUGINS.has(config.name) ||
-      equicordConfig.isModified ||
-      !hasSameSettingSurface(config, equicordConfig)
-  );
+      ? Result.succeed({ ...match, equicordConfig })
+      : Result.fail(match);
+  });
 
   const genericTuples = genericMatches.map(
-    ({ name, equicordConfig }) => [name, equicordConfig!] as [string, PluginConfig]
+    ({ name, equicordConfig }) => [name, equicordConfig] as const
   );
-
-  const vencordTuples = vencordMatches.map(
-    ({ name, config }) => [name, config] as [string, PluginConfig]
-  );
-
+  const vencordTuples = vencordMatches.map(({ name, config }) => [name, config] as const);
   const matchedEquicordPluginNames = new Set(
-    genericMatches
-      .map(({ equicordConfig }) => equicordConfig!.name)
-      .filter((name) => name !== undefined)
+    genericMatches.map(({ equicordConfig }) => equicordConfig.name)
   );
 
   const modifiedEquicordSharedPluginNames = new Set(
@@ -128,7 +120,7 @@ export function categorizePlugins(
   );
 
   // Include Equicord's ordinary plugins with no Vencord counterpart;
-  // the Vencord loop above cannot discover them.
+  // the Vencord loop above cannot discover them
   const renamedEquicordTargets = new Set(Object.values(PLUGIN_RENAME_MAP));
   const equicordSharedExtras = Object.fromEntries(
     Object.entries(equicordSharedPlugins).filter(

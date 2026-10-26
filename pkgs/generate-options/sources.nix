@@ -28,9 +28,11 @@ in
       (lib.fileset.fromSource (import ../../nix/workspace-source.nix { inherit lib; }))
       ../../tsconfig.json
       ../../tsconfig.base.json
+      ../../tsconfig.patching.json
       ../../modules/lib/tsconfig.json
       ../../modules/lib/legcord-build.ts
-      ../../vitest.workspace.ts
+      ../../vitest.config.ts
+      ../../docs/site/plugin-metadata
       ../../vite.config.shared.ts
       ../../modules/plugins/overrides.json
       ../../modules/plugins/deprecated.json

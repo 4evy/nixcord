@@ -15,8 +15,7 @@ describe('declarative setting rules', () => {
       expect(
         applySettingRule({
           optionType,
-          hasDefault,
-          ...(hasDefault ? { defaultValue: value } : {}),
+          defaultEvidence: hasDefault ? { kind: 'known', value: value! } : { kind: 'absent' },
           options: [],
         })
       ).toMatchObject({ type, defaultValue: fallback });
@@ -27,7 +26,7 @@ describe('declarative setting rules', () => {
     expect(
       applySettingRule({
         optionType: 'SELECT',
-        hasDefault: false,
+        defaultEvidence: { kind: 'absent' },
         options: [
           { value: true, label: 'On', isDefault: true },
           { value: false, label: 'Off', isDefault: false },
@@ -38,7 +37,7 @@ describe('declarative setting rules', () => {
     expect(
       applySettingRule({
         optionType: 'SELECT',
-        hasDefault: false,
+        defaultEvidence: { kind: 'absent' },
         options: [
           { value: 'one', label: 'One', isDefault: false },
           { value: 'two', label: 'Two', isDefault: true },
@@ -54,7 +53,7 @@ describe('declarative setting rules', () => {
     expect(
       applySettingRule({
         optionType: 'SELECT',
-        hasDefault: false,
+        defaultEvidence: { kind: 'absent' },
         options: [
           { value: 'high', label: 'High', isDefault: true },
           { value: 'low', label: 'Low', isDefault: false },
@@ -70,8 +69,7 @@ describe('declarative setting rules', () => {
   test('empty arrays use contextual string-list evidence', () => {
     expect(
       applySettingRule({
-        hasDefault: true,
-        defaultValue: [],
+        defaultEvidence: { kind: 'known', value: [] },
         options: [],
         contextualType: 'string[]',
       })
@@ -81,8 +79,7 @@ describe('declarative setting rules', () => {
   test('empty arrays preserve contextual element types and otherwise accept anything', () => {
     expect(
       applySettingRule({
-        hasDefault: true,
-        defaultValue: [],
+        defaultEvidence: { kind: 'known', value: [] },
         options: [],
         contextualType: 'Array<KeywordEntry>',
       })
@@ -90,8 +87,7 @@ describe('declarative setting rules', () => {
 
     expect(
       applySettingRule({
-        hasDefault: true,
-        defaultValue: [],
+        defaultEvidence: { kind: 'known', value: [] },
         options: [],
       })
     ).toMatchObject({ type: { kind: 'list', element: 'anything' }, defaultValue: [] });

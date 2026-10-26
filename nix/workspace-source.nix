@@ -1,6 +1,6 @@
 { lib }:
 let
-  # Workspaces are explicit, dependency-ordered paths in the root manifest.
+  # Read the explicit workspace paths from the root manifest
   manifest = lib.trivial.importJSON ../package.json;
   packageManifests = map (
     workspace: lib.path.append ../. "${workspace}/package.json"
@@ -10,9 +10,9 @@ lib.fileset.toSource {
   root = ./..;
   fileset = lib.fileset.unions (
     [
-      ../.npmrc
+      ../bunfig.toml
       ../package.json
-      ../package-lock.json
+      ../bun.lock
     ]
     ++ packageManifests
   );

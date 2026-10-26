@@ -95,9 +95,9 @@ From your Nix configuration directory, pin Nixcord and Nixpkgs with
 [npins](https://github.com/andir/npins):
 
 ```sh
-nix-shell -p npins --run 'npins init --bare'
-nix-shell -p npins --run 'npins add github NixOS nixpkgs --branch nixos-26.05 --name nixpkgs'
-nix-shell -p npins --run 'npins add github 4evy nixcord --branch main'
+nix-shell --packages npins --run 'npins init --bare'
+nix-shell --packages npins --run 'npins add github NixOS nixpkgs --branch nixos-26.05 --name nixpkgs'
+nix-shell --packages npins --run 'npins add github 4evy nixcord --branch main'
 ```
 
 Skip initialization if you already use npins, and skip any pin you already
@@ -124,7 +124,7 @@ Apply your configuration as usual. Commit the generated `npins` files to keep
 these versions reproducible. To update them:
 
 ```sh
-nix-shell -p npins --run 'npins update nixpkgs nixcord'
+nix-shell --packages npins --run 'npins update nixpkgs nixcord'
 ```
 
 Review the pin changes before committing them.
@@ -168,8 +168,8 @@ The import exposes `homeModules`, `nixosModules`, `darwinModules`, `packages`,
 (pkgs.extend nixcord.overlay).nixcord.vencord
 ```
 
-From a Nixcord checkout, you can also run `nix-build -A vencord`,
-`nix-build -A goofcord`, `nix-build -A docs`, or `nix-shell`.
+From a Nixcord checkout, you can also run `nix-build --attr vencord`,
+`nix-build --attr goofcord`, `nix-build --attr docs`, or `nix-shell`.
 
 </details>
 
@@ -339,7 +339,7 @@ it for calls.
 
 - `nix build .#docs` builds the site.
 - `nix build .#docs-json` builds the option reference as JSON.
-- `npm run docs:dev:options` generates options and starts the local docs server.
+- `bun run docs:dev:options` generates options and starts the local docs server.
 
 Vencord and Equicord modify Discord in ways that violate its terms of service.
 See the [Vencord FAQ](https://vencord.dev/support/) before using them.

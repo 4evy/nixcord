@@ -1,6 +1,7 @@
-import type { SettingListElement, SettingScalar, SettingType, SettingValue } from '@nixcord/shared';
-import { ts } from 'ts-morph';
+import type { SettingListElement, SettingScalar, SettingType, SettingValue } from '@nixcord/domain';
+import { Array as Arr } from 'effect';
 import type { OptionTypeName } from '../profiles.js';
+import { contextualTypeNode, type TypeContext, typeMembers } from './type-context.js';
 
 export interface SelectOption {
   readonly value: SettingScalar;
@@ -8,18 +9,21 @@ export interface SelectOption {
   readonly isDefault: boolean;
 }
 
+// A declared but unresolved default must never receive an invented fallback
+export type DefaultEvidence =
+  | { readonly kind: 'absent' }
+  | { readonly kind: 'unresolved' }
+  | { readonly kind: 'known'; readonly value: SettingValue };
+
 export interface SettingRuleInput {
   readonly optionType?: OptionTypeName;
-  readonly hasDefault: boolean;
-  readonly hasDeclaredDefault?: boolean;
-  readonly defaultValue?: SettingValue;
+  readonly defaultEvidence: DefaultEvidence;
   readonly options: readonly SelectOption[];
-  readonly contextualType?: string;
+  readonly contextualType?: string | TypeContext;
 }
 
 export interface SettingRuleResult {
   readonly type: SettingType;
-  readonly hasDefault: boolean;
   readonly defaultValue?: SettingValue;
 }
 
@@ -27,23 +31,15 @@ const withDefault = (
   type: SettingType,
   input: SettingRuleInput,
   fallback?: SettingValue
-): SettingRuleResult => ({
-  type,
-  hasDefault: input.hasDefault || (input.hasDeclaredDefault !== true && fallback !== undefined),
-  ...(input.hasDefault
-    ? { defaultValue: input.defaultValue }
-    : input.hasDeclaredDefault !== true && fallback !== undefined
-      ? { defaultValue: fallback }
-      : {}),
-});
+): SettingRuleResult => {
+  const evidence = input.defaultEvidence;
+  if (evidence.kind === 'known') return { type, defaultValue: evidence.value };
+  if (evidence.kind === 'absent' && fallback !== undefined) return { type, defaultValue: fallback };
+  return { type };
+};
 
 const selectRule = (input: SettingRuleInput): SettingRuleResult => {
-  const seen = new Set<SettingScalar>();
-  const options = input.options.filter((option) => {
-    if (seen.has(option.value)) return false;
-    seen.add(option.value);
-    return true;
-  });
+  const options = Arr.dedupeWith(input.options, (left, right) => left.value === right.value);
   const values = options.map((option) => option.value);
   if (
     values.length === 2 &&
@@ -74,27 +70,16 @@ const selectRule = (input: SettingRuleInput): SettingRuleResult => {
 
 export const inferTypeFromValue = (
   value: SettingValue | undefined,
-  contextualType?: string | ts.TypeNode
+  contextualType?: string | TypeContext
 ): SettingType => {
   if (typeof value === 'boolean') return { kind: 'boolean' };
   if (typeof value === 'number')
     return Number.isInteger(value) ? { kind: 'integer' } : { kind: 'float' };
-  const context =
-    typeof contextualType === 'string'
-      ? contextualTypeNode(contextualType)
-      : contextualType
-        ? unwrapType(contextualType)
-        : undefined;
+  const context = contextualTypeNode(contextualType);
   const members = typeMembers(context);
   const nullable = members.some(isNullType);
   if (typeof value === 'string') return { kind: 'string', nullable };
-  const isRecord = members.some(
-    (member) =>
-      ts.isTypeLiteralNode(member) ||
-      (ts.isTypeReferenceNode(member) &&
-        ts.isIdentifier(member.typeName) &&
-        member.typeName.text === 'Record')
-  );
+  const isRecord = members.some((member) => member.name === 'record');
   if (value === null) {
     return isRecord ? { kind: 'attrs', nullable: true } : { kind: 'string', nullable: true };
   }
@@ -113,69 +98,36 @@ export const inferTypeFromValue = (
   const contextualListElement = listElementFromContext(context);
   if (contextualListElement) return { kind: 'list', element: contextualListElement };
   if (isRecord) return { kind: 'attrs', nullable: true };
-  if (members.some((member) => member.kind === ts.SyntaxKind.BooleanKeyword))
-    return { kind: 'boolean' };
-  if (members.some((member) => member.kind === ts.SyntaxKind.NumberKeyword))
-    return { kind: 'float' };
+  if (members.some((member) => member.name === 'boolean')) return { kind: 'boolean' };
+  if (members.some((member) => member.name === 'number')) return { kind: 'float' };
   return { kind: 'string', nullable: true };
 };
 
-const unwrapType = (node: ts.TypeNode): ts.TypeNode => {
-  while (ts.isParenthesizedTypeNode(node) || ts.isTypeOperatorNode(node)) node = node.type;
-  return node;
-};
+const isNullType = (context: TypeContext): boolean => context.name === 'null';
 
-const contextualTypeNode = (text: string | undefined): ts.TypeNode | undefined => {
-  if (!text) return undefined;
-  const source = ts.createSourceFile(
-    'context.ts',
-    `type Setting = ${text};`,
-    ts.ScriptTarget.Latest
-  );
-  const declaration = source.statements[0];
-  return declaration && ts.isTypeAliasDeclaration(declaration)
-    ? unwrapType(declaration.type)
-    : undefined;
-};
-
-const typeMembers = (node: ts.TypeNode | undefined): readonly ts.TypeNode[] => {
-  if (!node) return [];
-  const type = unwrapType(node);
-  return ts.isUnionTypeNode(type) ? type.types.flatMap(typeMembers) : [type];
-};
-
-const isNullType = (node: ts.TypeNode): boolean =>
-  ts.isLiteralTypeNode(node) && node.literal.kind === ts.SyntaxKind.NullKeyword;
-
-const listElementFromContext = (type: ts.TypeNode | undefined): SettingListElement | undefined => {
-  if (!type) return undefined;
-  const element = ts.isArrayTypeNode(type)
-    ? type.elementType
-    : ts.isTypeReferenceNode(type) &&
-        ts.isIdentifier(type.typeName) &&
-        ['Array', 'ReadonlyArray'].includes(type.typeName.text)
-      ? type.typeArguments?.[0]
-      : undefined;
+const listElementFromContext = (
+  context: TypeContext | undefined
+): SettingListElement | undefined => {
+  const element = context?.element;
   if (!element) return undefined;
-  const unwrapped = unwrapType(element);
-  const members = ts.isUnionTypeNode(unwrapped)
-    ? unwrapped.types.filter((member) => member.kind !== ts.SyntaxKind.NeverKeyword)
-    : [unwrapped];
+  const members = typeMembers(element).filter((member) => member.name !== 'never');
   if (members.length === 0) return 'anything';
-  if (members.every((member) => member.kind === ts.SyntaxKind.StringKeyword)) return 'string';
-  if (members.every((member) => member.kind === ts.SyntaxKind.NumberKeyword)) return 'number';
-  if (members.every((member) => member.kind === ts.SyntaxKind.BooleanKeyword)) return 'boolean';
+  if (members.every((member) => member.name === 'string')) return 'string';
+  if (members.every((member) => member.name === 'number')) return 'number';
+  if (members.every((member) => member.name === 'boolean')) return 'boolean';
   if (
     members.length > 1 ||
-    members.some((member) =>
-      [ts.SyntaxKind.AnyKeyword, ts.SyntaxKind.UnknownKeyword, ts.SyntaxKind.NeverKeyword].includes(
-        member.kind
-      )
-    )
+    members.some((member) => ['any', 'unknown'].includes(member.name ?? ''))
   )
     return 'anything';
   return 'attrs';
 };
+
+const inferInputType = (input: SettingRuleInput): SettingType =>
+  inferTypeFromValue(
+    input.defaultEvidence.kind === 'known' ? input.defaultEvidence.value : undefined,
+    input.contextualType
+  );
 
 const RULES: Readonly<Record<OptionTypeName, (input: SettingRuleInput) => SettingRuleResult>> = {
   BOOLEAN: (input) => withDefault({ kind: 'boolean' }, input, false),
@@ -184,8 +136,8 @@ const RULES: Readonly<Record<OptionTypeName, (input: SettingRuleInput) => Settin
       {
         kind: 'string',
         nullable:
-          input.hasDeclaredDefault !== true ||
-          input.defaultValue === null ||
+          input.defaultEvidence.kind === 'absent' ||
+          (input.defaultEvidence.kind === 'known' && input.defaultEvidence.value === null) ||
           typeMembers(contextualTypeNode(input.contextualType)).some(isNullType),
       },
       input,
@@ -193,9 +145,9 @@ const RULES: Readonly<Record<OptionTypeName, (input: SettingRuleInput) => Settin
     ),
   NUMBER: (input) =>
     withDefault(
-      input.hasDefault &&
-        typeof input.defaultValue === 'number' &&
-        Number.isInteger(input.defaultValue)
+      input.defaultEvidence.kind === 'known' &&
+        typeof input.defaultEvidence.value === 'number' &&
+        Number.isInteger(input.defaultEvidence.value)
         ? { kind: 'integer' }
         : { kind: 'float' },
       input
@@ -203,15 +155,12 @@ const RULES: Readonly<Record<OptionTypeName, (input: SettingRuleInput) => Settin
   BIGINT: (input) => withDefault({ kind: 'integer' }, input),
   SELECT: selectRule,
   SLIDER: (input) => withDefault({ kind: 'float' }, input),
-  COMPONENT: (input) =>
-    withDefault(inferTypeFromValue(input.defaultValue, input.contextualType), input),
+  COMPONENT: (input) => withDefault(inferInputType(input), input),
   CUSTOM: (input) =>
-    input.options.length > 0
-      ? selectRule(input)
-      : withDefault(inferTypeFromValue(input.defaultValue, input.contextualType), input),
+    input.options.length > 0 ? selectRule(input) : withDefault(inferInputType(input), input),
 };
 
 export function applySettingRule(input: SettingRuleInput): SettingRuleResult {
   if (input.optionType) return RULES[input.optionType](input);
-  return withDefault(inferTypeFromValue(input.defaultValue, input.contextualType), input);
+  return withDefault(inferInputType(input), input);
 }

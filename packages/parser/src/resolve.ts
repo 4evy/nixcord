@@ -1,12 +1,14 @@
-import { resolvedDeclaration, type StaticEvaluator, unwrapExpression } from '@nixcord/ast';
 import {
   type CallExpression,
   Node,
   type ObjectLiteralExpression,
+  resolvedDeclaration,
   type SourceFile,
+  type StaticEvaluator,
   SyntaxKind,
   type TypeChecker,
-} from 'ts-morph';
+  unwrapExpression,
+} from '@nixcord/typescript-analysis';
 import type { SourceProfile } from './profiles.js';
 
 // Resolve canonical upstream API calls and their source-level bindings
@@ -66,7 +68,9 @@ const isApiCall = (
     const resolved = symbol?.isAlias() ? symbol.getAliasedSymbol() : symbol;
     const declaration = resolved?.getValueDeclaration() ?? resolved?.getDeclarations()[0];
     const declarationName =
-      Node.isNamed(declaration) || Node.isNameable(declaration) ? declaration.getName() : undefined;
+      Node.isNamed(declaration) || Node.isNameable(declaration)
+        ? declaration?.getName()
+        : undefined;
     const filePath = declaration?.getSourceFile().getFilePath().replaceAll('\\', '/');
     return Boolean(
       declarationName === canonicalName &&
@@ -91,7 +95,7 @@ const declarationInitializer = (node: Node, checker: TypeChecker): Node | undefi
   try {
     const declaration = resolvedDeclaration(node, checker);
     if (Node.isInitializerExpressionGetable(declaration)) {
-      const initializer = declaration.getInitializer();
+      const initializer = declaration?.getInitializer();
       if (initializer) return initializer;
     }
   } catch {
@@ -101,25 +105,37 @@ const declarationInitializer = (node: Node, checker: TypeChecker): Node | undefi
 };
 
 export const resolveNode = (node: Node | undefined, checker: TypeChecker): Node | undefined => {
-  if (!node) return undefined;
-  const unwrapped = unwrapExpression(node);
-  if (unwrapped.isKind(SyntaxKind.Identifier)) {
-    const initializer = declarationInitializer(unwrapped, checker);
-    return initializer && initializer !== node ? resolveNode(initializer, checker) : unwrapped;
+  const visited = new Set<Node>();
+  while (node) {
+    node = unwrapExpression(node);
+    if (visited.has(node)) return undefined;
+    visited.add(node);
+    if (!node.isKind(SyntaxKind.Identifier)) return node;
+    const initializer = declarationInitializer(node, checker);
+    if (!initializer) return node;
+    node = initializer;
   }
-  return unwrapped;
+  return undefined;
 };
 
-export const objectPropertyInitializer = (
-  object: ObjectLiteralExpression | undefined,
-  name: string
-): Node | undefined => {
-  const property = object?.getProperty(name);
+export const propertyInitializer = (property: Node | undefined): Node | undefined => {
+  if (property?.isKind(SyntaxKind.GetAccessor)) {
+    // Inspect a pure return expression without executing runtime getter code
+    const statements = property.getBody()?.getStatements();
+    return statements?.length === 1
+      ? statements[0]?.asKind(SyntaxKind.ReturnStatement)?.getExpression()
+      : undefined;
+  }
   return (
     property?.asKind(SyntaxKind.PropertyAssignment)?.getInitializer() ??
     property?.asKind(SyntaxKind.ShorthandPropertyAssignment)?.getNameNode()
   );
 };
+
+export const objectPropertyInitializer = (
+  object: ObjectLiteralExpression | undefined,
+  name: string
+): Node | undefined => propertyInitializer(object?.getProperty(name));
 
 export const objectArgument = (
   call: CallExpression | undefined

@@ -2,6 +2,19 @@
 let
   inherit (import ./discord.nix { inherit lib; }) branchDirName getPrimaryDiscordBranch;
 
+  # Read only defined option values so absent upstream settings stay absent
+  configFromOptions =
+    include: opts:
+    lib.attrsets.concatMapAttrs (
+      name: option:
+      if lib.options.isOption option then
+        lib.attrsets.optionalAttrs (option.isDefined && include option) { ${name} = option.value; }
+      else
+        lib.attrsets.filterAttrs (_: value: value != { }) {
+          ${name} = configFromOptions include option;
+        }
+    ) opts;
+
   mkIsQuickCssUsed =
     cfg: appConfig:
     let
@@ -9,14 +22,7 @@ let
     in
     (cfg.config.useQuickCss || appQuickCss) && cfg.quickCss != "";
 
-  toSnakeCase =
-    str:
-    lib.trivial.pipe str [
-      (lib.strings.splitStringBy (_prev: curr: builtins.match "[A-Z]" curr != null) true)
-      (lib.lists.filter (part: part != ""))
-      (map lib.strings.toLower)
-      (lib.strings.concatStringsSep "_")
-    ];
+  inherit (import ./normalization/casing.nix { inherit lib; }) toSnakeCase;
 
   mkDorionConfigAttrs =
     cfg:
@@ -59,7 +65,6 @@ let
           pluginKit.mkFullConfig {
             inherit client;
             inherit (cfg) extraConfig;
-            baseConfig = cfg.config;
             clientConfig = cfg.${name + "Config"};
           }
         )
@@ -75,6 +80,7 @@ let
 in
 {
   inherit
+    configFromOptions
     mkIsQuickCssUsed
     toSnakeCase
     mkDorionConfigAttrs

@@ -1,26 +1,7 @@
-import { defineConfig } from 'vite';
+import { createViteConfig } from '../../vite.config.shared.js';
 
-export default defineConfig({
-  build: {
-    lib: {
-      entry: {
-        index: 'src/index.ts',
-        runner: 'src/runner.ts',
-      },
-      formats: ['es'],
-    },
-    outDir: 'dist',
-    emptyOutDir: true,
-    minify: false,
-    sourcemap: true,
-    rolldownOptions: {
-      external: [/^node:/, 'ts-morph'],
-      output: { entryFileNames: '[name].js' },
-    },
-  },
-  test: {
-    testTimeout: 20_000,
-    pool: 'threads',
-    isolate: false,
-  },
+export default createViteConfig({
+  mode: 'lib',
+  entries: { index: 'src/index.ts', runner: 'src/runner.ts' },
+  packageDirectory: import.meta.dirname,
 });

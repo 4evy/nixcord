@@ -42,7 +42,7 @@ async function repository() {
         '-c',
         'commit.gpgSign=false',
         'commit',
-        '-m',
+        '--message',
         'test: fixture history',
       ],
       {

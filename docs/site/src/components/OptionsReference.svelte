@@ -1,5 +1,6 @@
 <script lang="ts">
 import { onMount, tick } from 'svelte';
+import { SvelteSet } from 'svelte/reactivity';
 import { focusClass, paragraphClass, topSectionClass } from '../classes';
 import {
   categoryFromSectionHash,
@@ -33,8 +34,8 @@ let optionsError = $state('');
 let query = $state(initialSearchState.query);
 let category = $state<OptionCategoryFilter>(initialSearchState.category);
 let openCategory = $state<OptionCategory | null>(null);
-let openPluginNames = $state.raw(new Set<string>());
-let openOptionNames = $state.raw(new Set<string>());
+const openPluginNames = new SvelteSet<string>();
+const openOptionNames = new SvelteSet<string>();
 let referenceElement = $state<HTMLElement | null>(null);
 let loadPromise: Promise<void> | null = null;
 
@@ -175,17 +176,8 @@ async function revealCurrentHash() {
       if (!pluginHasMatch) query = '';
     }
 
-    if (optionTarget.pluginName) {
-      const nextOpenPlugins = new Set(openPluginNames);
-      nextOpenPlugins.add(optionTarget.pluginName);
-      openPluginNames = nextOpenPlugins;
-    }
-
-    if (optionTarget.optionName) {
-      const nextOpenOptions = new Set(openOptionNames);
-      nextOpenOptions.add(optionTarget.optionName);
-      openOptionNames = nextOpenOptions;
-    }
+    if (optionTarget.pluginName) openPluginNames.add(optionTarget.pluginName);
+    if (optionTarget.optionName) openOptionNames.add(optionTarget.optionName);
 
     await scrollToHashTarget(hash);
     return;
@@ -256,19 +248,15 @@ function handleSectionToggle(sectionCategory: OptionCategory, isOpen: boolean) {
 }
 
 function handlePluginToggle(pluginName: string, isOpen: boolean) {
-  openPluginNames = toggleSetValue(openPluginNames, pluginName, isOpen);
+  if (isOpen) openPluginNames.add(pluginName);
+  else openPluginNames.delete(pluginName);
 }
 
 function handleOptionToggle(optionName: string, isOpen: boolean) {
-  openOptionNames = toggleSetValue(openOptionNames, optionName, isOpen);
+  if (isOpen) openOptionNames.add(optionName);
+  else openOptionNames.delete(optionName);
 }
 
-function toggleSetValue(values: Set<string>, value: string, included: boolean): Set<string> {
-  const nextValues = new Set(values);
-  if (included) nextValues.add(value);
-  else nextValues.delete(value);
-  return nextValues;
-}
 
 function isReferenceHash(hash: string): boolean {
   return hash === '#sec-options' || hash.startsWith('#options-') || hash.startsWith('#opt-');

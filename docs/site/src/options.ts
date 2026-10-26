@@ -178,13 +178,13 @@ function normalizeWhitespace(value: string): string {
 }
 
 function getOptionCategory(option: RawOption): OptionCategory {
-  const declarationText = option.declarations
-    ?.map((declaration) => `${declaration.name ?? ''} ${declaration.url ?? ''}`)
-    .join(' ');
-
-  if (declarationText?.includes('modules/plugins/shared.json')) return 'shared';
-  if (declarationText?.includes('modules/plugins/vencord.json')) return 'vencord';
-  if (declarationText?.includes('modules/plugins/equicord.json')) return 'equicord';
+  for (const category of ['shared', 'vencord', 'equicord'] as const) {
+    if (
+      option.declarations?.some((declaration) => declaration.name === `${category} plugin option`)
+    ) {
+      return category;
+    }
+  }
 
   return 'core';
 }
@@ -193,49 +193,44 @@ function groupSectionOptions(
   options: OptionEntry[],
   totalOptions: OptionEntry[]
 ): OptionSectionItem[] {
-  const pluginGroups = new Map<string, OptionEntry[]>();
-  const totalPluginGroupSizes = new Map<string, number>();
-  const coreOptions: OptionSectionItem[] = [];
+  const pluginGroups = Map.groupBy(options, (option) => getPluginRoot(option.name));
+  const totalPluginGroups = Map.groupBy(totalOptions, (option) => getPluginRoot(option.name));
+  const coreOptions: OptionSectionItem[] = (pluginGroups.get(null) ?? []).map((option) => ({
+    kind: 'option',
+    option,
+  }));
 
-  for (const option of totalOptions) {
-    const pluginRoot = getPluginRoot(option.name);
-    if (pluginRoot == null) continue;
-    totalPluginGroupSizes.set(pluginRoot, (totalPluginGroupSizes.get(pluginRoot) ?? 0) + 1);
-  }
+  const groupedPlugins: OptionSectionItem[] = Array.from(pluginGroups).flatMap<OptionSectionItem>(
+    ([name, groupOptions]) => {
+      if (name === null) return [];
+      const sortedOptions = groupOptions.toSorted((left, right) =>
+        comparePluginOptions(name, left, right)
+      );
 
-  for (const option of options) {
-    const pluginRoot = getPluginRoot(option.name);
-
-    if (pluginRoot == null) {
-      coreOptions.push({ kind: 'option', option });
-      continue;
+      return [
+        {
+          group: {
+            category: sortedOptions[0]?.category ?? 'core',
+            name,
+            optionCount: sortedOptions.length,
+            options: sortedOptions,
+            totalOptionCount: totalPluginGroups.get(name)?.length ?? sortedOptions.length,
+          } satisfies PluginOptionGroup,
+          kind: 'plugin',
+        },
+      ];
     }
+  );
 
-    const groupOptions = pluginGroups.get(pluginRoot) ?? [];
-    groupOptions.push(option);
-    pluginGroups.set(pluginRoot, groupOptions);
-  }
-
-  const groupedPlugins: OptionSectionItem[] = Array.from(pluginGroups, ([name, groupOptions]) => {
-    const sortedOptions = [...groupOptions].sort((left, right) => comparePluginOptions(name, left, right));
-
-    return {
-      group: {
-        category: sortedOptions[0]?.category ?? 'core',
-        name,
-        optionCount: sortedOptions.length,
-        options: sortedOptions,
-        totalOptionCount: totalPluginGroupSizes.get(name) ?? sortedOptions.length,
-      } satisfies PluginOptionGroup,
-      kind: 'plugin',
-    };
-  });
-
-  return [...coreOptions, ...groupedPlugins].sort((left, right) => getSectionItemName(left).localeCompare(getSectionItemName(right)));
+  return [...coreOptions, ...groupedPlugins].sort((left, right) =>
+    getSectionItemName(left).localeCompare(getSectionItemName(right))
+  );
 }
 
 export function getPluginOptionLabel(pluginName: string, optionName: string): string {
-  return optionName.startsWith(`${pluginName}.`) ? optionName.slice(pluginName.length + 1) : optionName;
+  return optionName.startsWith(`${pluginName}.`)
+    ? optionName.slice(pluginName.length + 1)
+    : optionName;
 }
 
 export function getPluginRoot(optionName: string): string | null {

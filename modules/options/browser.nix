@@ -7,19 +7,20 @@
 }:
 let
   cfg = config.programs.nixcord;
-  inherit (import ../lib { inherit lib; }) mkPluginKit;
-  inherit (pkgs.callPackage ../lib/core.nix { inherit (cfg) parseRules; }) mkVencordCfg;
-  pluginKit = mkPluginKit { inherit cfg mkVencordCfg; };
-  # Preserve browser settings that were not explicitly declared in Nix.
-  declaredConfig =
-    opts:
-    lib.attrsets.concatMapAttrs (
-      name: option:
-      if lib.options.isOption option then
-        lib.attrsets.optionalAttrs (option.highestPrio < 1500) { ${name} = option.value; }
-      else
-        lib.attrsets.filterAttrs (_: value: value != { }) { ${name} = declaredConfig option; }
-    ) opts;
+  inherit (import ../lib { inherit lib; }) mkPluginKit configFromOptions;
+  inherit
+    (import ../lib/normalization/normalization.nix {
+      inherit lib;
+      inherit (cfg) parseRules;
+    })
+    mkVencordCfg
+    ;
+  pluginKit = mkPluginKit {
+    inherit cfg mkVencordCfg;
+    configOptions = options.programs.nixcord.config;
+  };
+  # Preserve browser settings that were not explicitly declared in Nix
+  declaredConfig = configFromOptions (option: option.highestPrio < 1500);
   normalize =
     extraConfig: mkVencordCfg (pluginKit.migrateFreeformConfigFor cfg.browser.client extraConfig);
 in

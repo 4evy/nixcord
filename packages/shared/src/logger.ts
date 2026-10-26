@@ -1,12 +1,7 @@
+import type { Logger } from '@nixcord/domain';
 import consola from 'consola';
 
-export interface Logger {
-  info(message: string): void;
-  warn(message: string): void;
-  error(message: string | Error, ...args: unknown[]): void;
-  success(message: string): void;
-  debug(message: string): void;
-}
+export type { Logger } from '@nixcord/domain';
 
 export const createLogger = (verbose = false): Logger => {
   const level = verbose ? 4 : 3;

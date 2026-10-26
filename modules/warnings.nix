@@ -16,8 +16,17 @@ let
     mkAssertions
     ;
 
-  inherit (pkgs.callPackage ./lib/core.nix { inherit (cfg) parseRules; }) mkVencordCfg;
-  pluginKit = mkPluginKit { inherit cfg mkVencordCfg; };
+  inherit
+    (import ./lib/normalization/normalization.nix {
+      inherit lib;
+      inherit (cfg) parseRules;
+    })
+    mkVencordCfg
+    ;
+  pluginKit = mkPluginKit {
+    inherit cfg mkVencordCfg;
+    configOptions = options.programs.nixcord.config;
+  };
 
   inherit (pluginKit)
     pluginNameMigrations

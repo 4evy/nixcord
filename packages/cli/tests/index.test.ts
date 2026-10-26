@@ -72,14 +72,14 @@ describe('executable CLI', () => {
         join(temporary, 'equicord'),
         '--output',
         output,
+        '--metadata',
+        join(temporary, 'generated/metadata.json'),
         '--skip-git-migrations',
       ],
       { env }
     );
-    const shared = JSON.parse(
-      await readFile(join(temporary, 'generated/plugins/shared.json'), 'utf8')
-    );
-    expect(shared.sharedPlugin).toBeDefined();
-    expect(shared.sharedPlugin.settings).toBeDefined();
+    const metadata = JSON.parse(await readFile(join(temporary, 'generated/metadata.json'), 'utf8'));
+    expect(metadata.shared.sharedPlugin).toBeDefined();
+    expect(metadata.shared.sharedPlugin.settings).toBeDefined();
   });
 });

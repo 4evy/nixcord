@@ -1,32 +1,38 @@
 import { dirname, join } from 'node:path';
 import type { ParsedPluginsResult, PluginConfig } from '@nixcord/shared';
 import { CLI_CONFIG } from '@nixcord/shared';
+import { Effect } from 'effect';
 import { createFixture } from 'fs-fixture';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { runGeneratePluginOptions, validateParsedResults } from '../../src/runner/index.js';
 
 const mocks = vi.hoisted(() => ({
-  parsePlugins: vi.fn(),
+  parsePluginsEffect: vi.fn(),
   categorizePlugins: vi.fn(),
   extractMigrations: vi.fn(async () => ({ renames: [], deletions: [] })),
-  generatePluginModule: vi.fn((plugins: Record<string, unknown>, label: string) => {
-    return `${label}:${Object.keys(plugins).join(',')}`;
+  generatePluginSchema: vi.fn((plugins: Record<string, unknown>, label: string) => {
+    return Object.fromEntries(
+      Object.keys(plugins).map((name) => [
+        name,
+        { upstreamName: name, description: label, settings: {} },
+      ])
+    );
   }),
   generateParseRulesModule: vi.fn(() => 'rules'),
   generateMigrationsJson: vi.fn(() => '{"renames":[],"removals":[]}'),
   updateDeprecatedPlugins: vi.fn(async () => ({ renames: {}, removals: {}, settingRenames: {} })),
-  applyPluginOverrides: vi.fn(async () => undefined),
-  oraPromise: vi.fn((promise: Promise<unknown>) => promise),
+  applyPluginOverrides: vi.fn(async (_path: string, schemas: unknown) => schemas),
+  withSpinner: vi.fn((effect: Effect.Effect<unknown>) => effect),
 }));
 
 vi.mock('@nixcord/parser', () => ({
-  parsePlugins: mocks.parsePlugins,
+  parsePluginsEffect: mocks.parsePluginsEffect,
   categorizePlugins: mocks.categorizePlugins,
   extractMigrations: mocks.extractMigrations,
 }));
 
 vi.mock('@nixcord/nix-generator', () => ({
-  generatePluginModule: mocks.generatePluginModule,
+  generatePluginSchema: mocks.generatePluginSchema,
   generateParseRulesModule: mocks.generateParseRulesModule,
   generateMigrationsJson: mocks.generateMigrationsJson,
   updateDeprecatedPlugins: mocks.updateDeprecatedPlugins,
@@ -34,7 +40,7 @@ vi.mock('@nixcord/nix-generator', () => ({
 }));
 
 vi.mock('../../src/runner/spinner.js', () => ({
-  oraPromise: mocks.oraPromise,
+  withSpinner: mocks.withSpinner,
 }));
 
 vi.mock('../../src/overrides.js', () => ({
@@ -95,7 +101,9 @@ describe('runGeneratePluginOptions', () => {
       ...emptyResultFields,
     };
 
-    mocks.parsePlugins.mockResolvedValueOnce(vencordResult).mockResolvedValueOnce(equicordResult);
+    mocks.parsePluginsEffect
+      .mockReturnValueOnce(Effect.succeed(vencordResult))
+      .mockReturnValueOnce(Effect.succeed(equicordResult));
     mocks.categorizePlugins.mockReturnValue({
       generic: { Shared: basePlugin },
       vencordOnly: { SoloV: basePlugin },
@@ -110,6 +118,7 @@ describe('runGeneratePluginOptions', () => {
       vencordPluginsDir: CLI_CONFIG.directories.vencordPlugins,
       equicordPluginsDir: CLI_CONFIG.directories.equicordPlugins,
       outputPath,
+      metadataPath: fixture.getPath('result', 'metadata.json'),
       overridesPath,
       verbose: false,
       logger,
@@ -123,15 +132,17 @@ describe('runGeneratePluginOptions', () => {
     });
 
     const outputDir = join('result', CLI_CONFIG.directories.output);
+    await expect(fixture.readJson(join('result', 'metadata.json'))).resolves.toMatchObject({
+      shared: { Shared: { settings: {} } },
+      vencord: { SoloV: { settings: {} } },
+      equicord: { SoloE: { settings: {} } },
+    });
     await expect(
-      fixture.readFile(join(outputDir, CLI_CONFIG.filenames.shared), 'utf8')
-    ).resolves.toBe('shared:Shared');
-    await expect(
-      fixture.readFile(join(outputDir, CLI_CONFIG.filenames.vencord), 'utf8')
-    ).resolves.toBe('vencord:SoloV');
-    await expect(
-      fixture.readFile(join(outputDir, CLI_CONFIG.filenames.equicord), 'utf8')
-    ).resolves.toBe('equicord:SoloE');
+      fixture.readFile(join(outputDir, 'options/options.nix'), 'utf8')
+    ).resolves.toContain('"Shared" =');
+    await expect(fixture.readFile(join(outputDir, 'schema/schema.nix'), 'utf8')).resolves.toContain(
+      '"shared" ='
+    );
     await expect(
       fixture.readFile(join(outputDir, CLI_CONFIG.filenames.parseRules), 'utf8')
     ).resolves.toBe('rules');
@@ -139,87 +150,62 @@ describe('runGeneratePluginOptions', () => {
       fixture.readFile(join(outputDir, CLI_CONFIG.filenames.migrations), 'utf8')
     ).resolves.toBe('{"renames":[],"removals":[]}');
 
-    expect(mocks.parsePlugins).toHaveBeenNthCalledWith(1, vencordRepo, {
+    expect(mocks.parsePluginsEffect).toHaveBeenNthCalledWith(1, vencordRepo, {
       vencordPluginsDir: CLI_CONFIG.directories.vencordPlugins,
       equicordPluginsDir: CLI_CONFIG.directories.equicordPlugins,
     });
-    expect(mocks.parsePlugins).toHaveBeenNthCalledWith(2, equicordRepo, {
+    expect(mocks.parsePluginsEffect).toHaveBeenNthCalledWith(2, equicordRepo, {
       vencordPluginsDir: CLI_CONFIG.directories.vencordPlugins,
       equicordPluginsDir: CLI_CONFIG.directories.equicordPlugins,
     });
-    expect(mocks.oraPromise).toHaveBeenCalledTimes(2);
     expect(mocks.applyPluginOverrides).toHaveBeenCalledWith(
       overridesPath,
-      join(dirname(outputPath), CLI_CONFIG.directories.output)
+      expect.objectContaining({
+        shared: expect.any(Object),
+        vencord: expect.any(Object),
+        equicord: expect.any(Object),
+      })
     );
-  });
-
-  test('skips ora spinner when verbose logging is enabled', async () => {
-    await using fixture = await createRepos();
-    const logger = createLogger();
-    const vencordRepo = fixture.getPath('vencord');
-    mocks.parsePlugins.mockResolvedValue({
-      vencordPlugins: { Only: basePlugin },
-      equicordPlugins: {},
-      ...emptyResultFields,
-    });
-    mocks.categorizePlugins.mockReturnValue({
-      generic: {},
-      vencordOnly: { Only: basePlugin },
-      equicordOnly: {},
-    });
-
-    await runGeneratePluginOptions({
-      vencordPath: vencordRepo,
-      vencordPluginsDir: CLI_CONFIG.directories.vencordPlugins,
-      equicordPluginsDir: CLI_CONFIG.directories.equicordPlugins,
-      outputPath: fixture.getPath('out.nix'),
-      verbose: true,
-      logger,
-    });
-
-    expect(logger.info).toHaveBeenCalledWith(
-      expect.stringContaining('Found 1 plugins in Vencord src/plugins')
-    );
-    expect(mocks.oraPromise).not.toHaveBeenCalled();
   });
 
   test('returns parser diagnostic summary when parsed sources report diagnostics', async () => {
     await using fixture = await createRepos();
     const logger = createLogger();
     const vencordRepo = fixture.getPath('vencord');
-    mocks.parsePlugins.mockResolvedValue({
-      vencordPlugins: { Only: basePlugin },
-      equicordPlugins: {},
-      settingRenames: [],
-      pluginRenames: [],
-      diagnostics: [
-        {
-          code: 'component-only-setting-skipped',
-          severity: 'info',
-          stage: 'normalization',
-          pluginName: 'Only',
-          location: { file: '/tmp/only/index.ts', line: 1, column: 1 },
-          message: 'Skipped component-only setting',
-        },
-        {
-          code: 'component-only-setting-skipped',
-          severity: 'info',
-          stage: 'normalization',
-          pluginName: 'Only',
-          location: { file: '/tmp/only/index.ts', line: 1, column: 1 },
-          message: 'Skipped component-only setting',
-        },
-        {
-          code: 'unsupported-generated-settings-pattern',
-          severity: 'warning',
-          stage: 'evaluation',
-          pluginName: 'Other',
-          location: { file: '/tmp/other/index.ts', line: 1, column: 1 },
-          message: 'Unsupported generated settings pattern',
-        },
-      ],
-    });
+    mocks.parsePluginsEffect.mockReturnValue(
+      Effect.succeed({
+        vencordPlugins: { Only: basePlugin },
+        equicordPlugins: {},
+        settingRenames: [],
+        pluginRenames: [],
+        diagnostics: [
+          {
+            code: 'component-only-setting-skipped',
+            severity: 'info',
+            stage: 'normalization',
+            pluginName: 'Only',
+            location: { file: '/tmp/only/index.ts', line: 1, column: 1 },
+            message: 'Skipped component-only setting',
+          },
+          {
+            code: 'component-only-setting-skipped',
+            severity: 'info',
+            stage: 'normalization',
+            pluginName: 'Only',
+            location: { file: '/tmp/only/index.ts', line: 1, column: 1 },
+            message: 'Skipped component-only setting',
+          },
+          {
+            code: 'unsupported-generated-settings-pattern',
+            severity: 'warning',
+            stage: 'evaluation',
+            pluginName: 'Other',
+            location: { file: '/tmp/other/index.ts', line: 1, column: 1 },
+            message: 'Unsupported generated settings pattern',
+          },
+        ],
+      })
+    );
     mocks.categorizePlugins.mockReturnValue({
       generic: {},
       vencordOnly: { Only: basePlugin },
@@ -255,11 +241,13 @@ describe('runGeneratePluginOptions', () => {
     await using fixture = await createRepos();
     const logger = createLogger();
     const vencordRepo = fixture.getPath('vencord');
-    mocks.parsePlugins.mockResolvedValue({
-      vencordPlugins: { Broken: { name: 'Broken' } as unknown as PluginConfig },
-      equicordPlugins: {},
-      ...emptyResultFields,
-    });
+    mocks.parsePluginsEffect.mockReturnValue(
+      Effect.succeed({
+        vencordPlugins: { Broken: { name: 'Broken' } as unknown as PluginConfig },
+        equicordPlugins: {},
+        ...emptyResultFields,
+      })
+    );
 
     const result = runGeneratePluginOptions({
       vencordPath: vencordRepo,
@@ -284,7 +272,7 @@ describe('runGeneratePluginOptions', () => {
     });
 
     await expect(result).rejects.toThrow('Vencord source path does not exist');
-    expect(mocks.parsePlugins).not.toHaveBeenCalled();
+    expect(mocks.parsePluginsEffect).not.toHaveBeenCalled();
   });
 });
 

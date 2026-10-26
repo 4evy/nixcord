@@ -1,7 +1,6 @@
-{ fetchNpmDeps, lib }:
-fetchNpmDeps {
-  name = "plugin-generator-npm-deps";
+{ callPackage, lib }:
+(callPackage ../bun/fetch-deps.nix { }) {
+  name = "plugin-generator-bun-deps";
   src = import ../../nix/workspace-source.nix { inherit lib; };
-  hash = "sha256-J5G2RtRyP+D5u1XY1yEKldWmQe3NPQwI2iA5ep25m8o=";
-  fetcherVersion = 2;
+  hash = "sha256-NdoYC09WX9KeH7RZcaIhYmbv+263vL/+5qnY1ol78Mw=";
 }

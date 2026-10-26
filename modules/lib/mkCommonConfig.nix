@@ -1,7 +1,8 @@
-# Build packages, settings, and file specifications for all platform modules.
+# Build packages, settings, and file specifications for all platform modules
 {
   config,
   lib,
+  options,
   pkgs,
   ...
 }:
@@ -25,9 +26,13 @@ let
 
   inherit (cfg) parseRules;
 
-  inherit (pkgs.callPackage ./core.nix { inherit lib parseRules; }) mkVencordCfg mkFinalPackages;
+  inherit (import ./normalization/normalization.nix { inherit lib parseRules; }) mkVencordCfg;
+  inherit (pkgs.callPackage ./packages/packages.nix { inherit lib; }) mkFinalPackages;
 
-  pluginKit = mkPluginKit { inherit cfg mkVencordCfg; };
+  pluginKit = mkPluginKit {
+    inherit cfg mkVencordCfg;
+    configOptions = options.programs.nixcord.config;
+  };
 
   fullConfigs = mkAllFullConfigs cfg pluginKit;
 
@@ -84,7 +89,6 @@ let
           pluginKit.mkFullConfig {
             inherit client;
             inherit (cfg) extraConfig;
-            baseConfig = cfg.config;
           }
         );
         inherit (cfg) quickCss;
@@ -93,7 +97,7 @@ let
       null
   );
 
-  # Bundled Legcord mods must use the Nix-built files and skip bundle updates.
+  # Bundled Legcord mods must use the Nix-built files and skip bundle updates
   legcordAttrs =
     let
       inherit (cfg) legcord;
@@ -258,10 +262,12 @@ let
       inherit
         lib
         pkgs
-        cfg
         mkVencordCfg
         wrapScript
         ;
+      cfg = cfg // {
+        config = pluginKit.configuredConfig;
+      };
     };
 
   fileSpecs = mkFileSpecs {
@@ -272,7 +278,7 @@ let
       ;
   };
 
-  fileCopyCommands = mkCopyCommands fileSpecs;
+  fileCopyCommands = command: mkCopyCommands { inherit fileSpecs command; };
 in
 {
   inherit

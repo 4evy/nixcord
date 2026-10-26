@@ -5,5 +5,9 @@
     "rootDir": "./src"
   },
   "include": ["src/**/*"],
-  "references": [{ "path": "../shared" }, { "path": "../git-analyzer" }]
+  "references": [
+    {
+      "path": "../domain"
+    }
+  ]
 }

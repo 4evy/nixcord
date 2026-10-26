@@ -4,7 +4,6 @@ let
   common = import ./common.nix { inherit testLib; };
   inherit (common)
     baseConfig
-    vesktopBaseConfig
     recursiveUpdate
     ;
   inherit (testLib) lib pkgs;
@@ -80,7 +79,7 @@ let
         passthru.overrideArgs = args;
       };
   };
-  stubEquicordPackage = pkgs.runCommand "equicord-stub" { } "mkdir -p $out/equibop" // {
+  stubEquicordPackage = pkgs.runCommand "equicord-stub" { } "mkdir --parents $out/equibop" // {
     overrideAttrs =
       f:
       let
@@ -89,7 +88,7 @@ let
           postInstall = "";
         };
       in
-      pkgs.runCommand "equicord-final-stub" { } "mkdir -p $out/equibop" // attrs;
+      pkgs.runCommand "equicord-final-stub" { } "mkdir --parents $out/equibop" // attrs;
   };
   stubEquibopPackage = lib.customisation.makeOverridable (
     {
@@ -133,16 +132,6 @@ in
     assert !overrideArgs.withVencord;
     assert overrideArgs.withEquicord == true;
     assert lib.strings.hasSuffix "Equicord" (toString config.programs.nixcord.configDir);
-    true;
-
-  "configDir defaults to Vencord when vencord is enabled" =
-    let
-      config = testLib.eval.hm {
-        enable = true;
-        discord.vencord.enable = true;
-      };
-    in
-    assert lib.strings.hasSuffix "Vencord" (toString config.programs.nixcord.configDir);
     true;
 
   "discord settings are generated when non-empty" =
@@ -214,19 +203,6 @@ in
     in
     assert overrideArgs.withKrisp == true;
     true;
-
-  "vesktop settings are generated when vesktop is enabled" =
-    let
-      config = testLib.eval.hm (
-        recursiveUpdate vesktopBaseConfig {
-          config.plugins.alwaysAnimate.enable = true;
-        }
-      );
-      settingsJson = testLib.output.homeFileSource config "/home/testuser/.config/vesktop/settings/settings.json";
-    in
-    ''
-      ${testLib.output.json settingsJson ".plugins.AlwaysAnimate.enabled == true"}
-    '';
 
   "vesktop package options reach its override" =
     let

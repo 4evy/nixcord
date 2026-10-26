@@ -3,26 +3,32 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "build": "vite build"
+    "build": "bun run build:bundle && bun --bun tsc --build --emitDeclarationOnly --force",
+    "build:bundle": "bun --bun vite build"
   },
   "exports": {
     ".": {
       "types": "./src/index.ts",
       "import": "./dist/index.js"
+    },
+    "./identifier": {
+      "types": "./src/identifier.ts",
+      "import": "./dist/identifier.js"
     }
   },
   "main": "./dist/index.js",
   "types": "./src/index.ts",
   "dependencies": {
-    "@nixcord/git-analyzer": "1.0.0",
-    "@nixcord/shared": "1.0.0",
     "change-case": "^5.4.4",
     "fs-extra": "^11.4.1",
     "pathe": "^2.0.3",
-    "zod": "^4.6.5"
+    "@nixcord/domain": "workspace:*",
+    "valibot": "^1.5.0",
+    "effect": "4.0.6"
   },
   "devDependencies": {
-    "fs-fixture": "2.16.0"
+    "fs-fixture": "2.16.0",
+    "@nixcord/shared": "1.0.0"
   },
   "files": [
     "dist"

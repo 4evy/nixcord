@@ -1,6 +1,7 @@
 {
   config,
   lib,
+  options,
   pkgs,
   ...
 }:
@@ -17,6 +18,7 @@
         inherit
           config
           lib
+          options
           pkgs
           ;
       };
@@ -36,7 +38,7 @@
         # runuser unqualified avoids forcing that large package solely while
         # evaluating this module; the system activation script already owns
         # and guarantees the dependency.
-        runuser -u ${lib.strings.escapeShellArg cfg.user} -- ${pkgs.runtimeShell} -c ${lib.strings.escapeShellArg script}
+        runuser --user ${lib.strings.escapeShellArg cfg.user} -- ${pkgs.runtimeShell} -c ${lib.strings.escapeShellArg script}
       '');
 
       writeFilesScript =
@@ -45,19 +47,11 @@
           idBin = lib.meta.getExe' pkgs.coreutils "id";
         in
         ''
-          set -euo pipefail
+          set -o errexit -o nounset -o pipefail
 
-          target_user=${lib.strings.escapeShellArg cfg.user}
-          target_group="$(${idBin} -gn "$target_user")"
+          target_group="$(${idBin} --group --name ${lib.strings.escapeShellArg cfg.user})"
 
-          copy_file() {
-            local src="$1"
-            local dest="$2"
-            local mode="$3"
-            ${install} -D -m "$mode" -o "$target_user" -g "$target_group" "$src" "$dest"
-          }
-
-          ${fileCopyCommands}
+          ${fileCopyCommands "${install} -D --mode=0644 --owner ${lib.strings.escapeShellArg cfg.user} --group \"$target_group\""}
         '';
     in
     lib.modules.mkMerge [

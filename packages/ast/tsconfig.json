@@ -5,5 +5,16 @@
     "rootDir": "./src",
     "types": ["node"]
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts"],
+  "references": [
+    {
+      "path": "../typescript-analysis"
+    },
+    {
+      "path": "../setting-analysis"
+    },
+    {
+      "path": "../slice-executor"
+    }
+  ]
 }

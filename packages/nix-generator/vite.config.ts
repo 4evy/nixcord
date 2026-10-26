@@ -2,16 +2,8 @@ import { createViteConfig } from '../../vite.config.shared.js';
 
 export default createViteConfig({
   mode: 'lib',
-  external: [
-    /^node:/,
-    '@nixcord/ast',
-    '@nixcord/shared',
-    '@nixcord/git-analyzer',
-    'change-case',
-    'fs-extra',
-    'pathe',
-    'zod',
-  ],
-  testTimeout: 20000,
+  packageDirectory: import.meta.dirname,
+  entries: { index: 'src/index.ts', identifier: 'src/identifier.ts' },
+  testTimeout: 20_000,
   testPool: 'threads',
 });

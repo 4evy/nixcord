@@ -1,7 +1,11 @@
-import type { AnalysisSession, StaticEvaluator } from '@nixcord/ast';
-import type { ParseDiagnostic, PluginConfig, PluginRename, SettingRename } from '@nixcord/shared';
-import type pLimit from 'p-limit';
-import type { Node, SourceFile } from 'ts-morph';
+import type { ParseDiagnostic, PluginConfig, PluginRename, SettingRename } from '@nixcord/domain';
+import type { SliceExecutionOptions, SliceExecutionResult } from '@nixcord/slice-executor';
+import type {
+  AnalysisSession,
+  Node,
+  SourceFile,
+  StaticEvaluator,
+} from '@nixcord/typescript-analysis';
 import type { SourceProfile } from './profiles.js';
 
 // Shared per-plugin analysis state and diagnostic construction
@@ -13,7 +17,10 @@ export interface PluginContext {
   readonly session: AnalysisSession;
   readonly evaluator: StaticEvaluator;
   readonly executionMode: 'disabled' | 'fallback';
-  readonly executionLimit: ReturnType<typeof pLimit>;
+  readonly executeSlice: (
+    component: Node,
+    options: SliceExecutionOptions
+  ) => Promise<SliceExecutionResult>;
   readonly diagnostics: ParseDiagnostic[];
 }
 

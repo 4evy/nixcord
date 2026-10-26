@@ -7,15 +7,10 @@ let
 
   mergeMany = lib.lists.foldl' lib.attrsets.recursiveUpdate { };
 
-  sharedPluginNames = builtins.attrNames (
-    lib.trivial.importJSON (lib.path.append pluginRoot "shared.json")
-  );
-  vencordPluginNames = builtins.attrNames (
-    lib.trivial.importJSON (lib.path.append pluginRoot "vencord.json")
-  );
-  equicordPluginNames = builtins.attrNames (
-    lib.trivial.importJSON (lib.path.append pluginRoot "equicord.json")
-  );
+  paths = import (lib.path.append pluginRoot "schema/schema.nix");
+  sharedPluginNames = builtins.attrNames paths.shared;
+  vencordPluginNames = builtins.attrNames paths.vencord;
+  equicordPluginNames = builtins.attrNames paths.equicord;
 
   mkPluginSet =
     pluginNames:
