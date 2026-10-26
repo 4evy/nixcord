@@ -1,0 +1,27 @@
+[workspace]
+members = [
+    "pkgs/discord/platforms/darwin/launcher",
+]
+resolver = "3"
+
+[workspace.package]
+version = "1.0.0"
+edition = "2024"
+rust-version = "1.85"
+license = "MIT"
+
+# Keep local edits incremental and skip expensive type-level debug information
+[profile.dev]
+opt-level = 0
+debug = "line-tables-only"
+incremental = true
+codegen-units = 256
+lto = "off"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+debug = false
+strip = "debuginfo"
+incremental = false
