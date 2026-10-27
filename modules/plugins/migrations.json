@@ -4744,6 +4744,17 @@
     {
       "from": [
         "PinDMs",
+        "friendsSidebarGroupDms"
+      ],
+      "to": [
+        "pinDms",
+        "friendsSidebarGroupDms"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "PinDMs",
         "pinOrder"
       ],
       "to": [
@@ -5580,6 +5591,7 @@
   ],
   "removals": [
     "appleMusic",
+    "externalPlayer",
     "seeSummaries",
     "showAllBadges"
   ],

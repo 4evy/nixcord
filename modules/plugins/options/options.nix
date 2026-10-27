@@ -346,7 +346,7 @@ in
     };
   };
   "betterBlockedUsers" = {
-    enable = lib.options.mkEnableOption "Allows you to search in blocked users list and makes names selectable in settings. (Equicord-only)";
+    enable = lib.options.mkEnableOption "Allows you to search in blocked users list, make names selectable in settings, skips blocked profile prompt, and groups blocked / ignored messages. (Equicord-only)";
 
   };
   "betterCommands" = {
@@ -2174,6 +2174,10 @@ in
       default = false;
     };
   };
+  "draftNavigator" = {
+    enable = lib.options.mkEnableOption "Search unsent drafts, preview their text, and jump to the channel. (Equicord-only)";
+
+  };
   "dragFavoriteEmotes" = {
     enable = lib.options.mkEnableOption "Adds the ability to change the order of your favorite emotes (Equicord-only)";
 
@@ -2483,32 +2487,6 @@ in
   "expressionCloner" = {
     enable = lib.options.mkEnableOption "Allows you to clone Emotes & Stickers to your own server (right click them) (Shared between Vencord and Equicord)";
 
-  };
-  "externalPlayer" = {
-    enable = lib.options.mkEnableOption "Open videos and audio in an external media player like mpv. (Equicord-only)";
-    "player" = lib.options.mkOption {
-      type = lib.types.enum [
-        "mpv"
-        "vlc"
-      ];
-      description = "Which player to open media in.";
-      default = "mpv";
-    };
-    "openOnClick" = lib.options.mkOption {
-      type = lib.types.bool;
-      description = "Open videos and audio in the player when you press play, instead of playing them in Discord.";
-      default = false;
-    };
-    "path" = lib.options.mkOption {
-      type = lib.types.str;
-      description = "Absolute path to the player executable. Leave empty to use the one on your PATH.";
-      default = "";
-    };
-    "args" = lib.options.mkOption {
-      type = lib.types.str;
-      description = "Extra arguments passed to the player. Wrap values with spaces in quotes.";
-      default = "";
-    };
   };
   "f8Break" = {
     enable = lib.options.mkEnableOption "Pause the client when you press F8 with DevTools (+ breakpoints) open. (Shared between Vencord and Equicord)";
@@ -5592,15 +5570,7 @@ in
     };
   };
   "pinDms" = {
-    enable = lib.options.mkEnableOption "Allows you to pin private channels to the top of your DM list. To pin/unpin or re-order pins, right click DMs (Shared between Vencord and Equicord)";
-    "pinOrder" = lib.options.mkOption {
-      type = lib.types.enum [
-        0
-        1
-      ];
-      description = "Which order should pinned DMs be displayed in?\n\nValues: 0 = Most recent message, 1 = Custom (right click channels to reorder)";
-      default = 0;
-    };
+    enable = lib.options.mkEnableOption "Allows you to pin private channels to the top of your DM list. To pin/unpin or re-order pins, right click DMs (Equicord-only)";
     "canCollapseDmSection" = lib.options.mkOption {
       type = lib.types.bool;
       description = "Allow uncategorised DMs section to be collapsable";
@@ -5610,6 +5580,19 @@ in
       type = lib.types.bool;
       description = "Collapse DM section";
       default = false;
+    };
+    "friendsSidebarGroupDms" = lib.options.mkOption {
+      type = lib.types.bool;
+      description = "Show pinned group DMs in the friends sidebar.";
+      default = true;
+    };
+    "pinOrder" = lib.options.mkOption {
+      type = lib.types.enum [
+        0
+        1
+      ];
+      description = "Which order should pinned DMs be displayed in?\n\nValues: 0 = Most recent message, 1 = Custom (right click channels to reorder)";
+      default = 0;
     };
     "userBasedCategoryList" = lib.options.mkOption {
       type = jsonAttrs;

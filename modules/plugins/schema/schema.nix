@@ -668,22 +668,6 @@
         };
       };
     };
-    "pinDms" = {
-      "settings" = {
-        "pinOrder" = {
-          "type" = "types.enum";
-        };
-        "canCollapseDmSection" = {
-          "type" = "types.bool";
-        };
-        "dmSectionCollapsed" = {
-          "type" = "types.bool";
-        };
-        "userBasedCategoryList" = {
-          "type" = "types.attrs";
-        };
-      };
-    };
     "plainFolderIcon" = {
       "settings" = { };
     };
@@ -1410,6 +1394,22 @@
         };
         "itunes" = {
           "type" = "types.bool";
+        };
+      };
+    };
+    "pinDms" = {
+      "settings" = {
+        "pinOrder" = {
+          "type" = "types.enum";
+        };
+        "canCollapseDmSection" = {
+          "type" = "types.bool";
+        };
+        "dmSectionCollapsed" = {
+          "type" = "types.bool";
+        };
+        "userBasedCategoryList" = {
+          "type" = "types.attrs";
         };
       };
     };
@@ -2781,6 +2781,9 @@
         };
       };
     };
+    "draftNavigator" = {
+      "settings" = { };
+    };
     "dragFavoriteEmotes" = {
       "settings" = { };
     };
@@ -2967,22 +2970,6 @@
         };
         "exportContacts" = {
           "type" = "types.bool";
-        };
-      };
-    };
-    "externalPlayer" = {
-      "settings" = {
-        "player" = {
-          "type" = "types.enum";
-        };
-        "openOnClick" = {
-          "type" = "types.bool";
-        };
-        "path" = {
-          "type" = "types.str";
-        };
-        "args" = {
-          "type" = "types.str";
         };
       };
     };
@@ -4350,6 +4337,25 @@
       "settings" = {
         "superIntensePartyMode" = {
           "type" = "types.enum";
+        };
+      };
+    };
+    "pinDms" = {
+      "settings" = {
+        "pinOrder" = {
+          "type" = "types.enum";
+        };
+        "canCollapseDmSection" = {
+          "type" = "types.bool";
+        };
+        "dmSectionCollapsed" = {
+          "type" = "types.bool";
+        };
+        "friendsSidebarGroupDms" = {
+          "type" = "types.bool";
+        };
+        "userBasedCategoryList" = {
+          "type" = "types.attrs";
         };
       };
     };
