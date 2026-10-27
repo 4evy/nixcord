@@ -6,7 +6,7 @@ pkgs.mkShellNoCC {
     jq
     nix-update
     nixfmt
-    bun
+    (callPackage ./bun/bun.nix { })
     npins
     treefmt
     yamllint

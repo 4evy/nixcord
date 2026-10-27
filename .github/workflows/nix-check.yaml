@@ -73,6 +73,20 @@ jobs:
             fi
           done
 
+      - name: Build client mods against stable Nixpkgs
+        if: matrix.system == 'x86_64-linux'
+        run: |
+          nix build --no-link --print-build-logs --impure --expr '
+            let
+              flake = builtins.getFlake (toString ./.);
+              pkgs = import flake.inputs.nixpkgs {
+                system = builtins.currentSystem;
+              };
+              packages = import ./pkgs { inherit pkgs; };
+            in
+            [ packages.equicord packages.vencord ]
+          '
+
       - name: Run flake checks
         env:
           EXPECTED_SYSTEM: ${{ matrix.system }}

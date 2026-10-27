@@ -1,7 +1,7 @@
 {
   lib,
   stdenvNoCC,
-  bun,
+  callPackage,
   cacert,
   writableTmpDirAsHomeHook,
 }:
@@ -12,6 +12,9 @@
   patches ? [ ],
   postPatch ? "",
 }:
+let
+  bun = callPackage ../../nix/bun/bun.nix { };
+in
 stdenvNoCC.mkDerivation {
   inherit
     name

@@ -2,7 +2,7 @@
   lib,
   stdenvNoCC,
   stdenv,
-  bun,
+  callPackage,
   nodejs,
   writableTmpDirAsHomeHook,
   autoPatchelfHook,
@@ -10,6 +10,7 @@
 }:
 args:
 let
+  bun = callPackage ../../nix/bun/bun.nix { };
   incompatibleLibc = if stdenvNoCC.hostPlatform.isMusl then "gnu" else "musl";
 in
 stdenvNoCC.mkDerivation (

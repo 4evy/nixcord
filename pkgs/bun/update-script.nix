@@ -4,7 +4,7 @@
   writeShellScript,
   nix-update-script,
   nix,
-  bun,
+  callPackage,
   jq,
   patch,
   coreutils,
@@ -15,6 +15,7 @@
   prepareLockfile ? "",
 }:
 let
+  bun = callPackage ../../nix/bun/bun.nix { };
   update =
     extraArgs:
     lib.escapeShellArgs (nix-update-script {

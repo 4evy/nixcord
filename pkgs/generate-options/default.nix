@@ -1,6 +1,5 @@
 {
   lib,
-  bun,
   callPackage,
   git,
   nix,
@@ -11,6 +10,7 @@
   skipGitMigrations ? true,
 }:
 let
+  bun = callPackage ../../nix/bun/bun.nix { };
   buildBunPackage = callPackage ../bun/build-package.nix { };
   sources = import ./sources.nix { inherit lib; };
 in
