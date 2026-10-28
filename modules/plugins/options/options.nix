@@ -2848,12 +2848,12 @@ in
         "nfp"
       ];
       description = "Embed helper service to wrap uploaded video links.";
-      default = "cors";
+      default = "nfp";
     };
     "corsProxyUrl" = lib.options.mkOption {
       type = lib.types.str;
-      description = "CORS proxy URL used for browser uploads";
-      default = "https://cors.keiran0.workers.dev";
+      description = "Optional CORS proxy URL used for browser uploads";
+      default = "";
     };
     "apngToGif" = lib.options.mkOption {
       type = lib.types.bool;
