@@ -1,64 +1,79 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="scheme-light motion-safe:scroll-smooth dark:scheme-dark">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta
       name="description"
       content="Install Discord clients and configure plugins and themes with Nixcord on NixOS, Home Manager, or nix-darwin. Explore the option reference and settings converter."
-    />
-    <link rel="canonical" href="https://4evy.github.io/nixcord/" />
-    <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="Nixcord" />
-    <meta property="og:title" content="Nixcord documentation" />
+    >
+    <link rel="canonical" href="https://4evy.github.io/nixcord/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Nixcord">
+    <meta property="og:title" content="Nixcord documentation">
     <meta
       property="og:description"
       content="Install Discord clients and configure plugins and themes with Nixcord on NixOS, Home Manager, or nix-darwin. Explore the option reference and settings converter."
-    />
-    <meta property="og:url" content="https://4evy.github.io/nixcord/" />
-    <meta property="og:image" content="https://4evy.github.io/nixcord/nixcord-social-preview.png" />
-    <meta property="og:image:type" content="image/png" />
-    <meta property="og:image:width" content="1280" />
-    <meta property="og:image:height" content="640" />
-    <meta property="og:image:alt" content="Nixcord — Discord, configured with Nix." />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:image" content="https://4evy.github.io/nixcord/nixcord-social-preview.png" />
-    <link rel="icon" href="/nixcord-logo.svg" type="image/svg+xml" />
+    >
+    <meta property="og:url" content="https://4evy.github.io/nixcord/">
+    <meta property="og:image" content="https://4evy.github.io/nixcord/nixcord-social-preview.png">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:width" content="1280">
+    <meta property="og:image:height" content="640">
+    <meta property="og:image:alt" content="Nixcord — Discord, configured with Nix.">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://4evy.github.io/nixcord/nixcord-social-preview.png">
+    <link rel="icon" href="/nixcord-logo.svg" type="image/svg+xml">
     <title>Nixcord manual</title>
     <script id="discord:component-embed" type="application/json">
-      {
-        "component": {
-          "type": 17,
-          "accent_color": 5793266,
-          "components": [
-            {
-              "type": 12,
-              "items": [
-                {
-                  "media": { "url": "https://4evy.github.io/nixcord/nixcord-social-preview.png" },
-                  "description": "Nixcord — Discord, configured with Nix."
-                }
-              ]
-            },
-            {
-              "type": 10,
-              "content": "# [Nixcord documentation](https://4evy.github.io/nixcord/)\nInstall Discord clients and configure plugins and themes with NixOS, Home Manager, or nix-darwin."
-            },
-            {
-              "type": 1,
-              "components": [
-                { "type": 2, "style": 5, "label": "Get started", "url": "https://4evy.github.io/nixcord/#getting-started" },
-                { "type": 2, "style": 5, "label": "Option reference", "url": "https://4evy.github.io/nixcord/#sec-options" },
-                { "type": 2, "style": 5, "label": "Convert settings", "url": "https://4evy.github.io/nixcord/#sec-converter" },
-                { "type": 2, "style": 5, "label": "GitHub", "url": "https://github.com/4evy/nixcord" }
-              ]
-            }
-          ]
-        }
+    {
+      "component": {
+        "type": 17,
+        "accent_color": 5793266,
+        "components": [
+          {
+            "type": 12,
+            "items": [
+              {
+                "media": { "url": "https://4evy.github.io/nixcord/nixcord-social-preview.png" },
+                "description": "Nixcord — Discord, configured with Nix."
+              }
+            ]
+          },
+          {
+            "type": 10,
+            "content": "# [Nixcord documentation](https://4evy.github.io/nixcord/)\nInstall Discord clients and configure plugins and themes with NixOS, Home Manager, or nix-darwin."
+          },
+          {
+            "type": 1,
+            "components": [
+              {
+                "type": 2,
+                "style": 5,
+                "label": "Get started",
+                "url": "https://4evy.github.io/nixcord/#getting-started"
+              },
+              {
+                "type": 2,
+                "style": 5,
+                "label": "Option reference",
+                "url": "https://4evy.github.io/nixcord/#sec-options"
+              },
+              {
+                "type": 2,
+                "style": 5,
+                "label": "Convert settings",
+                "url": "https://4evy.github.io/nixcord/#sec-converter"
+              },
+              { "type": 2, "style": 5, "label": "GitHub", "url": "https://github.com/4evy/nixcord" }
+            ]
+          }
+        ]
       }
+    }
     </script>
   </head>
-  <body>
+  <body class="min-h-dvh bg-page font-sans text-ink antialiased">
     <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>

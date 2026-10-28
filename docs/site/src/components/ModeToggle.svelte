@@ -10,7 +10,7 @@ const label = $derived(`Switch to ${nextMode} mode`);
 
 <button
   type="button"
-  class={`theme-toggle ${focusClass}`}
+  class={`inline-flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted hover:bg-panel hover:text-ink ${focusClass}`}
   aria-label={label}
   title={label}
   onclick={toggleMode}

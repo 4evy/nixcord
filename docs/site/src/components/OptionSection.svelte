@@ -1,6 +1,6 @@
 <script lang="ts">
 import ChevronRight from '@lucide/svelte/icons/chevron-right';
-import { focusClass } from '../classes';
+import { disclosureIconClass, focusClass } from '../classes';
 import type { OptionSection } from '../types';
 import OptionDefinition from './OptionDefinition.svelte';
 import PluginOptionGroup from './PluginOptionGroup.svelte';
@@ -34,7 +34,7 @@ const countLabel = $derived(
 
 <details
   id={section.id}
-  class="option-section scroll-mt-20 border-t border-neutral-300 py-3 first:border-t-0 first:pt-0 dark:border-neutral-700"
+  class="group/section border-t border-line first:border-t-0"
   {open}
   ontoggle={(event) => {
     // Ignore queued events from removed categories and controlled updates
@@ -44,19 +44,25 @@ const countLabel = $derived(
   }}
 >
   <summary
-    class={`option-section-summary -mx-2 grid min-h-12 cursor-pointer list-none grid-cols-[minmax(0,1fr)_auto] items-start gap-3 rounded-sm px-2 py-2 text-[#0a3e68] transition-colors hover:bg-sky-50 hover:text-[#268598] [&::-webkit-details-marker]:hidden dark:text-[#8ccff0] dark:hover:bg-[#1f2b35] dark:hover:text-[#bde8fa] ${focusClass}`}
+    class={`grid min-h-12 cursor-pointer list-none grid-cols-[minmax(0,1fr)_auto] items-start gap-3 rounded-sm py-4 text-ink hover:bg-panel @max-[19rem]:grid-cols-1 [&::-webkit-details-marker]:hidden ${focusClass}`}
   >
-    <span class="flex min-w-0 items-start gap-2">
-      <ChevronRight size={16} class="disclosure-icon" aria-hidden="true" />
+    <h3 class="m-0 flex min-w-0 items-start gap-2 text-[17px]/snug font-semibold">
+      <ChevronRight
+        size={16}
+        class={`${disclosureIconClass} group-open/section:rotate-90`}
+        aria-hidden="true"
+      />
       <span class="min-w-0">
-        <h3 class="option-section-heading my-0 min-w-0 text-[1.35rem] leading-snug font-semibold">
+        <span class="block">
           {section.title}
-        </h3>
-        <span class="option-section-description">{section.description}</span>
+        </span>
+        <span class="mt-1 block text-[13px]/[1.5] font-normal text-muted"
+          >{section.description}</span
+        >
       </span>
-    </span>
+    </h3>
     <data
-      class="rounded-sm border border-neutral-200 bg-white px-2 py-0.5 text-right text-[0.82rem] leading-5 text-neutral-600 dark:border-neutral-700 dark:bg-[#171d24] dark:text-neutral-400"
+      class="pt-0.5 text-right text-xs/5 text-muted tabular-nums @max-[19rem]:ml-6 @max-[19rem]:justify-self-start"
       value={section.optionCount}
     >
       {countLabel}
@@ -65,11 +71,13 @@ const countLabel = $derived(
 
   {#if open}
     {#if section.optionCount === 0}
-      <p class="my-4 rounded-r-sm border-l-4 border-neutral-300 bg-neutral-50 px-4 py-3 text-neutral-700 dark:border-neutral-600 dark:bg-[#171d24] dark:text-neutral-300">
+      <p
+        class="my-4 rounded-r-sm border-l-4 border-neutral-300 bg-neutral-50 px-4 py-3 text-neutral-700 dark:border-neutral-600 dark:bg-[#171d24] dark:text-neutral-300"
+      >
         No matching options in this category.
       </p>
     {:else}
-      <ul class="option-section-items m-0 list-none p-0">
+      <ul class="m-0 list-none p-0">
         {#each section.items as item (item.kind === 'plugin' ? item.group.name : item.option.name)}
           {#if item.kind === 'plugin'}
             <PluginOptionGroup

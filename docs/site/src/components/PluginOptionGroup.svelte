@@ -1,6 +1,6 @@
 <script lang="ts">
 import ChevronRight from '@lucide/svelte/icons/chevron-right';
-import { focusClass } from '../classes';
+import { disclosureIconClass, focusClass } from '../classes';
 import { getPluginOptionLabel } from '../options';
 import type { PluginOptionGroup } from '../types';
 import OptionDefinition from './OptionDefinition.svelte';
@@ -31,26 +31,34 @@ const countLabel = $derived(
 );
 </script>
 
-<li class="option-plugin-item my-0">
+<li class="my-0">
   <details
     id={groupId}
-    class="option-plugin mt-3 scroll-mt-20 rounded-sm border border-neutral-300 border-l-4 border-l-[#0a3e68] bg-white shadow-sm target:!border-l-[#ec733b] target:bg-orange-50 target:shadow-md dark:border-neutral-700 dark:border-l-[#8ccff0] dark:bg-[#12171d] dark:target:bg-[#2a1d18]"
+    class="group/plugin border-b border-line target:bg-selected target:inset-shadow-[2px_0_var(--color-accent)]"
     {open}
-    ontoggle={(event) => onToggle(event.currentTarget.open)}
+    ontoggle={(event) => {
+      if (event.currentTarget.isConnected && event.currentTarget.open !== open) {
+        onToggle(event.currentTarget.open);
+      }
+    }}
   >
     <summary
-      class={`option-plugin-summary grid min-h-14 cursor-pointer list-none grid-cols-[minmax(0,1fr)_auto] items-start gap-3 rounded-sm bg-neutral-50 px-4 py-3 transition-colors hover:bg-sky-50 [&::-webkit-details-marker]:hidden dark:bg-[#171d24] dark:hover:bg-[#1f2b35] ${
-        open ? 'rounded-b-none border-b border-neutral-200 dark:border-neutral-700' : ''
-      } ${focusClass}`}
+      class={`grid min-h-14 cursor-pointer list-none grid-cols-1 items-start gap-1 rounded-sm py-3.5 hover:bg-panel @min-[40rem]:grid-cols-[minmax(0,1fr)_auto] @min-[40rem]:gap-3 [&::-webkit-details-marker]:hidden ${focusClass}`}
     >
-      <span class="flex min-w-0 items-start gap-2">
-        <ChevronRight size={16} class="disclosure-icon" aria-hidden="true" />
-        <h4 id={groupHeadingId} class="my-0 min-w-0 text-[1rem] leading-snug font-semibold">
-          <OptionName name={group.name} />
-        </h4>
-      </span>
+      <h4
+        id={groupHeadingId}
+        class="m-0 flex min-w-0 items-start gap-2 text-[13px]/snug font-medium"
+      >
+        <ChevronRight
+          size={16}
+          class={`${disclosureIconClass} group-open/plugin:rotate-90`}
+          aria-hidden="true"
+        />
+
+        <OptionName name={group.name} />
+      </h4>
       <data
-        class="rounded-sm border border-neutral-200 bg-white px-2 py-0.5 text-right text-[0.8rem] leading-5 text-neutral-600 dark:border-neutral-700 dark:bg-[#12171d] dark:text-neutral-400"
+        class="ml-6 text-xs/5 text-muted tabular-nums @min-[40rem]:ml-0 @min-[40rem]:text-right"
         value={group.optionCount}
       >
         {countLabel}
@@ -58,13 +66,11 @@ const countLabel = $derived(
     </summary>
 
     {#if open}
-      <ul class="option-plugin-options m-0 list-none px-4 pb-4">
+      <ul class="ml-2 list-none border-l border-line pl-2.5 @min-[40rem]:ml-4 @min-[40rem]:pl-6">
         {#each group.options as option (option.name)}
           <OptionDefinition
             {option}
-            headingLevel={5}
             label={getPluginOptionLabel(group.name, option.name)}
-            mutedBorder
             open={openOptionNames.has(option.name)}
             onToggle={(isOpen) => onOptionToggle(option.name, isOpen)}
           />

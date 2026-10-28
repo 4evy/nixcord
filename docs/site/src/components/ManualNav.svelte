@@ -9,6 +9,8 @@ import { focusClass } from '../classes';
 import { introductionToc, mainToc, prefaceToc } from '../content';
 import ModeToggle from './ModeToggle.svelte';
 
+const navLinkClass = `flex items-center gap-2 rounded-md px-2.5 whitespace-nowrap text-muted hover:bg-panel hover:text-ink aria-[current=location]:bg-selected aria-[current=location]:font-semibold aria-[current=location]:text-accent lg:my-0.5 lg:whitespace-normal ${focusClass}`;
+
 const sectionIcons = [SlidersHorizontal, ArrowLeftRight, BookOpen, Terminal];
 
 let activeHref = $state<string | null>(null);
@@ -20,8 +22,9 @@ onMount(() => {
     const offset = window.innerWidth >= 1024 ? 160 : (navElement?.offsetHeight ?? 64) + 48;
     let nextActiveHref: string | null = null;
     let activeTop = -Infinity;
-    // A short final section cannot always reach the usual activation offset.
-    const atBottom = window.scrollY > 0 &&
+    // A short final section cannot always reach the usual activation offset
+    const atBottom =
+      window.scrollY > 0 &&
       window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2;
     const activationOffset = atBottom ? window.innerHeight : offset;
 
@@ -40,7 +43,7 @@ onMount(() => {
       const section = document.getElementById(item.href.slice(1));
       if (!section) continue;
       const top = section.getBoundingClientRect().top;
-      // Navigation priority can differ from the document's reading order.
+      // Navigation priority can differ from the document's reading order
       if (top <= activationOffset && top > activeTop) {
         activeTop = top;
         nextActiveHref = item.href;
@@ -89,32 +92,53 @@ function keepLinkVisible(href: string) {
 }
 </script>
 
-<header bind:this={navElement} class="manual-nav">
-  <div class="nav-brand">
-    <a class={`brand ${focusClass}`} href="#nixcord-manual">
-      <img src={`${import.meta.env.BASE_URL}nixcord-logo.svg`} alt="" width="30" height="30" />
-      Nixcord <span>docs</span>
+<header
+  bind:this={navElement}
+  data-manual-nav
+  class="sticky top-0 z-40 border-b border-line bg-page lg:flex lg:h-dvh lg:flex-col lg:border-r lg:border-b-0"
+>
+  <div class="flex items-center justify-between gap-3 px-5 py-2.5 sm:py-4 lg:py-7">
+    <a
+      class={`flex items-center gap-2 text-lg font-semibold tracking-tight ${focusClass}`}
+      href="#nixcord-manual"
+    >
+      <img src={`${import.meta.env.BASE_URL}nixcord-logo.svg`} alt="" width="25" height="25">
+      Nixcord <span class="text-xs font-normal tracking-normal text-muted">docs</span>
     </a>
     <ModeToggle />
   </div>
-  <nav bind:this={navScrollElement} class="section-navigation" aria-label="Manual sections">
-    <p class="nav-label">Documentation</p>
-    <ul>
+  <nav
+    bind:this={navScrollElement}
+    class="overflow-x-auto px-3 pb-2.5 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:px-3.5 lg:py-4"
+    aria-label="Manual sections"
+  >
+    <p class="mx-2.5 mb-3.5 hidden text-xs font-semibold lg:block">Documentation</p>
+    <ul class="flex list-none gap-1 lg:block">
       {#each mainToc as item, index (item.href)}
         {@const Icon = sectionIcons[index]}
         <li>
-          <a class={`nav-link ${focusClass}`} class:active={activeHref === item.href}
-            href={item.href} aria-current={activeHref === item.href ? 'location' : undefined}>
-            <Icon size={16} aria-hidden="true" />
+          <a
+            class={`${navLinkClass} py-2 text-[13px]`}
+            href={item.href}
+            aria-current={activeHref === item.href ? 'location' : undefined}
+          >
+            <Icon class="shrink-0" size={16} aria-hidden="true" />
             {item.label}
           </a>
           {#if item.href === '#sec-preface' || item.href === '#sec-introduction'}
-            <ul class="nav-children">
-              {#each item.href === '#sec-preface' ? prefaceToc : introductionToc as child (child.href)}
-                <li><a class={`nav-link ${focusClass}`} class:active={activeHref === child.href}
-                  href={child.href} aria-current={activeHref === child.href ? 'location' : undefined}>
-                  {child.label}
-                </a></li>
+            <ul class="mt-1 mb-4 ml-4 hidden border-l border-line pl-2 lg:block">
+              {#each item.href === '#sec-preface'
+                ? prefaceToc
+                : introductionToc as child (child.href)}
+                <li>
+                  <a
+                    class={`${navLinkClass} py-1.5 text-xs`}
+                    href={child.href}
+                    aria-current={activeHref === child.href ? 'location' : undefined}
+                  >
+                    {child.label}
+                  </a>
+                </li>
               {/each}
             </ul>
           {/if}
@@ -122,5 +146,9 @@ function keepLinkVisible(href: string) {
       {/each}
     </ul>
   </nav>
-  <a class={`nav-source ${focusClass}`} href="https://github.com/4evy/nixcord">GitHub <ExternalLink size={15} aria-hidden="true" /></a>
+  <a
+    class={`hidden items-center gap-2 px-6 py-5 text-[13px] text-muted hover:text-accent lg:flex ${focusClass}`}
+    href="https://github.com/4evy/nixcord"
+    >GitHub <ExternalLink size={15} aria-hidden="true" /></a
+  >
 </header>

@@ -1,7 +1,7 @@
 <script lang="ts">
 import { onMount, tick } from 'svelte';
 import { SvelteSet } from 'svelte/reactivity';
-import { focusClass, paragraphClass, topSectionClass } from '../classes';
+import { focusClass, paragraphClass } from '../classes';
 import {
   categoryFromSectionHash,
   filterAndGroupOptions,
@@ -236,7 +236,8 @@ function alignHashTarget(target: HTMLElement | null) {
 
   const stickyNavHeight =
     window.innerWidth < 1024
-      ? (document.querySelector<HTMLElement>('.manual-nav')?.getBoundingClientRect().height ?? 0)
+      ? (document.querySelector<HTMLElement>('[data-manual-nav]')?.getBoundingClientRect().height ??
+        0)
       : 16;
   const targetTop = target.getBoundingClientRect().top + window.scrollY;
   window.scrollTo({ top: Math.max(0, targetTop - stickyNavHeight - 16) });
@@ -262,16 +263,20 @@ function isReferenceHash(hash: string): boolean {
 }
 </script>
 
-<section bind:this={referenceElement} class={topSectionClass} aria-labelledby="sec-options">
+<section bind:this={referenceElement} class="mt-6" aria-labelledby="sec-options">
   <TitlePage id="sec-options" title="Option reference" level={2} />
-  <p class="reference-description">Find a client setting or plugin. Open an option for its type, default, and example.</p>
+  <p class="max-w-[64ch] text-sm text-muted">
+    Find a client setting or plugin. Open an option for its type, default, and example.
+  </p>
 
   <section
     id="appendix-configuration-options"
-    class="variablelist scroll-mt-20"
+    class="scroll-mt-20"
     aria-labelledby="appendix-configuration-options-heading"
   >
-    <h3 id="appendix-configuration-options-heading" class="sr-only">Configuration options reference</h3>
+    <h3 id="appendix-configuration-options-heading" class="sr-only">
+      Configuration options reference
+    </h3>
 
     {#if optionsError}
       <div
@@ -293,32 +298,42 @@ function isReferenceHash(hash: string): boolean {
       <OptionsToolbar bind:query bind:category {totalMatches} {totalOptions} />
 
       {#if isFiltering && totalMatches === 0}
-        <div class="empty-search">
-          <p role="status">No options match “{query}”{category === 'all' ? '.' : ' in this category.'}</p>
-          <p>Try a plugin name or a shorter search.</p>
-          <button type="button" onclick={() => {
-            query = '';
-            category = 'all';
-            document.getElementById('option-search')?.focus();
-          }}>Clear search and filters</button>
+        <div class="my-5 rounded-lg bg-panel p-6 text-sm">
+          <p role="status">
+            No options match “{query}”{category === 'all' ? '.' : ' in this category.'}
+          </p>
+          <p class="mt-2 text-muted">Try a plugin name or a shorter search.</p>
+          <button
+            class={`mt-2 min-h-11 cursor-pointer text-accent underline underline-offset-3 ${focusClass}`}
+            type="button"
+            onclick={() => {
+              query = '';
+              category = 'all';
+              document.getElementById('option-search')?.focus();
+            }}
+          >
+            Clear search and filters
+          </button>
         </div>
       {:else}
         {#each sections as section (section.id)}
           {#if !isFiltering || section.optionCount > 0}
-          <OptionSection
-            {section}
-            filtering={isFiltering}
-            open={openCategory === section.category}
-            {openPluginNames}
-            {openOptionNames}
-            onToggle={(isOpen) => handleSectionToggle(section.category, isOpen)}
-            onPluginToggle={handlePluginToggle}
-            onOptionToggle={handleOptionToggle}
-          />
+            <OptionSection
+              {section}
+              filtering={isFiltering}
+              open={openCategory === section.category}
+              {openPluginNames}
+              {openOptionNames}
+              onToggle={(isOpen) => handleSectionToggle(section.category, isOpen)}
+              onPluginToggle={handlePluginToggle}
+              onOptionToggle={handleOptionToggle}
+            />
           {/if}
         {/each}
       {/if}
     {/if}
   </section>
-  <p class="reference-source">Generated from the Nixcord modules and upstream plugin sources.</p>
+  <p class="mt-4 text-xs text-muted">
+    Generated from the Nixcord modules and upstream plugin sources.
+  </p>
 </section>
