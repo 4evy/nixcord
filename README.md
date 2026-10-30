@@ -16,7 +16,8 @@ Vencord or Equicord, plus Vesktop, Equibop, GoofCord, Legcord, and Dorion.
 [![Built with Nix](https://img.shields.io/badge/built%20with-Nix-5277C3?style=flat-square&logo=nixos&logoColor=white)](https://nixos.org/)
 
 [Get started](#quickstart) · [Without flakes](#without-flakes) ·
-[Configuration](#configuration) · [Manual and options](https://4evy.github.io/nixcord/)
+[Configuration](#configuration) ·
+[Manual and options](https://4evy.github.io/nixcord/)
 
 </div>
 
@@ -312,12 +313,12 @@ programs.nixcord = {
 ```
 
 Replace `MyPlugin` with your plugin's declared name. Remote sources accept
-`github:owner/repo/COMMIT`, `gitlab:`, `codeberg:`, `sourcehut:`,
-and `bitbucket:` shorthands, or `git+https://forge.example/owner/repo.git?rev=COMMIT`.
-Replace `COMMIT` with a full 40-character commit hash; branches and tags are
-not accepted. An absolute path string such as `"/home/user/projects/myPlugin"`
-requires `--impure` when used with flakes. Nix path literals and derivations
-are also accepted.
+`github:owner/repo/COMMIT`, `gitlab:`, `codeberg:`, `sourcehut:`, and
+`bitbucket:` shorthands, or
+`git+https://forge.example/owner/repo.git?rev=COMMIT`. Replace `COMMIT` with a
+full 40-character commit hash; branches and tags are not accepted. An absolute
+path string such as `"/home/user/projects/myPlugin"` requires `--impure` when
+used with flakes. Nix path literals and derivations are also accepted.
 
 ## Dorion
 
@@ -332,8 +333,8 @@ That first launch creates the WebKit storage used by the mod.
 
 Linux voice and video depend on Dorion's WebKitGTK support and may fail even
 when Nixcord is configured. Check
-[Dorion's compatibility notes](https://github.com/SpikeHD/Dorion) before choosing
-it for calls.
+[Dorion's compatibility notes](https://github.com/SpikeHD/Dorion) before
+choosing it for calls.
 
 ## Build the docs
 
