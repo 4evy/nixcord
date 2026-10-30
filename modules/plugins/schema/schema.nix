@@ -122,9 +122,6 @@
     "copyFileContents" = {
       "settings" = { };
     };
-    "copyStickerLinks" = {
-      "settings" = { };
-    };
     "copyUserUrls" = {
       "settings" = { };
     };
@@ -256,8 +253,18 @@
     "dontRoundMyTimestamps" = {
       "settings" = { };
     };
-    "expressionCloner" = {
-      "settings" = { };
+    "expressionManager" = {
+      "settings" = {
+        "editAndDelete" = {
+          "type" = "types.bool";
+        };
+        "stickerCopyAndOpen" = {
+          "type" = "types.bool";
+        };
+        "recents" = {
+          "type" = "types.bool";
+        };
+      };
     };
     "f8Break" = {
       "settings" = { };

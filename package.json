@@ -41,16 +41,44 @@
     "@types/bun": "1.4.4",
     "@types/fs-extra": "11.0.4",
     "@types/node": "26.6.5",
-    "equicord": "https://github.com/Equicord/Equicord/archive/a5753f70a1e4ccde881ea516a5d1b2fc51cadd86.tar.gz",
+    "equicord": "https://github.com/Equicord/Equicord/archive/8d0ebf3549890be2ecb1e1d602b1695f584c71cc.tar.gz",
     "fallow": "3.36.0",
     "svelte": "^5.57.2",
     "typescript": "7.1.0-beta",
-    "vencord": "https://github.com/Vendicated/Vencord/archive/443688b5366a4d43e9868519f48a4544cd7520d4.tar.gz",
+    "vencord": "https://github.com/Vendicated/Vencord/archive/644434941b515a2626a2161e219653cb36e723e7.tar.gz",
     "vite": "8.3.5",
     "vitest": "5.0.5"
   },
   "engines": {
     "bun": ">=1.4.3"
   },
-  "packageManager": "bun@1.4.4"
+  "packageManager": "bun@1.4.4",
+  "overrides": {
+    "equicord": {
+      "@ffmpeg/ffmpeg": "^0.12.10",
+      "@ffmpeg/util": "^0.12.1",
+      "@intrnl/xxhash64": "^0.1.2",
+      "@song-spotlight/api": "^2.2.0",
+      "@streamparser/json": "^0.0.22",
+      "@vap/core": "0.0.12",
+      "@vap/shiki": "0.10.5",
+      "fflate": "^0.8.3",
+      "gifenc": "github:mattdesl/gifenc#64842fca317b112a8590f8fef2bf3825da8f6fe3",
+      "gifuct-js": "^2.1.2",
+      "idb": "8.0.3",
+      "jsqr": "1.4.0",
+      "monaco-editor": "^0.57.0",
+      "nanoid": "^5.1.16",
+      "native-file-system-adapter": "^3.0.1",
+      "yaml-js": "^0.3.1"
+    },
+    "vencord": {
+      "@intrnl/xxhash64": "^0.1.2",
+      "@vap/core": "0.0.12",
+      "@vap/shiki": "0.10.5",
+      "fflate": "^0.8.3",
+      "gifenc": "github:mattdesl/gifenc#64842fca317b112a8590f8fef2bf3825da8f6fe3",
+      "monaco-editor": "^0.57.0"
+    }
+  }
 }

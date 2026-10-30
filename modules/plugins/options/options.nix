@@ -1416,10 +1416,6 @@ in
     enable = lib.options.mkEnableOption "Copy the users status url when you right-click it (Equicord-only)";
 
   };
-  "copyStickerLinks" = {
-    enable = lib.options.mkEnableOption "Adds the ability to copy & open Sticker links (Shared between Vencord and Equicord)";
-
-  };
   "copyUserMention" = {
     enable = lib.options.mkEnableOption "Adds a button to copy user's mention on the user context menu, works best with ValidUser. (Equicord-only)";
 
@@ -2484,9 +2480,23 @@ in
       default = false;
     };
   };
-  "expressionCloner" = {
-    enable = lib.options.mkEnableOption "Allows you to clone Emotes & Stickers to your own server (right click them) (Shared between Vencord and Equicord)";
-
+  "expressionManager" = {
+    enable = lib.options.mkEnableOption "Clone Emotes & Stickers. Adds context menu options to quickly clone, edit, or delete them. Also adds Copy & Save options for stickers (Shared between Vencord and Equicord)";
+    "editAndDelete" = lib.options.mkOption {
+      type = lib.types.bool;
+      description = "Add \"Edit\" and \"Delete\" options to the expression picker context menu";
+      default = true;
+    };
+    "stickerCopyAndOpen" = lib.options.mkOption {
+      type = lib.types.bool;
+      description = "Add \"Copy Sticker Link\" and \"Open Sticker Link\" options to the sticker context menu";
+      default = true;
+    };
+    "recents" = lib.options.mkOption {
+      type = lib.types.bool;
+      description = "Add \"Remove from Recents\" option to the context menu of frequently used expressions";
+      default = true;
+    };
   };
   "f8Break" = {
     enable = lib.options.mkEnableOption "Pause the client when you press F8 with DevTools (+ breakpoints) open. (Shared between Vencord and Equicord)";
@@ -7166,7 +7176,7 @@ in
     };
   };
   "showConnections" = {
-    enable = lib.options.mkEnableOption "Show connected accounts in user popouts (Equicord-only)";
+    enable = lib.options.mkEnableOption "Show connected accounts in user popouts and the DM sidebar (Equicord-only)";
     "iconSize" = lib.options.mkOption {
       type = lib.types.int;
       description = "Icon size (px)";
