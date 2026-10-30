@@ -1,5 +1,5 @@
 {
-  "lockfileVersion": 2,
+  "lockfileVersion": 3,
   "configVersion": 0,
   "workspaces": {
     "": {
@@ -8,11 +8,11 @@
         "@types/bun": "1.4.4",
         "@types/fs-extra": "11.0.4",
         "@types/node": "26.6.5",
-        "equicord": "https://github.com/Equicord/Equicord/archive/a5753f70a1e4ccde881ea516a5d1b2fc51cadd86.tar.gz",
+        "equicord": "https://github.com/Equicord/Equicord/archive/8d0ebf3549890be2ecb1e1d602b1695f584c71cc.tar.gz",
         "fallow": "3.36.0",
         "svelte": "^5.57.2",
         "typescript": "7.1.0-beta",
-        "vencord": "https://github.com/Vendicated/Vencord/archive/443688b5366a4d43e9868519f48a4544cd7520d4.tar.gz",
+        "vencord": "https://github.com/Vendicated/Vencord/archive/644434941b515a2626a2161e219653cb36e723e7.tar.gz",
         "vite": "8.3.5",
         "vitest": "5.0.5",
       },
@@ -133,6 +133,34 @@
         "@typescript/native": "npm:typescript@7.1.0-beta",
         "effect": "4.0.6",
       },
+    },
+  },
+  "overrides": {
+    "equicord": {
+      "@ffmpeg/ffmpeg": "^0.12.10",
+      "@ffmpeg/util": "^0.12.1",
+      "@intrnl/xxhash64": "^0.1.2",
+      "@song-spotlight/api": "^2.2.0",
+      "@streamparser/json": "^0.0.22",
+      "@vap/core": "0.0.12",
+      "@vap/shiki": "0.10.5",
+      "fflate": "^0.8.3",
+      "gifenc": "github:mattdesl/gifenc#64842fca317b112a8590f8fef2bf3825da8f6fe3",
+      "gifuct-js": "^2.1.2",
+      "idb": "8.0.3",
+      "jsqr": "1.4.0",
+      "monaco-editor": "^0.57.0",
+      "nanoid": "^5.1.16",
+      "native-file-system-adapter": "^3.0.1",
+      "yaml-js": "^0.3.1",
+    },
+    "vencord": {
+      "@intrnl/xxhash64": "^0.1.2",
+      "@vap/core": "0.0.12",
+      "@vap/shiki": "0.10.5",
+      "fflate": "^0.8.3",
+      "gifenc": "github:mattdesl/gifenc#64842fca317b112a8590f8fef2bf3825da8f6fe3",
+      "monaco-editor": "^0.57.0",
     },
   },
   "packages": {
@@ -434,13 +462,13 @@
 
     "devalue": ["devalue@5.9.4", "", {}, "sha512-sPAT4pztbu6586/hrhOnMKS17IJrvg12mXiSPSS3W5qDeN2RGgvZ0diZCm31dBbnevfVmujNO3IM2wrS4Y2Rhg=="],
 
-    "dompurify": ["dompurify@3.2.7", "", { "optionalDependencies": { "@types/trusted-types": "^2.0.7" } }, "sha512-WhL/YuveyGXJaerVlMYGWhvQswa7myDG17P7Vu65EWC05o8vfeNbvNf4d/BOvH99+ZW+LlQsc1GDKMa1vNK6dw=="],
+    "dompurify": ["dompurify@3.4.15", "", { "optionalDependencies": { "@types/trusted-types": "^2.0.7" } }, "sha512-EUBjM+B+lkDE41iE82DDSCfkoPGfXx8IxFxPMjNzm/Uk4xDet77rTN9wqlxlVg71kK7XGuUMv6wUxJUwwv+Xyw=="],
 
     "effect": ["effect@4.0.6", "", {}, "sha512-Tc3mkzuLR6t6P9dhLt0D2GrxYtmU5td4XEJEiXCmILz53IRIfJyHsKZWjTA3xEjiwpNTtXBgI4iqYPxMztBDrw=="],
 
     "enhanced-resolve": ["enhanced-resolve@5.26.0", "", { "dependencies": { "graceful-fs": "^4.2.4", "tapable": "^2.3.3" } }, "sha512-9vhedylFonb2YGogzUKX6+Ja72gOJbN1QHAqdrvqLwhdl/QWbKopzoUC9EbQNVsAns/bx/4uyqalrQAoy1IByw=="],
 
-    "equicord": ["equicord@https://github.com/Equicord/Equicord/archive/a5753f70a1e4ccde881ea516a5d1b2fc51cadd86.tar.gz", { "dependencies": { "@ffmpeg/ffmpeg": "^0.12.10", "@ffmpeg/util": "^0.12.1", "@intrnl/xxhash64": "^0.1.2", "@song-spotlight/api": "^2.2.0", "@streamparser/json": "^0.0.22", "@vap/core": "0.0.12", "@vap/shiki": "0.10.5", "fflate": "^0.8.3", "gifenc": "github:mattdesl/gifenc#64842fca317b112a8590f8fef2bf3825da8f6fe3", "gifuct-js": "^2.1.2", "idb": "8.0.3", "jsqr": "1.4.0", "monaco-editor": "^0.55.1", "nanoid": "^5.1.16", "native-file-system-adapter": "^3.0.1", "virtual-merge": "^1.0.1", "yaml-js": "^0.3.1" } }, "sha512-bBJ++N7dBv2qMfGFHwGfA4n5N3lyyuYiqPlh/5ud6WqbZNzVhsUH7InsrHUQdcEhSLLFPBNL9jspu9eXQdwv2A=="],
+    "equicord": ["equicord@https://github.com/Equicord/Equicord/archive/8d0ebf3549890be2ecb1e1d602b1695f584c71cc.tar.gz", { "dependencies": { "@ffmpeg/ffmpeg": "^0.12.10", "@ffmpeg/util": "^0.12.1", "@intrnl/xxhash64": "^0.1.2", "@song-spotlight/api": "^2.2.0", "@streamparser/json": "^0.0.22", "@vap/core": "0.0.12", "@vap/shiki": "0.10.5", "fflate": "^0.8.3", "gifenc": "github:mattdesl/gifenc#64842fca317b112a8590f8fef2bf3825da8f6fe3", "gifuct-js": "^2.1.2", "idb": "8.0.3", "jsqr": "1.4.0", "monaco-editor": "^0.57.0", "nanoid": "^5.1.16", "native-file-system-adapter": "^3.0.1", "yaml-js": "^0.3.1" } }, "sha512-8960Bmo7PmpgEE3mYjE+oZAp/QOQvJwiol+/7B/mqsQxiQgxEWb5eqleLi+UxErdTe4hAKg+tp+xQBPbIH503w=="],
 
     "es-module-lexer": ["es-module-lexer@2.3.2", "", {}, "sha512-poHGpORABojJJucnV9KbOavETW8lBVnphkW77ER5/BQ5Fz7oXSoCNek7IH3vR5nRjdsEz926ibFYX8KtLQmdyw=="],
 
@@ -554,7 +582,7 @@
 
     "mode-watcher": ["mode-watcher@1.1.0", "", { "dependencies": { "runed": "^0.25.0", "svelte-toolbelt": "^0.7.1" }, "peerDependencies": { "svelte": "^5.27.0" } }, "sha512-mUT9RRGPDYenk59qJauN1rhsIMKBmWA3xMF+uRwE8MW/tjhaDSCCARqkSuDTq8vr4/2KcAxIGVjACxTjdk5C3g=="],
 
-    "monaco-editor": ["monaco-editor@0.55.1", "", { "dependencies": { "dompurify": "3.2.7", "marked": "14.0.0" } }, "sha512-jz4x+TJNFHwHtwuV9vA9rMujcZRb0CEilTEwG2rRSpe/A7Jdkuj8xPKttCgOh+v/lkHy7HsZ64oj+q3xoAFl9A=="],
+    "monaco-editor": ["monaco-editor@0.57.0", "", { "dependencies": { "dompurify": "3.4.15", "marked": "14.0.0" } }, "sha512-5BkI9KGoqrNvBGUe15/QlZq3OooZ8WLg1AxTpaqHRCP3HNpzPPZKE2EDz8M7c+VRmCeUw1Brp4cx/PWm3kI/5A=="],
 
     "nanoid": ["nanoid@5.1.16", "", { "bin": "bin/nanoid.js" }, "sha512-kVrnsrJqMR8+oLJnGEmSWw9BivK5mt7H3FZatVRjrc5wGqFYuBxX1yG7+A7Gi5AefkX6t/oCkizcQgpu0cY1dQ=="],
 
@@ -636,9 +664,7 @@
 
     "valibot": ["valibot@1.5.0", "", { "peerDependencies": { "typescript": ">=5" }, "optionalPeers": ["typescript"] }, "sha512-nil6AkP2TChWL43Z5uJ6GTxX01CUA+g8LWUM+N/rB9NBbkUMaUsi9PUNzlUPgoKASgmx9f7eGOYpJ04/fSa6FQ=="],
 
-    "vencord": ["vencord@https://github.com/Vendicated/Vencord/archive/443688b5366a4d43e9868519f48a4544cd7520d4.tar.gz", { "dependencies": { "@intrnl/xxhash64": "^0.1.2", "@vap/core": "0.0.12", "@vap/shiki": "0.10.5", "fflate": "^0.8.3", "gifenc": "github:mattdesl/gifenc#64842fca317b112a8590f8fef2bf3825da8f6fe3", "monaco-editor": "^0.55.1", "nanoid": "^5.1.16", "virtual-merge": "^1.0.1" } }, "sha512-Zb5w/K5N9GPZ8AGv6Gu0i/6IR1JS54OvlmpAwTcOMEaAYILg93S9Q7Hgm98MpqDtHg3Aynm+7SAC6ckZjJkY6Q=="],
-
-    "virtual-merge": ["virtual-merge@1.0.2", "", {}, "sha512-5hxklfyTUWMKYaLuoriOf9Xqmt3oWtfAiZw0M3ITeeNmVdKhcnys7rYyfBHqvy/hlELP0hQ4u7o1r5HBXbm6sg=="],
+    "vencord": ["vencord@https://github.com/Vendicated/Vencord/archive/644434941b515a2626a2161e219653cb36e723e7.tar.gz", { "dependencies": { "@intrnl/xxhash64": "^0.1.2", "@vap/core": "0.0.12", "@vap/shiki": "0.10.5", "fflate": "^0.8.3", "gifenc": "github:mattdesl/gifenc#64842fca317b112a8590f8fef2bf3825da8f6fe3", "monaco-editor": "^0.57.0" } }, "sha512-qSeRjwZ4u0QDpQrOkBjU7eQwgFeZs5Hs05jcbKIDLJsrb5CAGXMYH+ixY8iHSt8jbKACXNIT/h1P1ln2ksz6nQ=="],
 
     "vite": ["vite@8.3.5", "", { "dependencies": { "lightningcss": "^1.33.0", "picomatch": "^4.0.7", "postcss": "^8.5.30", "rolldown": "~1.2.14", "tinyglobby": "^0.2.17" }, "optionalDependencies": { "fsevents": "~2.3.3" }, "peerDependencies": { "@types/node": "^20.19.0 || >=22.12.0", "@vitejs/devtools": "^0.7.1 || ^0.8.0", "esbuild": "^0.27.0 || ^0.28.0", "jiti": ">=1.21.0", "less": "^4.0.0", "sass": "^1.70.0", "sass-embedded": "^1.70.0", "stylus": ">=0.54.8", "sugarss": "^5.0.0", "terser": "^5.16.0", "tsx": "^4.8.1", "yaml": "^2.4.2" }, "optionalPeers": ["@types/node", "@vitejs/devtools", "esbuild", "jiti", "less", "sass", "sass-embedded", "stylus", "sugarss", "terser", "tsx", "yaml"], "bin": { "vite": "bin/vite.js" } }, "sha512-z1YpjieJ9g0ebTmQpLBv/oq9E3F9EIlOe+7LahW8SrE3LTiG3udBRUXQOlYXP9b+IC2q2phHeVxj9xGlw34OEQ=="],
 

@@ -629,12 +629,45 @@
     },
     {
       "from": [
-        "emoteCloner",
+        "expressionCloner",
+        "editAndDelete"
+      ],
+      "to": [
+        "expressionManager",
+        "editAndDelete"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "expressionCloner",
         "enable"
       ],
       "to": [
-        "expressionCloner",
+        "expressionManager",
         "enable"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "expressionCloner",
+        "recents"
+      ],
+      "to": [
+        "expressionManager",
+        "recents"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "expressionCloner",
+        "stickerCopyAndOpen"
+      ],
+      "to": [
+        "expressionManager",
+        "stickerCopyAndOpen"
       ],
       "warn": false
     },
@@ -5591,6 +5624,7 @@
   ],
   "removals": [
     "appleMusic",
+    "copyStickerLinks",
     "externalPlayer",
     "seeSummaries",
     "showAllBadges"
