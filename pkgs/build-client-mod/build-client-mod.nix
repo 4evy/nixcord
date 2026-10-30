@@ -18,8 +18,8 @@ let
   buildBunPackage = callPackage ../bun/build-package.nix { };
   postPatch = ''
     cp ${bunLock} bun.lock
+    bun ${./prepare-package.ts}
     substituteInPlace package.json \
-      --replace-fail 'link:packages/discord-types' 'file:packages/discord-types' \
       --replace-fail 'node ' 'bun ' \
       --replace-fail 'pnpm ' 'bun run --bun '
   '';
@@ -56,9 +56,7 @@ buildBunPackage {
     attrPath = pname;
     extraArgs = [ "--version=branch=main" ];
     prepareLockfile = ''
-      jq '.devDependencies["@vencord/discord-types"] = "file:packages/discord-types"' \
-        package.json > package.json.tmp
-      mv package.json.tmp package.json
+      bun ${./prepare-package.ts}
     '';
   };
 }

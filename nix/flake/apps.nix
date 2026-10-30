@@ -36,7 +36,7 @@ let
     runtimeInputs = [
       pkgs.nix-update
       pkgs.nix
-      pkgs.bun
+      (pkgs.callPackage ../bun/bun.nix { })
     ];
     # nix-update 1.16 resolves <nixpkgs> when running flake update hooks
     runtimeEnv.NIX_PATH = "nixpkgs=${pkgs.path}";
@@ -69,7 +69,11 @@ let
               }
               ${lib.optionalString (lib.elem name pluginPackages) ''
                 dependency=$(nix eval --raw ${lib.escapeShellArg ".#${name}.src.urls"} --apply builtins.head)
+                source=$(nix build --no-link --print-out-paths ${lib.escapeShellArg ".#${name}.src"})
+                bun ${../../pkgs/build-client-mod/prepare-package.ts} "$source" package.json
                 bun add --dev --lockfile-only --ignore-scripts "${name}@$dependency"
+                bun ${../../pkgs/build-client-mod/normalize-lockfile.ts} ${lib.escapeShellArg name}
+                bun install --lockfile-only --ignore-scripts --save-text-lockfile
               ''}
               ;;
           '') updatePackages}

@@ -338,6 +338,11 @@ choosing it for calls.
 
 ## Build the docs
 
+For local Bun commands, use `nix develop` or Bun 1.4.3 or newer, then run
+`bun install --frozen-lockfile --ignore-scripts`. Plugin source updates use
+[scoped dependency overrides](pkgs/build-client-mod/prepare-package.ts),
+which older Bun versions do not support.
+
 - `nix build .#docs` builds the site.
 - `nix build .#docs-json` builds the option reference as JSON.
 - `bun run docs:dev:options` generates options and starts the local docs server.

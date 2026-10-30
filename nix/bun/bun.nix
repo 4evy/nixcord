@@ -5,7 +5,7 @@
   stdenvNoCC,
 }:
 let
-  version = "1.4.2";
+  version = "1.4.3";
   sources =
     lib.mapAttrs
       (
@@ -18,19 +18,19 @@ let
       {
         aarch64-darwin = {
           archive = "bun-darwin-aarch64";
-          hash = "sha256-kJh6OhbX21VtiGrD1VHnttPt8KHPQ6yu1iLoZ2vh0S8=";
+          hash = "sha256-gK/UwGm0am+o8+xSC+vHUKeEPkqNW5WD0prUNsAKNAM=";
         };
         aarch64-linux = {
           archive = "bun-linux-aarch64";
-          hash = "sha256-VDKLvC2cjgyfiSxUTWbFeoO4QTnjSQnl7oF1jxrI/ac=";
+          hash = "sha256-76mBPaXtckI7+Ef5FujSxHwNd2rdlyNUAmp14Q2pqiE=";
         };
         x86_64-linux = {
           archive = "bun-linux-x64-baseline";
-          hash = "sha256-xngEDxT+BEDrg503y9DOTAUaMtpygGrJfeamqra/co8=";
+          hash = "sha256-H8LtrIQxApCeOhvh2NmALMYHHPB05n6IIx9P/g+LOXs=";
         };
       };
 in
-# Stable Nixpkgs ships Bun 1.3, which cannot read our version 2 lockfiles
+# Bun 1.4.3 supports the scoped overrides needed by upstream catalog dependencies
 if lib.versionAtLeast bun.version version then
   bun
 else
