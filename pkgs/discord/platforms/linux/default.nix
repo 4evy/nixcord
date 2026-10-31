@@ -179,7 +179,9 @@ in
 
   # GApps prepares its wrapper arguments in preFixupPhases
   postFixup = ''
+    # Helpers inherit stdio too, so redirect before staging or deployment
     wrapProgramShell "$out/${layout.executable}" \
+      --run '[ -t 1 ] || exec > /dev/null 2>&1' \
       "''${gappsWrapperArgs[@]}" \
       --run 'case ":''${XDG_CURRENT_DESKTOP:-}:" in *:KDE:*) discordKdeWayland=1 ;; *) unset discordKdeWayland ;; esac' \
       --add-flags "\''${NIXOS_OZONE_WL:+\''${WAYLAND_DISPLAY:+--ozone-platform=wayland --enable-features=WaylandWindowDecorations --enable-wayland-ime=true}}" \
@@ -195,12 +197,12 @@ in
       --prefix LD_LIBRARY_PATH : ${finalAttrs.libPath} \
       --suffix VK_ADD_DRIVER_FILES : "${addDriverRunpath.driverLink}/share/vulkan/icd.d" \
       --run "${finalAttrs.stageModules} $out/${layout.modulesDir}" \
-      --run '[ -t 1 ] || exec > /dev/null 2>&1' \
       --add-flags ${lib.escapeShellArg commandLineArgsString}
   ''
   + lib.strings.optionalString hasDeployKrisp ''
     # Deploy before staging, outside the launcher's library environment
     wrapProgramShell "$out/${layout.executable}" \
+      --run '[ -t 1 ] || exec > /dev/null 2>&1' \
       --run ${lib.strings.escapeShellArg (lib.meta.getExe deployKrisp)}
   '';
 

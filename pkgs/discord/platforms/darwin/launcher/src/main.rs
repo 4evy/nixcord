@@ -1,8 +1,9 @@
 use std::collections::BTreeMap;
 use std::ffi::OsString;
+use std::io::{self, IsTerminal};
 use std::os::unix::process::{CommandExt, ExitStatusExt};
 use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::process::{Command, Stdio};
 use std::{env, process};
 
 use anyhow::{Context, Result, ensure};
@@ -59,14 +60,29 @@ impl Directory {
     }
 }
 
+fn command(
+    executable: &Path,
+    environment: &BTreeMap<String, OsString>,
+    silence_output: bool,
+) -> Command {
+    let mut command = Command::new(executable);
+    command.envs(environment);
+    // Finder and closed pipes can leave unusable output streams
+    // Apply this before helpers too, since Krisp deployment prints to stdout
+    if silence_output {
+        command.stdout(Stdio::null()).stderr(Stdio::null());
+    }
+    command
+}
+
 fn run_helper(
     executable: &Path,
     arguments: &[&Path],
     environment: &BTreeMap<String, OsString>,
+    silence_output: bool,
 ) -> Result<i32> {
-    let status = Command::new(executable)
+    let status = command(executable, environment, silence_output)
         .args(arguments)
-        .envs(environment)
         .status()
         .with_context(|| format!("failed to run {}", executable.display()))?;
     Ok(status
@@ -99,21 +115,26 @@ fn run() -> Result<i32> {
     }
 
     // Pass overrides to each child without mutating the process environment
-    let status = run_helper(&config.stage_modules, &[&modules], &environment)?;
+    let silence_output = !io::stdout().is_terminal();
+    let status = run_helper(
+        &config.stage_modules,
+        &[&modules],
+        &environment,
+        silence_output,
+    )?;
     if status != 0 {
         return Ok(status);
     }
     if let Some(deploy) = config.deploy_krisp {
-        let status = run_helper(&deploy, &[], &environment)?;
+        let status = run_helper(&deploy, &[], &environment, silence_output)?;
         if status != 0 {
             return Ok(status);
         }
     }
 
-    let error = Command::new(&target)
+    let error = command(&target, &environment, silence_output)
         .args(env::args_os().skip(1))
         .args(config.command_line_args)
-        .envs(&environment)
         .exec();
     Err(error).with_context(|| format!("failed to exec {}", target.display()))
 }
