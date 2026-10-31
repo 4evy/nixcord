@@ -12,9 +12,11 @@ diff --git a/src/bootstrap.js b/src/bootstrap.js
 diff --git a/src/cmdSwitches.js b/src/cmdSwitches.js
 --- a/src/cmdSwitches.js
 +++ b/src/cmdSwitches.js
-@@ -14,6 +14,7 @@ module.exports = () => {
+@@ -14,6 +14,8 @@ module.exports = () => {
++  // The web client only keeps OpenH264 2.7.0 in its asset cache
    if (process.platform === 'linux' && settings.get('openH264Enabled', true))
-     flags.push('--enable-libopenh264', '--openh264-library-path=' + join(paths.getAssetCachePath(), 'openh264', 'libopenh264-2.5.1-linux64.7.so'));
+-    flags.push('--enable-libopenh264', '--openh264-library-path=' + join(paths.getAssetCachePath(), 'openh264', 'libopenh264-2.5.1-linux64.7.so'));
++    flags.push('--enable-libopenh264', '--openh264-library-path=' + join(paths.getAssetCachePath(), 'openh264', 'libopenh264-2.7.0-linux64.8.so'));
 
 +  if (process.platform === 'linux') flags.push('--disable-features=WaylandWpColorManagerV1');
    let c = {};
