@@ -555,6 +555,9 @@
         };
       };
     };
+    "mutedServersActivityBadge" = {
+      "settings" = { };
+    };
     "mutualGroupDms" = {
       "settings" = { };
     };
@@ -697,9 +700,6 @@
     "reactErrorDecoder" = {
       "settings" = { };
     };
-    "readAllNotificationsButton" = {
-      "settings" = { };
-    };
     "relationshipNotifier" = {
       "settings" = {
         "notices" = {
@@ -780,6 +780,13 @@
       "settings" = {
         "replaceMessageContents" = {
           "type" = "types.bool";
+        };
+      };
+    };
+    "serverListIndicators" = {
+      "settings" = {
+        "mode" = {
+          "type" = "types.enum";
         };
       };
     };
@@ -1327,9 +1334,6 @@
         };
       };
     };
-    "mutedServersActivityBadge" = {
-      "settings" = { };
-    };
     "newGuildSettings" = {
       "settings" = {
         "guild" = {
@@ -1439,6 +1443,9 @@
         };
       };
     };
+    "readAllNotificationsButton" = {
+      "settings" = { };
+    };
     "reviewDb" = {
       "settings" = {
         "notifyReviews" = {
@@ -1463,13 +1470,6 @@
     };
     "serverInfo" = {
       "settings" = { };
-    };
-    "serverListIndicators" = {
-      "settings" = {
-        "mode" = {
-          "type" = "types.enum";
-        };
-      };
     };
     "settings" = {
       "settings" = {
@@ -2946,6 +2946,9 @@
           "type" = "types.bool";
         };
         "showAllBadges" = {
+          "type" = "types.bool";
+        };
+        "gifPickerTyping" = {
           "type" = "types.bool";
         };
         "enableAutoCorrect" = {
@@ -4756,6 +4759,13 @@
     "reactionTimestamps" = {
       "settings" = { };
     };
+    "readAllNotificationsButton" = {
+      "settings" = {
+        "compact" = {
+          "type" = "types.bool";
+        };
+      };
+    };
     "recentDmSwitcher" = {
       "settings" = {
         "visualStyle" = {
@@ -5023,16 +5033,6 @@
       "settings" = {
         "sorting" = {
           "type" = "types.enum";
-        };
-      };
-    };
-    "serverListIndicators" = {
-      "settings" = {
-        "mode" = {
-          "type" = "types.enum";
-        };
-        "useCompact" = {
-          "type" = "types.bool";
         };
       };
     };

@@ -2367,6 +2367,11 @@ in
       description = "Shows every profile badge instead of collapsing the rest behind +n (restart required)";
       default = false;
     };
+    "gifPickerTyping" = lib.options.mkOption {
+      type = lib.types.bool;
+      description = "Shows you as typing while the GIF picker is open (restart required)";
+      default = false;
+    };
     "enableAutoCorrect" = lib.options.mkOption {
       type = lib.types.bool;
       description = "Adds a chat box context menu toggle for native autocorrection and text replacements (restart required)";
@@ -5177,7 +5182,7 @@ in
     };
   };
   "mutedServersActivityBadge" = {
-    enable = lib.options.mkEnableOption "Keeps the servers activity badge visible even when server is muted. (Vencord-only)";
+    enable = lib.options.mkEnableOption "Keeps the servers activity badge visible even when server is muted. (Shared between Vencord and Equicord)";
 
   };
   "mutualGroupDms" = {
@@ -6357,8 +6362,12 @@ in
 
   };
   "readAllNotificationsButton" = {
-    enable = lib.options.mkEnableOption "Read all server notifications with a single button click! (Shared between Vencord and Equicord)";
-
+    enable = lib.options.mkEnableOption "Read all server notifications with a single button click! (Equicord-only)";
+    "compact" = lib.options.mkOption {
+      type = lib.types.bool;
+      description = "Show a small text button instead of a server list icon";
+      default = false;
+    };
   };
   "recentDmSwitcher" = {
     enable = lib.options.mkEnableOption "Ctrl+Tab between most recently used DMs (Ctrl+Shift+Tab reverse) (Equicord-only)";
@@ -6953,20 +6962,15 @@ in
     };
   };
   "serverListIndicators" = {
-    enable = lib.options.mkEnableOption "Add online friend count or server count in the server list (Equicord-only)";
+    enable = lib.options.mkEnableOption "Add online friend count or server count in the server list (Shared between Vencord and Equicord)";
     "mode" = lib.options.mkOption {
       type = lib.types.enum [
         2
         1
         3
       ];
-      description = "Mode (restart required)\n\nValues: 2 = Only online friend count, 1 = Only server count, 3 = Both server and online friend counts";
+      description = "Mode\n\nValues: 2 = Only online friend count, 1 = Only server count, 3 = Both server and online friend counts";
       default = 2;
-    };
-    "useCompact" = lib.options.mkOption {
-      type = lib.types.bool;
-      description = "Makes the indicator appear with only text (restart required)";
-      default = false;
     };
   };
   "serverSearch" = {

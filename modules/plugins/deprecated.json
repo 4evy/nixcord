@@ -247,6 +247,11 @@
         "date": "2026-10-19"
       }
     },
+    "serverListIndicators": {
+      "useCompact": {
+        "date": "2026-10-31"
+      }
+    },
     "timezones": {
       "databaseUrl": {
         "date": "2026-10-27"
