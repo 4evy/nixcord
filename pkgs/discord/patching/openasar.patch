@@ -26,6 +26,16 @@ diff --git a/src/cmdSwitches.js b/src/cmdSwitches.js
    let c = {};
    for (const x of flags) {
      if (!x) continue;
+@@ -25,4 +28,9 @@
+   for (const k in c) {
++    // appendSwitch replaces existing values, including parsed CLI features
++    if (k === '--enable-features' || k === '--disable-features') {
++      const userFeatures = app.commandLine.getSwitchValue(k.slice(2));
++      if (userFeatures) c[k].unshift(userFeatures);
++    }
+     app.commandLine.appendSwitch(k.replace('--', ''), c[k].join(','));
+   }
+ };
 diff --git a/src/paths.js b/src/paths.js
 --- a/src/paths.js
 +++ b/src/paths.js
