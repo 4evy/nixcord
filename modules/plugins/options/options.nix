@@ -5176,6 +5176,10 @@ in
       default = true;
     };
   };
+  "mutedServersActivityBadge" = {
+    enable = lib.options.mkEnableOption "Keeps the servers activity badge visible even when server is muted. (Vencord-only)";
+
+  };
   "mutualGroupDms" = {
     enable = lib.options.mkEnableOption "Shows mutual group dms in profiles (Shared between Vencord and Equicord)";
 

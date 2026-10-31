@@ -1327,6 +1327,9 @@
         };
       };
     };
+    "mutedServersActivityBadge" = {
+      "settings" = { };
+    };
     "newGuildSettings" = {
       "settings" = {
         "guild" = {

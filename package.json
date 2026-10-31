@@ -45,7 +45,7 @@
     "fallow": "3.36.0",
     "svelte": "^5.57.2",
     "typescript": "7.1.0-beta",
-    "vencord": "https://github.com/Vendicated/Vencord/archive/644434941b515a2626a2161e219653cb36e723e7.tar.gz",
+    "vencord": "https://github.com/Vendicated/Vencord/archive/8d64c8be7e68616f8f116a6fff9480051aa2a0c5.tar.gz",
     "vite": "8.3.5",
     "vitest": "5.0.5"
   },
@@ -76,9 +76,9 @@
       "@intrnl/xxhash64": "^0.1.2",
       "@vap/core": "0.0.12",
       "@vap/shiki": "0.10.5",
+      "@vencord/monaco-editor": "0.57.0-beta.4",
       "fflate": "^0.8.3",
-      "gifenc": "github:mattdesl/gifenc#64842fca317b112a8590f8fef2bf3825da8f6fe3",
-      "monaco-editor": "^0.57.0"
+      "gifenc": "github:mattdesl/gifenc#64842fca317b112a8590f8fef2bf3825da8f6fe3"
     }
   }
 }
