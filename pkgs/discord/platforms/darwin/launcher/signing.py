@@ -156,7 +156,6 @@ def main() -> None:
                             f"Contents/MacOS/{binary_name}:{flag_text}",
                         )
                     )
-        subprocess.run([*command, str(app)], check=True)
 
         # NDI runs in a separate hardened process and loads Nix codec dylibs
         ndi_tool = app / "Contents/Resources/modules/discord_ndi/discord_ndi"
@@ -184,6 +183,9 @@ def main() -> None:
             if flags:
                 tool_command.extend(("--code-signature-flags", ",".join(flags)))
             subprocess.run([*tool_command, str(ndi_tool)], check=True)
+
+        # Seal the bundle after signing NDI, which changes a sealed resource
+        subprocess.run([*command, str(app)], check=True)
 
 
 if __name__ == "__main__":
