@@ -7,7 +7,7 @@
 }:
 let
   inherit (import ./patching.nix { inherit lib; }) applyPostPatch;
-  inherit (import ./files.nix { inherit lib; }) mkThemeFile;
+  inherit (import ./files/files.nix { inherit lib; }) mkThemeFile;
   themes = lib.lists.imap0 (index: name: {
     inherit index name;
     path = mkThemeFile { inherit pkgs; } name cfg.config.themes.${name};
@@ -41,10 +41,17 @@ let
           const themes: Record<string, string> = {
               ${renderThemes (theme: "${builtins.toJSON "${theme.name}.css"}: theme${toString theme.index},")}
           };
-          native.themes.getThemesList = async () =>
-              Object.entries({ ...Object.fromEntries(await DataStore.entries(themeStore)), ...themes })
+          native.themes.getThemesList = async () => {
+              // Configured themes remain available when browser storage is unavailable
+              const storedThemes = await DataStore.entries(themeStore).catch(error => {
+                  console.error("Failed to read browser themes:", error);
+                  return [];
+              });
+              return Object.entries({ ...Object.fromEntries(storedThemes), ...themes })
                   .map(([name, css]) => getThemeInfo(css, name));
-          native.themes.getThemeData = async name => themes[name] ?? await DataStore.get(name, themeStore);
+          };
+          native.themes.getThemeData = async name =>
+              Object.hasOwn(themes, name) ? themes[name] : await DataStore.get(name, themeStore);
         ''}
     }
   '';
