@@ -71,7 +71,7 @@ let
     lines = linesWithNumbers ../modules/plugins/options/options.nix;
   };
 
-  pluginSourcesByName = lib.attrsets.zipAttrsWith (_: sources: sources) (
+  pluginSourcesByName = lib.attrsets.zipAttrs (
     map
       (
         category:

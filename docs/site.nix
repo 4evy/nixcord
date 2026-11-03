@@ -19,9 +19,8 @@ let
   src = lib.fileset.toSource {
     root = ./..;
     fileset = lib.fileset.unions [
-      (lib.fileset.fromSource (import ../nix/workspace-source.nix { inherit lib; }))
-      ../tsconfig.base.json
       ../modules/plugins/parse-rules.json
+      # The generator project already includes workspace manifests and TS config
       (lib.fileset.fromSource (import ../pkgs/generate-options/sources.nix { inherit lib; }).project)
       siteSources
     ];
