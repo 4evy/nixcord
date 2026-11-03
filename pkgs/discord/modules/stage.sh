@@ -45,7 +45,8 @@ prune_unstaged_modules() {
 
   [[ -d "$dir" ]] || return 0
   for path in "$dir"/discord_*; do
-    [[ -e "$path" ]] || continue
+    # Removed store paths can leave dangling links that still need pruning
+    [[ -e "$path" || -L "$path" ]] || continue
     module=${path##*/}
     case "$staged_modules" in
     *" $module "*) ;;
@@ -62,6 +63,8 @@ mkdir --parents "${module_dirs[@]}"
 settings_file="$config_dir/settings.json"
 if [[ -f "$settings_file" ]]; then
   jq ". + ${DISCORD_DISABLED_UPDATE_SETTINGS_JSON:?}" "$settings_file" >"$settings_file.tmp"
+  # Replacing settings must not broaden access to a private user configuration
+  chmod --reference="$settings_file" "$settings_file.tmp"
   mv "$settings_file.tmp" "$settings_file"
 else
   printf '%s\n' "${DISCORD_DISABLED_UPDATE_SETTINGS_JSON:?}" >"$settings_file"
