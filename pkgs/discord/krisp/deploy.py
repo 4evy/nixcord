@@ -52,17 +52,10 @@ WATCHED_EVENTS: list[type[FileSystemEvent]] = [
 def modules_dir() -> Path:
     configured_base = os.environ.get("DISCORD_USER_DATA_DIR")
     if configured_base is not None:
-        return (
-            Path(configured_base)
-            / CONFIG_DIR.replace(" ", "")
-            / VERSION
-            / "modules"
-        )
+        return Path(configured_base) / CONFIG_DIR.replace(" ", "") / VERSION / "modules"
     if sys.platform == "darwin":
         base = (
-            Path(pwd.getpwuid(os.getuid()).pw_dir)
-            / "Library"
-            / "Application Support"
+            Path(pwd.getpwuid(os.getuid()).pw_dir) / "Library" / "Application Support"
         )
         return base / CONFIG_DIR.replace(" ", "") / VERSION / "modules"
     home = Path(os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config")
@@ -85,7 +78,7 @@ KRISP_HASH = hashlib.sha256(
 # True if the deployed krisp is missing, damaged, or has different patched
 # contents. A hash mismatch means another Discord install (or the user)
 # overwrote our files, so the caller redeploys from KRISP_STORE
-def needs_deploy(dest: Path, verify_node: bool = True) -> bool:
+def needs_deploy(dest: Path) -> bool:
     node = dest / "discord_krisp.node"
     index = dest / "index.js"
     marker = dest / MARKER
@@ -97,22 +90,18 @@ def needs_deploy(dest: Path, verify_node: bool = True) -> bool:
         return True
     if stored_hash != KRISP_HASH:
         return True
-    if not verify_node:
-        try:
-            return node.stat().st_mtime_ns > marker.stat().st_mtime_ns
-        except OSError:
-            return True
-    return (
-        verify_node
-        and hashlib.sha256(
-            (_file_hash(node) + _file_hash(index)).encode()
-        ).hexdigest()
-        != KRISP_HASH
-    )
+    try:
+        return (
+            hashlib.sha256((_file_hash(node) + _file_hash(index)).encode()).hexdigest()
+            != KRISP_HASH
+        )
+    except OSError:
+        # The updater may replace files while the watcher verifies them
+        return True
 
 
-def deploy(dest: Path, quiet: bool = False, verify_node: bool = True) -> None:
-    if not needs_deploy(dest, verify_node):
+def deploy(dest: Path, quiet: bool = False) -> None:
+    if not needs_deploy(dest):
         if not quiet:
             print("[Nix] Krisp already deployed")
         return
@@ -148,7 +137,9 @@ def register(manifest: Path, create: bool) -> None:
             else {}
         )
     except json.JSONDecodeError, OSError:
-        data = {}
+        # A writer may not have completed its manifest yet
+        # Leave it untouched and register Krisp after the next change
+        return
     if data.get("discord_krisp", {}).get("installedVersion") != 1:
         data["discord_krisp"] = {"installedVersion": 1}
         tmp = manifest.with_name(f"{manifest.name}.tmp")
@@ -197,7 +188,14 @@ def watch(parent_pid: int, dest: Path, manifest: Path) -> None:
                 EVENT_TYPE_CLOSED_NO_WRITE,
             }:
                 return
-            repair()
+            # Other modules' activity cannot change the deployed Krisp
+            for path in (event.src_path, getattr(event, "dest_path", "")):
+                if not path:
+                    continue
+                changed = Path(path)
+                if changed == manifest or changed == dest or dest in changed.parents:
+                    repair()
+                    return
 
     observer = Observer()
     observer.schedule(
@@ -238,10 +236,7 @@ def main() -> None:
     manifest = mdir / "installed.json"
 
     remove_incomplete_manifest(mdir, manifest)
-    if not needs_deploy(dest):
-        print("[Nix] Krisp already deployed")
-    else:
-        deploy(dest)
+    deploy(dest)
 
     # Do not create installed.json on fresh legacy installs: Discord needs a
     # missing manifest to bootstrap discord_desktop_core and friends. A short
