@@ -208,7 +208,8 @@ in
 
   desktopItem = makeDesktopItem {
     name = finalAttrs.pname;
-    exec = binaryName;
+    # Desktop URI handlers only forward the URL when Exec has a field code
+    exec = "${binaryName} %U";
     icon = finalAttrs.pname;
     inherit desktopName;
     comment = finalAttrs.meta.description;
