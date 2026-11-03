@@ -263,11 +263,11 @@ Re-import after changing your Nix configuration. Back up first: Vencord replaces
 imported settings and Quick CSS, while Equicord merges settings and ignores
 empty CSS.
 
-For Chromium, load `config.programs.nixcord.browser.finalPackage` with developer
-mode's **Load unpacked**. It bundles settings, Quick CSS, local themes, and
-`userPlugins`, reapplies declared settings on page load, and preserves
-undeclared settings. Disable other copies of the mod and load the new path after
-rebuilding.
+For Chromium, use developer mode's **Load unpacked** on
+`config.programs.nixcord.browser.finalPackage`. It bundles settings, Quick CSS,
+local themes, and `userPlugins`. Declared settings override stored values on
+page load, preserving undeclared settings. Disable other mod copies. After
+rebuilding, load the new store path and reload Discord.
 
 Set `discord.enable = false` for browser-only use. See the
 [browser options](modules/options/browser.nix) for backup contents and

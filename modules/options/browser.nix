@@ -75,7 +75,12 @@ in
     finalPackage = lib.options.mkOption {
       type = lib.types.package;
       readOnly = true;
-      description = "Configured unpacked Chromium extension. Add this to your browser's extension paths.";
+      description = ''
+        Configured unpacked Chromium extension with settings, Quick CSS, themes,
+        and user plugins. Select the store path with Load unpacked in developer
+        mode. Network rules are cached in the browser profile, not the Nix store.
+        After rebuilding, load the new store path and reload Discord.
+      '';
     };
   };
 
