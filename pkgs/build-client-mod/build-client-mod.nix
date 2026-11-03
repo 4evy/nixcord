@@ -22,6 +22,10 @@ let
     substituteInPlace package.json \
       --replace-fail 'node ' 'bun ' \
       --replace-fail 'pnpm ' 'bun run --bun '
+    # Extension assembly and browser consumers copy bundles without sidecars
+    # Keep dependency notices in the distributed JavaScript instead
+    substituteInPlace scripts/build/common.mjs \
+      --replace-fail 'legalComments: "linked"' 'legalComments: "eof"'
   '';
 in
 buildBunPackage {
