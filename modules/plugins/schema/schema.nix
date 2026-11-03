@@ -1,4 +1,4 @@
-# Generated plugin and setting paths used by filtering and migrations
+# Generated plugin settings and UI element paths used by modules
 {
   "shared" = {
     "accountPanelServerProfile" = {
@@ -10,6 +10,10 @@
     };
     "addAttachments" = {
       "settings" = { };
+      "uiElements" = {
+        "chatBarButtons" = [ "AddAttachments" ];
+        "messagePopoverButtons" = [ "AddAttachments" ];
+      };
     };
     "autoDndWhilePlaying" = {
       "settings" = {
@@ -336,6 +340,9 @@
     };
     "hideMedia" = {
       "settings" = { };
+      "uiElements" = {
+        "messagePopoverButtons" = [ "HideMedia" ];
+      };
     };
     "ignoreActivities" = {
       "settings" = {
@@ -683,9 +690,15 @@
     };
     "previewMessage" = {
       "settings" = { };
+      "uiElements" = {
+        "chatBarButtons" = [ "PreviewMessage" ];
+      };
     };
     "quickMention" = {
       "settings" = { };
+      "uiElements" = {
+        "messagePopoverButtons" = [ "QuickMention" ];
+      };
     };
     "quickReply" = {
       "settings" = {
@@ -781,6 +794,9 @@
         "replaceMessageContents" = {
           "type" = "types.bool";
         };
+      };
+      "uiElements" = {
+        "chatBarButtons" = [ "SendTimestamps" ];
       };
     };
     "serverListIndicators" = {
@@ -887,6 +903,10 @@
         "dismissedAutoTranslateAlert" = {
           "type" = "types.bool";
         };
+      };
+      "uiElements" = {
+        "chatBarButtons" = [ "Translate" ];
+        "messagePopoverButtons" = [ "Translate" ];
       };
     };
     "unindent" = {
@@ -1005,6 +1025,9 @@
         "stripSensitiveData" = {
           "type" = "types.bool";
         };
+      };
+      "uiElements" = {
+        "messagePopoverButtons" = [ "ViewRaw" ];
       };
     };
     "voiceChatDoubleClick" = {
@@ -1326,6 +1349,9 @@
           "type" = "types.str";
         };
       };
+      "uiElements" = {
+        "messagePopoverButtons" = [ "MessageLogger" ];
+      };
     };
     "moreQuickReactions" = {
       "settings" = {
@@ -1551,6 +1577,9 @@
           "type" = "types.bool";
         };
       };
+      "uiElements" = {
+        "chatBarButtons" = [ "SilentMessageToggle" ];
+      };
     };
     "silentTyping" = {
       "settings" = {
@@ -1563,6 +1592,9 @@
         "isEnabled" = {
           "type" = "types.bool";
         };
+      };
+      "uiElements" = {
+        "chatBarButtons" = [ "SilentTyping" ];
       };
     };
     "sortFriendRequests" = {
@@ -2750,6 +2782,9 @@
           "type" = "types.enum";
         };
       };
+      "uiElements" = {
+        "messagePopoverButtons" = [ "DecodeBase64" ];
+      };
     };
     "decor" = {
       "settings" = {
@@ -2790,9 +2825,15 @@
           "type" = "types.bool";
         };
       };
+      "uiElements" = {
+        "messagePopoverButtons" = [ "DownloadAllAttachments" ];
+      };
     };
     "draftNavigator" = {
       "settings" = { };
+      "uiElements" = {
+        "chatBarButtons" = [ "DraftNavigator" ];
+      };
     };
     "dragFavoriteEmotes" = {
       "settings" = { };
@@ -3218,6 +3259,9 @@
           "type" = "types.bool";
         };
       };
+      "uiElements" = {
+        "messagePopoverButtons" = [ "FindReply" ];
+      };
     };
     "fixFileExtensions" = {
       "settings" = { };
@@ -3462,6 +3506,9 @@
           "type" = "types.bool";
         };
       };
+      "uiElements" = {
+        "messagePopoverButtons" = [ "HideMessages" ];
+      };
     };
     "hideServers" = {
       "settings" = {
@@ -3495,6 +3542,9 @@
           "type" = "types.int";
         };
       };
+      "uiElements" = {
+        "messagePopoverButtons" = [ "Husk" ];
+      };
     };
     "iconViewer" = {
       "settings" = { };
@@ -3524,6 +3574,9 @@
         "isEnabled" = {
           "type" = "types.bool";
         };
+      };
+      "uiElements" = {
+        "chatBarButtons" = [ "Ingtoninator" ];
       };
     };
     "inRole" = {
@@ -3562,6 +3615,10 @@
         "savedPasswords" = {
           "type" = "types.str";
         };
+      };
+      "uiElements" = {
+        "chatBarButtons" = [ "InvisibleChat" ];
+        "messagePopoverButtons" = [ "InvisibleChat" ];
       };
     };
     "inviteDefaults" = {
@@ -3760,6 +3817,9 @@
           "type" = "types.str";
         };
       };
+      "uiElements" = {
+        "chatBarButtons" = [ "MessageFetchTimer" ];
+      };
     };
     "messageLinkTooltip" = {
       "settings" = {
@@ -3821,6 +3881,9 @@
         "separatedDiffs" = {
           "type" = "types.bool";
         };
+      };
+      "uiElements" = {
+        "messagePopoverButtons" = [ "MessageLogger" ];
       };
     };
     "messageLoggerEnhanced" = {
@@ -4793,6 +4856,9 @@
     };
     "repeatMessages" = {
       "settings" = { };
+      "uiElements" = {
+        "messagePopoverButtons" = [ "RepeatMessages" ];
+      };
     };
     "replyPingControl" = {
       "settings" = {
@@ -5008,6 +5074,9 @@
           "type" = "types.bool";
         };
       };
+      "uiElements" = {
+        "chatBarButtons" = [ "ScheduledMessages" ];
+      };
     };
     "screenRecorder" = {
       "settings" = { };
@@ -5027,6 +5096,9 @@
         "autoCloseModal" = {
           "type" = "types.bool";
         };
+      };
+      "uiElements" = {
+        "chatBarButtons" = [ "SekaiStickers" ];
       };
     };
     "serverInfo" = {
@@ -5309,6 +5381,9 @@
           "type" = "types.bool";
         };
       };
+      "uiElements" = {
+        "chatBarButtons" = [ "Signature" ];
+      };
     };
     "silenceUsers" = {
       "settings" = {
@@ -5325,6 +5400,9 @@
         "autoDisable" = {
           "type" = "types.bool";
         };
+      };
+      "uiElements" = {
+        "chatBarButtons" = [ "SilentMessageToggle" ];
       };
     };
     "silentTyping" = {
@@ -5371,6 +5449,9 @@
         "disabledLocations" = {
           "type" = "types.str";
         };
+      };
+      "uiElements" = {
+        "chatBarButtons" = [ "SilentTyping" ];
       };
     };
     "snowfall" = {
@@ -5536,6 +5617,9 @@
     };
     "talkInReverse" = {
       "settings" = { };
+      "uiElements" = {
+        "chatBarButtons" = [ "TalkInReverse" ];
+      };
     };
     "textReplace" = {
       "settings" = {
@@ -5679,6 +5763,9 @@
           "type" = "types.bool";
         };
       };
+      "uiElements" = {
+        "messagePopoverButtons" = [ "Translate+" ];
+      };
     };
     "triviaAi" = {
       "settings" = {
@@ -5715,6 +5802,9 @@
         "sendImagesAsBase64" = {
           "type" = "types.bool";
         };
+      };
+      "uiElements" = {
+        "messagePopoverButtons" = [ "TriviaAI" ];
       };
     };
     "typingIndicator" = {
@@ -5757,6 +5847,9 @@
         "myUnits" = {
           "type" = "types.enum";
         };
+      };
+      "uiElements" = {
+        "messagePopoverButtons" = [ "UnitConverter" ];
       };
     };
     "universalMention" = {

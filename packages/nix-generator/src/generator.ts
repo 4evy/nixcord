@@ -36,6 +36,7 @@ export interface PluginJson {
   category?: PluginCategory;
   directoryName?: string;
   source?: PluginConfig['source'];
+  uiElements?: PluginConfig['uiElements'];
   description: string;
   settings: Record<string, PluginSettingJson | PluginJson>;
 }
@@ -181,6 +182,7 @@ export const generatePluginJson = (
     ...(category ? { category } : {}),
     ...(config.directoryName ? { directoryName: config.directoryName } : {}),
     ...(config.source ? { source: config.source } : {}),
+    ...(config.uiElements ? { uiElements: config.uiElements } : {}),
     description,
     settings,
   };

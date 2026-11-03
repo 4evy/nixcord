@@ -5,7 +5,13 @@ import type {
   PluginSetting,
   SettingRename,
 } from '@nixcord/domain';
-import type { CallExpression, SourceFile, StaticEvaluator } from '@nixcord/typescript-analysis';
+import {
+  type CallExpression,
+  type ObjectLiteralExpression,
+  type SourceFile,
+  type StaticEvaluator,
+  SyntaxKind,
+} from '@nixcord/typescript-analysis';
 import { relative } from 'pathe';
 import {
   diagnostic,
@@ -20,6 +26,7 @@ import {
   findSettingsCall,
   objectArgument,
   objectPropertyInitializer,
+  resolveNode,
   settingsBindingsForCall,
 } from './resolve.js';
 import { isRecord, rawSettingsFromArgument, settingNodeMap } from './settings/extract.js';
@@ -35,6 +42,31 @@ const inferPluginName = (pluginDir: string, pluginInfoName: string | undefined):
     .split(PLUGIN_DIR_SEPARATOR_PATTERN)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join('');
+
+const extractUiElements = (
+  pluginObject: ObjectLiteralExpression | undefined,
+  context: PluginContext,
+  pluginName: string
+): PluginConfig['uiElements'] => {
+  const hasButton = (propertyName: string): boolean => {
+    const initializer = resolveNode(
+      objectPropertyInitializer(pluginObject, propertyName),
+      context.session.checker
+    );
+    if (!initializer) return false;
+    // Button objects contain runtime render methods that need not be evaluated
+    if (initializer.isKind(SyntaxKind.ObjectLiteralExpression)) return true;
+    const result = context.evaluator.evaluate(initializer);
+    return result.known && Boolean(result.value);
+  };
+  const chatBarButton = hasButton('chatBarButton');
+  const messagePopoverButton = hasButton('messagePopoverButton');
+  if (!chatBarButton && !messagePopoverButton) return undefined;
+  return {
+    ...(chatBarButton ? { chatBarButtons: [pluginName] } : {}),
+    ...(messagePopoverButton ? { messagePopoverButtons: [pluginName] } : {}),
+  };
+};
 
 async function extractSettings(
   settingsCall: CallExpression,
@@ -230,6 +262,7 @@ export async function parseSinglePlugin(
       pluginDir,
       typeof infoName === 'string' ? infoName : undefined
     );
+    const uiElements = extractUiElements(pluginObject, context, pluginName);
     const settingsCall = findSettingsCall(
       definePluginCall,
       sourceFiles,
@@ -275,6 +308,7 @@ export async function parseSinglePlugin(
           },
           ...(typeof description === 'string' ? { description } : {}),
           ...(typeof isModified === 'boolean' ? { isModified } : {}),
+          ...(uiElements ? { uiElements } : {}),
         },
       ],
       ...renames,

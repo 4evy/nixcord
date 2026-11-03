@@ -142,14 +142,17 @@ const settingPaths = (settings: Settings): Record<string, unknown> =>
   );
 
 export const compilePluginPaths = (categories: Readonly<Record<string, Schemas>>): string =>
-  `# Generated plugin and setting paths used by filtering and migrations\n${nixValue(
+  `# Generated plugin settings and UI element paths used by modules\n${nixValue(
     Object.fromEntries(
       Object.entries(categories).map(([category, plugins]) => [
         category,
         Object.fromEntries(
           Object.entries(plugins).map(([name, plugin]) => [
             name,
-            { settings: settingPaths(plugin.settings) },
+            {
+              settings: settingPaths(plugin.settings),
+              ...(plugin.uiElements ? { uiElements: plugin.uiElements } : {}),
+            },
           ])
         ),
       ])

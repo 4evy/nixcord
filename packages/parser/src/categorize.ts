@@ -7,7 +7,7 @@ const CLIENT_SPECIFIC_PLUGINS = new Set(
   Object.values(SOURCE_PROFILES).flatMap((profile) => profile.clientSpecificPlugins)
 );
 
-const collectSettingSurface = (config: PluginConfig): readonly string[] => {
+const collectPluginSurface = (config: PluginConfig): readonly string[] => {
   const entries: string[] = [];
   const collect = (settings: PluginConfig['settings'], parentPath = '') => {
     for (const [key, setting] of Object.entries(settings)) {
@@ -25,12 +25,16 @@ const collectSettingSurface = (config: PluginConfig): readonly string[] => {
     }
   };
   collect(config.settings);
+  for (const [group, names] of Object.entries(config.uiElements ?? {})) {
+    if (names && names.length > 0)
+      entries.push(`uiElements.${group}:${JSON.stringify([...names].sort())}`);
+  }
   return entries.sort();
 };
 
-const hasSameSettingSurface = (left: PluginConfig, right: PluginConfig): boolean => {
-  const leftNames = collectSettingSurface(left);
-  const rightNames = collectSettingSurface(right);
+const hasSamePluginSurface = (left: PluginConfig, right: PluginConfig): boolean => {
+  const leftNames = collectPluginSurface(left);
+  const rightNames = collectPluginSurface(right);
   return (
     leftNames.length === rightNames.length && leftNames.every((name, i) => name === rightNames[i])
   );
@@ -85,7 +89,7 @@ export function categorizePlugins(
     return equicordConfig !== undefined &&
       !CLIENT_SPECIFIC_PLUGINS.has(config.name) &&
       !equicordConfig.isModified &&
-      hasSameSettingSurface(config, equicordConfig)
+      hasSamePluginSurface(config, equicordConfig)
       ? Result.succeed({ ...match, equicordConfig })
       : Result.fail(match);
   });

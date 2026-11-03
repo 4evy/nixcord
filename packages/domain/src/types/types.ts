@@ -16,6 +16,10 @@ export interface PluginConfig {
   readonly name: string;
   readonly description?: string;
   readonly isModified?: boolean;
+  readonly uiElements?: {
+    readonly chatBarButtons?: readonly string[];
+    readonly messagePopoverButtons?: readonly string[];
+  };
   readonly settings: Readonly<Record<string, PluginSetting | PluginConfig>>;
   readonly directoryName?: string;
   readonly source?: { readonly file: string; readonly line: number };
@@ -77,6 +81,12 @@ const PluginConfigSchema: v.GenericSchema<unknown, PluginConfig> = v.lazy(() =>
     name: v.string(),
     description: v.optional(v.string()),
     isModified: v.optional(v.boolean()),
+    uiElements: v.optional(
+      v.object({
+        chatBarButtons: v.optional(v.array(v.string())),
+        messagePopoverButtons: v.optional(v.array(v.string())),
+      })
+    ),
     settings: v.record(v.string(), v.union([PluginSettingSchema, PluginConfigSchema])),
     directoryName: v.optional(v.string()),
     source: v.optional(
