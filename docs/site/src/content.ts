@@ -1,3 +1,4 @@
+import browserExample from './examples/browser.nix?raw';
 import configurationExample from './examples/configuration.nix?raw';
 import darwinExample from './examples/darwin.nix?raw';
 import flakeExample from './examples/flake.nix?raw';
@@ -28,6 +29,7 @@ export const introductionToc = [
   { href: '#getting-started', label: 'Install Nixcord' },
   { href: '#without-flakes', label: 'Without flakes' },
   { href: '#sec-configuration', label: 'Plugins and themes' },
+  { href: '#sec-browser', label: 'Browser extensions' },
   { href: '#sec-legcord', label: 'Legcord' },
   { href: '#sec-goofcord', label: 'GoofCord' },
   { href: '#sec-user-plugins', label: 'Custom plugins' },
@@ -35,6 +37,7 @@ export const introductionToc = [
 ];
 
 export {
+  browserExample,
   configurationExample,
   darwinExample,
   flakeExample,

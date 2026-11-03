@@ -38,6 +38,11 @@ const setup = $derived(setups.find((item) => item.id === selectedSetup) ?? setup
   Start with a working Home Manager, NixOS, or nix-darwin configuration. Add Nixcord in three steps.
   <a class={linkClass} href="#without-flakes">Not using flakes?</a>
 </p>
+<p class={paragraphClass}>
+  For browser-only use, keep the module imports below but replace their desktop
+  client settings with the
+  <a class={linkClass} href="#sec-browser">browser configuration</a>.
+</p>
 
 <fieldset class="my-6 min-w-0">
   <legend class="mb-2.5 text-sm font-semibold">Choose your setup</legend>

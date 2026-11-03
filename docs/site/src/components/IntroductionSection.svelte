@@ -7,6 +7,7 @@ import {
   topSectionClass,
 } from '../classes';
 import {
+  browserExample,
   configurationExample,
   goofcordExample,
   introductionToc,
@@ -25,7 +26,8 @@ import TitlePage from './TitlePage.svelte';
 
   <p class={paragraphClass}>
     Nixcord supports Discord with Vencord or Equicord, plus Vesktop, Equibop, GoofCord, Legcord, and
-    Dorion. Choose a client below, then add plugins and themes.
+    Dorion. You can also configure Vencord or Equicord browser extensions. Choose a client below,
+    then add plugins and themes.
   </p>
   <aside
     class="my-4 rounded-r-sm border-l-4 border-[#167cb9] bg-sky-50 px-4 py-3 text-neutral-900 dark:bg-[#142633] dark:text-neutral-100"
@@ -99,6 +101,92 @@ import TitlePage from './TitlePage.svelte';
       branches share your mod settings and package options.
       <code class={literalCodeClass}>"development"</code>
       is also accepted.
+    </p>
+  </section>
+
+  <section class={sectionClass} aria-labelledby="sec-browser">
+    <TitlePage id="sec-browser" title="Browser extensions" level={3} />
+    <p class={paragraphClass}>
+      Build a Chromium extension directly from your Nixcord configuration. Nixcord
+      bundles your settings, Quick CSS, themes, and custom plugins, with no
+      separate settings file to write or import. First
+      <a class={linkClass} href="#getting-started">import the Nixcord module</a>,
+      then use this browser-only configuration:
+    </p>
+    <CodeBlock code={browserExample} />
+    <p class={paragraphClass}>
+      Set <code class={literalCodeClass}>browser.client = "equicord"</code> for
+      Equicord. Keep <code class={literalCodeClass}>discord.enable = false</code>
+      to avoid installing desktop Discord. Browser settings come from
+      <code class={literalCodeClass}>config</code> and
+      <code class={literalCodeClass}>extraConfig</code>, with
+      <a class={linkClass} href="#opt-programs.nixcord.browser.extraConfig">
+        <code class={literalCodeClass}>browser.extraConfig</code></a
+      > overriding them for the browser only. Native client overrides, such as
+      <code class={literalCodeClass}>vesktopConfig</code>, are not included.
+    </p>
+
+    <h4 class="mt-6 text-base/6 font-semibold">Load a configured Chromium extension</h4>
+    <ol class="my-3 ml-8 list-decimal">
+      <li class="my-1">
+        Build
+        <a class={linkClass} href="#opt-programs.nixcord.browser.finalPackage">
+          <code class={literalCodeClass}>
+            config.programs.nixcord.browser.finalPackage</code
+          ></a
+        > from your evaluated configuration.
+      </li>
+      <li class="my-1">
+        Open your browser's extensions page
+        (<code class={literalCodeClass}>chrome://extensions</code> in Chromium).
+        Disable other copies of Vencord or Equicord and enable
+        <strong>Developer mode</strong>.
+      </li>
+      <li class="my-1">
+        Choose <strong>Load unpacked</strong>, select the package's Nix store
+        directory, and reload Discord.
+      </li>
+    </ol>
+    <p class={paragraphClass}>
+      The extension bundles settings, Quick CSS, local themes, and
+      <a class={linkClass} href="#sec-user-plugins">custom plugins</a>. Declared
+      settings override stored values on page load, preserving undeclared
+      settings. Chromium keeps network rules in the browser profile, so the
+      extension can stay in the read-only Nix store. After rebuilding, load the
+      new store path and reload Discord.
+    </p>
+
+    <h4 class="mt-6 text-base/6 font-semibold">Optional: import into an existing extension</h4>
+    <p class={paragraphClass}>
+      Already using an extension installed elsewhere? Export a settings backup
+      instead. This is an alternative to the generated extension above, not an
+      extra step it requires.
+    </p>
+    <ol class="my-3 ml-8 list-decimal">
+      <li class="my-1">
+        Apply your Nix configuration and find the generated JSON file at
+        <a class={linkClass} href="#opt-programs.nixcord.browser.settingsFile">
+          <code class={literalCodeClass}>
+            config.programs.nixcord.browser.settingsFile</code
+          ></a
+        > in your evaluated configuration.
+      </li>
+      <li class="my-1">
+        Back up your current mod settings. In Discord's mod settings, open
+        <strong>Backup &amp; Restore</strong> and import that file
+        (Equicord: <strong>Import All Settings</strong>).
+      </li>
+      <li class="my-1">
+        Reload Discord. Re-import the backup after changing your Nix
+        configuration.
+      </li>
+    </ol>
+    <p class={paragraphClass}>
+      This generates a backup without building or installing an extension or
+      changing your browser profile. It includes settings, Quick CSS, and online
+      theme settings, but not local theme files or custom plugin code. Vencord
+      replaces imported settings and Quick CSS, including clearing CSS when the
+      backup's CSS is empty. Equicord merges settings and ignores empty CSS.
     </p>
   </section>
 
