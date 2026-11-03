@@ -11,9 +11,7 @@ pkgs.runCommand "legcord-${client}"
     nativeBuildInputs = [ pkgs.bun ];
     spec = builtins.toJSON {
       inherit client settings quickCss;
-      themes = lib.attrsets.mapAttrs' (
-        name: path: lib.attrsets.nameValuePair "${lib.strings.removeSuffix ".css" name}.css" path
-      ) themes;
+      themes = lib.attrsets.mapAttrs' (name: path: lib.attrsets.nameValuePair "${name}.css" path) themes;
     };
     passAsFile = [ "spec" ];
   }

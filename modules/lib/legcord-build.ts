@@ -4,7 +4,7 @@ import { join } from 'node:path';
 interface BundleSpec {
   client: 'vencord' | 'equicord';
   settings: Record<string, unknown>;
-  quickCss: string;
+  quickCss: string | null;
   themes: Record<string, string>;
 }
 
@@ -20,9 +20,26 @@ const themes = await Promise.all(
   )
 );
 
-// Legcord runs this bundle in Discord's page. Seed settings and themes before
-// loading the mod so a new profile uses the configured values on its first read.
+// Legcord runs this bundle in Discord's page. Apply managed values before loading
+// the mod without discarding unrelated settings or CSS from the existing profile
 async function bootstrap({ client, settings, quickCss, themes }: BootstrapConfig): Promise<void> {
+  function mergeSettings(
+    current: unknown,
+    managed: Record<string, unknown>
+  ): Record<string, unknown> {
+    const result =
+      current !== null && typeof current === 'object' && !Array.isArray(current)
+        ? ({ ...current } as Record<string, unknown>)
+        : {};
+    for (const [key, value] of Object.entries(managed)) {
+      result[key] =
+        value !== null && typeof value === 'object' && !Array.isArray(value)
+          ? mergeSettings(result[key], value as Record<string, unknown>)
+          : value;
+    }
+    return result;
+  }
+
   function writeStore(
     database: string,
     storeName: string,
@@ -34,30 +51,59 @@ async function bootstrap({ client, settings, quickCss, themes }: BootstrapConfig
       request.onerror = () => reject(request.error);
       request.onsuccess = () => {
         const database = request.result;
-        const transaction = database.transaction(storeName, 'readwrite');
-        const store = transaction.objectStore(storeName);
-        for (const [key, value] of entries) store.put(value, key);
-        transaction.oncomplete = () => {
+        try {
+          const transaction = database.transaction(storeName, 'readwrite');
+          transaction.oncomplete = () => {
+            database.close();
+            resolve();
+          };
+          transaction.onabort = transaction.onerror = () => {
+            database.close();
+            reject(transaction.error);
+          };
+          const store = transaction.objectStore(storeName);
+          for (const [key, value] of entries) store.put(value, key);
+        } catch (error) {
           database.close();
-          resolve();
-        };
-        transaction.onabort = transaction.onerror = () => {
-          database.close();
-          reject(transaction.error);
-        };
+          reject(error);
+        }
       };
     });
   }
 
-  localStorage.setItem(
-    client === 'vencord' ? 'VencordSettings' : 'EquicordSettings',
-    JSON.stringify(settings)
+  const settingsKey = client === 'vencord' ? 'VencordSettings' : 'EquicordSettings';
+  try {
+    let current: unknown = {};
+    const stored = localStorage.getItem(settingsKey);
+    if (stored !== null) {
+      try {
+        current = JSON.parse(stored);
+        // Equicord also accepts settings encoded twice by older clients
+        if (client === 'equicord' && typeof current === 'string') current = JSON.parse(current);
+      } catch (error) {
+        console.error('Failed to parse existing Legcord mod settings:', error);
+      }
+    }
+    localStorage.setItem(settingsKey, JSON.stringify(mergeSettings(current, settings)));
+  } catch (error) {
+    console.error('Failed to apply Legcord mod settings:', error);
+  }
+
+  // Both browser mods use Vencord's IndexedDB names
+  const writes: Promise<void>[] = [];
+  if (quickCss !== null) {
+    writes.push(writeStore('VencordData', 'VencordStore', [['VencordQuickCss', quickCss]]));
+  }
+  if (themes.length !== 0) {
+    writes.push(writeStore('VencordThemes', 'VencordThemeData', themes));
+  }
+  await Promise.all(
+    writes.map((write) =>
+      write.catch((error) => {
+        console.error('Failed to apply Legcord mod browser data:', error);
+      })
+    )
   );
-  // Both browser mods use Vencord's IndexedDB names.
-  await Promise.all([
-    writeStore('VencordData', 'VencordStore', [['VencordQuickCss', quickCss]]),
-    writeStore('VencordThemes', 'VencordThemeData', themes),
-  ]);
 }
 
 const payload = JSON.stringify({ ...spec, themes });

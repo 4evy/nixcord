@@ -91,7 +91,7 @@ let
             inherit (cfg) extraConfig;
           }
         );
-        inherit (cfg) quickCss;
+        quickCss = if options.programs.nixcord.quickCss.highestPrio < 1500 then cfg.quickCss else null;
       }
     else
       null
