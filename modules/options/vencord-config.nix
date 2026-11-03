@@ -1,19 +1,65 @@
 { lib, ... }:
 let
+  pluginSchema = import ../plugins/schema/schema.nix;
+  plugins = lib.concatMap lib.attrValues (lib.attrValues pluginSchema);
+  uiElementNames =
+    group: lib.unique (lib.concatMap (plugin: plugin.uiElements.${group} or [ ]) plugins);
+
   uiElementOptions =
     { name, ... }:
     {
-      options.enable = lib.options.mkEnableOption "the ${name} plugin UI element";
+      options.enable = lib.options.mkEnableOption "the ${name} plugin UI element" // {
+        description = ''
+          Whether to enable this plugin UI element.
+          Leaving this element unconfigured preserves its upstream default.
+        '';
+      };
+    };
+
+  # Expose a real submodule schema to editors, but merge its freeform dictionary
+  # directly so discovering named IDs never instantiates unconfigured entries
+  uiElementsType =
+    moduleType:
+    let
+      attrsType = moduleType.nestedTypes.freeformType;
+      functor = moduleType.functor // {
+        type = payload: uiElementsType (moduleType.functor.type payload);
+      };
+    in
+    moduleType
+    // {
+      inherit (attrsType) check merge emptyValue;
+      substSubModules = modules: uiElementsType (moduleType.substSubModules modules);
+      typeMerge = lib.types.defaultTypeMerge functor;
+      inherit functor;
     };
 
   uiElementsOption =
-    description:
+    group: description:
+    let
+      elemType = lib.types.submodule uiElementOptions;
+    in
     lib.options.mkOption {
-      type = lib.types.attrsOf (lib.types.submodule uiElementOptions);
+      type = uiElementsType (
+        lib.types.submodule {
+          freeformType = lib.types.attrsOf elemType;
+          options = lib.genAttrs (uiElementNames group) (
+            name:
+            lib.options.mkOption {
+              type = elemType;
+              description = "UI visibility for the ${name} plugin.";
+            }
+          );
+        }
+      );
       default = { };
-      description = "Plugin UI elements to configure for ${description}.";
+      description = ''
+        Plugin UI elements to configure for ${description}.
+        Unconfigured elements keep their upstream defaults.
+        Arbitrary names from user plugins are also supported.
+      '';
       example = {
-        MessageLatency.enable = false;
+        AddAttachments.enable = false;
       };
     };
 in
@@ -66,8 +112,8 @@ in
       transparent = lib.options.mkEnableOption "client transparency";
       disableMinSize = lib.options.mkEnableOption "disabling the minimum window size";
       uiElements = {
-        chatBarButtons = uiElementsOption "chat bar buttons";
-        messagePopoverButtons = uiElementsOption "message popover buttons";
+        chatBarButtons = uiElementsOption "chatBarButtons" "chat bar buttons";
+        messagePopoverButtons = uiElementsOption "messagePopoverButtons" "message popover buttons";
       };
       plugins = import ../plugins/options/options.nix { inherit lib; };
     };
