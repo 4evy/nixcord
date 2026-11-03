@@ -1,5 +1,4 @@
 {
-  lib,
   callPackage,
   git,
 }:
@@ -11,6 +10,7 @@
   bunDepsHash,
   patches ? [ ],
   buildWebExtension ? false,
+  browserDir ? "dist",
   env,
   meta,
 }:
@@ -52,7 +52,7 @@ buildBunPackage {
   '';
   installPhase = ''
     runHook preInstall
-    cp --recursive dist/${lib.optionalString buildWebExtension "chromium-unpacked/"} "$out"
+    cp --recursive ${if buildWebExtension then "${browserDir}/chromium-unpacked" else "dist"} "$out"
     cp package.json "$out/"
     runHook postInstall
   '';

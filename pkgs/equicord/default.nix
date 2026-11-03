@@ -27,6 +27,8 @@ buildClientMod {
     buildWebExtension
     ;
   bunLock = ./bun.lock;
+  # Upstream nests browser artifacts alongside the desktop build
+  browserDir = "dist/browser";
   env = {
     EQUICORD_REMOTE = "${src.owner}/${src.repo}";
     EQUICORD_HASH = rev;
