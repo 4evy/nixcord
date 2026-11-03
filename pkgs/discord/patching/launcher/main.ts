@@ -80,6 +80,35 @@ const hostRules: Rule[] = [
     replacement: launcherLiteral,
   },
 ];
+// Removing the legacy updater also removes its two host relaunch sites
+const legacyHost =
+  kind === 'host' &&
+  values(
+    factory(
+      (node) =>
+        values(node, 'exports.registerLocalModulePaths').length > 0 ||
+        forEachDescendant(node, (child) =>
+          Node.isStringLiteral(child) && child.text === 'legacyModulesUpdater.log'
+            ? true
+            : undefined
+        ) === true,
+      'module loader factory'
+    ),
+    'exports.registerLocalModulePaths'
+  ).length === 0;
+// The core's legacy QUIT_AND_INSTALL listener has one extra fallback relaunch
+const legacyCore =
+  kind === 'core' &&
+  forEachDescendant(
+    factory(
+      (node) =>
+        values(node, 'exports.getMainWindowId').length > 0 &&
+        values(node, 'exports.setMainWindowVisible').length > 0,
+      'main screen factory'
+    ),
+    (node) =>
+      Node.isPropertyAccessExpression(node) && node.name.text === 'moduleUpdater' ? true : undefined
+  ) === true;
 // Preserve wrapper/user arguments; new upstream options require review
 const relaunch: Rule = {
   name: 'app.relaunch calls',
@@ -90,7 +119,7 @@ const relaunch: Rule = {
         const name = referenceName(node.expression);
         return name === 'app.relaunch' || name?.endsWith('.app.relaunch') === true;
       }),
-  expected: kind === 'host' ? 3 : 4,
+  expected: kind === 'host' ? (legacyHost ? 3 : 1) : legacyCore ? 4 : 3,
   replacement: (node) => {
     const call = expectKind(node, SyntaxKind.CallExpression) as CallExpression;
     if (call.arguments.length) throw new Error(`${filename}: review new app.relaunch options`);
