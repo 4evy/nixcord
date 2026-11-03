@@ -154,19 +154,6 @@ in
       ${testLib.output.json settingsJson ''(.enabledThemeLinks | index("https://example.com/enabled-theme.css") != null)''}
     '';
 
-  "useQuickCss is renamed for generated output" =
-    let
-      config = testLib.eval.hm (
-        recursiveUpdate baseConfig {
-          config.useQuickCss = true;
-        }
-      );
-      settingsJson = discordModSettingsSource config;
-    in
-    ''
-      ${testLib.output.json settingsJson ".useQuickCSS == true"}
-    '';
-
   "plugin UI element settings are copied to generated output" =
     let
       config = testLib.eval.hm (

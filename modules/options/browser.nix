@@ -12,6 +12,7 @@ let
     (import ../lib/normalization/normalization.nix {
       inherit lib;
       inherit (cfg) parseRules;
+      client = cfg.browser.client;
     })
     mkVencordCfg
     ;

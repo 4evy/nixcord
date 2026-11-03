@@ -1,4 +1,8 @@
-{ lib, parseRules }:
+{
+  lib,
+  parseRules,
+  client ? "vencord",
+}:
 let
   inherit (import ./casing.nix { inherit lib; }) toSnakeCase;
 
@@ -29,10 +33,9 @@ let
   specialRenames = {
     enable = "enabled";
     tagSettings = "tagSettings";
-    useQuickCss = "useQuickCSS";
-    webRichPresence = "WebRichPresence (arRPC)";
+    # The pinned clients use different names for the browser RPC plugin
+    webRichPresence = if client == "equicord" then "WebRichPresence" else "WebRichPresence (arRPC)";
     _24hTime = "24h Time";
-    showOwnTimezone = "Show Own Timezone";
   };
 
   # mkNormalizeName :: string -> (string -> value -> string)
