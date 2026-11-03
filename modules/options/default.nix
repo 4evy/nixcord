@@ -21,7 +21,11 @@
 
     homeDirectory = lib.options.mkOption {
       type = lib.types.path;
-      description = "Home directory of the user named by `programs.nixcord.user`.";
+      description = ''
+        Home directory of the user named by `programs.nixcord.user`.
+        On NixOS and nix-darwin, default client paths follow this value.
+        Individual `configDir` options can override those defaults.
+      '';
     };
 
     xdgConfigHome = lib.options.mkOption {

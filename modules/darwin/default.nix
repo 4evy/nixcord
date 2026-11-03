@@ -36,7 +36,8 @@
       homeDir = lib.trivial.defaultTo "/Users/${cfg.user}" (
         lib.attrsets.attrByPath [ cfg.user "home" ] null config.users.users
       );
-      basePath = "${homeDir}/Library/Application Support";
+      # Derive defaults from the resolved option so user overrides propagate
+      basePath = "${cfg.homeDirectory}/Library/Application Support";
 
       managedConfigDirs = [
         cfg.configDir
@@ -59,9 +60,9 @@
       {
         programs.nixcord = (mkConfigDirs cfg basePath) // {
           homeDirectory = lib.modules.mkDefault homeDir;
-          xdgConfigHome = lib.modules.mkDefault "${homeDir}/.config";
+          xdgConfigHome = lib.modules.mkDefault "${cfg.homeDirectory}/.config";
           # Darwin dorion uses ~/.config instead of ~/Library/Application Support
-          dorion.configDir = lib.modules.mkDefault "${homeDir}/.config/dorion";
+          dorion.configDir = lib.modules.mkDefault "${cfg.homeDirectory}/.config/dorion";
         };
       }
       {
