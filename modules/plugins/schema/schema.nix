@@ -417,6 +417,28 @@
         };
       };
     };
+    "ircColors" = {
+      "settings" = {
+        "lightness" = {
+          "type" = "types.int";
+        };
+        "saturation" = {
+          "type" = "types.int";
+        };
+        "seed" = {
+          "type" = "types.str";
+        };
+        "memberListColors" = {
+          "type" = "types.bool";
+        };
+        "applyColorOnlyToUsersWithoutColor" = {
+          "type" = "types.bool";
+        };
+        "applyColorOnlyInDms" = {
+          "type" = "types.bool";
+        };
+      };
+    };
     "jumpToTop" = {
       "settings" = { };
     };
@@ -1195,6 +1217,9 @@
         "blurAmount" = {
           "type" = "types.int";
         };
+        "ignoredChannels" = {
+          "type" = "types.str";
+        };
       };
     };
     "callTimer" = {
@@ -1268,22 +1293,6 @@
       "settings" = {
         "provider" = {
           "type" = "types.enum";
-        };
-      };
-    };
-    "ircColors" = {
-      "settings" = {
-        "lightness" = {
-          "type" = "types.int";
-        };
-        "memberListColors" = {
-          "type" = "types.bool";
-        };
-        "applyColorOnlyToUsersWithoutColor" = {
-          "type" = "types.bool";
-        };
-        "applyColorOnlyInDms" = {
-          "type" = "types.bool";
         };
       };
     };
@@ -1581,6 +1590,9 @@
         };
         "isEnabled" = {
           "type" = "types.bool";
+        };
+        "showTypingIn" = {
+          "type" = "types.str";
         };
       };
       "uiElements" = {
@@ -3633,28 +3645,6 @@
           "type" = "types.enum";
         };
         "temporaryMembership" = {
-          "type" = "types.bool";
-        };
-      };
-    };
-    "ircColors" = {
-      "settings" = {
-        "lightness" = {
-          "type" = "types.int";
-        };
-        "saturation" = {
-          "type" = "types.int";
-        };
-        "seed" = {
-          "type" = "types.str";
-        };
-        "memberListColors" = {
-          "type" = "types.bool";
-        };
-        "applyColorOnlyToUsersWithoutColor" = {
-          "type" = "types.bool";
-        };
-        "applyColorOnlyInDms" = {
           "type" = "types.bool";
         };
       };

@@ -3697,26 +3697,11 @@ in
     };
   };
   "ircColors" = {
-    enable = lib.options.mkEnableOption "Makes username colors in chat unique, like in IRC clients (Equicord-only)";
-    "applyColorOnlyInDms" = lib.options.mkOption {
-      type = lib.types.bool;
-      description = "Apply colors only in direct messages; do not apply colors in servers.";
-      default = false;
-    };
-    "applyColorOnlyToUsersWithoutColor" = lib.options.mkOption {
-      type = lib.types.bool;
-      description = "Apply colors only to users who don't have a predefined color";
-      default = false;
-    };
+    enable = lib.options.mkEnableOption "Makes username colors in chat unique, like in IRC clients (Shared between Vencord and Equicord)";
     "lightness" = lib.options.mkOption {
       type = lib.types.int;
       description = "Lightness, in %. Change if the colors are too light or too dark";
       default = 70;
-    };
-    "memberListColors" = lib.options.mkOption {
-      type = lib.types.bool;
-      description = "Replace role colors in the member list (restart required)";
-      default = true;
     };
     "saturation" = lib.options.mkOption {
       type = lib.types.int;
@@ -3727,6 +3712,21 @@ in
       type = lib.types.str;
       description = "Changing this will shuffle everyone's username color to a new color";
       default = "";
+    };
+    "memberListColors" = lib.options.mkOption {
+      type = lib.types.bool;
+      description = "Replace role colors in the member list (restart required)";
+      default = true;
+    };
+    "applyColorOnlyToUsersWithoutColor" = lib.options.mkOption {
+      type = lib.types.bool;
+      description = "Apply colors only to users who don't have a predefined color";
+      default = false;
+    };
+    "applyColorOnlyInDms" = lib.options.mkOption {
+      type = lib.types.bool;
+      description = "Apply colors only in direct messages; do not apply colors in servers.";
+      default = false;
     };
   };
   "jumpTo" = {
@@ -7365,6 +7365,7 @@ in
         "user-nick"
         "nick-user"
         "user"
+        "nick"
       ];
       description = "How to display usernames and nicks";
       default = "user-nick";
@@ -7661,6 +7662,11 @@ in
       type = lib.types.bool;
       description = "Show an icon for toggling the plugin (restart required)";
       default = false;
+    };
+    "showTypingIn" = lib.options.mkOption {
+      type = lib.types.str;
+      description = "Comma-separated list of channel IDs to always show typing in";
+      default = "";
     };
     "temporaryEnableThresholdDirectMessages" = lib.options.mkOption {
       type = lib.types.int;
