@@ -14,6 +14,7 @@
   equicord ? null,
   withOpenASAR ? false,
   openasar ? null,
+  # Darwin requires argument lists, while Linux also accepts shell flags
   commandLineArgs ? [ ],
   withKrisp ? false,
   withTTS ? true,
@@ -92,6 +93,10 @@ assert lib.asserts.assertMsg (lib.meta.availableOn stdenv.hostPlatform {
 assert lib.asserts.assertMsg (
   builtins.length enabledMods <= 1
 ) "Discord: Vencord and Equicord cannot both be enabled";
+assert lib.asserts.assertMsg (
+  !stdenv.hostPlatform.isDarwin
+  || (builtins.isList commandLineArgs && builtins.all builtins.isString commandLineArgs)
+) "Discord: commandLineArgs must be a list of strings on Darwin";
 assert lib.asserts.assertMsg (
   appDataDir == null || (stdenv.hostPlatform.isDarwin && lib.strings.hasPrefix "/" appDataDir)
 ) "Discord: appDataDir must be an absolute Darwin path";

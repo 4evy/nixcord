@@ -32,7 +32,6 @@ let
     rm discord-distro.tar
   '';
 
-  commandLineArgsList = if builtins.isList commandLineArgs then commandLineArgs else [ ];
   darwinSigningPython = python3.withPackages (ps: [ ps.pyyaml ]);
   launcher = callPackage ./launcher {
     configuration = {
@@ -50,7 +49,7 @@ let
       };
       stage_modules = finalAttrs.stageModules;
       deploy_krisp = if hasDeployKrisp then lib.getExe deployKrisp else null;
-      command_line_args = commandLineArgsList;
+      command_line_args = commandLineArgs;
       modules_dir = "../Resources/modules";
       target = "${binaryName}.unwrapped";
     };

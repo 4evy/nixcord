@@ -138,7 +138,11 @@ in
     commandLineArgs = lib.options.mkOption {
       type = lib.types.listOf lib.types.str;
       default = [ ];
-      description = "Extra arguments passed to Discord at launch. Each list item is one argument.";
+      description = ''
+        Extra arguments passed to Discord at launch. Each list item is one
+        argument. Direct overrides of Nixcord's Discord package on macOS also
+        require a list of strings, not a shell command string.
+      '';
       example = [
         "--enable-features=VaapiVideoDecoder,MiddleClickAutoscroll"
         "--ozone-platform-hint=auto"
