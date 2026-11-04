@@ -93,11 +93,11 @@ describe('StaticEvaluator', () => {
     });
   });
 
-  test('represents nondeterministic UUID defaults as omitted values', async () => {
+  test('leaves defaults containing nondeterministic UUIDs unresolved', async () => {
     const result = await evaluateInitializer(
       'const result = { find: "", id: crypto.randomUUID() };'
     );
-    expect(result).toMatchObject({ known: true, value: { find: '', id: undefined } });
+    expect(result).toMatchObject({ known: false });
   });
 
   test('returns an explicit unknown result for cycles and budgets', async () => {

@@ -254,6 +254,8 @@ function assign(
       );
   if (!keyResult.known || !['string', 'number'].includes(typeof keyResult.value))
     return keyResult.known ? unknown('invalid assignment key', target) : keyResult;
+  if (Object.getOwnPropertyDescriptor(base.value, String(keyResult.value))?.get)
+    return unknown('assignment to an object getter is not supported', target);
   (base.value as Record<string, RuntimeValue>)[String(keyResult.value)] = value;
   return known(true, target);
 }

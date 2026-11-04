@@ -2,6 +2,8 @@ import {
   type ArrowFunction,
   type FunctionDeclaration,
   type FunctionExpression,
+  type GetAccessorDeclaration,
+  type MethodDeclaration,
   Node,
   type TypeChecker,
 } from '../ast.js';
@@ -40,7 +42,12 @@ export type Environment = ReadonlyMap<string, RuntimeValue>;
 
 export type RuntimeValue = StaticValue | RegExp | CallableValue;
 
-export type CallableNode = ArrowFunction | FunctionDeclaration | FunctionExpression;
+export type CallableNode =
+  | ArrowFunction
+  | FunctionDeclaration
+  | FunctionExpression
+  | GetAccessorDeclaration
+  | MethodDeclaration;
 
 export interface CallableValue {
   readonly callable: true;
@@ -101,7 +108,22 @@ export const cloneRuntime = (value: RuntimeValue): RuntimeValue => {
   if (isCallable(value) || value instanceof RegExp || value === null || typeof value !== 'object')
     return value;
   if (Array.isArray(value)) return value.map(cloneRuntime) as StaticValue[];
-  return Object.fromEntries(
-    Object.entries(value).map(([key, item]) => [key, cloneRuntime(item as RuntimeValue)])
-  ) as StaticValue;
+  const result: Record<string, RuntimeValue> = {};
+  // Cloning must not turn a constant getter into a writable data property
+  for (const key of Object.keys(value)) {
+    const descriptor = Object.getOwnPropertyDescriptor(value, key)!;
+    Object.defineProperty(
+      result,
+      key,
+      descriptor.get
+        ? descriptor
+        : {
+            value: cloneRuntime(descriptor.value as RuntimeValue),
+            writable: true,
+            enumerable: true,
+            configurable: true,
+          }
+    );
+  }
+  return result as StaticValue;
 };

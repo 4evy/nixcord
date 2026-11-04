@@ -8108,28 +8108,10 @@ in
     "regexRules" = lib.options.mkOption {
       type = lib.types.listOf jsonAttrs;
       description = "Rules for replacing text using regular expressions.";
-      default = [
-        {
-          "name" = "";
-          "find" = "";
-          "replace" = "";
-          "onlyIfIncludes" = "";
-          "scope" = "myMessages";
-        }
-      ];
     };
     "stringRules" = lib.options.mkOption {
       type = lib.types.listOf jsonAttrs;
       description = "Rules for replacing text using string matching.";
-      default = [
-        {
-          "name" = "";
-          "find" = "";
-          "replace" = "";
-          "onlyIfIncludes" = "";
-          "scope" = "myMessages";
-        }
-      ];
     };
   };
   "themeAttributes" = {

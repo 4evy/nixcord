@@ -1,5 +1,6 @@
 import { type BinaryExpression, type Node, SyntaxKind } from '../ast.js';
 import { unwrapExpression } from '../nodes.js';
+import { invokeCallable } from './execution.js';
 import { evaluateIdentifier, evaluatePropertyName, initializerOf } from './references.js';
 import {
   cloneRuntime,
@@ -41,6 +42,53 @@ export function evaluateArray(
   return known(values as StaticValue[], node);
 }
 
+function isConstantGetterExpression(node: Node): boolean {
+  node = unwrapExpression(node);
+  if (
+    node.isKind(SyntaxKind.StringLiteral) ||
+    node.isKind(SyntaxKind.NoSubstitutionTemplateLiteral) ||
+    node.isKind(SyntaxKind.NumericLiteral) ||
+    node.isKind(SyntaxKind.TrueKeyword) ||
+    node.isKind(SyntaxKind.FalseKeyword) ||
+    node.isKind(SyntaxKind.NullKeyword)
+  )
+    return true;
+  if (node.isKind(SyntaxKind.PrefixUnaryExpression))
+    return isConstantGetterExpression(node.getOperand());
+  if (node.isKind(SyntaxKind.BinaryExpression))
+    return (
+      isConstantGetterExpression(node.getLeft()) && isConstantGetterExpression(node.getRight())
+    );
+  if (node.isKind(SyntaxKind.ConditionalExpression))
+    return (
+      isConstantGetterExpression(node.getCondition()) &&
+      isConstantGetterExpression(node.getWhenTrue()) &&
+      isConstantGetterExpression(node.getWhenFalse())
+    );
+  if (node.isKind(SyntaxKind.TemplateExpression))
+    return node
+      .getTemplateSpans()
+      .every((span) => isConstantGetterExpression(span.getExpression()));
+  return false;
+}
+
+function defineObjectValue(
+  object: Record<string, RuntimeValue>,
+  name: string,
+  value: RuntimeValue
+): void {
+  if (!Object.getOwnPropertyDescriptor(object, name)?.get) {
+    object[name] = value;
+    return;
+  }
+  Object.defineProperty(object, name, {
+    value,
+    writable: true,
+    enumerable: true,
+    configurable: true,
+  });
+}
+
 export function evaluateObject(
   context: EvaluationContext,
   node: import('../ast.js').ObjectLiteralExpression,
@@ -53,9 +101,11 @@ export function evaluateObject(
     if (property.isKind(SyntaxKind.SpreadAssignment)) {
       const spread = context.evaluate(property.getExpression(), environment, depth + 1, state);
       if (!spread.known) return spread;
-      if (spread.value === null || typeof spread.value !== 'object' || Array.isArray(spread.value))
-        return unknown('object spread did not evaluate to an object', property);
-      Object.assign(value, cloneRuntime(spread.value));
+      if (isCallable(spread.value))
+        return unknown('object spread of a callable is not supported', property);
+      // Object spread copies enumerable keys and treats nullish inputs as empty
+      for (const [name, item] of Object.entries(Object(spread.value)))
+        defineObjectValue(value, name, cloneRuntime(item as RuntimeValue));
       continue;
     }
     if (property.isKind(SyntaxKind.ShorthandPropertyAssignment)) {
@@ -72,14 +122,35 @@ export function evaluateObject(
         ? context.evaluate(unwrapExpression(initializer), environment, depth + 1, state)
         : evaluateIdentifier(context, nameNode, environment, depth + 1, state);
       if (!item.known) return item;
-      value[property.getName()] = cloneRuntime(item.value);
+      defineObjectValue(value, property.getName(), cloneRuntime(item.value));
       continue;
     }
-    if (
-      property.isKind(SyntaxKind.MethodDeclaration) ||
-      property.isKind(SyntaxKind.GetAccessor) ||
-      property.isKind(SyntaxKind.SetAccessor)
-    ) {
+    if (property.isKind(SyntaxKind.SetAccessor))
+      return unknown('object setters are not supported', property);
+    if (property.isKind(SyntaxKind.GetAccessor) || property.isKind(SyntaxKind.MethodDeclaration)) {
+      const name = evaluatePropertyName(context, property.getNameNode(), environment, depth, state);
+      if (!name.known) return name;
+      const callable = { callable: true as const, node: property, environment };
+      if (property.isKind(SyntaxKind.MethodDeclaration)) {
+        defineObjectValue(value, name.value, callable);
+      } else {
+        // Only closed scalar expressions can be materialized without stale
+        // captures, effects, or changing object identity across property reads
+        const statements = property.getBody()?.getStatements();
+        const statement = statements?.length === 1 ? statements[0] : undefined;
+        if (!statement?.isKind(SyntaxKind.ReturnStatement))
+          return unknown('getter body is not a constant return', property);
+        const expression = statement.getExpression();
+        if (expression && !isConstantGetterExpression(expression))
+          return unknown('getter expression is not a closed scalar constant', property);
+        const item = invokeCallable(context, callable, [], depth + 1, state, property);
+        if (!item.known) return item;
+        Object.defineProperty(value, name.value, {
+          get: () => item.value,
+          enumerable: true,
+          configurable: true,
+        });
+      }
       continue;
     }
     if (!property.isKind(SyntaxKind.PropertyAssignment))
@@ -93,7 +164,7 @@ export function evaluateObject(
       state
     );
     if (!item.known) return item;
-    value[name.value] = cloneRuntime(item.value);
+    defineObjectValue(value, name.value, cloneRuntime(item.value));
   }
   return known(value as StaticValue, node);
 }

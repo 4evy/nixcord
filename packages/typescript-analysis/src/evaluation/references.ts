@@ -1,5 +1,6 @@
 import { Node, SyntaxKind } from '../ast.js';
 import { resolvedDeclaration, unwrapExpression } from '../nodes.js';
+import type { StaticValue } from './runtime.js';
 import {
   cloneRuntime,
   type Environment,
@@ -64,6 +65,23 @@ export function evaluateIdentifier(
     if (declaration.isKind(SyntaxKind.EnumMember)) {
       const value = declaration.getValue();
       if (typeof value === 'string' || typeof value === 'number') return known(value, node);
+    }
+    if (declaration.isKind(SyntaxKind.EnumDeclaration)) {
+      const values: Record<string, RuntimeValue> = {};
+      const members = declaration.getMembers();
+      const charged = context.chargeOperations(members.length, state, declaration);
+      if (!charged.known) return charged;
+      for (const member of members) {
+        if (!member.isKind(SyntaxKind.EnumMember))
+          return unknown('unsupported enum member', member);
+        const value = member.getValue();
+        if (typeof value !== 'string' && typeof value !== 'number')
+          return unknown('enum member is not constant', member);
+        values[member.getName()] = value;
+        // Numeric enums expose reverse mappings, unlike string enums
+        if (typeof value === 'number') values[String(value)] = member.getName();
+      }
+      return known(values as StaticValue, node);
     }
     // Module declarations cannot capture a caller's local bindings. An empty
     // environment also lets the evaluator reuse imported constant initializers

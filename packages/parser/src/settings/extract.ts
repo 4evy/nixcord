@@ -61,32 +61,55 @@ export const settingNodeMap = (
   visited = new Set<string>()
 ): Map<string, ObjectLiteralExpression> => {
   const output = new Map<string, ObjectLiteralExpression>();
-  const resolved = resolveNode(node, checker);
-  if (!resolved) return output;
-  const key = `${resolved.getSourceFile().getFilePath()}:${resolved.getStart()}`;
-  if (visited.has(key)) return output;
-  visited.add(key);
-  const object = resolved.asKind(SyntaxKind.ObjectLiteralExpression);
-  if (!object) return output;
-  for (const property of object.getProperties()) {
-    if (property.isKind(SyntaxKind.SpreadAssignment)) {
-      for (const [name, value] of settingNodeMap(
-        property.getExpression(),
-        checker,
-        evaluator,
-        visited
-      ))
-        output.set(name, value);
-      continue;
+  const collect = (source: Node | undefined): void => {
+    if (!source) return;
+    const resolved = resolveNode(source, checker);
+    const object = resolved?.asKind(SyntaxKind.ObjectLiteralExpression);
+    if (!object) {
+      const spread = evaluator.evaluate(source);
+      if (spread.known) {
+        if (
+          isRecord(spread.value) ||
+          Array.isArray(spread.value) ||
+          typeof spread.value === 'string'
+        )
+          for (const name of Object.keys(spread.value)) output.delete(name);
+      } else output.clear();
+      return;
     }
-    if (!property.isKind(SyntaxKind.PropertyAssignment)) continue;
-    const name = propertyKey(property.getNameNode(), evaluator);
-    if (name === undefined) continue;
-    const value = resolveNode(property.getInitializer(), checker)?.asKind(
-      SyntaxKind.ObjectLiteralExpression
-    );
-    if (value) output.set(name, value);
-  }
+    const key = `${object.getSourceFile().getFilePath()}:${object.getStart()}`;
+    if (visited.has(key)) {
+      output.clear();
+      return;
+    }
+    visited.add(key);
+    for (const property of object.getProperties()) {
+      if (property.isKind(SyntaxKind.SpreadAssignment)) {
+        collect(property.getExpression());
+        continue;
+      }
+      if (
+        !property.isKind(SyntaxKind.PropertyAssignment) &&
+        !property.isKind(SyntaxKind.ShorthandPropertyAssignment) &&
+        !property.isKind(SyntaxKind.GetAccessor) &&
+        !property.isKind(SyntaxKind.MethodDeclaration)
+      )
+        continue;
+      const name = propertyKey(property.getNameNode(), evaluator);
+      if (name === undefined) {
+        output.clear();
+        continue;
+      }
+      const value = resolveNode(propertyInitializer(property), checker)?.asKind(
+        SyntaxKind.ObjectLiteralExpression
+      );
+      if (value) output.set(name, value);
+      else output.delete(name);
+    }
+    // Repeated spreads are separate evaluations, not cycles
+    visited.delete(key);
+  };
+  collect(node);
   return output;
 };
 
@@ -107,7 +130,8 @@ const rawObjectFromAst = (
   evaluator: StaticEvaluator,
   visited = new Set<string>(),
   unresolved: UnresolvedAstValue[] = [],
-  parentPath = ''
+  parentPath = '',
+  output: RawRecord = {}
 ): RawRecord => {
   const visitKey = `${object.getSourceFile().getFilePath()}:${object.getStart()}`;
   if (visited.has(visitKey)) {
@@ -116,47 +140,48 @@ const rawObjectFromAst = (
       ...(parentPath ? { path: parentPath } : {}),
       reason: 'Cyclic object definition could not be normalized',
     });
-    return {};
+    for (const key of Object.keys(output)) output[key] = undefined;
+    return output;
   }
   visited.add(visitKey);
-  const output: RawRecord = {};
   for (const property of object.getProperties()) {
     if (property.isKind(SyntaxKind.SpreadAssignment)) {
       const spreadObject = resolveNode(property.getExpression(), checker)?.asKind(
         SyntaxKind.ObjectLiteralExpression
       );
       if (spreadObject) {
-        Object.assign(
-          output,
-          rawObjectFromAst(spreadObject, checker, evaluator, visited, unresolved, parentPath)
-        );
+        rawObjectFromAst(spreadObject, checker, evaluator, visited, unresolved, parentPath, output);
         continue;
       }
       const spread = evaluator.evaluate(property.getExpression());
-      if (spread.known && isRecord(spread.value)) Object.assign(output, spread.value);
-      else
+      if (spread.known) {
+        if (
+          isRecord(spread.value) ||
+          Array.isArray(spread.value) ||
+          typeof spread.value === 'string'
+        )
+          Object.assign(output, spread.value);
+      } else {
+        // Keep overwritten keys present so normalization sees unresolved defaults
+        for (const key of Object.keys(output)) output[key] = undefined;
         recordUnresolvedAstValue(unresolved, {
           node: property.getExpression(),
           ...(parentPath ? { path: parentPath } : {}),
-          reason: spread.known ? 'Spread value did not evaluate to an object' : spread.reason,
+          reason: spread.reason,
         });
+      }
       continue;
     }
-    if (property.isKind(SyntaxKind.ShorthandPropertyAssignment)) {
-      const result = evaluator.evaluate(property.getNameNode());
-      if (result.known) output[property.getName()] = result.value;
-      else
-        recordUnresolvedAstValue(unresolved, {
-          node: property.getNameNode(),
-          path: parentPath ? `${parentPath}.${property.getName()}` : property.getName(),
-          reason: result.reason,
-        });
-      continue;
-    }
-    if (!property.isKind(SyntaxKind.PropertyAssignment) && !property.isKind(SyntaxKind.GetAccessor))
+    if (
+      !property.isKind(SyntaxKind.PropertyAssignment) &&
+      !property.isKind(SyntaxKind.ShorthandPropertyAssignment) &&
+      !property.isKind(SyntaxKind.GetAccessor) &&
+      !property.isKind(SyntaxKind.MethodDeclaration)
+    )
       continue;
     const key = propertyKey(property.getNameNode(), evaluator);
     if (key === undefined) {
+      for (const key of Object.keys(output)) output[key] = undefined;
       recordUnresolvedAstValue(unresolved, {
         node: property.getNameNode(),
         ...(parentPath ? { path: parentPath } : {}),
@@ -172,16 +197,22 @@ const rawObjectFromAst = (
       continue;
     }
     if (!initializer) {
+      output[key] = undefined;
       recordUnresolvedAstValue(unresolved, {
         node: property,
         path,
-        reason: 'Accessor does not have a single return expression',
+        reason: property.isKind(SyntaxKind.GetAccessor)
+          ? 'Accessor does not have a single return expression'
+          : 'Property does not have a statically evaluable initializer',
       });
       continue;
     }
     const result = evaluator.evaluate(initializer);
     if (result.known) output[key] = result.value;
-    else recordUnresolvedAstValue(unresolved, { node: initializer, path, reason: result.reason });
+    else {
+      output[key] = undefined;
+      recordUnresolvedAstValue(unresolved, { node: initializer, path, reason: result.reason });
+    }
   }
   // Remove each definition from `visited` when this branch returns. Settings can
   // share a definition; leaving it marked would discard later defaults and metadata

@@ -144,6 +144,13 @@ default = 0;`;
     and TypeScript assertions. Unused definitions elsewhere in the plugin do not supply its
     metadata or settings.
   </p>
+  <p class={paragraphClass}>
+    <a class={linkClass} href={`${sourceRoot}packages/parser/src/settings/extract.ts`}>Object extraction</a>
+    follows property and spread order. An unresolved override invalidates earlier values instead
+    of preserving a stale default. Static evaluation supports constant scalar getters, enum
+    objects, and spread arguments, but leaves captured getter state, browser state, randomness,
+    and unsupported mutation unresolved.
+  </p>
 
   <p class={`border-t border-line pt-4 text-sm ${paragraphClass}`}>
     Check the generated option's choices and default, not just whether the plugin was found. Run

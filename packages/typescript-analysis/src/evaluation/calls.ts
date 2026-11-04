@@ -45,13 +45,9 @@ export function evaluateCall(
   const expression = context.evaluate(node.getExpression(), environment, depth + 1, state);
   if (!expression.known) return expression;
   if (!isCallable(expression.value)) return unknown('call target is not statically callable', node);
-  const args: RuntimeValue[] = [];
-  for (const argument of node.getArguments()) {
-    const value = context.evaluate(argument, environment, depth + 1, state);
-    if (!value.known) return value;
-    args.push(cloneRuntime(value.value));
-  }
-  return invokeCallable(context, expression.value, args, depth + 1, state, node);
+  const args = evaluateArguments({ context, call: node, environment, depth, state });
+  if (!args.known) return args;
+  return invokeCallable(context, expression.value, args.value, depth + 1, state, node);
 }
 
 type IntrinsicScope = {
@@ -61,6 +57,31 @@ type IntrinsicScope = {
   depth: number;
   state: EvaluationState;
 };
+
+function evaluateArguments(scope: IntrinsicScope): EvaluationResult<RuntimeValue[]> {
+  const { context, call, environment, depth, state } = scope;
+  const args: RuntimeValue[] = [];
+  for (const argument of call.getArguments()) {
+    const spread = argument.isKind(SyntaxKind.SpreadElement);
+    const value = context.evaluate(
+      spread ? argument.getExpression() : argument,
+      environment,
+      depth + 1,
+      state
+    );
+    if (!value.known) return value;
+    if (spread) {
+      if (!Array.isArray(value.value) && typeof value.value !== 'string')
+        return unknown('call spread is not iterable', argument);
+      const charged = context.chargeOperations(value.value.length, state, argument);
+      if (!charged.known) return charged;
+      for (const item of value.value) args.push(cloneRuntime(item));
+    } else {
+      args.push(cloneRuntime(value.value));
+    }
+  }
+  return known(args, call);
+}
 
 function evaluateIntrinsic(
   context: EvaluationContext,
@@ -79,14 +100,19 @@ function evaluateIntrinsic(
     (!declaration ||
       declaration.view.defaultLibraries.has(declaration.getSourceFile().getFilePath()));
   const globalName = globalOwner ? `${ownerText}.${method}` : '';
-  if (globalName === 'crypto.randomUUID') return known(undefined, call);
+  if (globalName === 'crypto.randomUUID')
+    return unknown('crypto.randomUUID is not deterministic', call);
+  // Cloning native arguments cannot reproduce mutations visible to later
+  // statements or aliases, so do not treat Object.assign as a pure intrinsic
+  if (globalName === 'Object.assign')
+    return unknown('Object.assign mutation is not supported', call);
 
   const scope = { context, call, environment, depth, state };
   if (globalName === 'JSON.stringify') return evaluateNative(scope, JSON.stringify, JSON);
   if (
     globalOwner &&
     ownerText === 'Object' &&
-    ['keys', 'values', 'entries', 'assign', 'fromEntries'].includes(method)
+    ['keys', 'values', 'entries', 'fromEntries'].includes(method)
   )
     return evaluateNative(scope, Reflect.get(Object, method), Object);
   if (globalName === 'Array.from') return evaluateArrayFrom(scope);
@@ -99,8 +125,11 @@ function evaluateIntrinsic(
     return evaluateNative(scope, Array.prototype.join, receiver.value);
   if (typeof receiver.value === 'string' && STRING_METHODS.has(method))
     return evaluateNative(scope, Reflect.get(String.prototype, method), receiver.value);
-  if (receiver.value instanceof RegExp && method === 'test')
+  if (receiver.value instanceof RegExp && method === 'test') {
+    if (receiver.value.global || receiver.value.sticky)
+      return unknown('stateful RegExp.test is not supported', call);
     return evaluateNative(scope, RegExp.prototype.test, receiver.value);
+  }
   return undefined;
 }
 
@@ -111,42 +140,42 @@ function evaluateNative(
   callable: (...args: never[]) => unknown,
   receiver: unknown
 ): EvaluationResult<RuntimeValue> {
-  const { context, call, environment, depth, state } = scope;
-  const args: RuntimeValue[] = [];
-  for (const arg of call.getArguments()) {
-    const value = context.evaluate(arg, environment, depth + 1, state);
-    if (!value.known) return value;
-    if (isCallable(value.value)) return unknown('native callback is not supported', arg);
-    args.push(cloneRuntime(value.value));
-  }
-  return known(Reflect.apply(callable, receiver, args) as RuntimeValue, call);
+  const args = evaluateArguments(scope);
+  if (!args.known) return args;
+  if (args.value.some(isCallable)) return unknown('native callback is not supported', scope.call);
+  return known(Reflect.apply(callable, receiver, args.value) as RuntimeValue, scope.call);
 }
 
 function evaluateArrayFrom(scope: IntrinsicScope): EvaluationResult<RuntimeValue> | undefined {
-  const { context, call, environment, depth, state } = scope;
-  const args = call.getArguments();
-  const value = args[0] ? context.evaluate(args[0], environment, depth + 1, state) : undefined;
-  if (!value?.known || isCallable(value.value))
-    return value?.known ? unknown('Array.from input is not known', call) : value;
-  const input = value.value;
+  const { context, call, depth, state } = scope;
+  const args = evaluateArguments(scope);
+  if (!args.known) return args;
+  const input = args.value[0];
+  if (input == null || isCallable(input)) return unknown('Array.from input is not known', call);
+  if (args.value[2] !== undefined) return unknown('Array.from thisArg is not supported', call);
   const length =
     typeof input === 'string' || Array.isArray(input)
       ? input.length
-      : input && typeof input === 'object' && !isCallable(input)
-        ? Number((input as Record<string, RuntimeValue>).length ?? 0)
+      : typeof input === 'object'
+        ? Math.max(
+            0,
+            Math.min(
+              Math.trunc(Number((input as Record<string, RuntimeValue>).length ?? 0)) || 0,
+              Number.MAX_SAFE_INTEGER
+            )
+          )
         : 0;
   const charged = context.chargeOperations(length, state, call);
   if (!charged.known) return charged;
-  let output = Array.from(value.value as Iterable<StaticValue>);
-  if (args[1]) {
-    const callback = context.evaluate(args[1], environment, depth + 1, state);
-    if (!callback.known || !isCallable(callback.value))
-      return callback.known ? unknown('Array.from mapper is not callable', args[1]) : callback;
+  let output = Array.from(input as Iterable<StaticValue>);
+  if (args.value[1] !== undefined) {
+    const callback = args.value[1];
+    if (!isCallable(callback)) return unknown('Array.from mapper is not callable', call);
     const mapped: RuntimeValue[] = [];
     for (let index = 0; index < output.length; index++) {
       const result = invokeCallable(
         context,
-        callback.value,
+        callback,
         [output[index], index],
         depth + 1,
         state,
@@ -165,12 +194,13 @@ function evaluateArrayMethod(
   receiver: readonly StaticValue[],
   method: string
 ): EvaluationResult<RuntimeValue> | undefined {
-  const { context, call, environment, depth, state } = scope;
-  const args = call.getArguments();
-  const callback = args[0] ? context.evaluate(args[0], environment, depth + 1, state) : undefined;
-  if (!callback?.known || !isCallable(callback.value))
-    return callback?.known ? unknown(`${method} callback is not callable`, call) : callback;
-  const callable = callback.value;
+  const { context, call, depth, state } = scope;
+  const args = evaluateArguments(scope);
+  if (!args.known) return args;
+  const callable = args.value[0];
+  if (!isCallable(callable)) return unknown(`${method} callback is not callable`, call);
+  if (method !== 'reduce' && args.value[1] !== undefined)
+    return unknown(`${method} thisArg is not supported`, call);
   const nativeArgs: unknown[] = [
     (...values: RuntimeValue[]) => {
       const result = invokeCallable(context, callable, values, depth + 1, state, call);
@@ -182,11 +212,7 @@ function evaluateArrayMethod(
     },
   ];
   let failure: EvaluationResult<never> | undefined;
-  if (method === 'reduce' && args[1]) {
-    const initial = context.evaluate(args[1], environment, depth + 1, state);
-    if (!initial.known) return initial;
-    nativeArgs.push(cloneRuntime(initial.value));
-  }
+  if (method === 'reduce' && args.value.length > 1) nativeArgs.push(args.value[1]);
   try {
     return known(
       Reflect.apply(Reflect.get(Array.prototype, method), receiver, nativeArgs) as RuntimeValue,
