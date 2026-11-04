@@ -417,22 +417,6 @@
         };
       };
     };
-    "ircColors" = {
-      "settings" = {
-        "lightness" = {
-          "type" = "types.int";
-        };
-        "memberListColors" = {
-          "type" = "types.bool";
-        };
-        "applyColorOnlyToUsersWithoutColor" = {
-          "type" = "types.bool";
-        };
-        "applyColorOnlyInDms" = {
-          "type" = "types.bool";
-        };
-      };
-    };
     "jumpToTop" = {
       "settings" = { };
     };
@@ -1036,16 +1020,6 @@
     "voiceDownload" = {
       "settings" = { };
     };
-    "voiceMessages" = {
-      "settings" = {
-        "noiseSuppression" = {
-          "type" = "types.bool";
-        };
-        "echoCancellation" = {
-          "type" = "types.bool";
-        };
-      };
-    };
     "volumeBooster" = {
       "settings" = {
         "multiplier" = {
@@ -1294,6 +1268,22 @@
       "settings" = {
         "provider" = {
           "type" = "types.enum";
+        };
+      };
+    };
+    "ircColors" = {
+      "settings" = {
+        "lightness" = {
+          "type" = "types.int";
+        };
+        "memberListColors" = {
+          "type" = "types.bool";
+        };
+        "applyColorOnlyToUsersWithoutColor" = {
+          "type" = "types.bool";
+        };
+        "applyColorOnlyInDms" = {
+          "type" = "types.bool";
         };
       };
     };
@@ -1666,6 +1656,16 @@
         };
       };
     };
+    "voiceMessages" = {
+      "settings" = {
+        "noiseSuppression" = {
+          "type" = "types.bool";
+        };
+        "echoCancellation" = {
+          "type" = "types.bool";
+        };
+      };
+    };
   };
   "equicord" = {
     "advancedPermissions" = {
@@ -1981,6 +1981,9 @@
         };
         "blurAllChannels" = {
           "type" = "types.bool";
+        };
+        "ignoredChannels" = {
+          "type" = "types.str";
         };
       };
     };
@@ -3634,6 +3637,28 @@
         };
       };
     };
+    "ircColors" = {
+      "settings" = {
+        "lightness" = {
+          "type" = "types.int";
+        };
+        "saturation" = {
+          "type" = "types.int";
+        };
+        "seed" = {
+          "type" = "types.str";
+        };
+        "memberListColors" = {
+          "type" = "types.bool";
+        };
+        "applyColorOnlyToUsersWithoutColor" = {
+          "type" = "types.bool";
+        };
+        "applyColorOnlyInDms" = {
+          "type" = "types.bool";
+        };
+      };
+    };
     "iRememberYou" = {
       "settings" = { };
     };
@@ -4475,13 +4500,6 @@
           "type" = "types.bool";
         };
         "consoleIcon" = {
-          "type" = "types.enum";
-        };
-      };
-    };
-    "platformSpoofer" = {
-      "settings" = {
-        "platform" = {
           "type" = "types.enum";
         };
       };
@@ -5400,6 +5418,9 @@
         "autoDisable" = {
           "type" = "types.bool";
         };
+        "silent" = {
+          "type" = "types.bool";
+        };
       };
       "uiElements" = {
         "chatBarButtons" = [ "SilentMessageToggle" ];
@@ -6054,6 +6075,16 @@
           "type" = "types.str";
         };
         "ignoreBlockedUsers" = {
+          "type" = "types.bool";
+        };
+      };
+    };
+    "voiceMessages" = {
+      "settings" = {
+        "noiseSuppression" = {
+          "type" = "types.bool";
+        };
+        "echoCancellation" = {
           "type" = "types.bool";
         };
       };

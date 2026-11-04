@@ -577,6 +577,11 @@ in
       description = "Blur Amount (in pixels)";
       default = 10;
     };
+    "ignoredChannels" = lib.options.mkOption {
+      type = lib.types.str;
+      description = "List of channel IDs to not blur attachments in, separated by a space or comma";
+      default = "";
+    };
   };
   "bypassPinPrompt" = {
     enable = lib.options.mkEnableOption "Bypass the pin prompt when using the pin functions (Equicord-only)";
@@ -3692,7 +3697,17 @@ in
     };
   };
   "ircColors" = {
-    enable = lib.options.mkEnableOption "Makes username colors in chat unique, like in IRC clients (Shared between Vencord and Equicord)";
+    enable = lib.options.mkEnableOption "Makes username colors in chat unique, like in IRC clients (Equicord-only)";
+    "applyColorOnlyInDms" = lib.options.mkOption {
+      type = lib.types.bool;
+      description = "Apply colors only in direct messages; do not apply colors in servers.";
+      default = false;
+    };
+    "applyColorOnlyToUsersWithoutColor" = lib.options.mkOption {
+      type = lib.types.bool;
+      description = "Apply colors only to users who don't have a predefined color";
+      default = false;
+    };
     "lightness" = lib.options.mkOption {
       type = lib.types.int;
       description = "Lightness, in %. Change if the colors are too light or too dark";
@@ -3703,15 +3718,15 @@ in
       description = "Replace role colors in the member list (restart required)";
       default = true;
     };
-    "applyColorOnlyToUsersWithoutColor" = lib.options.mkOption {
-      type = lib.types.bool;
-      description = "Apply colors only to users who don't have a predefined color";
-      default = false;
+    "saturation" = lib.options.mkOption {
+      type = lib.types.int;
+      description = "Saturation, in %. Change if the colors are too vibrant or dull";
+      default = 100;
     };
-    "applyColorOnlyInDms" = lib.options.mkOption {
-      type = lib.types.bool;
-      description = "Apply colors only in direct messages; do not apply colors in servers.";
-      default = false;
+    "seed" = lib.options.mkOption {
+      type = lib.types.str;
+      description = "Changing this will shuffle everyone's username color to a new color";
+      default = "";
     };
   };
   "jumpTo" = {
@@ -5697,22 +5712,6 @@ in
       default = false;
     };
   };
-  "platformSpoofer" = {
-    enable = lib.options.mkEnableOption "Spoof what platform or device you're on (Equicord-only)";
-    "platform" = lib.options.mkOption {
-      type = lib.types.enum [
-        "desktop"
-        "web"
-        "android"
-        "ios"
-        "xbox"
-        "playstation"
-        "vr"
-      ];
-      description = "What platform to pretend you're on. (restart required)";
-      default = "desktop";
-    };
-  };
   "polishWording" = {
     enable = lib.options.mkEnableOption "Tweaks your messages to make them look nicer and have better grammar. See settings (Equicord-only)";
     "quickDisable" = lib.options.mkOption {
@@ -7566,6 +7565,10 @@ in
       description = "How to persist the silent message toggle state";
       default = "none";
     };
+    "silent" = lib.options.mkOption {
+      type = lib.types.bool;
+      description = "";
+    };
   };
   "silentTyping" = {
     enable = lib.options.mkEnableOption "Hide that you are typing (Equicord-only)";
@@ -9060,15 +9063,15 @@ in
     };
   };
   "voiceMessages" = {
-    enable = lib.options.mkEnableOption "Allows you to send voice messages like on mobile. To do so, right click the upload button and click Send Voice Message (Shared between Vencord and Equicord)";
-    "noiseSuppression" = lib.options.mkOption {
-      type = lib.types.bool;
-      description = "Noise Suppression";
-      default = true;
-    };
+    enable = lib.options.mkEnableOption "Allows you to send voice messages like on mobile. To do so, right click the upload button and click Send Voice Message (Equicord-only)";
     "echoCancellation" = lib.options.mkOption {
       type = lib.types.bool;
       description = "Echo Cancellation";
+      default = true;
+    };
+    "noiseSuppression" = lib.options.mkOption {
+      type = lib.types.bool;
+      description = "Noise Suppression";
       default = true;
     };
   };

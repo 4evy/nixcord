@@ -8,7 +8,7 @@
         "@types/bun": "1.4.4",
         "@types/fs-extra": "11.0.4",
         "@types/node": "26.6.5",
-        "equicord": "https://github.com/Equicord/Equicord/archive/00abcbeea2ddf4317e02843418f267db62bcb913.tar.gz",
+        "equicord": "https://github.com/Equicord/Equicord/archive/b177ac49d5cdb3aa6053103eb0ede1d496db36bb.tar.gz",
         "fallow": "3.36.0",
         "svelte": "^5.57.2",
         "typescript": "7.1.0-beta",
@@ -466,7 +466,7 @@
 
     "enhanced-resolve": ["enhanced-resolve@5.26.0", "", { "dependencies": { "graceful-fs": "^4.2.4", "tapable": "^2.3.3" } }, "sha512-9vhedylFonb2YGogzUKX6+Ja72gOJbN1QHAqdrvqLwhdl/QWbKopzoUC9EbQNVsAns/bx/4uyqalrQAoy1IByw=="],
 
-    "equicord": ["equicord@https://github.com/Equicord/Equicord/archive/00abcbeea2ddf4317e02843418f267db62bcb913.tar.gz", { "dependencies": { "@ffmpeg/ffmpeg": "^0.12.10", "@ffmpeg/util": "^0.12.1", "@intrnl/xxhash64": "^0.1.2", "@song-spotlight/api": "^2.2.0", "@streamparser/json": "^0.0.22", "@vap/core": "0.0.12", "@vap/shiki": "0.10.5", "@vencord/monaco-editor": "0.57.0-beta.4", "fflate": "^0.8.3", "gifenc": "github:mattdesl/gifenc#64842fca317b112a8590f8fef2bf3825da8f6fe3", "gifuct-js": "^2.1.2", "idb": "8.0.3", "jsqr": "1.4.0", "nanoid": "^5.1.16", "native-file-system-adapter": "^3.0.1", "yaml-js": "^0.3.1" } }, "sha512-flszxj4yalIDQ3uumm6q/a/WG4JRcAGAhSwRnt2EOH+Yy0e/wasUzn4RYLNIw7SoXryLi4EYhKHNLbiKAQW74Q=="],
+    "equicord": ["equicord@https://github.com/Equicord/Equicord/archive/b177ac49d5cdb3aa6053103eb0ede1d496db36bb.tar.gz", { "dependencies": { "@ffmpeg/ffmpeg": "^0.12.10", "@ffmpeg/util": "^0.12.1", "@intrnl/xxhash64": "^0.1.2", "@song-spotlight/api": "^2.2.0", "@streamparser/json": "^0.0.22", "@vap/core": "0.0.12", "@vap/shiki": "0.10.5", "@vencord/monaco-editor": "0.57.0-beta.4", "fflate": "^0.8.3", "gifenc": "github:mattdesl/gifenc#64842fca317b112a8590f8fef2bf3825da8f6fe3", "gifuct-js": "^2.1.2", "idb": "8.0.3", "jsqr": "1.4.0", "nanoid": "^5.1.16", "native-file-system-adapter": "^3.0.1", "yaml-js": "^0.3.1" } }, "sha512-cv5sqp5YupPCeTQUrRIoHmiYhUA1Hsi8cEk5f5gRKdGgizo2ORFPtdqhrVTG7efOjsTMd8m6OMv2V7NOuY2igA=="],
 
     "es-module-lexer": ["es-module-lexer@2.3.2", "", {}, "sha512-poHGpORABojJJucnV9KbOavETW8lBVnphkW77ER5/BQ5Fz7oXSoCNek7IH3vR5nRjdsEz926ibFYX8KtLQmdyw=="],
 
