@@ -248,7 +248,7 @@ export async function parseSinglePlugin(
       );
       return { settingRenames: [], pluginRenames: [], diagnostics };
     }
-    const pluginObject = objectArgument(definePluginCall);
+    const pluginObject = objectArgument(definePluginCall, context.session.checker);
     const infoName = evaluated(objectPropertyInitializer(pluginObject, 'name'), context.evaluator);
     const description = evaluated(
       objectPropertyInitializer(pluginObject, 'description'),
@@ -265,7 +265,6 @@ export async function parseSinglePlugin(
     const uiElements = extractUiElements(pluginObject, context, pluginName);
     const settingsCall = findSettingsCall(
       definePluginCall,
-      sourceFiles,
       context.profile,
       context.session.checker
     );

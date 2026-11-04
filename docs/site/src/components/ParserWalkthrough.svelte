@@ -138,6 +138,13 @@ default = 0;`;
     </div>
   </dl>
 
+  <p class={paragraphClass}>
+    <a class={linkClass} href={`${sourceRoot}packages/parser/src/resolve.ts`}>Plugin discovery</a>
+    follows the default export and its settings reference, including export specifiers, aliases,
+    and TypeScript assertions. Unused definitions elsewhere in the plugin do not supply its
+    metadata or settings.
+  </p>
+
   <p class={`border-t border-line pt-4 text-sm ${paragraphClass}`}>
     Check the generated option's choices and default, not just whether the plugin was found. Run
     <code class={literalCodeClass}>bun run test</code>

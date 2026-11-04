@@ -94,6 +94,7 @@ export const apiCalls = (
 const declarationInitializer = (node: Node, checker: TypeChecker): Node | undefined => {
   try {
     const declaration = resolvedDeclaration(node, checker);
+    if (declaration?.isKind(SyntaxKind.ExportAssignment)) return declaration.getExpression();
     if (Node.isInitializerExpressionGetable(declaration)) {
       const initializer = declaration?.getInitializer();
       if (initializer) return initializer;
@@ -138,30 +139,36 @@ export const objectPropertyInitializer = (
 ): Node | undefined => propertyInitializer(object?.getProperty(name));
 
 export const objectArgument = (
-  call: CallExpression | undefined
+  call: CallExpression | undefined,
+  checker: TypeChecker
 ): ObjectLiteralExpression | undefined =>
-  call?.getArguments()[0]?.asKind(SyntaxKind.ObjectLiteralExpression);
+  resolveNode(call?.getArguments()[0], checker)?.asKind(SyntaxKind.ObjectLiteralExpression);
 
 export const findDefinePluginCall = (
   entry: SourceFile,
   profile: SourceProfile,
   checker: TypeChecker
-): CallExpression | undefined =>
-  entry
-    .getDescendantsOfKind(SyntaxKind.CallExpression)
-    .find((call) => isApiCall(call, 'definePlugin', profile, checker));
+): CallExpression | undefined => {
+  // Upstream loads the default export, not the first API call in the file
+  const exported = entry.getExportedDeclarations().get('default')?.[0];
+  const expression = exported?.isKind(SyntaxKind.ExportAssignment)
+    ? exported.getExpression()
+    : exported?.getInitializer();
+  const call = resolveNode(expression, checker)?.asKind(SyntaxKind.CallExpression);
+  return call && isApiCall(call, 'definePlugin', profile, checker) ? call : undefined;
+};
 
 const findSettingsCallFromNode = (
   node: Node | undefined,
   profile: SourceProfile,
   checker: TypeChecker,
-  visited = new Set<string>()
+  visited = new Set<Node>()
 ): CallExpression | undefined => {
   const resolved = resolveNode(node, checker);
   if (!resolved) return undefined;
-  const key = `${resolved.getSourceFile().getFilePath()}:${resolved.getStart()}`;
-  if (visited.has(key)) return undefined;
-  visited.add(key);
+  // Chained calls share their start position but are distinct syntax nodes
+  if (visited.has(resolved)) return undefined;
+  visited.add(resolved);
   const call = resolved.asKind(SyntaxKind.CallExpression);
   if (call) {
     if (isApiCall(call, 'definePluginSettings', profile, checker)) return call;
@@ -174,17 +181,16 @@ const findSettingsCallFromNode = (
 
 export const findSettingsCall = (
   definePluginCall: CallExpression | undefined,
-  sourceFiles: readonly SourceFile[],
   profile: SourceProfile,
   checker: TypeChecker
 ): CallExpression | undefined => {
-  const pluginObject = objectArgument(definePluginCall);
-  const referenced = findSettingsCallFromNode(
+  const pluginObject = objectArgument(definePluginCall, checker);
+  // Unreferenced settings may belong to another definition or an unused helper
+  return findSettingsCallFromNode(
     objectPropertyInitializer(pluginObject, 'settings'),
     profile,
     checker
   );
-  return referenced ?? apiCalls(sourceFiles, 'definePluginSettings', profile, checker)[0];
 };
 
 export const settingsBindingsForCall = (call: CallExpression): readonly Node[] => {
