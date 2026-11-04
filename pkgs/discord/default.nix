@@ -6,6 +6,8 @@
 
   # Options
   branch ? "stable",
+  # Override the complete host and module source record together
+  source ? null,
   withVencord ? false,
   vencord ? null,
   withEquicord ? false,
@@ -49,9 +51,8 @@ let
   enabledMods = lib.filter (mod: mod.enabled) (builtins.attrValues mods);
   mod = if enabledMods == [ ] then null else builtins.head enabledMods;
 
-  sourceSet = callPackage ./sources { inherit branch withKrisp; };
+  sourceSet = callPackage ./sources { inherit branch withKrisp source; };
   inherit (sourceSet)
-    source
     version
     moduleSrcs
     moduleVersions
@@ -132,7 +133,7 @@ stdenv.mkDerivation (
   platformAttrs
   // {
     inherit pname version meta;
-    src = fetchurl { inherit (source.distro) url hash; };
+    src = fetchurl { inherit (sourceSet.source.distro) url hash; };
     dontUnpack = true;
     stageModules = lib.getExe stageModules;
 
@@ -156,7 +157,8 @@ stdenv.mkDerivation (
       + (platformAttrs.postInstall or "");
 
     passthru = {
-      inherit source moduleSrcs moduleVersions;
+      inherit (sourceSet) source;
+      inherit moduleSrcs moduleVersions;
       updateScript = lib.getExe (callPackage ./sources/update { inherit branch; });
       stageModules = finalAttrs.stageModules;
       commandLineArgsAsList = true;

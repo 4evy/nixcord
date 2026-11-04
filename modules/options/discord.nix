@@ -45,6 +45,14 @@ in
         nixpkgs' Discord package. It supports x86_64 Linux without an FHS
         environment and Apple silicon macOS with a signed native launcher.
         Host and module updates are managed by Nix, not Discord's updater.
+
+        To pin another release, use the package's `source` override with one
+        platform and branch record from
+        [the source manifest](https://github.com/4evy/nixcord/blob/main/pkgs/discord/sources/sources.json).
+        The record includes `version`, `distro`, and all `modules` for that
+        release. This updates the host, native modules, and staged versions
+        together. Overriding only `src` leaves the old modules pinned.
+        Setting `source = null` restores the selected branch's bundled pin.
       '';
     };
     branches = lib.options.mkOption {
