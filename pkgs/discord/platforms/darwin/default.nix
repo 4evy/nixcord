@@ -26,10 +26,9 @@ let
   '';
   unpackDistro = src: directory: ''
     mkdir --parents "$out/${directory}"
-    brotli --decompress < ${src} > discord-distro.tar
-    tar --extract --file=discord-distro.tar --strip-components=1 --directory="$out/${directory}"
+    # Stream the archive to avoid a second, decompressed copy during builds
+    brotli --decompress < ${src} | tar --extract --file=- --strip-components=1 --directory="$out/${directory}"
     ${fixDistroSymlinks directory}
-    rm discord-distro.tar
   '';
 
   darwinSigningPython = python3.withPackages (ps: [ ps.pyyaml ]);
