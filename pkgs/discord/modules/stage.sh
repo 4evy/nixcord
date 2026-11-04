@@ -62,10 +62,17 @@ mkdir --parents "${module_dirs[@]}"
 
 settings_file="$config_dir/settings.json"
 if [[ -f "$settings_file" ]]; then
-  jq ". + ${DISCORD_DISABLED_UPDATE_SETTINGS_JSON:?}" "$settings_file" >"$settings_file.tmp"
-  # Replacing settings must not broaden access to a private user configuration
-  chmod --reference="$settings_file" "$settings_file.tmp"
-  mv "$settings_file.tmp" "$settings_file"
+  # Leave declaratively managed, read-only settings and their symlinks intact
+  if [[ -w "$settings_file" ]]; then
+    (
+      settings_tmp=$(mktemp "$settings_file.XXXXXX")
+      trap 'rm --force "$settings_tmp"' EXIT
+      jq ". + ${DISCORD_DISABLED_UPDATE_SETTINGS_JSON:?}" "$settings_file" >"$settings_tmp"
+      # Replacing settings must not broaden access to private user configuration
+      chmod --reference="$settings_file" "$settings_tmp"
+      mv "$settings_tmp" "$settings_file"
+    )
+  fi
 else
   printf '%s\n' "${DISCORD_DISABLED_UPDATE_SETTINGS_JSON:?}" >"$settings_file"
 fi
