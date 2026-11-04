@@ -7,7 +7,8 @@
 Configure Discord clients, plugins, and themes with Nix.
 
 Nixcord provides Home Manager, NixOS, and nix-darwin modules for Discord with
-Vencord or Equicord, plus Vesktop, Equibop, GoofCord, Legcord, and Dorion.
+Vencord or Equicord, plus Vesktop, Equibop, GoofCord, Legcord, Dorion, and
+browser extensions.
 
 [![Flake Checks](https://github.com/4evy/nixcord/actions/workflows/check.yaml/badge.svg?branch=main)](https://github.com/4evy/nixcord/actions/workflows/check.yaml)
 [![Docs](https://github.com/4evy/nixcord/actions/workflows/github-pages.yaml/badge.svg?branch=main)](https://github.com/4evy/nixcord/actions/workflows/github-pages.yaml)
@@ -244,6 +245,33 @@ Replace the quickstart's Vencord selection with Equicord for this example.
 Every selected branch uses the same mod configuration and package options,
 including Krisp and OpenASAR. `finalPackage.discord` is the first branch;
 `finalPackage.discordBranches` contains all packages by branch name.
+
+### Browser extensions
+
+Enable configuration for an existing Vencord or Equicord browser extension:
+
+```nix
+programs.nixcord.browser = {
+  enable = true;
+  client = "vencord"; # Or "equicord"
+};
+```
+
+Import `config.programs.nixcord.browser.settingsFile` through
+**Backup & Restore** (Equicord: **Import All Settings**), then reload Discord.
+Re-import after changing your Nix configuration. Back up first: Vencord replaces
+imported settings and Quick CSS, while Equicord merges settings and ignores
+empty CSS.
+
+For Chromium, load `config.programs.nixcord.browser.finalPackage` with developer
+mode's **Load unpacked**. It bundles settings, Quick CSS, local themes, and
+`userPlugins`, reapplies declared settings on page load, and preserves
+undeclared settings. Disable other copies of the mod and load the new path after
+rebuilding.
+
+Set `discord.enable = false` for browser-only use. See the
+[browser options](modules/options/browser.nix) for backup contents and
+overrides.
 
 ## Settings converter
 
