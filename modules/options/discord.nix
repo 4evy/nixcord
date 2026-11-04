@@ -52,6 +52,7 @@ in
         The record includes `version`, `distro`, and all `modules` for that
         release. This updates the host, native modules, and staged versions
         together. Overriding only `src` leaves the old modules pinned.
+        `withKrisp` still controls whether Krisp is fetched and installed.
         Setting `source = null` restores the selected branch's bundled pin.
       '';
     };
@@ -128,7 +129,12 @@ in
     openASAR.enable = lib.options.mkEnableOption "OpenASAR for Discord" // {
       default = true;
     };
-    krisp.enable = lib.options.mkEnableOption "Krisp noise cancellation";
+    krisp.enable = lib.options.mkEnableOption "Krisp noise cancellation" // {
+      description = ''
+        Whether to fetch and enable Krisp noise cancellation. Nixcord's Discord
+        package omits the Krisp module entirely when this is disabled.
+      '';
+    };
     commandLineArgs = lib.options.mkOption {
       type = lib.types.listOf lib.types.str;
       default = [ ];

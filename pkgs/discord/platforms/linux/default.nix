@@ -166,7 +166,9 @@ in
       brotli --decompress < ${src} | tar --extract --file=- --strip-components=1 --directory "$out/${layout.modulesDir}/${name}"
     '') moduleSrcs}
 
-    mkdir --parents "$out/${layout.modulesDir}/discord_krisp/KMS/logs"
+    ${lib.optionalString (moduleSrcs ? discord_krisp) ''
+      mkdir --parents "$out/${layout.modulesDir}/discord_krisp/KMS/logs"
+    ''}
 
     ln --symbolic "$out/${layout.executable}" $out/bin/
     # Preserve support for case-insensitive build filesystems

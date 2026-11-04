@@ -71,13 +71,9 @@ let
   hasKrispModule = withKrisp && krispModule != null;
   hasDeployKrisp = withKrisp && deployKrisp != null;
 
-  stagedModuleVersions =
-    if hasKrispModule then
-      moduleVersions
-    else
-      lib.attrsets.removeAttrs moduleVersions [ "discord_krisp" ];
   stageModules = callPackage ./modules {
-    inherit version configDirName stagedModuleVersions;
+    inherit version configDirName;
+    stagedModuleVersions = moduleVersions;
   };
 
   krispRuntimePath =
