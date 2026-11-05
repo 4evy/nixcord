@@ -37,17 +37,17 @@
     "build:packages": "bun run --bun --filter './packages/*' build:bundle && bun --bun tsc --build packages/* modules/lib --emitDeclarationOnly --force"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.6.3",
+    "@biomejs/biome": "2.6.5",
     "@types/bun": "1.4.4",
     "@types/fs-extra": "11.0.4",
-    "@types/node": "26.6.5",
+    "@types/node": "26.6.6",
     "equicord": "https://github.com/Equicord/Equicord/archive/54704591b4b5dbfc5e5cca9ff38241bc8115cbee.tar.gz",
-    "fallow": "3.36.0",
-    "svelte": "^5.57.2",
+    "fallow": "3.39.0",
+    "svelte": "^5.57.3",
     "typescript": "7.1.0-beta",
     "vencord": "https://github.com/Vendicated/Vencord/archive/383409e6a6ec9008ee8a7496500f1e75f17824d1.tar.gz",
-    "vite": "8.3.5",
-    "vitest": "5.0.5"
+    "vite": "8.3.6",
+    "vitest": "5.1.0"
   },
   "engines": {
     "bun": ">=1.4.3"

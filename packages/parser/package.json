@@ -21,7 +21,7 @@
     "@nixcord/domain": "workspace:*",
     "@nixcord/setting-analysis": "workspace:*",
     "@nixcord/slice-executor": "workspace:*",
-    "effect": "4.0.6",
+    "effect": "4.1.2",
     "@nixcord/typescript-analysis": "workspace:*",
     "valibot": "^1.5.0"
   },
