@@ -11,4 +11,7 @@ runs:
 
     - name: Import Bun dependency caches
       shell: bash
-      run: nix-store --import < "$RUNNER_TEMP/bun-deps/bun-deps.nar"
+      run: |
+        set -o errexit -o nounset -o pipefail
+        gzip --decompress --stdout "$RUNNER_TEMP/bun-deps/bun-deps.nar.gz" |
+          nix-store --import
