@@ -1964,6 +1964,9 @@
     "betterInvites" = {
       "settings" = { };
     };
+    "betterMutualServers" = {
+      "settings" = { };
+    };
     "betterPlusReacts" = {
       "settings" = { };
     };

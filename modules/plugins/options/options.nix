@@ -470,6 +470,10 @@ in
     enable = lib.options.mkEnableOption "See invites expiration date, view inviter profile and preview servers before joining by clicking the name (Equicord-only)";
 
   };
+  "betterMutualServers" = {
+    enable = lib.options.mkEnableOption "Shows roles and join dates in the Mutual Servers list. (Equicord-only)";
+
+  };
   "betterPlusReacts" = {
     enable = lib.options.mkEnableOption "The amount of plus before :emoji: is the message to add it to (Equicord-only)";
 

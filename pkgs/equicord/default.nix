@@ -6,9 +6,9 @@
 }:
 let
   buildClientMod = callPackage ../build-client-mod/build-client-mod.nix { };
-  version = "2026-11-04-unstable-2026-11-04";
-  rev = "b177ac49d5cdb3aa6053103eb0ede1d496db36bb";
-  hash = "sha256-2QU7qa2dv/SRCXL8Owl9mIvpjwE/bGi+2g+C2mdEMY8=";
+  version = "2026-11-04-unstable-2026-11-05";
+  rev = "54704591b4b5dbfc5e5cca9ff38241bc8115cbee";
+  hash = "sha256-poye0GWfucn/NsSuAmkXjJVP7qOc2g6n9KQWUFQVzak=";
   bunDepsHash = "sha256-tB39RBn0qQVUO3HNF5Y9MQJK1zj2KOnGt/VX/XVS78Y=";
   src = fetchFromGitHub {
     owner = "Equicord";
