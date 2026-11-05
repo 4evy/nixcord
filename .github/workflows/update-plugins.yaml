@@ -65,7 +65,7 @@ jobs:
     uses: $/.github/workflows/update-discord.yaml
 
   update-plugins:
-    name: Update and verify plugins
+    name: Generate plugin update
     needs: update-discord
     runs-on: ubuntu-26.04
     timeout-minutes: 360
@@ -103,12 +103,6 @@ jobs:
           nix run .#update -- generate
           nix run .#generate
 
-      - name: Build packages and run checks
-        run: |
-          set -o errexit -o nounset -o pipefail
-          nix build --no-link --print-build-logs .#equicord .#vencord
-          nix flake check --print-build-logs
-
       - uses: $/.github/actions/export-bun-deps
 
       - name: Prepare atomic plugin update
@@ -142,6 +136,46 @@ jobs:
           path: source-update
           if-no-files-found: error
           retention-days: 1
+
+  verify-x86:
+    name: Verify plugins on x86_64-linux
+    needs: update-plugins
+    # Validate the same patch in parallel with the other native platforms
+    runs-on: ubuntu-26.04
+    timeout-minutes: 360
+    cache-mode: write
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.update-plugins.outputs.base-sha }}
+          persist-credentials: false
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: plugins-source-update
+          path: source-update
+
+      - name: Apply prepared plugin update
+        run: |
+          set -o errexit -o nounset -o pipefail
+          if [[ -s source-update/changes.patch ]]; then
+            git apply source-update/changes.patch
+          fi
+          git add -- pkgs/equicord pkgs/vencord pkgs/generate-options \
+            docs/site.nix package.json bun.lock modules/plugins
+
+      - uses: $/.github/actions/install-nix
+
+      - uses: $/.github/actions/import-bun-deps
+
+      - name: Build packages and run checks
+        run: |
+          set -o errexit -o nounset -o pipefail
+          nix build --no-link --print-build-logs .#equicord .#vencord
+          nix flake check --print-build-logs
 
   verify-platforms:
     name: Verify plugins on ${{ matrix.system }}
@@ -251,7 +285,7 @@ jobs:
 
   publish:
     name: Publish verified plugin update
-    needs: [update-plugins, verify-platforms]
+    needs: [update-plugins, verify-x86, verify-platforms]
     permissions:
       actions: write # Dispatch validation and documentation for the bot commit.
       contents: write # Publish the verified update.
@@ -262,7 +296,7 @@ jobs:
 
   check-updated-head:
     name: Check the final updated revision
-    needs: [update-discord, update-plugins, verify-platforms, publish]
+    needs: [update-discord, update-plugins, verify-x86, verify-platforms, publish]
     # A Discord commit still needs checks if plugin verification fails or is cancelled
     if: ${{ always() }}
     runs-on: ubuntu-26.04

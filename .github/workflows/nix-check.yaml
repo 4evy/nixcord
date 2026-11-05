@@ -13,10 +13,13 @@ defaults:
 
 jobs:
   check:
-    name: ${{ matrix.system }}
+    name: ${{ matrix.system }} / ${{ matrix.task }}
     strategy:
       fail-fast: false
       matrix:
+        # Keep module feedback independent of client builds and packaging
+        system: [x86_64-linux, aarch64-linux, aarch64-darwin]
+        task: [checks, discord, packages]
         include:
           - system: x86_64-linux
             runner: ubuntu-26.04
@@ -24,6 +27,12 @@ jobs:
             runner: ubuntu-26.04-arm
           - system: aarch64-darwin
             runner: macos-26
+          - system: x86_64-linux
+            task: metadata
+            runner: ubuntu-26.04
+          - system: x86_64-linux
+            task: stable
+            runner: ubuntu-26.04
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 360
     permissions:
@@ -56,7 +65,7 @@ jobs:
           fi
 
       - name: Check generated plugin metadata
-        if: matrix.system == 'x86_64-linux'
+        if: matrix.task == 'metadata'
         env:
           EXPECTED_SYSTEM: ${{ matrix.system }}
         run: |
@@ -73,7 +82,7 @@ jobs:
           done
 
       - name: Build client mods against stable Nixpkgs
-        if: matrix.system == 'x86_64-linux'
+        if: matrix.task == 'stable'
         run: |
           nix build --no-link --print-build-logs --impure --expr '
             let
@@ -87,18 +96,42 @@ jobs:
           '
 
       - name: Run flake checks
+        if: matrix.task == 'checks' || matrix.task == 'discord'
         env:
           EXPECTED_SYSTEM: ${{ matrix.system }}
+          CHECK_TASK: ${{ matrix.task }}
         run: |
+          set -o errexit -o nounset -o pipefail
+          # Validate the full flake once per platform, not in both partitions
+          if [[ "$CHECK_TASK" == "checks" ]]; then
+            nix --option system "$EXPECTED_SYSTEM" flake check --no-build \
+              --option allow-import-from-derivation false
+          fi
+          available=$(nix --option system "$EXPECTED_SYSTEM" eval \
+            --option allow-import-from-derivation false \
+            --json ".#checks.$EXPECTED_SYSTEM" --apply builtins.attrNames)
+          # Complementary filters assign every check to exactly one task
+          selected=$(jq -r --arg task "$CHECK_TASK" \
+            '.[] | select(startswith("discord") == ($task == "discord")) | tojson' \
+            <<< "$available")
+          if [[ -z "$selected" ]]; then
+            echo "No checks in the $CHECK_TASK partition on $EXPECTED_SYSTEM"
+            exit 0
+          fi
+          installables=()
+          while IFS= read -r name; do
+            installables+=(".#checks.$EXPECTED_SYSTEM.$name")
+          done <<< "$selected"
           nix_args=()
           if [[ "$RUNNER_OS" == "macOS" ]]; then
             nix_args+=(--max-jobs 1 --cores 2)
           fi
-          nix --option system "$EXPECTED_SYSTEM" flake check \
+          nix --option system "$EXPECTED_SYSTEM" build \
             --option allow-import-from-derivation false \
-            "${nix_args[@]}" --print-build-logs
+            "${nix_args[@]}" --no-link --print-build-logs "${installables[@]}"
 
       - name: Build every package
+        if: matrix.task == 'packages'
         env:
           EXPECTED_SYSTEM: ${{ matrix.system }}
         run: |

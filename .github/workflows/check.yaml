@@ -97,7 +97,7 @@ jobs:
 
   prepare-bun-deps:
     name: Prepare Bun dependencies
-    needs: [workflow-quality, javascript, nix-quality, renovate-config]
+    # Dependency preparation is independent of lint and JavaScript checks
     runs-on: ubuntu-26.04
     timeout-minutes: 360
     permissions:
