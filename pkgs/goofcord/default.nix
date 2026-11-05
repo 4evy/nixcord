@@ -21,7 +21,7 @@ let
     tag = "v${version}";
     hash = "sha256-958TIiBsXYTfYaQdNKeVJspdSE1vIYMX/wScfqekTBU=";
   };
-  bunDepsHash = "sha256-l8i+ZXImzuTzn/Ih9P4YyFd0u6JuFS2PoWwagEs4zXI=";
+  bunDepsHash = "sha256-DJhZqwqOdwcpssDQPvYSFe0At/43zQHmU3jfBTb2ArM=";
   dependencyPatch = ./dependencies.patch;
 
   nodeModules = buildBunPackage {

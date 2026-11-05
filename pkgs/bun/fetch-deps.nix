@@ -31,8 +31,9 @@ stdenvNoCC.mkDerivation {
   SSL_CERT_FILE = "${cacert}/etc/ssl/certs/ca-bundle.crt";
   buildPhase = ''
     runHook preBuild
+    # Include every libc variant as well as every CPU and OS for portable caches
     bun install --frozen-lockfile --ignore-scripts --linker hoisted --no-progress \
-      --cpu '*' --os '*' --cache-dir "$out"
+      --cpu '*' --os '*' --libc '*' --cache-dir "$out"
     runHook postBuild
   '';
   installPhase = ''
