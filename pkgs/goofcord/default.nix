@@ -21,7 +21,7 @@ let
     tag = "v${version}";
     hash = "sha256-958TIiBsXYTfYaQdNKeVJspdSE1vIYMX/wScfqekTBU=";
   };
-  bunDepsHash = "sha256-VYCPrQ1N8kGbsV2uD5UzrcczBCgangU+bHj9wDh8eSs=";
+  bunDepsHash = "sha256-l8i+ZXImzuTzn/Ih9P4YyFd0u6JuFS2PoWwagEs4zXI=";
   dependencyPatch = ./dependencies.patch;
 
   nodeModules = buildBunPackage {
@@ -92,11 +92,14 @@ goofcord.overrideAttrs (
           "bun run build -- --skipTypecheck"
           "node node_modules/electron-builder/out/cli/cli.js"
           "-c.npmRebuild=false"
+          "cp -r "
         ]
         [
           "bun run --bun build --skipTypecheck"
           "bun --bun node_modules/electron-builder/cli.js"
           "--config.nativeModules.npmRebuild=false"
+          # electron-builder 27 rejects Nix's external library symlinks on Linux
+          "cp -r${lib.optionalString stdenv.hostPlatform.isLinux "L"} "
         ]
         old.buildPhase;
     meta = (old.meta or { }) // {
