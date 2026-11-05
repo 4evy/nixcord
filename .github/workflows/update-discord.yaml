@@ -5,9 +5,6 @@ on:
 
 permissions: {}
 
-# Build artifacts cross jobs; mutable Actions caches do not.
-cache-mode: none
-
 defaults:
   run:
     shell: bash
@@ -114,6 +111,7 @@ jobs:
     name: Publish verified Discord update
     needs: update-discord
     if: needs.update-discord.outputs.changed == 'true'
+    cache-mode: none
     permissions:
       actions: write # Dispatch validation for the bot commit.
       contents: write # Publish the verified update.

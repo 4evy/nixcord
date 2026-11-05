@@ -14,3 +14,10 @@ runs:
       with:
         extra-conf: ${{ inputs.extra-conf }}
         github-token: ${{ github.token }}
+
+    # Use GitHub's branch-scoped binary cache, not a separate FlakeHub service
+    - uses: DeterminateSystems/magic-nix-cache-action@84c0677f58dcedf3b91f8223ce36a9ea5b3c84b7 # v15
+      with:
+        use-gha-cache: enabled
+        use-flakehub: disabled
+        diagnostic-endpoint: ""

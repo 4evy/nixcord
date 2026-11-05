@@ -26,7 +26,7 @@ concurrency:
 
 permissions: {}
 
-# Build artifacts cross jobs; mutable Actions caches do not.
+# Only the build uses caches; deployment stays isolated from mutable caches
 cache-mode: none
 
 defaults:
@@ -38,6 +38,7 @@ jobs:
     name: Build documentation
     runs-on: ubuntu-26.04
     timeout-minutes: 360
+    cache-mode: write
     permissions:
       contents: read
     steps:

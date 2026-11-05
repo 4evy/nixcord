@@ -48,7 +48,7 @@ concurrency:
 
 permissions: {}
 
-# Build artifacts cross jobs; mutable Actions caches do not.
+# Immutable artifacts carry generated sources and dependencies between jobs
 cache-mode: none
 
 defaults:
@@ -58,6 +58,7 @@ defaults:
 jobs:
   update-discord:
     name: Update Discord first
+    cache-mode: write
     permissions:
       actions: write # Dispatch validation and retry if the branch moves
       contents: write # Publish verified Discord sources before updating plugins
@@ -68,6 +69,7 @@ jobs:
     needs: update-discord
     runs-on: ubuntu-26.04
     timeout-minutes: 360
+    cache-mode: write
     outputs:
       base-sha: ${{ steps.prepare-update.outputs.base-sha }}
     permissions:
@@ -154,6 +156,7 @@ jobs:
             runner: macos-26
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 360
+    cache-mode: write
     permissions:
       contents: read
 

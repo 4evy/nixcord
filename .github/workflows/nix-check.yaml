@@ -5,8 +5,7 @@ on:
 
 permissions: {}
 
-# Build artifacts cross jobs; mutable Actions caches do not.
-cache-mode: none
+# Trigger defaults isolate PR caches from trusted branch builds
 
 defaults:
   run:
