@@ -9,7 +9,7 @@ let
   version = "1.15.16-unstable-2026-11-04";
   rev = "383409e6a6ec9008ee8a7496500f1e75f17824d1";
   hash = "sha256-aUJubLJpyLAZWiOezqFxPY6oVPgWVPQpajFqrJvrO9U=";
-  bunDepsHash = "sha256-jMo9ZPAio2bSan/5Q7BGxxFNBg+bQZvomErl1gEzMVM=";
+  bunDepsHash = "sha256-JlgocYb2P4YG0R8zVBE73rM0nRnceUi4Hhk4HZJAJPE=";
   src = fetchFromGitHub {
     owner = "Vendicated";
     repo = "Vencord";

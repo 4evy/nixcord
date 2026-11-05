@@ -9,7 +9,7 @@ let
   version = "2026-11-05-unstable-2026-11-05";
   rev = "54704591b4b5dbfc5e5cca9ff38241bc8115cbee";
   hash = "sha256-poye0GWfucn/NsSuAmkXjJVP7qOc2g6n9KQWUFQVzak=";
-  bunDepsHash = "sha256-tB39RBn0qQVUO3HNF5Y9MQJK1zj2KOnGt/VX/XVS78Y=";
+  bunDepsHash = "sha256-LTQS7WktqVUjfkkPuuqNhppEocxVwu7FrmU9Ztp9HUU=";
   src = fetchFromGitHub {
     owner = "Equicord";
     repo = "Equicord";

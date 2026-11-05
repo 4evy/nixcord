@@ -21,30 +21,34 @@ const workspaceFile = Bun.file(join(source, 'pnpm-workspace.yaml'));
 const workspace: Workspace = (await workspaceFile.exists())
   ? (Bun.YAML.parse(await workspaceFile.text()) as Workspace)
   : {};
-const overrides: Dependencies = {};
-
 // Bun does not import pnpm catalogs when an existing Bun lockfile is present
-for (const group of [
-  'dependencies',
-  'devDependencies',
-  'optionalDependencies',
-  'peerDependencies',
-] as const) {
-  for (const [name, version] of Object.entries(manifest[group] ?? {})) {
-    if (!version.startsWith('catalog:')) continue;
-    const catalogName = version.slice('catalog:'.length);
-    const catalog =
-      catalogName && catalogName !== 'default'
-        ? workspace.catalogs?.[catalogName]
-        : (workspace.catalog ?? workspace.catalogs?.default);
-    const resolved = catalog?.[name];
-    if (!resolved) throw new Error(`Missing ${version} entry for ${name}`);
-    manifest[group]![name] = resolved;
-    if (group !== 'devDependencies') {
-      overrides[name] = resolved;
+function resolveCatalogs(manifest: Manifest): Dependencies {
+  const overrides: Dependencies = {};
+  for (const group of [
+    'dependencies',
+    'devDependencies',
+    'optionalDependencies',
+    'peerDependencies',
+  ] as const) {
+    for (const [name, version] of Object.entries(manifest[group] ?? {})) {
+      if (!version.startsWith('catalog:')) continue;
+      const catalogName = version.slice('catalog:'.length);
+      const catalog =
+        catalogName && catalogName !== 'default'
+          ? workspace.catalogs?.[catalogName]
+          : (workspace.catalog ?? workspace.catalogs?.default);
+      const resolved = catalog?.[name];
+      if (!resolved) throw new Error(`Missing ${version} entry for ${name}`);
+      manifest[group]![name] = resolved;
+      if (group !== 'devDependencies') {
+        overrides[name] = resolved;
+      }
     }
   }
+  return overrides;
 }
+
+const overrides = resolveCatalogs(manifest);
 
 if (consumer) {
   // GitHub archives are not packed by pnpm and retain catalog: dependencies
@@ -60,4 +64,9 @@ if (consumer) {
   manifest.devDependencies ??= {};
   manifest.devDependencies['@vencord/discord-types'] = 'file:packages/discord-types';
   await Bun.write(file, `${JSON.stringify(manifest, null, 2)}\n`);
+  // The linked types package shares the root catalog during lockfile updates
+  const typesFile = Bun.file(join(source, 'packages/discord-types/package.json'));
+  const typesManifest: Manifest = await typesFile.json();
+  resolveCatalogs(typesManifest);
+  await Bun.write(typesFile, `${JSON.stringify(typesManifest, null, 2)}\n`);
 }
