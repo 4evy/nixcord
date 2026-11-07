@@ -503,6 +503,10 @@ in
       default = false;
     };
   };
+  "betterSearch" = {
+    enable = lib.options.mkEnableOption "Allows you to use channel message search options that aren't normally available (Equicord-only)";
+
+  };
   "betterSessions" = {
     enable = lib.options.mkEnableOption "Enhances the sessions (devices) menu. Allows you to view exact timestamps, give each session a custom name, and receive notifications about new sessions. (Shared between Vencord and Equicord)";
     "backgroundCheck" = lib.options.mkOption {

@@ -1970,6 +1970,9 @@
     "betterPlusReacts" = {
       "settings" = { };
     };
+    "betterSearch" = {
+      "settings" = { };
+    };
     "blockKeywords" = {
       "settings" = {
         "blockedWords" = {
