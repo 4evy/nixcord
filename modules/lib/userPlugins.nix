@@ -28,6 +28,6 @@ else if genericGitMatches != null then
     rev = builtins.elemAt genericGitMatches 1;
   }
 else if lib.strings.hasPrefix "/" value then
-  /. + value
+  builtins.path { path = value; }
 else
   throw "programs.nixcord.userPlugins: '${value}' is not a pinned Git source ('git+<url>?rev=<40-character commit>'), supported forge shorthand (github, gitlab, codeberg, sourcehut, or bitbucket), or absolute local path (must start with /)"
