@@ -331,6 +331,7 @@ adds Apple silicon macOS support to the Nixpkgs GoofCord package.
 
 `userPlugins` adds plugin source code to the mod build. Enable each plugin
 separately in `extraConfig.plugins`, using the name declared by the plugin.
+Nixcord's bundled mods use development mode for custom plugins.
 For a local plugin:
 
 ```nix

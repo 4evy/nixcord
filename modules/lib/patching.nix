@@ -3,6 +3,16 @@ let
   applyPostPatch =
     { cfg, pkg }:
     pkg.overrideAttrs (o: {
+      buildFlags =
+        let
+          flags =
+            o.buildFlags or [
+              "--standalone"
+              "--disable-updater"
+            ];
+        in
+        if cfg.userPlugins == { } then flags else lib.lists.remove "--standalone" flags ++ [ "--dev" ];
+
       postPatch =
         (o.postPatch or "")
         + lib.strings.optionalString (cfg.userPlugins != { }) ''
@@ -35,7 +45,9 @@ let
       (_old: {
         buildPhase = ''
           runHook preBuild
-          bun run --bun buildWeb --standalone --disable-updater
+          flagsArray=()
+          concatTo flagsArray buildFlags
+          bun run --bun buildWeb "''${flagsArray[@]}"
           runHook postBuild
         '';
         installPhase = ''

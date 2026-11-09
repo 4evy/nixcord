@@ -44,10 +44,15 @@ buildBunPackage {
     hash = bunDepsHash;
   };
   nativeBuildInputs = [ git ];
+  buildFlags = [
+    "--standalone"
+    "--disable-updater"
+  ];
   buildPhase = ''
     runHook preBuild
-    bun run --bun ${if buildWebExtension then "buildWeb" else "build"} \
-      --standalone --disable-updater
+    flagsArray=()
+    concatTo flagsArray buildFlags
+    bun run --bun ${if buildWebExtension then "buildWeb" else "build"} "''${flagsArray[@]}"
     runHook postBuild
   '';
   installPhase = ''
