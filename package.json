@@ -41,7 +41,7 @@
     "@types/bun": "1.4.4",
     "@types/fs-extra": "11.0.4",
     "@types/node": "26.6.6",
-    "equicord": "https://github.com/Equicord/Equicord/archive/200dba124066146a8f043fde7fc8b05e3dc5e68e.tar.gz",
+    "equicord": "https://github.com/Equicord/Equicord/archive/0d4da19faff378b7f62fd7fd31e78499a5e03e5b.tar.gz",
     "fallow": "3.39.0",
     "svelte": "^5.57.3",
     "typescript": "7.1.0-beta",

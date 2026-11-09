@@ -1876,6 +1876,18 @@
         "channelOpenScrollMode" = {
           "type" = "types.enum";
         };
+        "maximumLastReadAge" = {
+          "type" = "types.str";
+        };
+        "showJumpToPresentSooner" = {
+          "type" = "types.bool";
+        };
+        "addChatbarButton" = {
+          "type" = "types.bool";
+        };
+      };
+      "uiElements" = {
+        "chatBarButtons" = [ "BetterBackreading" ];
       };
     };
     "betterBanReasons" = {

@@ -324,12 +324,29 @@ in
     };
     "channelOpenScrollMode" = lib.options.mkOption {
       type = lib.types.enum [
-        "default"
-        "bottom"
+        "savedLatest"
         "saved"
+        "unread"
+        "bottom"
+        "default"
       ];
-      description = "Open unread channels at the saved position (or bottom), always the bottom, or defer to default unread behavior.";
+      description = "Where in the chat history to open channels. If you leave within 5 messages of the latest, \"Saved Position\" is considered unset and the next fallback is used. If your last-read message is older than the maximum age below, the channel is considered abandoned and \"Oldest Unread\" is considered unset.";
       default = "saved";
+    };
+    "maximumLastReadAge" = lib.options.mkOption {
+      type = lib.types.str;
+      description = "Maximum age of your last-read message, in minutes, to use the \"Oldest Unread\" fallback. Set to 0 for unlimited.";
+      default = "10080";
+    };
+    "showJumpToPresentSooner" = lib.options.mkOption {
+      type = lib.types.bool;
+      description = "Shows the Jump To Present button when scrolled 5 or more messages above the latest.";
+      default = true;
+    };
+    "addChatbarButton" = lib.options.mkOption {
+      type = lib.types.bool;
+      description = "Adds a chatbar button to quickly switch channel opening position.";
+      default = false;
     };
   };
   "betterBanReasons" = {
