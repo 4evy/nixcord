@@ -68,7 +68,7 @@
       "gifuct-js": "^2.1.2",
       "idb": "8.0.3",
       "jsqr": "1.4.0",
-      "nanoid": "^5.1.16",
+      "nanoid": "^6.0.0",
       "native-file-system-adapter": "^3.0.1",
       "yaml-js": "^0.3.1"
     },
