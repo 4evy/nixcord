@@ -552,6 +552,28 @@
     },
     {
       "from": [
+        "audioBookShelfRichPresence",
+        "tosuPrivacyMode"
+      ],
+      "to": [
+        "richPresence",
+        "tosuPrivacyMode"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "audioBookShelfRichPresence",
+        "tosuServerUrl"
+      ],
+      "to": [
+        "richPresence",
+        "tosuServerUrl"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
         "betterQuickReact",
         "columns"
       ],
@@ -1339,6 +1361,28 @@
       "to": [
         "richPresence",
         "tosuEnabled"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "GensokyoRadioRPC",
+        "tosuPrivacyMode"
+      ],
+      "to": [
+        "richPresence",
+        "tosuPrivacyMode"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "GensokyoRadioRPC",
+        "tosuServerUrl"
+      ],
+      "to": [
+        "richPresence",
+        "tosuServerUrl"
       ],
       "warn": false
     },
@@ -1988,6 +2032,28 @@
       "to": [
         "richPresence",
         "tosuEnabled"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "jellyfinRichPresence",
+        "tosuPrivacyMode"
+      ],
+      "to": [
+        "richPresence",
+        "tosuPrivacyMode"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "jellyfinRichPresence",
+        "tosuServerUrl"
+      ],
+      "to": [
+        "richPresence",
+        "tosuServerUrl"
       ],
       "warn": false
     },
@@ -3016,6 +3082,28 @@
     },
     {
       "from": [
+        "statsfmPresence",
+        "tosuPrivacyMode"
+      ],
+      "to": [
+        "richPresence",
+        "tosuPrivacyMode"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "statsfmPresence",
+        "tosuServerUrl"
+      ],
+      "to": [
+        "richPresence",
+        "tosuServerUrl"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
         "tenorGifSearch",
         "enable"
       ],
@@ -3605,6 +3693,28 @@
       "to": [
         "richPresence",
         "tosuEnabled"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "TosuRPC",
+        "tosuPrivacyMode"
+      ],
+      "to": [
+        "richPresence",
+        "tosuPrivacyMode"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "TosuRPC",
+        "tosuServerUrl"
+      ],
+      "to": [
+        "richPresence",
+        "tosuServerUrl"
       ],
       "warn": false
     },
@@ -5634,11 +5744,9 @@
     }
   ],
   "removals": [
-    "appleMusic",
     "copyStickerLinks",
     "externalPlayer",
     "platformSpoofer",
-    "seeSummaries",
     "showAllBadges"
   ],
   "settingRemovals": [

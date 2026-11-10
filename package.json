@@ -41,11 +41,11 @@
     "@types/bun": "1.4.4",
     "@types/fs-extra": "11.0.4",
     "@types/node": "26.6.6",
-    "equicord": "https://github.com/Equicord/Equicord/archive/0d4da19faff378b7f62fd7fd31e78499a5e03e5b.tar.gz",
+    "equicord": "https://github.com/Equicord/Equicord/archive/32b337cd098bc9ad782250810be8eb570e28ef2f.tar.gz",
     "fallow": "3.39.0",
     "svelte": "^5.57.3",
     "typescript": "7.1.0-beta",
-    "vencord": "https://github.com/Vendicated/Vencord/archive/383409e6a6ec9008ee8a7496500f1e75f17824d1.tar.gz",
+    "vencord": "https://github.com/Vendicated/Vencord/archive/795ed0ff5b7e6b8db7488d0fcc95512a58edc919.tar.gz",
     "vite": "8.3.6",
     "vitest": "5.1.0"
   },

@@ -523,7 +523,9 @@
       "sfmStatusName": "sfm_statusName",
       "sfmUseListeningStatus": "sfm_useListeningStatus",
       "sfmUsername": "sfm_username",
-      "tosuEnabled": "tosu_enabled"
+      "tosuEnabled": "tosu_enabled",
+      "tosuPrivacyMode": "tosu_privacyMode",
+      "tosuServerUrl": "tosu_serverUrl"
     },
     "sekaiStickers": {
       "autoCloseModal": "AutoCloseModal"

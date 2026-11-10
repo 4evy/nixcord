@@ -6,10 +6,10 @@
 }:
 let
   buildClientMod = callPackage ../build-client-mod/build-client-mod.nix { };
-  version = "1.15.16-unstable-2026-11-04";
-  rev = "383409e6a6ec9008ee8a7496500f1e75f17824d1";
-  hash = "sha256-aUJubLJpyLAZWiOezqFxPY6oVPgWVPQpajFqrJvrO9U=";
-  bunDepsHash = "sha256-JlgocYb2P4YG0R8zVBE73rM0nRnceUi4Hhk4HZJAJPE=";
+  version = "1.15.17-unstable-2026-11-10";
+  rev = "795ed0ff5b7e6b8db7488d0fcc95512a58edc919";
+  hash = "sha256-+dN4wAFNmYVDiEe0QStqrFBRFHBBRkApqbmhuvsLZZM=";
+  bunDepsHash = "sha256-yFwPl8fcKGfSKGKehIpyYyG8dB+Uwys7bag/2JCgjJU=";
   src = fetchFromGitHub {
     owner = "Vendicated";
     repo = "Vencord";

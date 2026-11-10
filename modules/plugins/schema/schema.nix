@@ -45,6 +45,9 @@
         };
       };
     };
+    "betterSearch" = {
+      "settings" = { };
+    };
     "betterSessions" = {
       "settings" = {
         "backgroundCheck" = {
@@ -1980,9 +1983,6 @@
       "settings" = { };
     };
     "betterPlusReacts" = {
-      "settings" = { };
-    };
-    "betterSearch" = {
       "settings" = { };
     };
     "blockKeywords" = {
@@ -4987,6 +4987,12 @@
           "type" = "types.bool";
         };
         "sfmAlwaysHideArt" = {
+          "type" = "types.bool";
+        };
+        "tosuServerUrl" = {
+          "type" = "types.str";
+        };
+        "tosuPrivacyMode" = {
           "type" = "types.bool";
         };
         "jfServerUrl" = {

@@ -521,7 +521,7 @@ in
     };
   };
   "betterSearch" = {
-    enable = lib.options.mkEnableOption "Allows you to use channel message search options that aren't normally available (Equicord-only)";
+    enable = lib.options.mkEnableOption "Allows you to use channel message search options that aren't normally available (Shared between Vencord and Equicord)";
 
   };
   "betterSessions" = {
@@ -6688,6 +6688,16 @@ in
     "sfmAlwaysHideArt" = lib.options.mkOption {
       type = lib.types.bool;
       description = "Disable downloading album art.";
+      default = false;
+    };
+    "tosuServerUrl" = lib.options.mkOption {
+      type = lib.types.str;
+      description = "tosu domain URL.";
+      default = "";
+    };
+    "tosuPrivacyMode" = lib.options.mkOption {
+      type = lib.types.bool;
+      description = "Privacy Mode";
       default = false;
     };
     "jfServerUrl" = lib.options.mkOption {
