@@ -3077,7 +3077,7 @@ in
 
   };
   "fullUserInChatbox" = {
-    enable = lib.options.mkEnableOption "Makes the user mention in the chatbox have more functionalities, like left/right clicking (Shared between Vencord and Equicord)";
+    enable = lib.options.mkEnableOption "Makes the user mention in the chatbox have more functionalities, like left/right clicking (Equicord-only)";
 
   };
   "fullVcpfp" = {
@@ -5440,6 +5440,11 @@ in
   };
   "noTrack" = {
     enable = lib.options.mkEnableOption "Disable Discord's tracking (analytics/'science'), metrics and Sentry crash reporting (Equicord-only)";
+    "allowBadgeTracking" = lib.options.mkOption {
+      type = lib.types.bool;
+      description = "Still send the events needed for badges to track your progress (eg: hours played, hours streamed) (restart required)";
+      default = true;
+    };
     "disableAnalytics" = lib.options.mkOption {
       type = lib.types.bool;
       description = "Block Discord's tracking analytics. Disable this if you want badges to track your progress (eg: hours streamed). (restart required)";

@@ -12,7 +12,7 @@
         "fallow": "3.39.0",
         "svelte": "^5.57.3",
         "typescript": "7.1.0-beta",
-        "vencord": "https://github.com/Vendicated/Vencord/archive/795ed0ff5b7e6b8db7488d0fcc95512a58edc919.tar.gz",
+        "vencord": "https://github.com/Vendicated/Vencord/archive/d07030c0968e31e41caa0c35fda0ef8ae63a079e.tar.gz",
         "vite": "8.3.6",
         "vitest": "5.1.0",
       },
@@ -658,7 +658,7 @@
 
     "valibot": ["valibot@1.5.0", "", { "peerDependencies": { "typescript": ">=5" }, "optionalPeers": ["typescript"] }, "sha512-nil6AkP2TChWL43Z5uJ6GTxX01CUA+g8LWUM+N/rB9NBbkUMaUsi9PUNzlUPgoKASgmx9f7eGOYpJ04/fSa6FQ=="],
 
-    "vencord": ["vencord@https://github.com/Vendicated/Vencord/archive/795ed0ff5b7e6b8db7488d0fcc95512a58edc919.tar.gz", { "dependencies": { "@intrnl/xxhash64": "^0.1.2", "@vap/core": "0.0.12", "@vap/shiki": "0.10.5", "@vencord/monaco-editor": "0.57.0-beta.4", "fflate": "^0.8.3", "gifenc": "github:mattdesl/gifenc#64842fca317b112a8590f8fef2bf3825da8f6fe3" } }, "sha512-afytngAxewfKzGMlSIEAvBLSJjTltTaOumtMy1lksCICETuu2ACDB6M5mDmTM8V4jAKxo2DtKBFt5vrpeNmdLQ=="],
+    "vencord": ["vencord@https://github.com/Vendicated/Vencord/archive/d07030c0968e31e41caa0c35fda0ef8ae63a079e.tar.gz", { "dependencies": { "@intrnl/xxhash64": "^0.1.2", "@vap/core": "0.0.12", "@vap/shiki": "0.10.5", "@vencord/monaco-editor": "0.57.0-beta.4", "fflate": "^0.8.3", "gifenc": "github:mattdesl/gifenc#64842fca317b112a8590f8fef2bf3825da8f6fe3" } }, "sha512-3RrVCaP8vdP9B2CfgmvHwQ0zozBe/09FffV3YrCW6vBl5+EMWGM7CaMiEz2NzL0/UjTEGDaYet8fQDrjNK8WFw=="],
 
     "vite": ["vite@8.3.6", "", { "dependencies": { "lightningcss": "^1.33.0", "picomatch": "^4.0.7", "postcss": "^8.5.32", "rolldown": "~1.2.16", "tinyglobby": "^0.2.17" }, "optionalDependencies": { "fsevents": "~2.3.3" }, "peerDependencies": { "@types/node": "^20.19.0 || >=22.12.0", "@vitejs/devtools": "^0.7.1 || ^0.8.0", "esbuild": "^0.27.0 || ^0.28.0", "jiti": ">=1.21.0", "less": "^4.0.0", "sass": "^1.70.0", "sass-embedded": "^1.70.0", "stylus": ">=0.54.8", "sugarss": "^5.0.0", "terser": "^5.16.0", "tsx": "^4.8.1", "yaml": "^2.4.2" }, "optionalPeers": ["@types/node", "@vitejs/devtools", "esbuild", "jiti", "less", "sass", "sass-embedded", "stylus", "sugarss", "terser", "tsx", "yaml"], "bin": { "vite": "bin/vite.js" } }, "sha512-UI7dK29NnS54Fk+mmo7o+jI6U8Fp7hDl+X5Q1k45WH+d4dSlbLVUETGQ+hfkNgvLQGyoElPj837nZyv4MBc0VA=="],
 

@@ -312,9 +312,6 @@
     "fullSearchContext" = {
       "settings" = { };
     };
-    "fullUserInChatbox" = {
-      "settings" = { };
-    };
     "gameActivityToggle" = {
       "settings" = {
         "oldIcon" = {
@@ -1400,6 +1397,9 @@
     "noTrack" = {
       "settings" = {
         "disableAnalytics" = {
+          "type" = "types.bool";
+        };
+        "allowBadgeTracking" = {
           "type" = "types.bool";
         };
       };
@@ -3340,6 +3340,9 @@
       };
     };
     "friendTags" = {
+      "settings" = { };
+    };
+    "fullUserInChatbox" = {
       "settings" = { };
     };
     "fullVcpfp" = {

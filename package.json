@@ -45,7 +45,7 @@
     "fallow": "3.39.0",
     "svelte": "^5.57.3",
     "typescript": "7.1.0-beta",
-    "vencord": "https://github.com/Vendicated/Vencord/archive/795ed0ff5b7e6b8db7488d0fcc95512a58edc919.tar.gz",
+    "vencord": "https://github.com/Vendicated/Vencord/archive/d07030c0968e31e41caa0c35fda0ef8ae63a079e.tar.gz",
     "vite": "8.3.6",
     "vitest": "5.1.0"
   },

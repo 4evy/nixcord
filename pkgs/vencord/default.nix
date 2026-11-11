@@ -6,9 +6,9 @@
 }:
 let
   buildClientMod = callPackage ../build-client-mod/build-client-mod.nix { };
-  version = "1.15.17-unstable-2026-11-10";
-  rev = "795ed0ff5b7e6b8db7488d0fcc95512a58edc919";
-  hash = "sha256-+dN4wAFNmYVDiEe0QStqrFBRFHBBRkApqbmhuvsLZZM=";
+  version = "1.15.17-unstable-2026-11-11";
+  rev = "d07030c0968e31e41caa0c35fda0ef8ae63a079e";
+  hash = "sha256-CA+FBccf6gmTDP6ABMQJ92myGyUgtmTS5b+DYxYd/fk=";
   bunDepsHash = "sha256-yFwPl8fcKGfSKGKehIpyYyG8dB+Uwys7bag/2JCgjJU=";
   src = fetchFromGitHub {
     owner = "Vendicated";
