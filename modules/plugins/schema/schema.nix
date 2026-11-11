@@ -2896,6 +2896,9 @@
         };
       };
     };
+    "duplicateCategory" = {
+      "settings" = { };
+    };
     "elementHighlighter" = {
       "settings" = {
         "keybind" = {
@@ -3340,9 +3343,6 @@
       };
     };
     "friendTags" = {
-      "settings" = { };
-    };
-    "fullUserInChatbox" = {
       "settings" = { };
     };
     "fullVcpfp" = {
@@ -4390,6 +4390,9 @@
           "type" = "types.bool";
         };
         "disableStackDumping" = {
+          "type" = "types.bool";
+        };
+        "allowBadgeTracking" = {
           "type" = "types.bool";
         };
       };

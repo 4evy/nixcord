@@ -2268,6 +2268,10 @@ in
       default = false;
     };
   };
+  "duplicateCategory" = {
+    enable = lib.options.mkEnableOption "Adds an option to duplicate a category with the same permissions. (Equicord-only)";
+
+  };
   "elementHighlighter" = {
     enable = lib.options.mkEnableOption "Highlight and inspect elements easily. (Equicord-only)";
     "keybind" = lib.options.mkOption {
@@ -3074,10 +3078,6 @@ in
   };
   "fullSearchContext" = {
     enable = lib.options.mkEnableOption "Makes the message context menu in message search results have all options you'd expect (Shared between Vencord and Equicord)";
-
-  };
-  "fullUserInChatbox" = {
-    enable = lib.options.mkEnableOption "Makes the user mention in the chatbox have more functionalities, like left/right clicking (Equicord-only)";
 
   };
   "fullVcpfp" = {
@@ -5447,7 +5447,7 @@ in
     };
     "disableAnalytics" = lib.options.mkOption {
       type = lib.types.bool;
-      description = "Block Discord's tracking analytics. Disable this if you want badges to track your progress (eg: hours streamed). (restart required)";
+      description = "Block Discord's tracking analytics (restart required)";
       default = true;
     };
     "disableStackDumping" = lib.options.mkOption {

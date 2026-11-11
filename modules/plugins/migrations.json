@@ -5746,6 +5746,7 @@
   "removals": [
     "copyStickerLinks",
     "externalPlayer",
+    "fullUserInChatbox",
     "platformSpoofer",
     "showAllBadges"
   ],
