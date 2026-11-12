@@ -5822,10 +5822,6 @@
     [
       "serverListIndicators",
       "useCompact"
-    ],
-    [
-      "voiceMessageTranscriber",
-      "deleteModalFiles"
     ]
   ],
   "clientRenames": [
