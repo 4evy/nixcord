@@ -7,8 +7,8 @@
 let
   buildClientMod = callPackage ../build-client-mod/build-client-mod.nix { };
   version = "2026-11-14-unstable-2026-11-14";
-  rev = "42a73345be4ada7359866fc5a198ec5dd40c6b84";
-  hash = "sha256-qJ6duNZXDI5wkhTyVk7erjvNnB8Vc5rp0dPMmISvoJU=";
+  rev = "87dcb6a316a00616a99495f508b11b12b68c064a";
+  hash = "sha256-ZpFDQWCdxm8WGxaEhD5QvJlnqtsjoIXV/+PxQ2Qq9M0=";
   bunDepsHash = "sha256-mwaA1pyXAGrlxLNGV5lCtvBRIYJbPXsMHPqmd3uQs9s=";
   src = fetchFromGitHub {
     owner = "Equicord";
