@@ -495,6 +495,10 @@ in
     enable = lib.options.mkEnableOption "The amount of plus before :emoji: is the message to add it to (Equicord-only)";
 
   };
+  "betterPollDetails" = {
+    enable = lib.options.mkEnableOption "Shows poll percentages and vote counts before voting or expiration without disabling the ability to vote (Equicord-only)";
+
+  };
   "betterRoleContext" = {
     enable = lib.options.mkEnableOption "Adds options to copy role color / edit role / view role icon when right clicking roles in the user profile or in the member list (Shared between Vencord and Equicord)";
     "roleIconFileFormat" = lib.options.mkOption {
@@ -2710,6 +2714,16 @@ in
       type = lib.types.str;
       description = "Zipline auth token";
       default = "";
+    };
+    "ziplineStripExtension" = lib.options.mkOption {
+      type = lib.types.bool;
+      description = "Strip file extension";
+      default = false;
+    };
+    "ziplineOriginalName" = lib.options.mkOption {
+      type = lib.types.bool;
+      description = "Keep original file name";
+      default = false;
     };
     "folderId" = lib.options.mkOption {
       type = lib.types.str;

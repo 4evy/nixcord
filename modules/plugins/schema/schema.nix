@@ -1985,6 +1985,9 @@
     "betterPlusReacts" = {
       "settings" = { };
     };
+    "betterPollDetails" = {
+      "settings" = { };
+    };
     "blockKeywords" = {
       "settings" = {
         "blockedWords" = {
@@ -3139,6 +3142,12 @@
         };
         "ziplineToken" = {
           "type" = "types.str";
+        };
+        "ziplineStripExtension" = {
+          "type" = "types.bool";
+        };
+        "ziplineOriginalName" = {
+          "type" = "types.bool";
         };
         "folderId" = {
           "type" = "types.str";
