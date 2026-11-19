@@ -110,7 +110,7 @@
     },
     "TenorGifSearch": {
       "to": "GifProviderSwitcher",
-      "date": "2026-10-08"
+      "date": "2026-11-19"
     },
     "TimelessClips": {
       "to": "ClipsEnhancements",
@@ -241,6 +241,11 @@
       },
       "showYourOwnActivityButtons": {
         "date": "2026-10-19"
+      }
+    },
+    "globalBadges": {
+      "showModStyle": {
+        "date": "2026-11-15"
       }
     },
     "serverListIndicators": {

@@ -5,7 +5,7 @@
   stdenvNoCC,
 }:
 let
-  version = "1.4.4";
+  version = "1.4.5";
   sources =
     lib.mapAttrs
       (
@@ -18,15 +18,15 @@ let
       {
         aarch64-darwin = {
           archive = "bun-darwin-aarch64";
-          hash = "sha256-wkDX8My5DCY6hJ/NsJt+5iYw2SE0jtaq/ahrnVd7xRA=";
+          hash = "sha256-tda8LhPK8U5XyJZh6J79Bz/xYWW0G/5DiCYWQQYJzRA=";
         };
         aarch64-linux = {
           archive = "bun-linux-aarch64";
-          hash = "sha256-uqa7NvUdblhWHgK76oJQOKnfRU9nPW13bou/hvjHhQ4=";
+          hash = "sha256-GGVqO/DqVkH1eWrkITt1JVV5pwoP3tLzN5M3hVaM34Q=";
         };
         x86_64-linux = {
           archive = "bun-linux-x64-baseline";
-          hash = "sha256-4ERutVmVdy65iUvrrppr42jZhai5Jx7hJEhvmUbu3XY=";
+          hash = "sha256-3LI6GKHC//EtV7zvaW27tC62f94p9DgW7LWVRZokxGM=";
         };
       };
 in

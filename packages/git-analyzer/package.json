@@ -16,7 +16,7 @@
   "types": "./src/index.ts",
   "dependencies": {
     "@nixcord/domain": "workspace:*",
-    "effect": "4.1.2",
+    "effect": "4.1.4",
     "@nixcord/typescript-analysis": "workspace:*"
   },
   "files": [

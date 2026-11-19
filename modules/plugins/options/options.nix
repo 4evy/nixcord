@@ -3276,15 +3276,6 @@ in
   };
   "globalBadges" = {
     enable = lib.options.mkEnableOption "Adds global badges from other client mods (Equicord-only)";
-    "showModStyle" = lib.options.mkOption {
-      type = lib.types.enum [
-        "none"
-        "prefix"
-        "suffix"
-      ];
-      description = "Mod Style";
-      default = "none";
-    };
     "apiUrl" = lib.options.mkOption {
       type = lib.types.str;
       description = "API to use";
@@ -6593,7 +6584,7 @@ in
 
   };
   "richPresence" = {
-    enable = lib.options.mkEnableOption "Unified rich presence hub for AudioBookShelf, osu!, stats.fm, Jellyfin, Navidrome, and Gensokyo Radio. (Equicord-only)";
+    enable = lib.options.mkEnableOption "Unified rich presence hub for AudioBookShelf, osu!, stats.fm, Jellyfin, Plex, Navidrome, and Gensokyo Radio. (Equicord-only)";
     "enabled" = lib.options.mkOption {
       type = lib.types.bool;
       description = "Enable rich presence services.";
@@ -6627,6 +6618,11 @@ in
     "ndEnabled" = lib.options.mkOption {
       type = lib.types.bool;
       description = "Enable Navidrome presence.";
+      default = false;
+    };
+    "pxEnabled" = lib.options.mkOption {
+      type = lib.types.bool;
+      description = "Enable Plex presence.";
       default = false;
     };
     "absServerUrl" = lib.options.mkOption {
@@ -6787,6 +6783,41 @@ in
       default = true;
     };
     "jfPrivacyMode" = lib.options.mkOption {
+      type = lib.types.bool;
+      description = "Hide media details.";
+      default = false;
+    };
+    "pxServerUrl" = lib.options.mkOption {
+      type = lib.types.str;
+      description = "Plex server URL.";
+      default = "";
+    };
+    "pxToken" = lib.options.mkOption {
+      type = lib.types.str;
+      description = "Plex token.";
+      default = "";
+    };
+    "pxUsername" = lib.options.mkOption {
+      type = lib.types.str;
+      description = "Plex username to show sessions for.";
+      default = "";
+    };
+    "pxShowEpisodeName" = lib.options.mkOption {
+      type = lib.types.bool;
+      description = "Show episode name after season/episode info.";
+      default = true;
+    };
+    "pxShowCover" = lib.options.mkOption {
+      type = lib.types.bool;
+      description = "Show cover art. Your Plex token is sent to Discord in the image URL.";
+      default = false;
+    };
+    "pxShowPausedState" = lib.options.mkOption {
+      type = lib.types.bool;
+      description = "Show presence when media is paused.";
+      default = true;
+    };
+    "pxPrivacyMode" = lib.options.mkOption {
       type = lib.types.bool;
       description = "Hide media details.";
       default = false;
@@ -7264,7 +7295,7 @@ in
     };
   };
   "showHiddenChannels" = {
-    enable = lib.options.mkEnableOption "Show channels that you do not have access to view. (Equicord-only)";
+    enable = lib.options.mkEnableOption "THIS PLUGIN IS DEAD! Discord patched it. See the plugin settings for more information. (Equicord-only)";
     "channelStyle" = lib.options.mkOption {
       type = lib.types.enum [
         0
@@ -8069,6 +8100,16 @@ in
   };
   "streaks" = {
     enable = lib.options.mkEnableOption "Shows a streak next to a user when you exchange DMs with them on consecutive days. (Equicord-only)";
+    "showOnSelf" = lib.options.mkOption {
+      type = lib.types.bool;
+      description = "Show the streak on your own messages in DMs";
+      default = false;
+    };
+    "showOutsideDms" = lib.options.mkOption {
+      type = lib.types.bool;
+      description = "Show streaks on messages outside DMs";
+      default = true;
+    };
     "eliteColor" = lib.options.mkOption {
       type = lib.types.str;
       description = "Elite Streak Color (100+ days)";
@@ -9223,27 +9264,6 @@ in
   };
   "webScreenShare" = {
     enable = lib.options.mkEnableOption "Adds a screenshare options menu. Allows for changing resolution, framerate, encoding hints, and system audio settings. (Shared between Vencord and Equicord)";
-    "resolution" = lib.options.mkOption {
-      type = lib.types.enum [
-        "480"
-        "720"
-        "1080"
-        "1440"
-        "2160"
-      ];
-      description = "Resolution";
-      default = "1080";
-    };
-    "frameRate" = lib.options.mkOption {
-      type = lib.types.enum [
-        "15"
-        "30"
-        "60"
-        "120"
-      ];
-      description = "Frame Rate";
-      default = "60";
-    };
     "contentHint" = lib.options.mkOption {
       type = lib.types.enum [
         "motion"
@@ -9253,15 +9273,14 @@ in
       description = "Content Hint";
       default = "motion";
     };
-    "systemAudio" = lib.options.mkOption {
-      type = lib.types.bool;
-      description = "Mute system audio";
-      default = false;
-    };
   };
   "webScreenShareFixes" = {
-    enable = lib.options.mkEnableOption "Removes 2500kbps bitrate cap on chromium and vesktop clients and fixes CPU usage growing endlessly while screensharing. (Shared between Vencord and Equicord)";
-
+    enable = lib.options.mkEnableOption "Removes 2500kbps bitrate cap on chromium and vesktop clients, enables stereo stream audio with a higher bitrate, raises the start bitrate of streams, uses hardware H264 encoding and fixes CPU usage growing endlessly while screensharing. (Shared between Vencord and Equicord)";
+    "betterCodecs" = lib.options.mkOption {
+      type = lib.types.bool;
+      description = "MAY CAUSE ISSUES! Prefer better codecs like AV1 and VP9 when streaming. Should improve quality but may lead to issues like infinitely loading streams. (restart required)";
+      default = false;
+    };
   };
   "webpackTarball" = {
     enable = lib.options.mkEnableOption "Converts Discord's webpack sources into a tarball. (Equicord-only)";

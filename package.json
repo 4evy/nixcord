@@ -37,22 +37,22 @@
     "build:packages": "bun run --bun --filter './packages/*' build:bundle && bun --bun tsc --build packages/* modules/lib --emitDeclarationOnly --force"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.6.5",
+    "@biomejs/biome": "2.6.8",
     "@types/bun": "1.4.4",
     "@types/fs-extra": "11.0.4",
     "@types/node": "26.6.6",
-    "equicord": "https://github.com/Equicord/Equicord/archive/87dcb6a316a00616a99495f508b11b12b68c064a.tar.gz",
-    "fallow": "3.39.0",
-    "svelte": "^5.57.3",
+    "equicord": "https://github.com/Equicord/Equicord/archive/d7da0517c84637fa7bb8acb4e2e0f2ebf9069d2f.tar.gz",
+    "fallow": "3.44.0",
+    "svelte": "^5.58.0",
     "typescript": "7.1.0-beta",
-    "vencord": "https://github.com/Vendicated/Vencord/archive/d07030c0968e31e41caa0c35fda0ef8ae63a079e.tar.gz",
-    "vite": "8.3.6",
-    "vitest": "5.1.0"
+    "vencord": "https://github.com/Vendicated/Vencord/archive/a846785482f96c50f1160a04217e1e90283d2ec1.tar.gz",
+    "vite": "8.3.8",
+    "vitest": "5.1.1"
   },
   "engines": {
     "bun": ">=1.4.3"
   },
-  "packageManager": "bun@1.4.4",
+  "packageManager": "bun@1.4.5",
   "overrides": {
     "equicord": {
       "@ffmpeg/ffmpeg": "^0.12.10",

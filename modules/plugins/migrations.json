@@ -410,6 +410,94 @@
     {
       "from": [
         "audioBookShelfRichPresence",
+        "pxEnabled"
+      ],
+      "to": [
+        "richPresence",
+        "pxEnabled"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "audioBookShelfRichPresence",
+        "pxPrivacyMode"
+      ],
+      "to": [
+        "richPresence",
+        "pxPrivacyMode"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "audioBookShelfRichPresence",
+        "pxServerUrl"
+      ],
+      "to": [
+        "richPresence",
+        "pxServerUrl"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "audioBookShelfRichPresence",
+        "pxShowCover"
+      ],
+      "to": [
+        "richPresence",
+        "pxShowCover"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "audioBookShelfRichPresence",
+        "pxShowEpisodeName"
+      ],
+      "to": [
+        "richPresence",
+        "pxShowEpisodeName"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "audioBookShelfRichPresence",
+        "pxShowPausedState"
+      ],
+      "to": [
+        "richPresence",
+        "pxShowPausedState"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "audioBookShelfRichPresence",
+        "pxToken"
+      ],
+      "to": [
+        "richPresence",
+        "pxToken"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "audioBookShelfRichPresence",
+        "pxUsername"
+      ],
+      "to": [
+        "richPresence",
+        "pxUsername"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "audioBookShelfRichPresence",
         "sfmAlwaysHideArt"
       ],
       "to": [
@@ -1218,6 +1306,94 @@
       "to": [
         "richPresence",
         "ndUsername"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "GensokyoRadioRPC",
+        "pxEnabled"
+      ],
+      "to": [
+        "richPresence",
+        "pxEnabled"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "GensokyoRadioRPC",
+        "pxPrivacyMode"
+      ],
+      "to": [
+        "richPresence",
+        "pxPrivacyMode"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "GensokyoRadioRPC",
+        "pxServerUrl"
+      ],
+      "to": [
+        "richPresence",
+        "pxServerUrl"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "GensokyoRadioRPC",
+        "pxShowCover"
+      ],
+      "to": [
+        "richPresence",
+        "pxShowCover"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "GensokyoRadioRPC",
+        "pxShowEpisodeName"
+      ],
+      "to": [
+        "richPresence",
+        "pxShowEpisodeName"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "GensokyoRadioRPC",
+        "pxShowPausedState"
+      ],
+      "to": [
+        "richPresence",
+        "pxShowPausedState"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "GensokyoRadioRPC",
+        "pxToken"
+      ],
+      "to": [
+        "richPresence",
+        "pxToken"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "GensokyoRadioRPC",
+        "pxUsername"
+      ],
+      "to": [
+        "richPresence",
+        "pxUsername"
       ],
       "warn": false
     },
@@ -1889,6 +2065,94 @@
       "to": [
         "richPresence",
         "ndUsername"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "jellyfinRichPresence",
+        "pxEnabled"
+      ],
+      "to": [
+        "richPresence",
+        "pxEnabled"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "jellyfinRichPresence",
+        "pxPrivacyMode"
+      ],
+      "to": [
+        "richPresence",
+        "pxPrivacyMode"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "jellyfinRichPresence",
+        "pxServerUrl"
+      ],
+      "to": [
+        "richPresence",
+        "pxServerUrl"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "jellyfinRichPresence",
+        "pxShowCover"
+      ],
+      "to": [
+        "richPresence",
+        "pxShowCover"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "jellyfinRichPresence",
+        "pxShowEpisodeName"
+      ],
+      "to": [
+        "richPresence",
+        "pxShowEpisodeName"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "jellyfinRichPresence",
+        "pxShowPausedState"
+      ],
+      "to": [
+        "richPresence",
+        "pxShowPausedState"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "jellyfinRichPresence",
+        "pxToken"
+      ],
+      "to": [
+        "richPresence",
+        "pxToken"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "jellyfinRichPresence",
+        "pxUsername"
+      ],
+      "to": [
+        "richPresence",
+        "pxUsername"
       ],
       "warn": false
     },
@@ -2940,6 +3204,94 @@
     {
       "from": [
         "statsfmPresence",
+        "pxEnabled"
+      ],
+      "to": [
+        "richPresence",
+        "pxEnabled"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "statsfmPresence",
+        "pxPrivacyMode"
+      ],
+      "to": [
+        "richPresence",
+        "pxPrivacyMode"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "statsfmPresence",
+        "pxServerUrl"
+      ],
+      "to": [
+        "richPresence",
+        "pxServerUrl"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "statsfmPresence",
+        "pxShowCover"
+      ],
+      "to": [
+        "richPresence",
+        "pxShowCover"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "statsfmPresence",
+        "pxShowEpisodeName"
+      ],
+      "to": [
+        "richPresence",
+        "pxShowEpisodeName"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "statsfmPresence",
+        "pxShowPausedState"
+      ],
+      "to": [
+        "richPresence",
+        "pxShowPausedState"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "statsfmPresence",
+        "pxToken"
+      ],
+      "to": [
+        "richPresence",
+        "pxToken"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "statsfmPresence",
+        "pxUsername"
+      ],
+      "to": [
+        "richPresence",
+        "pxUsername"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "statsfmPresence",
         "sfmAlwaysHideArt"
       ],
       "to": [
@@ -3550,6 +3902,94 @@
       "to": [
         "richPresence",
         "ndUsername"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "TosuRPC",
+        "pxEnabled"
+      ],
+      "to": [
+        "richPresence",
+        "pxEnabled"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "TosuRPC",
+        "pxPrivacyMode"
+      ],
+      "to": [
+        "richPresence",
+        "pxPrivacyMode"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "TosuRPC",
+        "pxServerUrl"
+      ],
+      "to": [
+        "richPresence",
+        "pxServerUrl"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "TosuRPC",
+        "pxShowCover"
+      ],
+      "to": [
+        "richPresence",
+        "pxShowCover"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "TosuRPC",
+        "pxShowEpisodeName"
+      ],
+      "to": [
+        "richPresence",
+        "pxShowEpisodeName"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "TosuRPC",
+        "pxShowPausedState"
+      ],
+      "to": [
+        "richPresence",
+        "pxShowPausedState"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "TosuRPC",
+        "pxToken"
+      ],
+      "to": [
+        "richPresence",
+        "pxToken"
+      ],
+      "warn": false
+    },
+    {
+      "from": [
+        "TosuRPC",
+        "pxUsername"
+      ],
+      "to": [
+        "richPresence",
+        "pxUsername"
       ],
       "warn": false
     },
@@ -5150,6 +5590,17 @@
     },
     {
       "from": [
+        "streaks",
+        "showOutsideDMs"
+      ],
+      "to": [
+        "streaks",
+        "showOutsideDms"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
         "streamingCodecDisabler",
         "disableVP8Codec"
       ],
@@ -5818,6 +6269,10 @@
     [
       "equicordHelper",
       "showYourOwnActivityButtons"
+    ],
+    [
+      "globalBadges",
+      "showModStyle"
     ],
     [
       "serverListIndicators",

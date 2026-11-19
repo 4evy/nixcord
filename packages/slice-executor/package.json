@@ -20,7 +20,7 @@
   "types": "./src/index.ts",
   "dependencies": {
     "@nixcord/typescript-analysis": "workspace:*",
-    "effect": "4.1.2",
+    "effect": "4.1.4",
     "quickjs-emscripten": "0.32.0"
   },
   "files": [

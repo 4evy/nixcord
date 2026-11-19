@@ -1074,22 +1074,17 @@
     };
     "webScreenShare" = {
       "settings" = {
-        "resolution" = {
-          "type" = "types.enum";
-        };
-        "frameRate" = {
-          "type" = "types.enum";
-        };
         "contentHint" = {
           "type" = "types.enum";
-        };
-        "systemAudio" = {
-          "type" = "types.bool";
         };
       };
     };
     "webScreenShareFixes" = {
-      "settings" = { };
+      "settings" = {
+        "betterCodecs" = {
+          "type" = "types.bool";
+        };
+      };
     };
     "whoReacted" = {
       "settings" = {
@@ -3460,9 +3455,6 @@
     };
     "globalBadges" = {
       "settings" = {
-        "showModStyle" = {
-          "type" = "types.enum";
-        };
         "apiUrl" = {
           "type" = "types.str";
         };
@@ -4962,6 +4954,9 @@
         "ndEnabled" = {
           "type" = "types.bool";
         };
+        "pxEnabled" = {
+          "type" = "types.bool";
+        };
         "absServerUrl" = {
           "type" = "types.str";
         };
@@ -5041,6 +5036,27 @@
           "type" = "types.bool";
         };
         "jfPrivacyMode" = {
+          "type" = "types.bool";
+        };
+        "pxServerUrl" = {
+          "type" = "types.str";
+        };
+        "pxToken" = {
+          "type" = "types.str";
+        };
+        "pxUsername" = {
+          "type" = "types.str";
+        };
+        "pxShowEpisodeName" = {
+          "type" = "types.bool";
+        };
+        "pxShowCover" = {
+          "type" = "types.bool";
+        };
+        "pxShowPausedState" = {
+          "type" = "types.bool";
+        };
+        "pxPrivacyMode" = {
           "type" = "types.bool";
         };
         "grRefreshInterval" = {
@@ -5623,6 +5639,12 @@
     };
     "streaks" = {
       "settings" = {
+        "showOnSelf" = {
+          "type" = "types.bool";
+        };
+        "showOutsideDms" = {
+          "type" = "types.bool";
+        };
         "eliteColor" = {
           "type" = "types.str";
         };

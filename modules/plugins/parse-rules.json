@@ -512,6 +512,14 @@
       "ndStateString": "nd_stateString",
       "ndStatusDisplayType": "nd_statusDisplayType",
       "ndUsername": "nd_username",
+      "pxEnabled": "px_enabled",
+      "pxPrivacyMode": "px_privacyMode",
+      "pxServerUrl": "px_serverUrl",
+      "pxShowCover": "px_showCover",
+      "pxShowEpisodeName": "px_showEpisodeName",
+      "pxShowPausedState": "px_showPausedState",
+      "pxToken": "px_token",
+      "pxUsername": "px_username",
       "sfmAlwaysHideArt": "sfm_alwaysHideArt",
       "sfmEnabled": "sfm_enabled",
       "sfmHideWithExternalRpc": "sfm_hideWithExternalRPC",
@@ -541,6 +549,9 @@
     },
     "statusPresets": {
       "statusPresets": "StatusPresets"
+    },
+    "streaks": {
+      "showOutsideDms": "showOutsideDMs"
     },
     "streamingCodecDisabler": {
       "disableVp8Codec": "disableVP8Codec",
