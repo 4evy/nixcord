@@ -5,7 +5,7 @@
   "gitIgnoredAuthors": [
     "41898282+github-actions[bot]@users.noreply.github.com"
   ],
-  "dependencyDashboard": false,
+  "dependencyDashboard": { "enabled": false },
   "configMigration": false,
   "automerge": true,
   "automergeType": "branch",
