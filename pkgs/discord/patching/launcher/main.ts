@@ -20,6 +20,7 @@ const {
   apply,
   descendantsOfKind,
   forEachDescendant,
+  firstAncestor,
   expectKind,
 } = patch;
 const launcherLiteral = JSON.stringify(launcher);
@@ -80,36 +81,9 @@ const hostRules: Rule[] = [
     replacement: launcherLiteral,
   },
 ];
-// Removing the legacy updater also removes its two host relaunch sites
-const legacyHost =
-  kind === 'host' &&
-  values(
-    factory(
-      (node) =>
-        values(node, 'exports.registerLocalModulePaths').length > 0 ||
-        forEachDescendant(node, (child) =>
-          Node.isStringLiteral(child) && child.text === 'legacyModulesUpdater.log'
-            ? true
-            : undefined
-        ) === true,
-      'module loader factory'
-    ),
-    'exports.registerLocalModulePaths'
-  ).length === 0;
-// The core's legacy QUIT_AND_INSTALL listener has one extra fallback relaunch
-const legacyCore =
-  kind === 'core' &&
-  forEachDescendant(
-    factory(
-      (node) =>
-        values(node, 'exports.getMainWindowId').length > 0 &&
-        values(node, 'exports.setMainWindowVisible').length > 0,
-      'main screen factory'
-    ),
-    (node) =>
-      Node.isPropertyAccessExpression(node) && node.name.text === 'moduleUpdater' ? true : undefined
-  ) === true;
-// Preserve wrapper/user arguments; new upstream options require review
+// Discord's macOS-only launcher helper already supplies its own executable
+// and arguments. On Linux, both direct relaunches and the shared fallback
+// must go through the Nix launcher
 const relaunch: Rule = {
   name: 'app.relaunch calls',
   select: (scope) =>
@@ -117,9 +91,11 @@ const relaunch: Rule = {
       .filter(Node.isCallExpression)
       .filter((node) => {
         const name = referenceName(node.expression);
-        return name === 'app.relaunch' || name?.endsWith('.app.relaunch') === true;
+        if (name !== 'app.relaunch' && !name?.endsWith('.app.relaunch')) return false;
+        const fn = firstAncestor(node, SyntaxKind.FunctionDeclaration);
+        return !(fn && Node.isFunctionDeclaration(fn) && fn.name?.text === 'relaunchMacOSLauncher');
       }),
-  expected: kind === 'host' ? (legacyHost ? 3 : 1) : legacyCore ? 4 : 3,
+  expected: 'nonempty',
   replacement: (node) => {
     const call = expectKind(node, SyntaxKind.CallExpression) as CallExpression;
     if (call.arguments.length) throw new Error(`${filename}: review new app.relaunch options`);

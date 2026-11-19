@@ -11,7 +11,7 @@ export type Rule = {
   name: string;
   scope?: (file: Ast.SourceFile) => Ast.Node;
   select: (scope: Ast.Node) => readonly Ast.Node[];
-  expected: number;
+  expected: number | 'nonempty';
   replacement?: Replacement | ((node: Ast.Node) => Replacement);
 };
 
@@ -163,9 +163,11 @@ export async function bundle(
       const replacements = rules
         .flatMap((rule) => {
           const matches = rule.select(rule.scope ? rule.scope(file) : file);
-          if (matches.length !== rule.expected)
+          if (
+            rule.expected === 'nonempty' ? matches.length === 0 : matches.length !== rule.expected
+          )
             throw new Error(
-              `${filename}: expected ${rule.expected} ${rule.name}, found ${matches.length}`
+              `${filename}: expected ${rule.expected === 'nonempty' ? 'at least one' : rule.expected} ${rule.name}, found ${matches.length}`
             );
           const replacement = rule.replacement;
           return replacement === undefined
