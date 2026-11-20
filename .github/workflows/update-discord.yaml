@@ -2,6 +2,10 @@ name: Update Discord
 
 on:
   workflow_call:
+    outputs:
+      commit-sha:
+        description: SHA of the published Discord update, if any
+        value: ${{ jobs.publish.outputs.commit-sha }}
 
 permissions: {}
 

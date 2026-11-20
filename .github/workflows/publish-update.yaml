@@ -11,6 +11,10 @@ on:
         description: Exact revision used for generation and validation
         required: true
         type: string
+    outputs:
+      commit-sha:
+        description: SHA of the new commit, empty when no commit was published
+        value: ${{ jobs.publish.outputs.commit-sha }}
 
 permissions: {}
 
@@ -26,6 +30,8 @@ jobs:
     name: Commit and dispatch follow-up workflows
     runs-on: ubuntu-26.04
     timeout-minutes: 360
+    outputs:
+      commit-sha: ${{ steps.commit.outputs.commit-hash }}
     permissions:
       actions: write # GITHUB_TOKEN commits do not trigger push workflows.
       contents: write # Commit the verified files with GitHub signing.
