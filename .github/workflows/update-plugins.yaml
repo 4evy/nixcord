@@ -31,6 +31,7 @@ on:
       - "modules/lib/packages/**"
       - "modules/plugins/overrides.json"
       - "nix/flake/apps.nix"
+      - "nix/flake/default.nix"
       - "nix/generate-with-git.nix"
       - "nix/bun/**"
       - "docs/site.nix"

@@ -12,6 +12,19 @@ let
       pkgs = import inputs.nixpkgs-packages {
         inherit system;
         config.allowUnfree = true;
+        overlays = [
+          (_final: prev: {
+            nix-update = prev.nix-update.overrideAttrs (old: {
+              # Nix 2.35 metadata can report a source path it hasn't copied
+              # nix-update reads that path from a separate Nix process
+              postPatch = (old.postPatch or "") + ''
+                substituteInPlace nix_update/options.py \
+                  --replace-fail '"flake", "metadata", "--json"' '"flake", "prefetch", "--json"' \
+                  --replace-fail 'metadata.get("path")' 'metadata.get("storePath")'
+              '';
+            });
+          })
+        ];
       };
       packages = packagesFor pkgs;
       treefmt = inputs.treefmt-nix.lib.evalModule pkgs ../../treefmt.nix;
