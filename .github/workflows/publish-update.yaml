@@ -35,16 +35,9 @@ jobs:
           ref: ${{ inputs.base-sha }}
           persist-credentials: false
 
-      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+      - uses: $/.github/actions/apply-update
         with:
-          name: ${{ inputs.kind }}-source-update
-          path: source-update
-
-      - name: Apply verified source update
-        run: |
-          if [[ -s source-update/changes.patch ]]; then
-            git apply source-update/changes.patch
-          fi
+          kind: ${{ inputs.kind }}
 
       - name: Download verified GoofCord dependencies
         if: inputs.kind == 'plugins'
@@ -54,6 +47,7 @@ jobs:
           path: pkgs/goofcord
 
       - uses: $/.github/actions/setup-bun
+        if: inputs.kind == 'plugins'
         with:
           install-dependencies: "false"
 
@@ -102,28 +96,15 @@ jobs:
 
       - name: Restart update if the branch moved
         if: steps.commit.outcome == 'failure'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-          REF_NAME: ${{ github.ref_name }}
-          BASE_SHA: ${{ inputs.base-sha }}
-          UPDATE_KIND: ${{ inputs.kind }}
-        run: |
-          set -o errexit -o nounset -o pipefail
-          ref=$(jq --raw-output --null-input --arg ref "$REF_NAME" '$ref | @uri')
-          head=$(gh api "repos/$GH_REPO/git/ref/heads/$ref" --jq '.object.sha')
-          if [[ "$head" == "$BASE_SHA" ]]; then
-            echo "::error::Publishing failed without a branch change"
-            exit 1
-          fi
-          case "$UPDATE_KIND" in
-            plugins|discord) workflow=update-plugins.yaml ;;
-            *) echo "::error::Unknown update kind"; exit 1 ;;
-          esac
-          gh workflow run "$workflow" --ref "$REF_NAME"
-          echo "::notice::Branch moved during validation; queued a fresh update"
-          # Stop this run so dependent jobs cannot continue with stale sources
-          exit 1
+        uses: $/.github/actions/dispatch-if-updated
+        with:
+          branch: ${{ github.ref_name }}
+          base-sha: ${{ inputs.base-sha }}
+          workflows: update-plugins.yaml
+
+      - name: Stop after failed publication
+        if: steps.commit.outcome == 'failure'
+        run: exit 1
 
       - name: Rebuild published documentation
         if: >-

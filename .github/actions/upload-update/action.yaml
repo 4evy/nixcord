@@ -1,0 +1,37 @@
+name: Upload source update
+description: Capture changes to the listed paths against the checked-out base
+
+inputs:
+  kind:
+    description: Update type (discord or plugins)
+    required: true
+  paths:
+    description: Paths to include, one per line
+    required: true
+
+outputs:
+  base-sha:
+    description: Revision to check out before applying the patch
+    value: ${{ steps.patch.outputs.base-sha }}
+
+runs:
+  using: composite
+  steps:
+    - id: patch
+      shell: bash
+      env:
+        UPDATE_PATHS: ${{ inputs.paths }}
+      run: |
+        set -euo pipefail
+        mapfile -t paths <<< "$UPDATE_PATHS"
+        git add --all -- "${paths[@]}"
+        git diff --cached --binary --full-index --no-ext-diff --no-textconv \
+          HEAD -- "${paths[@]}" > "$RUNNER_TEMP/changes.patch"
+        echo "base-sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+    - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+      with:
+        name: ${{ inputs.kind }}-source-update
+        path: ${{ runner.temp }}/changes.patch
+        if-no-files-found: error
+        retention-days: 1

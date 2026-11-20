@@ -18,8 +18,8 @@ defaults:
     shell: bash
 
 jobs:
-  workflow-quality:
-    name: Workflow and shell checks
+  quality:
+    name: Workflow, shell, and Nix quality
     runs-on: ubuntu-26.04
     timeout-minutes: 360
     permissions:
@@ -33,6 +33,15 @@ jobs:
 
       - name: Lint and security-audit GitHub Actions
         run: nix develop .#ci --command bash .github/scripts/check-workflows.sh
+
+      - name: Test evaluation benchmark CLI
+        run: bash nix/tests/benchmark-eval.sh
+
+      - name: Verify non-flake source
+        run: nix-instantiate --eval --strict --expr '(import ./npins).nixpkgs'
+
+      - name: Check Nix formatting
+        run: nix fmt -- --fail-on-change .
 
   javascript:
     name: JavaScript and documentation
@@ -52,28 +61,6 @@ jobs:
 
       - name: Run JavaScript and TypeScript tests
         run: bun run test
-
-  nix-quality:
-    name: Nix formatting and evaluation
-    runs-on: ubuntu-26.04
-    timeout-minutes: 360
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - uses: $/.github/actions/install-nix
-
-      - name: Test evaluation benchmark CLI
-        run: bash nix/tests/benchmark-eval.sh
-
-      - name: Verify non-flake source
-        run: nix-instantiate --eval --strict --expr '(import ./npins).nixpkgs'
-
-      - name: Check Nix formatting
-        run: nix fmt -- --fail-on-change .
 
   renovate-config:
     name: Renovate configuration
@@ -97,7 +84,6 @@ jobs:
 
   prepare-bun-deps:
     name: Prepare Bun dependencies
-    # Dependency preparation is independent of lint and JavaScript checks
     runs-on: ubuntu-26.04
     timeout-minutes: 360
     permissions:
@@ -105,7 +91,6 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 1
           persist-credentials: false
 
       - uses: $/.github/actions/install-nix
@@ -122,7 +107,7 @@ jobs:
   required:
     name: CI required
     if: ${{ !cancelled() }}
-    needs: [workflow-quality, javascript, nix-quality, renovate-config, prepare-bun-deps, nix]
+    needs: [quality, javascript, renovate-config, prepare-bun-deps, nix]
     runs-on: ubuntu-26.04
     timeout-minutes: 360
     permissions: {}

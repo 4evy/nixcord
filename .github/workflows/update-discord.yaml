@@ -92,20 +92,12 @@ jobs:
       - name: Prepare verified source update
         id: prepare-update
         if: steps.sources.outputs.changed == 'true'
-        run: |
-          mkdir --parents source-update
-          git diff --binary --full-index -- \
-            pkgs/discord/sources/sources.json \
-            pkgs/discord/patching/default.nix > source-update/changes.patch
-          echo "base-sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-
-      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        if: steps.sources.outputs.changed == 'true'
+        uses: $/.github/actions/upload-update
         with:
-          name: discord-source-update
-          path: source-update
-          if-no-files-found: error
-          retention-days: 1
+          kind: discord
+          paths: |-
+            pkgs/discord/sources/sources.json
+            pkgs/discord/patching/default.nix
 
   publish:
     name: Publish verified Discord update

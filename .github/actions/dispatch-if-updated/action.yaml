@@ -1,0 +1,34 @@
+name: Dispatch workflows if a branch moved
+description: Run follow-up workflows only when the branch differs from the recorded revision
+
+inputs:
+  branch:
+    description: Target branch
+    required: true
+  base-sha:
+    description: Revision before the update
+    required: true
+  workflows:
+    description: Space-separated workflow filenames to dispatch in order
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      env:
+        BRANCH: ${{ inputs.branch }}
+        BASE_SHA: ${{ inputs.base-sha }}
+        WORKFLOWS: ${{ inputs.workflows }}
+      with:
+        script: |
+          const { BRANCH: branch, BASE_SHA: base, WORKFLOWS: workflows } = process.env
+          const { data } = await github.rest.git.getRef({ ...context.repo, ref: `heads/${branch}` })
+          if (data.object.sha === base) {
+            core.notice(`No new revision on ${branch}`)
+            return
+          }
+          for (const workflow of workflows.trim().split(/\s+/)) {
+            await github.rest.actions.createWorkflowDispatch({ ...context.repo, workflow_id: workflow, ref: branch })
+            core.info(`Dispatched ${workflow} on ${branch}`)
+          }

@@ -5,21 +5,18 @@ on:
 
 permissions: {}
 
-# Trigger defaults isolate PR caches from trusted branch builds
-
 defaults:
   run:
     shell: bash
 
 jobs:
   check:
-    name: ${{ matrix.system }} / ${{ matrix.task }}
+    name: ${{ matrix.system }} / ${{ matrix.partition }}
     strategy:
       fail-fast: false
       matrix:
-        # Keep module feedback independent of client builds and packaging
         system: [x86_64-linux, aarch64-linux, aarch64-darwin]
-        task: [checks, discord, packages]
+        partition: [modules, clients]
         include:
           - system: x86_64-linux
             runner: ubuntu-26.04
@@ -27,12 +24,6 @@ jobs:
             runner: ubuntu-26.04-arm
           - system: aarch64-darwin
             runner: macos-26
-          - system: x86_64-linux
-            task: metadata
-            runner: ubuntu-26.04
-          - system: x86_64-linux
-            task: stable
-            runner: ubuntu-26.04
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 360
     permissions:
@@ -40,37 +31,24 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 1
           persist-credentials: false
 
       - uses: $/.github/actions/install-nix
 
+      # Both partitions transitively depend on the client Bun stores
       - uses: $/.github/actions/import-bun-deps
 
-      - name: Verify host and target architectures
+      - name: Build native flake partition
         env:
-          EXPECTED_HOST_SYSTEM: ${{ matrix.system }}
+          PARTITION: ${{ matrix.partition }}
           EXPECTED_SYSTEM: ${{ matrix.system }}
-        run: |
-          actual_host_system=$(nix eval --impure --raw --expr builtins.currentSystem)
-          if [[ "$actual_host_system" != "$EXPECTED_HOST_SYSTEM" ]]; then
-            echo "::error::Expected host $EXPECTED_HOST_SYSTEM, got $actual_host_system"
-            exit 1
-          fi
-          actual_system=$(nix --option system "$EXPECTED_SYSTEM" \
-            eval --impure --raw --expr builtins.currentSystem)
-          if [[ "$actual_system" != "$EXPECTED_SYSTEM" ]]; then
-            echo "::error::Expected target $EXPECTED_SYSTEM, got $actual_system"
-            exit 1
-          fi
+        run: bash .github/scripts/build-flake-partition.sh "$PARTITION" "$EXPECTED_SYSTEM"
 
       - name: Check generated plugin metadata
-        if: matrix.task == 'metadata'
-        env:
-          EXPECTED_SYSTEM: ${{ matrix.system }}
+        if: matrix.partition == 'clients' && matrix.system == 'x86_64-linux'
         run: |
           set -o errexit -o nounset -o pipefail
-          generated=$(nix --option system "$EXPECTED_SYSTEM" build \
+          generated=$(nix build \
             --option allow-import-from-derivation false \
             .#generate --no-link --print-out-paths)
           for generated_entry in "$generated"/plugins/*; do
@@ -82,7 +60,7 @@ jobs:
           done
 
       - name: Build client mods against stable Nixpkgs
-        if: matrix.task == 'stable'
+        if: matrix.partition == 'clients' && matrix.system == 'x86_64-linux'
         run: |
           nix build --no-link --print-build-logs --impure --expr '
             let
@@ -94,57 +72,3 @@ jobs:
             in
             [ packages.equicord packages.vencord ]
           '
-
-      - name: Run flake checks
-        if: matrix.task == 'checks' || matrix.task == 'discord'
-        env:
-          EXPECTED_SYSTEM: ${{ matrix.system }}
-          CHECK_TASK: ${{ matrix.task }}
-        run: |
-          set -o errexit -o nounset -o pipefail
-          # Validate the full flake once per platform, not in both partitions
-          if [[ "$CHECK_TASK" == "checks" ]]; then
-            nix --option system "$EXPECTED_SYSTEM" flake check --no-build \
-              --option allow-import-from-derivation false
-          fi
-          available=$(nix --option system "$EXPECTED_SYSTEM" eval \
-            --option allow-import-from-derivation false \
-            --json ".#checks.$EXPECTED_SYSTEM" --apply builtins.attrNames)
-          # Complementary filters assign every check to exactly one task
-          selected=$(jq -r --arg task "$CHECK_TASK" \
-            '.[] | select(startswith("discord") == ($task == "discord")) | tojson' \
-            <<< "$available")
-          if [[ -z "$selected" ]]; then
-            echo "No checks in the $CHECK_TASK partition on $EXPECTED_SYSTEM"
-            exit 0
-          fi
-          installables=()
-          while IFS= read -r name; do
-            installables+=(".#checks.$EXPECTED_SYSTEM.$name")
-          done <<< "$selected"
-          nix_args=()
-          if [[ "$RUNNER_OS" == "macOS" ]]; then
-            nix_args+=(--max-jobs 1 --cores 2)
-          fi
-          nix --option system "$EXPECTED_SYSTEM" build \
-            --option allow-import-from-derivation false \
-            "${nix_args[@]}" --no-link --print-build-logs "${installables[@]}"
-
-      - name: Build every package
-        if: matrix.task == 'packages'
-        env:
-          EXPECTED_SYSTEM: ${{ matrix.system }}
-        run: |
-          set -o errexit -o nounset -o pipefail
-          available=$(nix --option system "$EXPECTED_SYSTEM" eval \
-            --option allow-import-from-derivation false \
-            --raw ".#packages.$EXPECTED_SYSTEM" \
-            --apply 'packages: builtins.concatStringsSep " " (map (name: ".#" + name) (builtins.attrNames packages))')
-          read -r -a installables <<< "$available"
-          nix_args=()
-          if [[ "$RUNNER_OS" == "macOS" ]]; then
-            nix_args+=(--max-jobs 1 --cores 2)
-          fi
-          nix --option system "$EXPECTED_SYSTEM" build \
-            --option allow-import-from-derivation false \
-            "${nix_args[@]}" --no-link --print-build-logs "${installables[@]}"
