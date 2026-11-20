@@ -12,21 +12,13 @@ diff --git a/src/bootstrap.js b/src/bootstrap.js
 diff --git a/src/cmdSwitches.js b/src/cmdSwitches.js
 --- a/src/cmdSwitches.js
 +++ b/src/cmdSwitches.js
-@@ -8,1 +8,2 @@
--  'perf': `--enable-gpu-rasterization --enable-zero-copy --ignore-gpu-blocklist --enable-hardware-overlays=single-fullscreen,single-on-top,underlay --enable-features=EnableDrDc,CanvasOopRasterization,BackForwardCache:TimeToLiveInBackForwardCacheInSeconds/300/should_ignore_blocklists/true/enable_same_site/true,ThrottleDisplayNoneAndVisibilityHiddenCrossOriginIframes,UseSkiaRenderer,WebAssemblyLazyCompilation --disable-features=Vulkan --force_high_performance_gpu`, // Performance
-+  // EnableDrDc can crash desktop GPU processes and force software rendering
-+  'perf': `--enable-gpu-rasterization --enable-zero-copy --ignore-gpu-blocklist --enable-hardware-overlays=single-fullscreen,single-on-top,underlay --enable-features=CanvasOopRasterization,BackForwardCache:TimeToLiveInBackForwardCacheInSeconds/300/should_ignore_blocklists/true/enable_same_site/true,ThrottleDisplayNoneAndVisibilityHiddenCrossOriginIframes,UseSkiaRenderer,WebAssemblyLazyCompilation --disable-features=Vulkan --force_high_performance_gpu`, // Performance
-@@ -14,6 +15,8 @@ module.exports = () => {
-+  // The web client only keeps OpenH264 2.7.0 in its asset cache
-   if (process.platform === 'linux' && settings.get('openH264Enabled', true))
--    flags.push('--enable-libopenh264', '--openh264-library-path=' + join(paths.getAssetCachePath(), 'openh264', 'libopenh264-2.5.1-linux64.7.so'));
-+    flags.push('--enable-libopenh264', '--openh264-library-path=' + join(paths.getAssetCachePath(), 'openh264', 'libopenh264-2.7.0-linux64.8.so'));
+@@ -16,4 +16,5 @@ module.exports = () => {
 
 +  if (process.platform === 'linux') flags.push('--disable-features=WaylandWpColorManagerV1');
    let c = {};
    for (const x of flags) {
      if (!x) continue;
-@@ -25,4 +28,9 @@
+@@ -25,4 +26,9 @@
    for (const k in c) {
 +    // appendSwitch replaces existing values, including parsed CLI features
 +    if (k === '--enable-features' || k === '--disable-features') {

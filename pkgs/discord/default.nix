@@ -85,6 +85,12 @@ let
 
   patchedOpenasar = openasar.overrideAttrs (old: {
     patches = (old.patches or [ ]) ++ [ ./patching/openasar.patch ];
+    # Older nixpkgs releases still need these fixes. Let nixpkgs apply them first
+    postPatch = (old.postPatch or "") + ''
+      substituteInPlace src/cmdSwitches.js \
+        --replace-quiet 'libopenh264-2.5.1-linux64.7.so' 'libopenh264-2.7.0-linux64.8.so' \
+        --replace-quiet 'EnableDrDc,' ""
+    '';
   });
 in
 assert lib.asserts.assertMsg (lib.meta.availableOn stdenv.hostPlatform {
