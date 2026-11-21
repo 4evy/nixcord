@@ -563,6 +563,19 @@ in
     enable = lib.options.mkEnableOption "Upload with a single click, open menu with right click (Shared between Vencord and Equicord)";
 
   };
+  "betterYouTubeEmbeds" = {
+    enable = lib.options.mkEnableOption "Block ads & bypass UMG blocks (Vencord-only)";
+    "fixBlockedEmbeds" = lib.options.mkOption {
+      type = lib.types.bool;
+      description = "Restore videos blocked from displaying in Discord, for example by UMG (restart required)";
+      default = true;
+    };
+    "blockAds" = lib.options.mkOption {
+      type = lib.types.bool;
+      description = "Blocks ads in YouTube embeds and WatchTogether. Video may take some seconds to load, due to YouTube's anti-ad measures";
+      default = true;
+    };
+  };
   "biggerStreamPreview" = {
     enable = lib.options.mkEnableOption "This plugin allows you to enlarge stream previews (Shared between Vencord and Equicord)";
 
@@ -7311,11 +7324,6 @@ in
       description = "Whether the allowed users and roles dropdown on hidden channels should be open by default";
       default = true;
     };
-    "hideUnreads" = lib.options.mkOption {
-      type = lib.types.bool;
-      description = "Hide Unreads (restart required)";
-      default = true;
-    };
     "showMode" = lib.options.mkOption {
       type = lib.types.enum [
         0
@@ -8900,6 +8908,10 @@ in
       default = true;
     };
   };
+  "vesktopPatches" = {
+    enable = lib.options.mkEnableOption "Contains patches for Vesktop (Vencord-only)";
+
+  };
   "viewIcons" = {
     enable = lib.options.mkEnableOption "Makes avatars and banners in user profiles clickable, adds View Icon/Banner/Avatar Decoration entries in the user, server and group channel context menu. (Shared between Vencord and Equicord)";
     "format" = lib.options.mkOption {
@@ -9414,7 +9426,7 @@ in
     };
   };
   "youtubeAdblock" = {
-    enable = lib.options.mkEnableOption "Block ads in YouTube embeds and the WatchTogether activity via AdGuard (Shared between Vencord and Equicord)";
+    enable = lib.options.mkEnableOption "Block ads in YouTube embeds and the WatchTogether activity via AdGuard (Equicord-only)";
 
   };
   "zipPreview" = {

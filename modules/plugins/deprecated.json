@@ -253,6 +253,14 @@
         "date": "2026-10-31"
       }
     },
+    "showHiddenChannels": {
+      "defaultAllowedUsersAndRolesDropdownState": {
+        "date": "2026-11-21"
+      },
+      "hideUnreads": {
+        "date": "2026-11-21"
+      }
+    },
     "timezones": {
       "databaseUrl": {
         "date": "2026-10-27"

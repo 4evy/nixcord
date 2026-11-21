@@ -1139,9 +1139,6 @@
         };
       };
     };
-    "youtubeAdblock" = {
-      "settings" = { };
-    };
   };
   "vencord" = {
     "alwaysAnimate" = {
@@ -1204,6 +1201,16 @@
         };
         "showFolderIcon" = {
           "type" = "types.enum";
+        };
+      };
+    };
+    "betterYouTubeEmbeds" = {
+      "settings" = {
+        "fixBlockedEmbeds" = {
+          "type" = "types.bool";
+        };
+        "blockAds" = {
+          "type" = "types.bool";
         };
       };
     };
@@ -1279,9 +1286,6 @@
       };
     };
     "favoriteEmojiFirst" = {
-      "settings" = { };
-    };
-    "fixYoutubeEmbeds" = {
       "settings" = { };
     };
     "gifProviderSwitcher" = {
@@ -1538,14 +1542,8 @@
     };
     "showHiddenChannels" = {
       "settings" = {
-        "hideUnreads" = {
-          "type" = "types.bool";
-        };
         "showMode" = {
           "type" = "types.enum";
-        };
-        "defaultAllowedUsersAndRolesDropdownState" = {
-          "type" = "types.bool";
         };
       };
     };
@@ -1665,6 +1663,9 @@
           "type" = "types.bool";
         };
       };
+    };
+    "vesktopPatches" = {
+      "settings" = { };
     };
     "voiceMessages" = {
       "settings" = {
@@ -6231,6 +6232,9 @@
           "type" = "types.str";
         };
       };
+    };
+    "youtubeAdblock" = {
+      "settings" = { };
     };
     "zipPreview" = {
       "settings" = { };
