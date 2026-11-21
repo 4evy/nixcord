@@ -251,4 +251,4 @@ jobs:
             echo "::notice::Published commit is no longer the branch tip"
             exit 0
           fi
-          gh workflow run check.yaml --ref "$REF_NAME"
+          gh workflow run check.yaml --repo "$GITHUB_REPOSITORY" --ref "$REF_NAME"
