@@ -5,12 +5,12 @@
   nix-update-script,
   nix,
   callPackage,
-  jq,
   patch,
   coreutils,
 }:
 {
   attrPath,
+  patches,
   extraArgs ? [ ],
   prepareLockfile ? "",
 }:
@@ -32,7 +32,6 @@ let
       coreutils
       nix
       bun
-      jq
       patch
     ];
     text = ''
@@ -41,15 +40,16 @@ let
       # Bun lockfile generation is not supported by nix-update yet
       root="$PWD"
       source=$(nix build --no-link --print-out-paths .#${attrPath}.src)
-      patches=$(nix eval --json .#${attrPath}.bunDeps.patches)
       work=$(mktemp --directory)
       trap 'rm --recursive --force -- "$work"' EXIT
       cp --recursive "$source/." "$work/"
       chmod --recursive u+w "$work"
       cd -P "$work"
-      while IFS= read -r source_patch; do
+      # Embed store dependencies instead of reading paths from the lazy flake source
+      source_patches=(${lib.escapeShellArgs (map (file: "${file}") patches)})
+      for source_patch in "''${source_patches[@]}"; do
         patch --strip=1 < "$source_patch"
-      done < <(jq --raw-output '.[]' <<< "$patches")
+      done
       cp "$root/pkgs/${attrPath}/bun.lock" bun.lock
       ${prepareLockfile}
       bun install --lockfile-only --ignore-scripts

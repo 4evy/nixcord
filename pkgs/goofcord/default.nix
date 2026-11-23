@@ -22,17 +22,17 @@ let
     hash = "sha256-958TIiBsXYTfYaQdNKeVJspdSE1vIYMX/wScfqekTBU=";
   };
   bunDepsHash = "sha256-SsUlAjmqV1o5pbn46CTa0UgYcoVbZ1qg3D/cl3zYTrI=";
-  dependencyPatch = ./dependencies.patch;
+  dependencyPatches = [ ./dependencies.patch ];
 
   nodeModules = buildBunPackage {
     pname = "goofcord-modules";
     inherit version src;
-    patches = [ dependencyPatch ];
+    patches = dependencyPatches;
     postPatch = "cp ${./bun.lock} bun.lock";
     bunDeps = (callPackage ../bun/fetch-deps.nix { }) {
       name = "goofcord-bun-deps";
       inherit src;
-      patches = [ dependencyPatch ];
+      patches = dependencyPatches;
       postPatch = "cp ${./bun.lock} bun.lock";
       hash = bunDepsHash;
     };
@@ -49,6 +49,7 @@ let
   };
 
   updateScript = callPackage ../bun/update-script.nix { } {
+    patches = dependencyPatches;
     attrPath = "goofcord";
   };
 in
@@ -62,7 +63,7 @@ goofcord.overrideAttrs (
   in
   {
     inherit version src;
-    patches = (old.patches or [ ]) ++ [ dependencyPatch ];
+    patches = (old.patches or [ ]) ++ dependencyPatches;
     node-modules = nodeModules;
     env =
       env

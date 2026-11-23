@@ -62,6 +62,7 @@ buildBunPackage {
     runHook postInstall
   '';
   passthru.updateScript = callPackage ../bun/update-script.nix { } {
+    inherit patches;
     attrPath = pname;
     extraArgs = [ "--version=branch=main" ];
     prepareLockfile = ''
