@@ -122,7 +122,6 @@
     "fixFileExtensions": "FixFileExtensions",
     "fixImagesQuality": "FixImagesQuality",
     "fixSpotifyEmbeds": "FixSpotifyEmbeds",
-    "fixYoutubeEmbeds": "FixYoutubeEmbeds",
     "followVoiceUser": "FollowVoiceUser",
     "fontLoader": "FontLoader",
     "forceOwnerCrown": "ForceOwnerCrown",
@@ -382,7 +381,6 @@
     "wigglyText": "WigglyText",
     "writeUpperCase": "WriteUpperCase",
     "xsOverlay": "XSOverlay",
-    "youtubeAdblock": "YoutubeAdblock",
     "zipPreview": "ZipPreview"
   },
   "settingRenames": {

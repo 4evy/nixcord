@@ -1007,6 +1007,9 @@
         };
       };
     };
+    "vesktopPatches" = {
+      "settings" = { };
+    };
     "viewIcons" = {
       "settings" = {
         "format" = {
@@ -1664,9 +1667,6 @@
         };
       };
     };
-    "vesktopPatches" = {
-      "settings" = { };
-    };
     "voiceMessages" = {
       "settings" = {
         "noiseSuppression" = {
@@ -1983,6 +1983,19 @@
     };
     "betterPollDetails" = {
       "settings" = { };
+    };
+    "betterYouTubeEmbeds" = {
+      "settings" = {
+        "fixBlockedEmbeds" = {
+          "type" = "types.bool";
+        };
+        "blockAds" = {
+          "type" = "types.bool";
+        };
+        "youtubeDescription" = {
+          "type" = "types.bool";
+        };
+      };
     };
     "blockKeywords" = {
       "settings" = {
@@ -3306,13 +3319,6 @@
     };
     "fixFileExtensions" = {
       "settings" = { };
-    };
-    "fixYoutubeEmbeds" = {
-      "settings" = {
-        "youtubeDescription" = {
-          "type" = "types.bool";
-        };
-      };
     };
     "followVoiceUser" = {
       "settings" = {
@@ -5284,9 +5290,6 @@
         "showMode" = {
           "type" = "types.enum";
         };
-        "defaultAllowedUsersAndRolesDropdownState" = {
-          "type" = "types.bool";
-        };
       };
     };
     "showMessageEmbeds" = {
@@ -5481,6 +5484,9 @@
           "type" = "types.bool";
         };
         "hideMembersListTypingIndicators" = {
+          "type" = "types.bool";
+        };
+        "hideDmListTypingIndicators" = {
           "type" = "types.bool";
         };
         "chatIcon" = {
@@ -6232,9 +6238,6 @@
           "type" = "types.str";
         };
       };
-    };
-    "youtubeAdblock" = {
-      "settings" = { };
     };
     "zipPreview" = {
       "settings" = { };

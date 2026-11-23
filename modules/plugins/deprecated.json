@@ -140,6 +140,9 @@
     "externalPlayer": {
       "date": "2026-10-27"
     },
+    "fixYoutubeEmbeds": {
+      "date": "2026-11-21"
+    },
     "fullUserInChatbox": {
       "date": "2026-11-10"
     },
@@ -148,6 +151,9 @@
     },
     "showAllBadges": {
       "date": "2026-10-19"
+    },
+    "youtubeAdblock": {
+      "date": "2026-11-21"
     }
   },
   "settingRenames": {

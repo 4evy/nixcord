@@ -4215,28 +4215,6 @@
     },
     {
       "from": [
-        "youtubeDescription",
-        "enable"
-      ],
-      "to": [
-        "fixYoutubeEmbeds",
-        "enable"
-      ],
-      "warn": false
-    },
-    {
-      "from": [
-        "youtubeDescription",
-        "youtubeDescription"
-      ],
-      "to": [
-        "fixYoutubeEmbeds",
-        "youtubeDescription"
-      ],
-      "warn": false
-    },
-    {
-      "from": [
         "declutter",
         "removeQuestsAboveDM"
       ],
@@ -6197,9 +6175,11 @@
   "removals": [
     "copyStickerLinks",
     "externalPlayer",
+    "fixYoutubeEmbeds",
     "fullUserInChatbox",
     "platformSpoofer",
-    "showAllBadges"
+    "showAllBadges",
+    "youtubeAdblock"
   ],
   "settingRemovals": [
     [
@@ -6277,6 +6257,10 @@
     [
       "serverListIndicators",
       "useCompact"
+    ],
+    [
+      "showHiddenChannels",
+      "defaultAllowedUsersAndRolesDropdownState"
     ],
     [
       "showHiddenChannels",

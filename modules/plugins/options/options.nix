@@ -564,16 +564,21 @@ in
 
   };
   "betterYouTubeEmbeds" = {
-    enable = lib.options.mkEnableOption "Block ads & bypass UMG blocks (Vencord-only)";
+    enable = lib.options.mkEnableOption "Block ads & bypass UMG blocks (Equicord-only)";
+    "blockAds" = lib.options.mkOption {
+      type = lib.types.bool;
+      description = "Blocks ads in YouTube embeds and WatchTogether. Video may take some seconds to load, due to YouTube's anti-ad measures";
+      default = true;
+    };
     "fixBlockedEmbeds" = lib.options.mkOption {
       type = lib.types.bool;
       description = "Restore videos blocked from displaying in Discord, for example by UMG (restart required)";
       default = true;
     };
-    "blockAds" = lib.options.mkOption {
+    "youtubeDescription" = lib.options.mkOption {
       type = lib.types.bool;
-      description = "Blocks ads in YouTube embeds and WatchTogether. Video may take some seconds to load, due to YouTube's anti-ad measures";
-      default = true;
+      description = "Adds descriptions to youtube video embeds (restart required)";
+      default = false;
     };
   };
   "biggerStreamPreview" = {
@@ -3039,14 +3044,6 @@ in
       type = lib.types.float;
       description = "The volume % to set for spotify embeds. Anything above 10% is veeeery loud";
       default = 10.0;
-    };
-  };
-  "fixYoutubeEmbeds" = {
-    enable = lib.options.mkEnableOption "Bypasses youtube videos being blocked from display on Discord (for example by UMG) (Equicord-only)";
-    "youtubeDescription" = lib.options.mkOption {
-      type = lib.types.bool;
-      description = "Adds descriptions to youtube video embeds (restart required)";
-      default = false;
     };
   };
   "followVoiceUser" = {
@@ -7308,21 +7305,14 @@ in
     };
   };
   "showHiddenChannels" = {
-    enable = lib.options.mkEnableOption "THIS PLUGIN IS DEAD! Discord patched it. See the plugin settings for more information. (Equicord-only)";
+    enable = lib.options.mkEnableOption "Shows hidden channels. Discord heavily limited this functionality. More info in the plugin settings. (Equicord-only)";
     "channelStyle" = lib.options.mkOption {
       type = lib.types.enum [
         0
         1
-        2
-        3
       ];
-      description = "The style used to display hidden channels. (restart required)\n\nValues: 0 = Classic, 1 = Muted, 2 = Show Unreads, 3 = Muted and Show Unreads";
+      description = "The style used to display hidden channels. (restart required)\n\nValues: 0 = Classic, 1 = Muted";
       default = 0;
-    };
-    "defaultAllowedUsersAndRolesDropdownState" = lib.options.mkOption {
-      type = lib.types.bool;
-      description = "Whether the allowed users and roles dropdown on hidden channels should be open by default";
-      default = true;
     };
     "showMode" = lib.options.mkOption {
       type = lib.types.enum [
@@ -7739,6 +7729,11 @@ in
     "hideChatBoxTypingIndicators" = lib.options.mkOption {
       type = lib.types.bool;
       description = "Hide other users' typing indicators from above the chat bar.";
+      default = false;
+    };
+    "hideDmListTypingIndicators" = lib.options.mkOption {
+      type = lib.types.bool;
+      description = "Hide typing indicators on conversations in the Direct Messages list.";
       default = false;
     };
     "hideMembersListTypingIndicators" = lib.options.mkOption {
@@ -8909,7 +8904,7 @@ in
     };
   };
   "vesktopPatches" = {
-    enable = lib.options.mkEnableOption "Contains patches for Vesktop (Vencord-only)";
+    enable = lib.options.mkEnableOption "Contains patches for Vesktop and Equibop (Shared between Vencord and Equicord)";
 
   };
   "viewIcons" = {
@@ -9424,10 +9419,6 @@ in
       description = "Volume";
       default = 0.2;
     };
-  };
-  "youtubeAdblock" = {
-    enable = lib.options.mkEnableOption "Block ads in YouTube embeds and the WatchTogether activity via AdGuard (Equicord-only)";
-
   };
   "zipPreview" = {
     enable = lib.options.mkEnableOption "Previews ZIP contents inside file attachments. (Equicord-only)";
