@@ -2819,6 +2819,15 @@
         "removeButtonTooltips" = {
           "type" = "types.bool";
         };
+        "removeAccountPopoutBadges" = {
+          "type" = "types.bool";
+        };
+        "removeAccountPopoutOrbs" = {
+          "type" = "types.bool";
+        };
+        "removeInvisibleWarning" = {
+          "type" = "types.bool";
+        };
       };
     };
     "decodeBase64" = {
@@ -3032,6 +3041,9 @@
           "type" = "types.bool";
         };
         "noOnboarding" = {
+          "type" = "types.bool";
+        };
+        "removeChannelSuggestions" = {
           "type" = "types.bool";
         };
         "showAllBadges" = {
@@ -4271,20 +4283,11 @@
         "lyricsPosition" = {
           "type" = "types.enum";
         };
-        "lyricsProvider" = {
-          "type" = "types.enum";
-        };
-        "spotifyLyricsApiUrl" = {
-          "type" = "types.str";
-        };
         "translateTo" = {
           "type" = "types.enum";
         };
         "lyricsConversion" = {
           "type" = "types.enum";
-        };
-        "fallbackProvider" = {
-          "type" = "types.bool";
         };
         "showFailedToasts" = {
           "type" = "types.bool";

@@ -6255,6 +6255,22 @@
       "showModStyle"
     ],
     [
+      "musicControls",
+      "fallbackProvider"
+    ],
+    [
+      "musicControls",
+      "lyricsProvider"
+    ],
+    [
+      "musicControls",
+      "lyricsProviderSettings"
+    ],
+    [
+      "musicControls",
+      "spotifyLyricsApiUrl"
+    ],
+    [
       "serverListIndicators",
       "useCompact"
     ],

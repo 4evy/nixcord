@@ -2143,6 +2143,21 @@ in
       description = "Remove button tooltips. (restart required)";
       default = false;
     };
+    "removeAccountPopoutBadges" = lib.options.mkOption {
+      type = lib.types.bool;
+      description = "Remove badges from the account popout. (restart required)";
+      default = false;
+    };
+    "removeAccountPopoutOrbs" = lib.options.mkOption {
+      type = lib.types.bool;
+      description = "Remove orbs from the account popout. (restart required)";
+      default = false;
+    };
+    "removeInvisibleWarning" = lib.options.mkOption {
+      type = lib.types.bool;
+      description = "Remove the invisible status warning from the account popout. (restart required)";
+      default = false;
+    };
   };
   "decodeBase64" = {
     enable = lib.options.mkEnableOption "Decode base64 content of any message and copy the decoded content. (Equicord-only)";
@@ -2416,6 +2431,11 @@ in
     "noOnboarding" = lib.options.mkOption {
       type = lib.types.bool;
       description = "Skips the server onboarding by gaslighting it (restart required)";
+      default = false;
+    };
+    "removeChannelSuggestions" = lib.options.mkOption {
+      type = lib.types.bool;
+      description = "Removes the Suggested channels category from the server sidebar (restart required)";
       default = false;
     };
     "showAllBadges" = lib.options.mkOption {
@@ -4919,19 +4939,6 @@ in
       description = "Position of the lyrics";
       default = "below";
     };
-    "lyricsProvider" = lib.options.mkOption {
-      type = lib.types.enum [
-        "LRCLIB"
-        "Spotify"
-      ];
-      description = "Where lyrics are fetched from";
-      default = "LRCLIB";
-    };
-    "spotifyLyricsApiUrl" = lib.options.mkOption {
-      type = lib.types.str;
-      description = "Spotify lyrics API base URL.";
-      default = "https://spotify-lyrics-api-pi.vercel.app";
-    };
     "translateTo" = lib.options.mkOption {
       type = lib.types.enum [
         "auto"
@@ -5080,11 +5087,6 @@ in
       ];
       description = "Automatically translate or romanize lyrics";
       default = "None";
-    };
-    "fallbackProvider" = lib.options.mkOption {
-      type = lib.types.bool;
-      description = "When a lyrics provider fails, try other providers";
-      default = true;
     };
     "showFailedToasts" = lib.options.mkOption {
       type = lib.types.bool;
@@ -9282,7 +9284,7 @@ in
     };
   };
   "webScreenShareFixes" = {
-    enable = lib.options.mkEnableOption "Removes 2500kbps bitrate cap on chromium and vesktop clients, enables stereo stream audio with a higher bitrate, raises the start bitrate of streams, uses hardware H264 encoding and fixes CPU usage growing endlessly while screensharing. (Shared between Vencord and Equicord)";
+    enable = lib.options.mkEnableOption "Removes 2500kbps bitrate cap on chromium and vesktop clients, enables stereo stream audio with a higher bitrate, raises the start bitrate of streams, uses hardware H264 encoding, fixes CPU usage growing endlessly while screensharing and prevents local audio playback during thumbnail generation. (Shared between Vencord and Equicord)";
     "betterCodecs" = lib.options.mkOption {
       type = lib.types.bool;
       description = "MAY CAUSE ISSUES! Prefer better codecs like AV1 and VP9 when streaming. Should improve quality but may lead to issues like infinitely loading streams. (restart required)";

@@ -254,6 +254,20 @@
         "date": "2026-11-15"
       }
     },
+    "musicControls": {
+      "fallbackProvider": {
+        "date": "2026-11-23"
+      },
+      "lyricsProvider": {
+        "date": "2026-11-23"
+      },
+      "lyricsProviderSettings": {
+        "date": "2026-11-23"
+      },
+      "spotifyLyricsApiUrl": {
+        "date": "2026-11-23"
+      }
+    },
     "serverListIndicators": {
       "useCompact": {
         "date": "2026-10-31"
