@@ -45,12 +45,12 @@ jobs:
             return data.object.sha
 
       - name: Run Renovate
-        uses: renovatebot/github-action@acdd6bda8b035c99ce59d5675816af2aa65a1774 # v46.3.14
+        uses: renovatebot/github-action@ebcbb513d07ead4d9c0c2139064301db05e84a3e # v46.3.15
         with:
           token: ${{ github.token }}
-          renovate-version: "44.254.0"
+          renovate-version: "44.261.2"
           renovate-image: >-
-            ghcr.io/renovatebot/renovate@sha256:7f044e90037223f5ede31fc03a7c3391f2b4fd8f4d51a498bdd67993952bc576
+            ghcr.io/renovatebot/renovate@sha256:1022cef9c87acb3a6fb6c00dd112cbcac2c86a2928975bc8949b8d5e9aba56b1
         env:
           LOG_LEVEL: info
           RENOVATE_GIT_AUTHOR: "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"

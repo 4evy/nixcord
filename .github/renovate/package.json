@@ -1,7 +1,7 @@
 {
   "private": true,
   "devDependencies": {
-    "renovate": "44.254.0"
+    "renovate": "44.261.2"
   },
   "engines": {
     "bun": "1.4.5"
