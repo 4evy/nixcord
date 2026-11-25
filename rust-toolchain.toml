@@ -1,5 +1,5 @@
 [toolchain]
 # Keep compiler output and dependency cache keys stable between checkouts
-channel = "nightly-2026-11-19"
+channel = "nightly-2026-11-24"
 profile = "minimal"
 components = ["rustfmt"]
