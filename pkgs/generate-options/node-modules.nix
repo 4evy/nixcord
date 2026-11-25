@@ -2,5 +2,5 @@
 (callPackage ../bun/fetch-deps.nix { }) {
   name = "plugin-generator-bun-deps";
   src = import ../../nix/workspace-source.nix { inherit lib; };
-  hash = "sha256-JkzQWeIkyjRDQfgQef9avW8C5VlSAZvKcyl5331S3jI=";
+  hash = "sha256-soTyUJauA64u56juZdU50fr/9ybwvkOXUcc6RLNILxM=";
 }
