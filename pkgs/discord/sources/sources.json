@@ -67,9 +67,9 @@
         "version": 4
       },
       "discord_voice": {
-        "hash": "sha256:34e055be881fef2eca943f0b51e87eea9d18f62a92310c3cfcee3950d7b90a6e",
-        "url": "https://canary.dl2.discordapp.net/distro/app/canary/linux/x64/1.0.2516/discord_voice/2/full.distro",
-        "version": 2
+        "hash": "sha256:996ff64f65c290ad89a4fd918bb1dde0574882ae65cf938f20a605f23c9270a0",
+        "url": "https://canary.dl2.discordapp.net/distro/app/canary/linux/x64/1.0.2516/discord_voice/3/full.distro",
+        "version": 3
       },
       "discord_zstd": {
         "hash": "sha256:59da6ac9302f13a9bff39c6872f4bfc23000c9a4974fdbbeb659bb6d66f06b0b",
