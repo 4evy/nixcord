@@ -166,11 +166,8 @@ jobs:
             exit 1
           fi
 
-      # The update job already generated the reference metadata on x86_64-linux
+      # Reproduce the candidate from pinned sources and its recorded migration history
       - name: Verify generated plugin metadata
-        if: matrix.system != 'x86_64-linux'
-        env:
-          GENERATE_WITH_GIT: "1"
         run: |
           set -o errexit -o nounset -o pipefail
           expected_plugins=$(mktemp -d)

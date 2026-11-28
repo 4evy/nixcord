@@ -63,7 +63,7 @@ const buildCli = () =>
       ),
       skipGitMigrations: withDefault(
         flag('--skip-git-migrations', '--skipGitMigrations', {
-          description: message`Do not inspect git history for plugin rename/removal migrations`,
+          description: message`Reuse recorded plugin rename/removal history without refreshing it`,
         }),
         false
       ),

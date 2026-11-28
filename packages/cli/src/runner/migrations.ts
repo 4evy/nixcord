@@ -26,42 +26,39 @@ export function writeMigrations(
     const verbose = params.verbose ?? false;
     const pluginsDir = getPluginsDir(params.outputPath);
 
-    // Nix builds skip Git migrations so fetched sources need no .git directory
-    // CI extracts them from full clones and saves the migration JSON
-    const vencordMigrations = params.skipGitMigrations
-      ? { renames: [], deletions: [] }
-      : yield* extractPluginMigrationsEffect(resolvedVencordPath, [params.vencordPluginsDir]);
-    const equicordMigrations = params.skipGitMigrations
-      ? { renames: [], deletions: [] }
-      : resolvedEquicordPath
-        ? yield* extractPluginMigrationsEffect(resolvedEquicordPath, [
+    // Pure generation reuses committed history instead of aging or refreshing it
+    const observedHistory = params.skipGitMigrations
+      ? undefined
+      : yield* Effect.gen(function* () {
+          const vencord = yield* extractPluginMigrationsEffect(resolvedVencordPath, [
             params.vencordPluginsDir,
-            params.equicordPluginsDir,
-          ])
-        : { renames: [], deletions: [] };
+          ]);
+          const equicord = resolvedEquicordPath
+            ? yield* extractPluginMigrationsEffect(resolvedEquicordPath, [
+                params.vencordPluginsDir,
+                params.equicordPluginsDir,
+              ])
+            : { renames: [], deletions: [] };
 
-    const sourcePluginRenames = [
-      ...(vencordResult.pluginRenames ?? []),
-      ...(equicordResult?.pluginRenames ?? []),
-    ].map((rename) => ({
-      ...rename,
-      commitDate: new Date().toISOString(),
-      commitHash: 'source-migration',
-    }));
+          const observedAt = new Date().toISOString();
+          const sourceRenames = [
+            ...(vencordResult.pluginRenames ?? []),
+            ...(equicordResult?.pluginRenames ?? []),
+          ].map((rename) => ({
+            ...rename,
+            commitDate: observedAt,
+            commitHash: 'source-migration',
+          }));
 
-    // Combine migrations from both repos and explicit migratePluginSettings() calls
-    const combinedMigrations = {
-      renames: [
-        ...vencordMigrations.renames,
-        ...equicordMigrations.renames,
-        ...sourcePluginRenames,
-      ],
-      deletions: [...vencordMigrations.deletions, ...equicordMigrations.deletions],
-      settingRemovals: [
-        ...(vencordMigrations.settingRemovals ?? []),
-        ...(equicordMigrations.settingRemovals ?? []),
-      ],
-    };
+          return {
+            renames: [...vencord.renames, ...equicord.renames, ...sourceRenames],
+            deletions: [...vencord.deletions, ...equicord.deletions],
+            settingRemovals: [
+              ...(vencord.settingRemovals ?? []),
+              ...(equicord.settingRemovals ?? []),
+            ],
+          };
+        });
 
     const allSettingRenames = [
       ...(vencordResult.settingRenames ?? []),
@@ -77,7 +74,7 @@ export function writeMigrations(
 
     const deprecated = yield* generationStep('migrations', () =>
       updateDeprecatedPlugins(
-        combinedMigrations,
+        observedHistory,
         pluginsDir,
         verbose,
         params.logger,

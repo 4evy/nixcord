@@ -147,7 +147,7 @@ function collectSettingNames(config: Readonly<PluginConfig>, prefix = ''): Set<s
 }
 
 export async function updateDeprecatedPlugins(
-  migrations: PluginMigrationInfo,
+  migrations: PluginMigrationInfo | undefined,
   pluginsDir: string,
   verbose: boolean,
   logger: Logger,
@@ -160,8 +160,10 @@ export async function updateDeprecatedPlugins(
   const existing = await readDeprecatedJson(deprecatedPath);
   const normalize = normalizePluginName ?? ((n: string) => n);
 
-  pruneExpiredHistory(existing);
-  mergeObservedPluginHistory(existing, migrations, normalize);
+  if (migrations) {
+    pruneExpiredHistory(existing);
+    mergeObservedPluginHistory(existing, migrations, normalize);
+  }
   reconcilePluginHistory(existing, normalize, activePluginNames, normalizePluginName !== undefined);
   mergeObservedSettingRenames(existing, settingRenames, normalize);
   reconcileSettingHistory(existing, normalize, activePlugins);
