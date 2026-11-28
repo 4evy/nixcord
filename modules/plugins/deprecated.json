@@ -14,19 +14,15 @@
     },
     "EquicordHelper": {
       "to": "EquiTweaks",
-      "date": "2026-10-19"
+      "date": "2026-11-28"
     },
     "ExpressionCloner": {
       "to": "ExpressionManager",
       "date": "2026-10-30"
     },
-    "favouriteAnything": {
-      "to": "FavoriteAnything",
-      "date": "2026-10-19"
-    },
     "FavouriteAnything": {
       "to": "FavoriteAnything",
-      "date": "2026-10-19"
+      "date": "2026-11-28"
     },
     "ForwardAnywhere": {
       "to": "BetterForwards",
