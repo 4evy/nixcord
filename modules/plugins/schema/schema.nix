@@ -159,82 +159,6 @@
         };
       };
     };
-    "customRpc" = {
-      "settings" = {
-        "enablePresence" = {
-          "type" = "types.bool";
-        };
-        "appId" = {
-          "type" = "types.nullOr types.str";
-        };
-        "appName" = {
-          "type" = "types.nullOr types.str";
-        };
-        "details" = {
-          "type" = "types.nullOr types.str";
-        };
-        "detailsUrl" = {
-          "type" = "types.nullOr types.str";
-        };
-        "state" = {
-          "type" = "types.nullOr types.str";
-        };
-        "stateUrl" = {
-          "type" = "types.nullOr types.str";
-        };
-        "type" = {
-          "type" = "types.enum";
-        };
-        "streamLink" = {
-          "type" = "types.nullOr types.str";
-        };
-        "timestampMode" = {
-          "type" = "types.enum";
-        };
-        "startTime" = {
-          "type" = "types.int";
-        };
-        "endTime" = {
-          "type" = "types.int";
-        };
-        "imageBig" = {
-          "type" = "types.nullOr types.str";
-        };
-        "imageBigUrl" = {
-          "type" = "types.nullOr types.str";
-        };
-        "imageBigTooltip" = {
-          "type" = "types.nullOr types.str";
-        };
-        "imageSmall" = {
-          "type" = "types.nullOr types.str";
-        };
-        "imageSmallUrl" = {
-          "type" = "types.nullOr types.str";
-        };
-        "imageSmallTooltip" = {
-          "type" = "types.nullOr types.str";
-        };
-        "buttonOneText" = {
-          "type" = "types.nullOr types.str";
-        };
-        "buttonOneUrl" = {
-          "type" = "types.nullOr types.str";
-        };
-        "buttonTwoText" = {
-          "type" = "types.nullOr types.str";
-        };
-        "buttonTwoUrl" = {
-          "type" = "types.nullOr types.str";
-        };
-        "partySize" = {
-          "type" = "types.int";
-        };
-        "partyMaxSize" = {
-          "type" = "types.int";
-        };
-      };
-    };
     "dearrow" = {
       "settings" = {
         "hideButton" = {
@@ -1234,6 +1158,19 @@
         };
       };
     };
+    "customRpc" = {
+      "settings" = {
+        "enablePresence" = {
+          "type" = "types.bool";
+        };
+        "profiles" = {
+          "type" = "types.listOf types.attrs";
+        };
+        "selectedProfileId" = {
+          "type" = "types.nullOr types.str";
+        };
+      };
+    };
     "decor" = {
       "settings" = {
         "agreedToGuidelines" = {
@@ -1245,6 +1182,13 @@
       "settings" = {
         "notifyOnAutoConnect" = {
           "type" = "types.bool";
+        };
+      };
+    };
+    "editUsers" = {
+      "settings" = {
+        "users" = {
+          "type" = "types.attrs";
         };
       };
     };
@@ -2539,6 +2483,82 @@
         };
         "folderIcons" = {
           "type" = "types.attrs";
+        };
+      };
+    };
+    "customRpc" = {
+      "settings" = {
+        "enablePresence" = {
+          "type" = "types.bool";
+        };
+        "appId" = {
+          "type" = "types.nullOr types.str";
+        };
+        "appName" = {
+          "type" = "types.nullOr types.str";
+        };
+        "details" = {
+          "type" = "types.nullOr types.str";
+        };
+        "detailsUrl" = {
+          "type" = "types.nullOr types.str";
+        };
+        "state" = {
+          "type" = "types.nullOr types.str";
+        };
+        "stateUrl" = {
+          "type" = "types.nullOr types.str";
+        };
+        "type" = {
+          "type" = "types.enum";
+        };
+        "streamLink" = {
+          "type" = "types.nullOr types.str";
+        };
+        "timestampMode" = {
+          "type" = "types.enum";
+        };
+        "startTime" = {
+          "type" = "types.int";
+        };
+        "endTime" = {
+          "type" = "types.int";
+        };
+        "imageBig" = {
+          "type" = "types.nullOr types.str";
+        };
+        "imageBigUrl" = {
+          "type" = "types.nullOr types.str";
+        };
+        "imageBigTooltip" = {
+          "type" = "types.nullOr types.str";
+        };
+        "imageSmall" = {
+          "type" = "types.nullOr types.str";
+        };
+        "imageSmallUrl" = {
+          "type" = "types.nullOr types.str";
+        };
+        "imageSmallTooltip" = {
+          "type" = "types.nullOr types.str";
+        };
+        "buttonOneText" = {
+          "type" = "types.nullOr types.str";
+        };
+        "buttonOneUrl" = {
+          "type" = "types.nullOr types.str";
+        };
+        "buttonTwoText" = {
+          "type" = "types.nullOr types.str";
+        };
+        "buttonTwoUrl" = {
+          "type" = "types.nullOr types.str";
+        };
+        "partySize" = {
+          "type" = "types.int";
+        };
+        "partyMaxSize" = {
+          "type" = "types.int";
         };
       };
     };

@@ -4768,6 +4768,28 @@
     {
       "from": [
         "CustomRPC",
+        "profiles"
+      ],
+      "to": [
+        "customRpc",
+        "profiles"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "CustomRPC",
+        "selectedProfileId"
+      ],
+      "to": [
+        "customRpc",
+        "selectedProfileId"
+      ],
+      "warn": true
+    },
+    {
+      "from": [
+        "CustomRPC",
         "startTime"
       ],
       "to": [

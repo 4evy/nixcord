@@ -1575,90 +1575,12 @@ in
     };
   };
   "customRpc" = {
-    enable = lib.options.mkEnableOption "Add a fully customisable Rich Presence (Game status) to your Discord profile (Shared between Vencord and Equicord)";
-    "enablePresence" = lib.options.mkOption {
-      type = lib.types.bool;
-      description = "Whether to show the presence";
-      default = true;
-    };
+    enable = lib.options.mkEnableOption "Add a fully customisable Rich Presence (Game status) to your Discord profile (Equicord-only)";
     "appId" = lib.options.mkOption {
       type = lib.types.nullOr lib.types.str;
       description = "";
     };
     "appName" = lib.options.mkOption {
-      type = lib.types.nullOr lib.types.str;
-      description = "";
-    };
-    "details" = lib.options.mkOption {
-      type = lib.types.nullOr lib.types.str;
-      description = "";
-    };
-    "detailsUrl" = lib.options.mkOption {
-      type = lib.types.nullOr lib.types.str;
-      description = "";
-    };
-    "state" = lib.options.mkOption {
-      type = lib.types.nullOr lib.types.str;
-      description = "";
-    };
-    "stateUrl" = lib.options.mkOption {
-      type = lib.types.nullOr lib.types.str;
-      description = "";
-    };
-    "type" = lib.options.mkOption {
-      type = lib.types.enum [
-        0
-        1
-        2
-        3
-        4
-        5
-        6
-      ];
-      description = "";
-    };
-    "streamLink" = lib.options.mkOption {
-      type = lib.types.nullOr lib.types.str;
-      description = "";
-    };
-    "timestampMode" = lib.options.mkOption {
-      type = lib.types.enum [
-        0
-        1
-        2
-        3
-      ];
-      description = "";
-    };
-    "startTime" = lib.options.mkOption {
-      type = lib.types.int;
-      description = "";
-    };
-    "endTime" = lib.options.mkOption {
-      type = lib.types.int;
-      description = "";
-    };
-    "imageBig" = lib.options.mkOption {
-      type = lib.types.nullOr lib.types.str;
-      description = "";
-    };
-    "imageBigUrl" = lib.options.mkOption {
-      type = lib.types.nullOr lib.types.str;
-      description = "";
-    };
-    "imageBigTooltip" = lib.options.mkOption {
-      type = lib.types.nullOr lib.types.str;
-      description = "";
-    };
-    "imageSmall" = lib.options.mkOption {
-      type = lib.types.nullOr lib.types.str;
-      description = "";
-    };
-    "imageSmallUrl" = lib.options.mkOption {
-      type = lib.types.nullOr lib.types.str;
-      description = "";
-    };
-    "imageSmallTooltip" = lib.options.mkOption {
       type = lib.types.nullOr lib.types.str;
       description = "";
     };
@@ -1678,12 +1600,98 @@ in
       type = lib.types.nullOr lib.types.str;
       description = "";
     };
-    "partySize" = lib.options.mkOption {
+    "details" = lib.options.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      description = "";
+    };
+    "detailsUrl" = lib.options.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      description = "";
+    };
+    "enablePresence" = lib.options.mkOption {
+      type = lib.types.bool;
+      description = "Whether to show the presence";
+      default = true;
+    };
+    "endTime" = lib.options.mkOption {
       type = lib.types.int;
+      description = "";
+    };
+    "imageBig" = lib.options.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      description = "";
+    };
+    "imageBigTooltip" = lib.options.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      description = "";
+    };
+    "imageBigUrl" = lib.options.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      description = "";
+    };
+    "imageSmall" = lib.options.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      description = "";
+    };
+    "imageSmallTooltip" = lib.options.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      description = "";
+    };
+    "imageSmallUrl" = lib.options.mkOption {
+      type = lib.types.nullOr lib.types.str;
       description = "";
     };
     "partyMaxSize" = lib.options.mkOption {
       type = lib.types.int;
+      description = "";
+    };
+    "partySize" = lib.options.mkOption {
+      type = lib.types.int;
+      description = "";
+    };
+    "profiles" = lib.options.mkOption {
+      type = lib.types.listOf jsonAttrs;
+      description = "";
+    };
+    "selectedProfileId" = lib.options.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      description = "";
+    };
+    "startTime" = lib.options.mkOption {
+      type = lib.types.int;
+      description = "";
+    };
+    "state" = lib.options.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      description = "";
+    };
+    "stateUrl" = lib.options.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      description = "";
+    };
+    "streamLink" = lib.options.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      description = "";
+    };
+    "timestampMode" = lib.options.mkOption {
+      type = lib.types.enum [
+        0
+        1
+        2
+        3
+      ];
+      description = "";
+    };
+    "type" = lib.options.mkOption {
+      type = lib.types.enum [
+        0
+        1
+        2
+        3
+        4
+        5
+        6
+      ];
       description = "";
     };
   };
@@ -2308,6 +2316,13 @@ in
   "duplicateCategory" = {
     enable = lib.options.mkEnableOption "Adds an option to duplicate a category with the same permissions. (Equicord-only)";
 
+  };
+  "editUsers" = {
+    enable = lib.options.mkEnableOption "Customize how users appear in your Discord client. (Vencord-only)";
+    "users" = lib.options.mkOption {
+      type = jsonAttrs;
+      description = "";
+    };
   };
   "elementHighlighter" = {
     enable = lib.options.mkEnableOption "Highlight and inspect elements easily. (Equicord-only)";
