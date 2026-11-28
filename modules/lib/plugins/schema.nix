@@ -23,7 +23,42 @@ let
   # Filtering and migration checks only need names and nesting, not defaults
   paths = import ../../plugins/schema/schema.nix;
   sharedPlugins = paths.shared;
-  vencordPlugins = paths.vencord;
+  # Vencord migrates these flat CustomRPC keys to a profile at runtime
+  # Equicord still supplies their option schema; do not drop them from Vencord JSON
+  vencordPlugins =
+    paths.vencord
+    //
+      lib.attrsets.optionalAttrs
+        (lib.attrsets.hasAttrByPath [ "customRpc" "settings" "profiles" ] paths.vencord)
+        {
+          customRpc = mergePlugin paths.vencord.customRpc {
+            settings = builtins.intersectAttrs (lib.attrsets.genAttrs [
+              "appId"
+              "appName"
+              "details"
+              "detailsUrl"
+              "state"
+              "stateUrl"
+              "type"
+              "streamLink"
+              "timestampMode"
+              "startTime"
+              "endTime"
+              "imageBig"
+              "imageBigUrl"
+              "imageBigTooltip"
+              "imageSmall"
+              "imageSmallUrl"
+              "imageSmallTooltip"
+              "buttonOneText"
+              "buttonOneUrl"
+              "buttonTwoText"
+              "buttonTwoUrl"
+              "partySize"
+              "partyMaxSize"
+            ] (_: null)) (equicordPlugins.customRpc.settings or { });
+          };
+        };
   equicordPlugins = paths.equicord;
 
   mergePlugin = lib.attrsets.recursiveUpdateUntil (
